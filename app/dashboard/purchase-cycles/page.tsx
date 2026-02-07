@@ -1,0 +1,47 @@
+"use client";
+
+import React, { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
+import { PurchaseCyclesWorkspaceV4 } from '@/components/purchase-cycles/PurchaseCyclesWorkspaceV4';
+import { User, mapAuthUserToUIUser, PurchaseCycle } from '@/types';
+
+export default function PurchaseCyclesPage() {
+    const { user: saasUser } = useAuthStore();
+    const router = useRouter();
+
+    const handleNavigate = (section: string, id?: string) => {
+        if (id) {
+            router.push(`/dashboard/${section}/${id}`);
+        } else {
+            router.push(`/dashboard/${section}`);
+        }
+    };
+
+    const handleStartNew = () => {
+        console.log("Start new purchase cycle");
+    };
+
+    const handleEditCycle = (cycle: PurchaseCycle) => {
+        router.push(`/dashboard/purchase-cycles/${cycle.id}/edit`);
+    };
+
+    const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
+
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    return (
+        <PurchaseCyclesWorkspaceV4
+            user={user}
+            onNavigate={handleNavigate}
+            onStartNew={handleStartNew}
+            onEditCycle={handleEditCycle}
+        />
+    );
+}

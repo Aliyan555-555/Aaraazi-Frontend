@@ -1,0 +1,113 @@
+/**
+ * useRecentActivity Hook
+ * 
+ * Loads recent activity data for workflow cards.
+ * 
+ * FEATURES:
+ * - Loads data from localStorage
+ * - Filters to last 7 days
+ * - Role-based filtering
+ * - Used by QuickLaunchSection
+ */
+
+import { useState, useEffect } from 'react';
+import { User, Property, Contact, Document } from '../../../types';
+import { LeadV4 } from '../../../types/leads';
+import { CRMTask } from '../../../types';
+import { getProperties, getContacts } from '../../../lib/data';
+import { getLeadsV4 } from '../../../lib/leadsV4';
+import { getAllTasks } from '../../../lib/data';
+
+export interface RecentActivityData {
+  properties: Property[];
+  leads: LeadV4[];
+  contacts: Contact[];
+  tasks: CRMTask[];
+  documents: Document[];
+  payments: any[];      // TODO: Add proper payment type
+  loading: boolean;
+}
+
+/**
+ * useRecentActivity hook
+ */
+export function useRecentActivity(user: User): RecentActivityData {
+  const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [leads, setLeads] = useState<LeadV4[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [tasks, setTasks] = useState<CRMTask[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
+
+  useEffect(() => {
+    try {
+      setLoading(true);
+
+      const userId = user.role === 'admin' ? undefined : user.id;
+      const userRole = user.role;
+
+      // Calculate date 7 days ago
+      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      // Load properties (last 7 days)
+      const allProperties = getProperties(userId, userRole);
+      const recentProperties = allProperties.filter(
+        p => new Date(p.createdAt) >= oneWeekAgo
+      );
+      setProperties(recentProperties);
+
+      // Load leads (last 7 days)
+      const allLeads = getLeadsV4(userId, userRole);
+      const recentLeads = allLeads.filter(
+        l => new Date(l.createdAt) >= oneWeekAgo
+      );
+      setLeads(recentLeads);
+
+      // Load contacts (last 7 days)
+      const allContacts = getContacts(userId, userRole);
+      const recentContacts = allContacts.filter(
+        c => new Date(c.createdAt) >= oneWeekAgo
+      );
+      setContacts(recentContacts);
+
+      // Load tasks (last 7 days)
+      const allTasks = getAllTasks(userId, userRole);
+      const recentTasks = allTasks.filter(
+        t => new Date(t.createdAt) >= oneWeekAgo
+      );
+      setTasks(recentTasks);
+
+      // Load documents (last 7 days)
+      // Note: getDocuments requires propertyId, so we get all documents directly
+      const documentsKey = 'estate_documents';
+      const allDocuments = JSON.parse(localStorage.getItem(documentsKey) || '[]') as Document[];
+      const recentDocuments = allDocuments.filter(
+        d => {
+          const createdDate = new Date(d.createdAt || d.uploadedAt || d.uploadDate || 0);
+          return createdDate >= oneWeekAgo;
+        }
+      );
+      setDocuments(recentDocuments);
+
+      // Load payments (last 7 days)
+      // TODO: Implement when payment service is ready
+      setPayments([]);
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
+      setLoading(false);
+    }
+  }, [user.id, user.role]);
+
+  return {
+    properties,
+    leads,
+    contacts,
+    tasks,
+    documents,
+    payments,
+    loading,
+  };
+}

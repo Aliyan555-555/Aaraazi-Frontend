@@ -1,0 +1,43 @@
+"use client";
+
+import React, { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
+import { TasksWorkspaceV4 } from '@/components/tasks/TasksWorkspaceV4';
+import { User, mapAuthUserToUIUser } from '@/types';
+
+export default function TasksPage() {
+    const { user: saasUser } = useAuthStore();
+    const router = useRouter();
+
+    const handleNavigate = (page: string, data?: any) => {
+        console.log(`Navigating to ${page}`, data);
+        if (page === 'task-details' && data) {
+            router.push(`/dashboard/tasks/${data}`);
+            return;
+        }
+
+        const routeMap: Record<string, string> = {
+            'dashboard': '/dashboard',
+            'tasks': '/dashboard/tasks',
+        };
+        const route = routeMap[page] || `/dashboard/${page}`;
+        router.push(route);
+    };
+
+    const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
+
+    if (!user) {
+        return (<div className="flex items-center justify-center h-[calc(100vh-4rem)]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>);
+    }
+
+    return (
+        <TasksWorkspaceV4
+            user={user}
+            onNavigate={handleNavigate}
+            onCreateTask={() => console.log("Create task")}
+            onEditTask={(taskId) => console.log(`Edit task ${taskId}`)}
+            onViewTask={(taskId) => handleNavigate('task-details', taskId)}
+        />
+    );
+}

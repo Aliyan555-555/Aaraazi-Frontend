@@ -1,0 +1,253 @@
+/**
+ * Prisma-aligned enums for Aaraazi frontend.
+ * Single source of truth matching Aaraazi-Backend/prisma/schema.prisma
+ */
+
+export enum UserRole {
+  SAAS_ADMIN = 'SAAS_ADMIN',
+  AGENCY_OWNER = 'AGENCY_OWNER',
+  AGENCY_MANAGER = 'AGENCY_MANAGER',
+  AGENCY_AGENT = 'AGENCY_AGENT',
+}
+
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  PENDING_VERIFICATION = 'PENDING_VERIFICATION',
+}
+
+export enum AgencyType {
+  AGENCY = 'AGENCY',
+  DEVELOPER = 'DEVELOPER',
+  BOTH = 'BOTH',
+}
+
+export enum Module {
+  AGENCY = 'AGENCY',
+  DEVELOPER = 'DEVELOPER',
+}
+
+export enum PropertyType {
+  HOUSE = 'HOUSE',
+  APARTMENT = 'APARTMENT',
+  PLOT = 'PLOT',
+  COMMERCIAL = 'COMMERCIAL',
+  LAND = 'LAND',
+  INDUSTRIAL = 'INDUSTRIAL',
+  VILLA = 'VILLA',
+  FARMHOUSE = 'FARMHOUSE',
+  PENTHOUSE = 'PENTHOUSE',
+  STUDIO = 'STUDIO',
+  WAREHOUSE = 'WAREHOUSE',
+  OFFICE = 'OFFICE',
+  SHOP = 'SHOP',
+  OTHER = 'OTHER',
+}
+
+export enum PropertyListingStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  UNDER_OFFER = 'UNDER_OFFER',
+  SOLD = 'SOLD',
+  RENTED = 'RENTED',
+  WITHDRAWN = 'WITHDRAWN',
+  EXPIRED = 'EXPIRED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum ListingType {
+  SALE = 'SALE',
+  RENT = 'RENT',
+  WANTED = 'WANTED',
+  INVESTOR = 'INVESTOR',
+}
+
+export enum LeadStatus {
+  NEW = 'NEW',
+  CONTACTED = 'CONTACTED',
+  QUALIFYING = 'QUALIFYING',
+  QUALIFIED = 'QUALIFIED',
+  CONVERTED = 'CONVERTED',
+  LOST = 'LOST',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum LeadStage {
+  NEW = 'NEW',
+  CONTACTED = 'CONTACTED',
+  QUALIFIED = 'QUALIFIED',
+  NEGOTIATION = 'NEGOTIATION',
+  CLOSED = 'CLOSED',
+}
+
+export enum LeadSource {
+  WEBSITE = 'WEBSITE',
+  REFERRAL = 'REFERRAL',
+  WALK_IN = 'WALK_IN',
+  PHONE_CALL = 'PHONE_CALL',
+  SOCIAL_MEDIA = 'SOCIAL_MEDIA',
+  ADVERTISEMENT = 'ADVERTISEMENT',
+  PARTNER = 'PARTNER',
+  OTHER = 'OTHER',
+}
+
+export enum LeadIntent {
+  BUYING = 'BUYING',
+  SELLING = 'SELLING',
+  RENTING = 'RENTING',
+  LEASING_OUT = 'LEASING_OUT',
+  INVESTING = 'INVESTING',
+  UNKNOWN = 'UNKNOWN',
+}
+
+export enum Priority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT',
+}
+
+export enum CycleStatus {
+  ACTIVE = 'ACTIVE',
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  ON_HOLD = 'ON_HOLD',
+  AVAILABLE = 'AVAILABLE',
+  SHOWING = 'SHOWING',
+  APPLICATION_RECEIVED = 'APPLICATION_RECEIVED',
+  LEASED = 'LEASED',
+  RENEWAL_PENDING = 'RENEWAL_PENDING',
+  ENDING = 'ENDING',
+  ENDED = 'ENDED',
+}
+
+export enum DealStage {
+  NEGOTIATION = 'NEGOTIATION',
+  OFFER_ACCEPTED = 'OFFER_ACCEPTED',
+  AGREEMENT_SIGNING = 'AGREEMENT_SIGNING',
+  DOCUMENTATION = 'DOCUMENTATION',
+  PAYMENT_PROCESSING = 'PAYMENT_PROCESSING',
+  PAYMENT = 'PAYMENT',
+  HANDOVER_PREP = 'HANDOVER_PREP',
+  TRANSFER_REGISTRATION = 'TRANSFER_REGISTRATION',
+  TRANSFER = 'TRANSFER',
+  FINAL_HANDOVER = 'FINAL_HANDOVER',
+  COMPLETED = 'COMPLETED',
+}
+
+export enum DealStatus {
+  ACTIVE = 'ACTIVE',
+  ON_HOLD = 'ON_HOLD',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+}
+
+export enum TaskStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  OVERDUE = 'OVERDUE',
+}
+
+export enum TaskPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT',
+}
+
+export enum TaskType {
+  FOLLOW_UP = 'FOLLOW_UP',
+  VIEWING = 'VIEWING',
+  MEETING = 'MEETING',
+  DOCUMENT = 'DOCUMENT',
+  CALL = 'CALL',
+  EMAIL = 'EMAIL',
+  INSPECTION = 'INSPECTION',
+  OTHER = 'OTHER',
+}
+
+export enum ContactType {
+  CLIENT = 'CLIENT',
+  PROSPECT = 'PROSPECT',
+  INVESTOR = 'INVESTOR',
+  VENDOR = 'VENDOR',
+  PARTNER = 'PARTNER',
+}
+
+export enum ContactCategory {
+  BUYER = 'BUYER',
+  SELLER = 'SELLER',
+  TENANT = 'TENANT',
+  LANDLORD = 'LANDLORD',
+  EXTERNAL_BROKER = 'EXTERNAL_BROKER',
+  BOTH = 'BOTH',
+}
+
+export enum ContactStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  ARCHIVED = 'ARCHIVED',
+  BLOCKED = 'BLOCKED',
+}
+
+export enum AreaUnit {
+  SQFT = 'SQFT',
+  SQMETER = 'SQMETER',
+  SQYARDS = 'SQYARDS',
+  MARLA = 'MARLA',
+  KANAL = 'KANAL',
+  ACRE = 'ACRE',
+  HECTARE = 'HECTARE',
+}
+
+export enum TenantStatus {
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  TRIAL = 'TRIAL',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED',
+}
+
+export enum RequirementType {
+  BUY = 'BUY',
+  RENT = 'RENT',
+  INVEST = 'INVEST',
+}
+
+export enum RequirementStatus {
+  ACTIVE = 'ACTIVE',
+  FULFILLED = 'FULFILLED',
+  CANCELLED = 'CANCELLED',
+  CLOSED = 'CLOSED',
+  ON_HOLD = 'ON_HOLD',
+}
+
+export enum NotificationType {
+  TASK_REMINDER = 'TASK_REMINDER',
+  DEAL_UPDATE = 'DEAL_UPDATE',
+  PAYMENT_DUE = 'PAYMENT_DUE',
+  LEASE_EXPIRY = 'LEASE_EXPIRY',
+  LEAD_ASSIGNMENT = 'LEAD_ASSIGNMENT',
+  SYSTEM_ALERT = 'SYSTEM_ALERT',
+}
+
+export enum ListingVisibility {
+  PRIVATE = 'PRIVATE',
+  BRANCH = 'BRANCH',
+  AGENCY = 'AGENCY',
+  SHARED = 'SHARED',
+  PUBLIC = 'PUBLIC',
+}
+
+export enum BranchStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  PAUSED = 'PAUSED',
+  CLOSED = 'CLOSED',
+  OPENING_SOON = 'OPENING_SOON',
+}
