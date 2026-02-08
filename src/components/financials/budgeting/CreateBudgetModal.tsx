@@ -159,7 +159,7 @@ export const CreateBudgetModal: React.FC<CreateBudgetModalProps> = ({
           {/* Period Selection */}
           <div>
             <Label htmlFor="period">Budget Period *</Label>
-            <Select value={period} onValueChange={setPeriod}>
+            <Select value={period} onValueChange={(val) => setPeriod(val)}>
               <SelectTrigger id="period">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>

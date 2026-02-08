@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { 
+import {
   FileText,
   DollarSign,
   Users,
@@ -16,7 +16,7 @@ import {
   Clock,
   TrendingUp,
 } from 'lucide-react';
-import { Deal } from '../../types';
+import { Deal } from '../../types/deals';
 import { WorkspaceCard } from '../workspace/cards/WorkspaceCard';
 import { QuickActionMenu, QuickActionPresets } from '../workspace/QuickActionMenu';
 import { formatPKR } from '../../lib/currency';
@@ -68,11 +68,12 @@ export const DealWorkspaceCard: React.FC<DealWorkspaceCardProps> = ({
       'agreement-signing': 'Agreement Signing',
       'documentation': 'Documentation',
       'payment-processing': 'Payment Processing',
-      'handover-preparation': 'Handover Prep',
+      'handover-prep': 'Handover Prep',
       'transfer-registration': 'Transfer Registration',
       'final-handover': 'Final Handover',
+      'completed': 'Completed',
     };
-    return stageLabels[deal.lifecycle.stage] || deal.lifecycle.stage;
+    return (stageLabels as any)[deal.lifecycle.stage] || deal.lifecycle.stage;
   };
 
   // Calculate payment progress
@@ -82,11 +83,11 @@ export const DealWorkspaceCard: React.FC<DealWorkspaceCardProps> = ({
 
   // Determine tags
   const tags: Array<{ label: string; variant: 'default' | 'success' | 'info' | 'warning' }> = [];
-  
+
   if (deal.cycles.purchaseCycle) {
     tags.push({ label: 'Dual Agent', variant: 'info' });
   }
-  
+
   if (paymentProgress === 100) {
     tags.push({ label: 'Paid', variant: 'success' });
   } else if (paymentProgress > 50) {
@@ -152,7 +153,7 @@ export const DealWorkspaceCard: React.FC<DealWorkspaceCardProps> = ({
     <WorkspaceCard
       title={deal.dealNumber}
       subtitle={getStageLabel()}
-      icon={<FileText className="h-12 w-12 text-gray-400" />}
+      imageFallback={<FileText className="h-12 w-12 text-gray-400" />}
       status={status}
       metadata={displayMetadata}
       tags={tags.slice(0, 3)}
@@ -173,13 +174,13 @@ export const DealWorkspaceCard: React.FC<DealWorkspaceCardProps> = ({
                 id: 'view',
                 label: 'View Details',
                 icon: <FileText className="h-4 w-4" />,
-                onClick: onClick,
+                onClick: onClick || (() => { }),
               },
               {
                 id: 'stage',
                 label: 'Change Stage',
                 icon: <CheckCircle2 className="h-4 w-4" />,
-                onClick: onChangeStage,
+                onClick: onChangeStage || (() => { }),
               },
               ...(onEdit ? [{
                 id: 'edit',

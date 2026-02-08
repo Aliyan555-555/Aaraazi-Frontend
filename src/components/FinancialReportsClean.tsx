@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Checkbox } from './ui/checkbox';
 import { Separator } from './ui/separator';
 import { User } from '../types';
-import { 
+import {
   FileText,
   Download,
   Filter,
@@ -427,8 +427,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                 <PopoverContent className="w-auto p-0" align="start">
                   <div className="p-3 space-y-2">
                     <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           handleDateRangeSelect('last-month');
@@ -437,8 +437,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                       >
                         Last Month
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           handleDateRangeSelect('last-quarter');
@@ -447,8 +447,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                       >
                         Last Quarter
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           handleDateRangeSelect('ytd');
@@ -457,8 +457,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                       >
                         YTD
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           handleDateRangeSelect('last-year');
@@ -479,7 +479,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                         if (range?.from && range?.to) {
                           setFilters(prev => ({
                             ...prev,
-                            dateRange: { from: range.from, to: range.to }
+                            dateRange: { from: range.from as Date, to: range.to as Date }
                           }));
                           setShowDatePicker(false);
                         }
@@ -500,8 +500,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                 <Button variant="outline" className="w-full justify-start border-2 border-blue-300 bg-white">
                   <Building2 className="h-4 w-4 mr-2 text-blue-600" />
                   <span className="font-medium">
-                    {filters.selectedProjects.includes('all') 
-                      ? 'All Projects' 
+                    {filters.selectedProjects.includes('all')
+                      ? 'All Projects'
                       : `${filters.selectedProjects.length} projects selected`}
                   </span>
                 </Button>
@@ -530,7 +530,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
             <div className="flex items-center space-x-2">
               <Checkbox
                 checked={filters.comparisonPeriod}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setFilters(prev => ({ ...prev, comparisonPeriod: !!checked }))
                 }
               />
@@ -560,7 +560,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
   const renderProfitLossStatement = () => {
     const grossProfit = currentPeriodData.revenue.total - currentPeriodData.costOfGoodsSold.total;
     const netProfit = grossProfit - currentPeriodData.operatingExpenses.total;
-    
+
     const comparisonGrossProfit = comparisonData.revenue.total - comparisonData.costOfGoodsSold.total;
     const comparisonNetProfit = comparisonGrossProfit - comparisonData.operatingExpenses.total;
 
@@ -952,7 +952,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
   };
 
   const renderBalanceSheet = () => (
-    <BalanceSheetEnhanced 
+    <BalanceSheetEnhanced
       currentPeriodData={currentPeriodData}
       comparisonData={comparisonData}
       filters={filters}
@@ -961,7 +961,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
   );
 
   const renderCashFlowStatement = () => (
-    <CashFlowEnhanced 
+    <CashFlowEnhanced
       currentPeriodData={currentPeriodData}
       comparisonData={comparisonData}
       filters={filters}
@@ -1059,9 +1059,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                   <TableCell className="font-medium">
                     <div className="flex items-center space-x-2">
                       {index < 3 && (
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs ${
-                          index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-amber-600'
-                        }`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-amber-600'
+                          }`}>
                           {index + 1}
                         </div>
                       )}
@@ -1086,8 +1085,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                   <TableCell className="text-right">
                     <Badge className={
                       agent.conversionRate >= 70 ? 'bg-green-100 text-green-800' :
-                      agent.conversionRate >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                        agent.conversionRate >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
                     }>
                       {agent.conversionRate}%
                     </Badge>
@@ -1207,8 +1206,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                   <TableCell className="text-right">
                     <Badge className={
                       project.margin >= 30 ? 'bg-green-100 text-green-800' :
-                      project.margin >= 25 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                        project.margin >= 25 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
                     }>
                       {project.margin.toFixed(1)}%
                     </Badge>
@@ -1231,7 +1230,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge className="bg-blue-100 text-blue-800">
-                    {(projectData.reduce((sum, p) => sum + p.grossProfit, 0) / 
+                    {(projectData.reduce((sum, p) => sum + p.grossProfit, 0) /
                       projectData.reduce((sum, p) => sum + p.revenue, 0) * 100).toFixed(1)}%
                   </Badge>
                 </TableCell>
@@ -1251,9 +1250,9 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
         <p className="text-gray-600 mb-8">
           Generate comprehensive financial reports with powerful filtering and comparison options
         </p>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-blue-500"
             onClick={() => setFilters(prev => ({ ...prev, reportType: 'profit-loss' }))}
           >
@@ -1268,7 +1267,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-green-500"
             onClick={() => setFilters(prev => ({ ...prev, reportType: 'balance-sheet' }))}
           >
@@ -1283,7 +1282,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-purple-500"
             onClick={() => setFilters(prev => ({ ...prev, reportType: 'cash-flow' }))}
           >
@@ -1298,7 +1297,7 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
             </CardContent>
           </Card>
 
-          <Card 
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-orange-500"
             onClick={() => setFilters(prev => ({ ...prev, reportType: 'project-profitability' }))}
           >
@@ -1312,8 +1311,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
               </p>
             </CardContent>
           </Card>
-          
-          <Card 
+
+          <Card
             className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-cyan-500"
             onClick={() => setFilters(prev => ({ ...prev, reportType: 'agent-performance' }))}
           >
@@ -1356,8 +1355,8 @@ export const FinancialReports: React.FC<FinancialReportsProps> = ({ user }) => {
           {renderGlobalFilters()}
           {renderSelectedReport()}
           <div className="mt-6 text-center">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setFilters(prev => ({ ...prev, reportType: 'profit-loss' as any }))}
             >
               ← Back to Report Menu

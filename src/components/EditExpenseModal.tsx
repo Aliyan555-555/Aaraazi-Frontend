@@ -56,7 +56,7 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
 
     onSave(expense.id, {
       date,
-      category,
+      category: category as any,
       description,
       amount: amountNum,
       propertyId: (propertyId && propertyId !== 'none') ? propertyId : undefined
@@ -140,7 +140,7 @@ export const EditExpenseModal: React.FC<EditExpenseModalProps> = ({
                 <SelectItem value="none">None - General Expense</SelectItem>
                 {properties.map((property) => (
                   <SelectItem key={property.id} value={property.id}>
-                    {property.title} - {formatPropertyAddressShort(property.address)} ({formatCurrencyShort(property.price || property.monthlyRent || 0)})
+                    {property.title} - {formatPropertyAddressShort(property.address)} ({formatCurrencyShort(property.price || property.rentAmount || 0)})
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { 
+import {
   User,
   Mail,
   Phone,
@@ -16,10 +16,17 @@ import {
   UserCheck,
   TrendingUp,
 } from 'lucide-react';
-import { Contact } from '../../types';
+import { Contact, ContactType, ContactStatus } from '../../types';
 import { WorkspaceCard } from '../workspace/cards/WorkspaceCard';
 import { QuickActionMenu } from '../workspace/QuickActionMenu';
 import { formatPKR } from '../../lib/currency';
+
+/** Contact with legacy UI/tracking fields not on schema Contact */
+type ContactWithLegacy = Contact & {
+  totalCommissionEarned?: number;
+  totalTransactions?: number;
+  interestedProperties?: string[];
+};
 
 export interface ContactWorkspaceCardProps {
   contact: Contact;
@@ -46,14 +53,16 @@ export const ContactWorkspaceCard: React.FC<ContactWorkspaceCardProps> = ({
   // Get contact type badge
   const getTypeBadge = (): { label: string; variant: 'default' | 'success' | 'warning' | 'info' | 'secondary' } => {
     switch (contact.type) {
-      case 'client':
+      case ContactType.CLIENT:
         return { label: 'Client', variant: 'success' };
-      case 'prospect':
+      case ContactType.PROSPECT:
         return { label: 'Prospect', variant: 'info' };
-      case 'investor':
+      case ContactType.INVESTOR:
         return { label: 'Investor', variant: 'warning' };
-      case 'vendor':
+      case ContactType.VENDOR:
         return { label: 'Vendor', variant: 'secondary' };
+      case ContactType.PARTNER:
+        return { label: 'Partner', variant: 'secondary' };
       default:
         return { label: contact.type, variant: 'default' };
     }
@@ -62,30 +71,35 @@ export const ContactWorkspaceCard: React.FC<ContactWorkspaceCardProps> = ({
   // Get status badge
   const getStatusBadge = (): { label: string; variant: 'default' | 'success' | 'warning' | 'info' | 'secondary' } => {
     switch (contact.status) {
-      case 'active':
+      case ContactStatus.ACTIVE:
         return { label: 'Active', variant: 'success' };
-      case 'inactive':
+      case ContactStatus.INACTIVE:
         return { label: 'Inactive', variant: 'secondary' };
-      case 'archived':
+      case ContactStatus.ARCHIVED:
         return { label: 'Archived', variant: 'warning' };
+      case ContactStatus.BLOCKED:
+        return { label: 'Blocked', variant: 'warning' };
       default:
         return { label: contact.status, variant: 'default' };
     }
   };
 
+  // Cast contact to legacy type for UI-specific fields
+  const legacy = contact as ContactWithLegacy;
+
   // Build tags (max 3 - Miller's Law)
-  const tags: Array<{ label: string; variant: 'default' | 'success' | 'info' | 'warning' }> = [];
-  
+  const tags: Array<{ label: string; variant: 'default' | 'success' | 'info' | 'warning' | 'secondary' }> = [];
+
   const typeBadge = getTypeBadge();
   tags.push({ label: typeBadge.label, variant: typeBadge.variant });
 
   if (contact.category) {
-    const categoryLabel = contact.category.charAt(0).toUpperCase() + contact.category.slice(1);
+    const categoryLabel = contact.category.charAt(0).toUpperCase() + contact.category.slice(1).toLowerCase().replace('_', ' ');
     tags.push({ label: categoryLabel, variant: 'info' });
   }
 
-  if (contact.totalTransactions && contact.totalTransactions > 0) {
-    tags.push({ label: `${contact.totalTransactions} deals`, variant: 'success' });
+  if (legacy.totalTransactions && legacy.totalTransactions > 0) {
+    tags.push({ label: `${legacy.totalTransactions} deals`, variant: 'success' });
   }
 
   // Build metadata (max 5 items - Miller's Law)
@@ -107,18 +121,18 @@ export const ContactWorkspaceCard: React.FC<ContactWorkspaceCardProps> = ({
     });
   }
 
-  if (contact.interestedProperties && contact.interestedProperties.length > 0) {
+  if (legacy.interestedProperties && legacy.interestedProperties.length > 0) {
     metadata.push({
       label: 'Properties',
-      value: `${contact.interestedProperties.length} interested`,
+      value: `${legacy.interestedProperties.length} interested`,
       icon: <Building2 className="h-4 w-4" />,
     });
   }
 
-  if (contact.totalCommissionEarned && contact.totalCommissionEarned > 0) {
+  if (legacy.totalCommissionEarned && legacy.totalCommissionEarned > 0) {
     metadata.push({
       label: 'Commission',
-      value: formatPKR(contact.totalCommissionEarned),
+      value: formatPKR(legacy.totalCommissionEarned),
       icon: <TrendingUp className="h-4 w-4" />,
     });
   }
@@ -142,7 +156,7 @@ export const ContactWorkspaceCard: React.FC<ContactWorkspaceCardProps> = ({
     <WorkspaceCard
       title={contact.name}
       subtitle={contact.type.charAt(0).toUpperCase() + contact.type.slice(1)}
-      icon={<User className="h-12 w-12 text-gray-400" />}
+      imageFallback={<User className="h-12 w-12 text-gray-400" />}
       status={status}
       metadata={displayMetadata}
       tags={tags.slice(0, 3)}
@@ -163,7 +177,7 @@ export const ContactWorkspaceCard: React.FC<ContactWorkspaceCardProps> = ({
                 id: 'view',
                 label: 'View Details',
                 icon: <UserCheck className="h-4 w-4" />,
-                onClick: onClick,
+                onClick: onClick || (() => { }),
               },
               ...(onEdit ? [{
                 id: 'edit',

@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Deal } from '../../types';
+import { Deal, DealPermissions } from '../../types/deals';
 import { getUserRoleInDeal, getRoleDisplayName } from '../../lib/dealPermissions';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
@@ -20,14 +20,14 @@ export const DualAgentHeader: React.FC<DualAgentHeaderProps> = ({ deal, currentU
   const userRole = getUserRoleInDeal(currentUserId, deal);
   const isPrimary = userRole === 'primary';
   const isSecondary = userRole === 'secondary';
-  
+
   return (
     <Card className="p-4 bg-accent/50 border-accent">
       <div className="flex items-start justify-between gap-4">
         {/* Left: Agent Roles */}
         <div className="flex items-center gap-4 flex-1">
           <Users className="h-5 w-5 text-primary" />
-          
+
           <div className="space-y-2 flex-1">
             {/* Primary Agent */}
             <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export const DualAgentHeader: React.FC<DualAgentHeaderProps> = ({ deal, currentU
                 </Badge>
               )}
             </div>
-            
+
             {/* Secondary Agent */}
             {deal.agents.secondary && (
               <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export const DualAgentHeader: React.FC<DualAgentHeaderProps> = ({ deal, currentU
             )}
           </div>
         </div>
-        
+
         {/* Right: Your Role & Sync Status */}
         <div className="flex items-center gap-3">
           {/* Sync Status */}
@@ -84,7 +84,7 @@ export const DualAgentHeader: React.FC<DualAgentHeaderProps> = ({ deal, currentU
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           {/* Your Role */}
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Your Role</div>
@@ -96,21 +96,21 @@ export const DualAgentHeader: React.FC<DualAgentHeaderProps> = ({ deal, currentU
           </div>
         </div>
       </div>
-      
+
       {/* Permission Info */}
       {isSecondary && (
         <div className="mt-3 pt-3 border-t border-accent-foreground/10">
           <p className="text-xs text-muted-foreground">
-            💡 You have view-only access. {deal.agents.primary.name} manages payments, documents, and stage progression. 
+            💡 You have view-only access. {deal.agents.primary.name} manages payments, documents, and stage progression.
             All updates are synced to you in real-time.
           </p>
         </div>
       )}
-      
+
       {isPrimary && deal.agents.secondary && (
         <div className="mt-3 pt-3 border-t border-accent-foreground/10">
           <p className="text-xs text-muted-foreground">
-            💡 You have full control. {deal.agents.secondary.name} can view all updates but cannot make changes. 
+            💡 You have full control. {deal.agents.secondary.name} can view all updates but cannot make changes.
             All your actions are automatically synced.
           </p>
         </div>

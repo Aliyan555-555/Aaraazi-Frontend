@@ -21,13 +21,14 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { Plus, Eye, Edit, Trash2, Download, Upload, FileText, CheckCircle2 } from 'lucide-react';
-import { User, Deal } from '../../types';
+import { User } from '../../types';
+import { Deal } from '../../types/deals';
 import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
 import { DealWorkspaceCard } from './DealWorkspaceCard';
 import { DealKanbanCard } from './DealKanbanCard';
 import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
 import { Column, EmptyStatePresets, KanbanColumn } from '../workspace';
-import { getDeals, updateDeal, deleteDeal } from '../../lib/deals';
+import { getDeals, updateDeal } from '../../lib/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 
@@ -66,19 +67,19 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
     const active = allDeals.filter(d => d.lifecycle.status === 'active').length;
     const completed = allDeals.filter(d => d.lifecycle.status === 'completed').length;
     const onHold = allDeals.filter(d => d.lifecycle.status === 'on-hold').length;
-    
+
     const totalValue = allDeals
       .filter(d => d.lifecycle.status === 'active')
       .reduce((sum, d) => sum + d.financial.agreedPrice, 0);
-    
+
     return [
       { label: 'Total', value: allDeals.length, variant: 'default' as const },
       { label: 'Active', value: active, variant: 'success' as const },
       { label: 'Completed', value: completed, variant: 'info' as const },
-      { 
-        label: 'Pipeline Value', 
-        value: formatPKR(totalValue).replace('PKR ', ''), 
-        variant: 'default' as const 
+      {
+        label: 'Pipeline Value',
+        value: formatPKR(totalValue).replace('PKR ', ''),
+        variant: 'default' as const
       },
     ];
   }, [allDeals]);
@@ -102,7 +103,7 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
       label: 'Payment Processing',
     },
     {
-      id: 'handover-preparation',
+      id: 'handover-prep',
       label: 'Handover Prep',
     },
     {
@@ -174,12 +175,11 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
         return (
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[80px]">
-              <div 
-                className={`h-2 rounded-full ${
-                  progress === 100 ? 'bg-green-500' :
+              <div
+                className={`h-2 rounded-full ${progress === 100 ? 'bg-green-500' :
                   progress > 50 ? 'bg-blue-500' :
-                  'bg-yellow-500'
-                }`}
+                    'bg-yellow-500'
+                  }`}
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -199,13 +199,14 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
           'agreement-signing': 'Agreement',
           'documentation': 'Documentation',
           'payment-processing': 'Payment',
-          'handover-preparation': 'Handover Prep',
+          'handover-prep': 'Handover Prep',
           'transfer-registration': 'Transfer',
           'final-handover': 'Final',
+          'completed': 'Completed',
         };
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            {stageLabels[d.lifecycle.stage] || d.lifecycle.stage}
+            {(stageLabels as any)[d.lifecycle.stage] || d.lifecycle.stage}
           </span>
         );
       },
@@ -222,9 +223,9 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
           completed: 'Completed',
           cancelled: 'Cancelled',
         };
-        
+
         const statusLabel = statusLabels[d.lifecycle.status] || d.lifecycle.status;
-        
+
         // PHASE 5: Use StatusBadge component with auto-mapping
         return <StatusBadge status={statusLabel} size="sm" />;
       },
@@ -239,7 +240,7 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
         const now = new Date();
         const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         const isOverdue = diffDays < 0;
-        
+
         return (
           <div className={`text-sm ${isOverdue ? 'text-red-600' : 'text-gray-600'}`}>
             {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -334,68 +335,67 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
     },
   ];
 
+  // Custom search function
+  const onSearch = useCallback((d: Deal, query: string): boolean => {
+    const q = query.toLowerCase();
+    return (
+      d.dealNumber.toLowerCase().includes(q) ||
+      d.parties.buyer.name.toLowerCase().includes(q) ||
+      d.parties.seller.name.toLowerCase().includes(q) ||
+      d.agents.primary.name.toLowerCase().includes(q)
+    );
+  }, []);
+
   // Custom filter function
-  const filterFunction = (
-    items: Deal[],
-    searchQuery: string,
-    activeFilters: Map<string, string[]>,
-    sortValue: string
-  ): Deal[] => {
-    let filtered = [...items];
-
-    // Apply search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(d =>
-        d.dealNumber.toLowerCase().includes(query) ||
-        d.parties.buyer.name.toLowerCase().includes(query) ||
-        d.parties.seller.name.toLowerCase().includes(query) ||
-        d.agents.primary.name.toLowerCase().includes(query)
-      );
-    }
-
-    // Apply filters
-    activeFilters.forEach((values, filterId) => {
-      if (values.length === 0) return;
+  const onFilter = useCallback((d: Deal, filters: Map<string, any>): boolean => {
+    for (const [filterId, values] of filters.entries()) {
+      if (!values || (Array.isArray(values) && values.length === 0)) continue;
 
       if (filterId === 'status') {
-        filtered = filtered.filter(d => values.includes(d.lifecycle.status));
+        if (!values.includes(d.lifecycle.status)) return false;
       } else if (filterId === 'stage') {
-        filtered = filtered.filter(d => values.includes(d.lifecycle.stage));
+        if (!values.includes(d.lifecycle.stage)) return false;
       } else if (filterId === 'agent') {
-        filtered = filtered.filter(d => {
-          if (values.includes('primary') && d.agents.primary.id === user.id) return true;
-          if (values.includes('secondary') && d.agents.secondary?.id === user.id) return true;
-          if (values.includes('dual') && d.cycles.purchaseCycle) return true;
-          return false;
-        });
+        let agentMatch = false;
+        if (values.includes('primary') && d.agents.primary.id === user.id) agentMatch = true;
+        if (values.includes('secondary') && d.agents.secondary?.id === user.id) agentMatch = true;
+        if (values.includes('dual') && d.cycles.purchaseCycle) agentMatch = true;
+        if (!agentMatch) return false;
       }
-    });
+    }
+    return true;
+  }, [user.id]);
 
-    // Apply sorting
-    if (sortValue === 'newest') {
-      filtered.sort((a, b) => 
-        new Date(b.lifecycle.timeline.offerAcceptedDate).getTime() - 
+  // Custom sort function
+  const onSort = useCallback((items: Deal[], sortBy: string, order: 'asc' | 'desc'): Deal[] => {
+    const sorted = [...items];
+    if (sortBy === 'newest') {
+      sorted.sort((a, b) =>
+        new Date(b.lifecycle.timeline.offerAcceptedDate).getTime() -
         new Date(a.lifecycle.timeline.offerAcceptedDate).getTime()
       );
-    } else if (sortValue === 'oldest') {
-      filtered.sort((a, b) => 
-        new Date(a.lifecycle.timeline.offerAcceptedDate).getTime() - 
+    } else if (sortBy === 'oldest') {
+      sorted.sort((a, b) =>
+        new Date(a.lifecycle.timeline.offerAcceptedDate).getTime() -
         new Date(b.lifecycle.timeline.offerAcceptedDate).getTime()
       );
-    } else if (sortValue === 'value-high') {
-      filtered.sort((a, b) => b.financial.agreedPrice - a.financial.agreedPrice);
-    } else if (sortValue === 'value-low') {
-      filtered.sort((a, b) => a.financial.agreedPrice - b.financial.agreedPrice);
-    } else if (sortValue === 'closing-soon') {
-      filtered.sort((a, b) => 
-        new Date(a.lifecycle.timeline.expectedClosingDate).getTime() - 
+    } else if (sortBy === 'value-high') {
+      sorted.sort((a, b) => b.financial.agreedPrice - a.financial.agreedPrice);
+    } else if (sortBy === 'value-low') {
+      sorted.sort((a, b) => a.financial.agreedPrice - b.financial.agreedPrice);
+    } else if (sortBy === 'closing-soon') {
+      sorted.sort((a, b) =>
+        new Date(a.lifecycle.timeline.expectedClosingDate).getTime() -
         new Date(b.lifecycle.timeline.expectedClosingDate).getTime()
       );
     }
 
-    return filtered;
-  };
+    if (order === 'desc' && sortBy !== 'newest' && sortBy !== 'oldest') {
+      sorted.reverse();
+    }
+
+    return sorted;
+  }, []);
 
   return (
     <WorkspacePageTemplate
@@ -424,10 +424,9 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
       kanbanColumns={kanbanColumns}
       getKanbanColumn={getKanbanColumn}
       renderKanbanCard={renderKanbanCard}
-      
+
       // Table View
       columns={columns}
-      enableSorting={true}
 
       // Grid View
       renderCard={(deal) => (
@@ -443,7 +442,9 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
       searchPlaceholder="Search deals by number, buyer, seller, or agent..."
       quickFilters={quickFilters}
       sortOptions={sortOptions}
-      filterFunction={filterFunction}
+      onSearch={onSearch}
+      onFilter={onFilter}
+      onSort={onSort}
 
       // Bulk Actions
       bulkActions={bulkActions}

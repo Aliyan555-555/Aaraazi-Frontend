@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { Deal, DealPermissions } from '../../types';
+import { Deal, DealPermissions } from '../../types/deals';
 import { checkPermission, getPermissionErrorMessage } from '../../lib/dealPermissions';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Lock } from 'lucide-react';
@@ -28,15 +28,15 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   showMessage = true,
 }) => {
   const hasPermission = checkPermission(userId, deal, permission);
-  
+
   if (hasPermission) {
     return <>{children}</>;
   }
-  
+
   if (fallback) {
     return <>{fallback}</>;
   }
-  
+
   if (showMessage) {
     return (
       <Alert className="bg-muted border-muted">
@@ -47,7 +47,7 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
       </Alert>
     );
   }
-  
+
   return null;
 };
 
@@ -74,7 +74,7 @@ export const PermissionButton: React.FC<PermissionButtonProps> = ({
   disabled = false,
 }) => {
   const hasPermission = checkPermission(userId, deal, permission);
-  
+
   return (
     <button
       onClick={onClick}

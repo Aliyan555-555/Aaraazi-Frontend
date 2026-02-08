@@ -7,11 +7,11 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
-import { 
-  FileText, 
-  Download, 
-  Plus, 
-  Search, 
+import {
+  FileText,
+  Download,
+  Plus,
+  Search,
   Calendar,
   User,
   Home,
@@ -43,7 +43,7 @@ interface DocumentTemplate {
   }>;
 }
 
-interface Document {
+interface ManagedDocument {
   id: string;
   title: string;
   templateId: string;
@@ -118,25 +118,25 @@ const quickTemplates: DocumentTemplate[] = [
 
 const generateDocumentContent = (template: DocumentTemplate, data: Record<string, any>): string => {
   let content = `${template.title.toUpperCase()}\n\n`;
-  
+
   template.fields.forEach(field => {
     const value = data[field.name] || '[Not provided]';
     content += `${field.label}: ${value}\n`;
   });
-  
+
   content += `\nGenerated on: ${new Date().toLocaleDateString()}\n`;
   content += `Created by: ${data.createdBy || 'System'}\n`;
-  
+
   return content;
 };
 
-const loadDocuments = (): Document[] => {
+const loadDocuments = (): ManagedDocument[] => {
   const stored = localStorage.getItem('estatemanager_documents');
   if (stored) {
     return JSON.parse(stored);
   }
-  
-  const defaultDocs: Document[] = [
+
+  const defaultDocs: ManagedDocument[] = [
     {
       id: '1',
       title: 'Rental Agreement - 123 Main St',
@@ -146,7 +146,7 @@ const loadDocuments = (): Document[] => {
       status: 'completed',
       tags: ['residential', 'lease'],
       createdBy: 'John Smith',
-      data: { 
+      data: {
         landlordName: 'John Smith',
         tenantName: 'Jane Doe',
         propertyAddress: '123 Main St, Anytown, ST 12345',
@@ -157,17 +157,17 @@ const loadDocuments = (): Document[] => {
       }
     }
   ];
-  
+
   localStorage.setItem('estatemanager_documents', JSON.stringify(defaultDocs));
   return defaultDocs;
 };
 
-const saveDocuments = (documents: Document[]) => {
+const saveDocuments = (documents: ManagedDocument[]) => {
   localStorage.setItem('estatemanager_documents', JSON.stringify(documents));
 };
 
 export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<ManagedDocument[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -188,18 +188,18 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
 
   const handleGenerateDocument = () => {
     if (!selectedTemplate) return;
-    
+
     // Validate required fields
     const missingFields = selectedTemplate.fields
       .filter(field => field.required && !formData[field.name])
       .map(field => field.label);
-    
+
     if (missingFields.length > 0) {
       toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
       return;
     }
 
-    const newDocument: Document = {
+    const newDocument: ManagedDocument = {
       id: Date.now().toString(),
       title: `${selectedTemplate.title} - ${formData.propertyAddress || 'New Document'}`,
       templateId: selectedTemplate.id,
@@ -219,44 +219,44 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
     const content = generateDocumentContent(selectedTemplate, newDocument.data);
     setPreviewDocument(content);
     setIsPreviewOpen(true);
-    
+
     // Reset form
     setIsDialogOpen(false);
     setFormData({});
     setSelectedTemplate(null);
-    
+
     toast.success('Document generated successfully!');
   };
 
-  const handleDownloadDocument = (document: Document) => {
-    const template = quickTemplates.find(t => t.id === document.templateId);
+  const handleDownloadDocument = (managedDoc: ManagedDocument) => {
+    const template = quickTemplates.find(t => t.id === managedDoc.templateId);
     if (!template) {
       toast.error('Template not found');
       return;
     }
 
-    const content = generateDocumentContent(template, document.data);
+    const content = generateDocumentContent(template, managedDoc.data);
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = window.document.createElement('a');
     a.href = url;
-    a.download = `${document.title}.txt`;
-    document.body.appendChild(a);
+    a.download = `${managedDoc.title}.txt`;
+    window.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     toast.success('Document downloaded successfully!');
   };
 
-  const handlePreviewDocument = (document: Document) => {
-    const template = quickTemplates.find(t => t.id === document.templateId);
+  const handlePreviewDocument = (managedDoc: ManagedDocument) => {
+    const template = quickTemplates.find(t => t.id === managedDoc.templateId);
     if (!template) {
       toast.error('Template not found');
       return;
     }
 
-    const content = generateDocumentContent(template, document.data);
+    const content = generateDocumentContent(template, managedDoc.data);
     setPreviewDocument(content);
     setIsPreviewOpen(true);
   };
@@ -315,7 +315,7 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
             {quickTemplates.map((template) => {
               const Icon = template.icon;
               return (
-                <Card 
+                <Card
                   key={template.id}
                   className="cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => {
@@ -399,24 +399,24 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
                     <Badge className={getStatusColor(doc.status)}>
                       {doc.status}
                     </Badge>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => handlePreviewDocument(doc)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
                       Preview
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => handleDownloadDocument(doc)}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       variant="outline"
                       onClick={() => handleDeleteDocument(doc.id)}
                       className="text-red-600 hover:text-red-700"
@@ -443,7 +443,7 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
               {selectedTemplate?.description}
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedTemplate && (
             <div className="space-y-4">
               {selectedTemplate.fields.map((field) => (

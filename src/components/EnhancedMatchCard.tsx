@@ -42,10 +42,10 @@ export function EnhancedMatchCard({
   onViewProperty,
 }: EnhancedMatchCardProps) {
   const property = match.property;
-  
+
   // Get display title - use formatted property address
   const displayTitle = formatPropertyAddress(property.address);
-  
+
   const getOfferStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'pending': 'bg-yellow-100 text-yellow-800 border-yellow-300',
@@ -64,11 +64,12 @@ export function EnhancedMatchCard({
   };
 
   return (
-    <Card className="hover:shadow-md transition-all border-l-4" 
-      style={{ borderLeftColor: latestOffer ? 
-        (latestOffer.offer.status === 'accepted' ? '#22c55e' : 
-         latestOffer.offer.status === 'pending' ? '#eab308' : '#ef4444') 
-        : '#e5e7eb' 
+    <Card className="hover:shadow-md transition-all border-l-4"
+      style={{
+        borderLeftColor: latestOffer ?
+          (latestOffer.offer.status === 'accepted' ? '#22c55e' :
+            latestOffer.offer.status === 'pending' ? '#eab308' : '#ef4444')
+          : '#e5e7eb'
       }}
     >
       <CardContent className="p-6">
@@ -79,7 +80,7 @@ export function EnhancedMatchCard({
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <h3 className="font-medium">{displayTitle}</h3>
               {latestOffer && (
-                <Badge 
+                <Badge
                   className={`${getOfferStatusColor(latestOffer.offer.status)} flex items-center gap-1 text-xs border`}
                 >
                   {getOfferStatusIcon(latestOffer.offer.status)}
@@ -127,15 +128,15 @@ export function EnhancedMatchCard({
                 <span className="text-sm font-medium">Your Offer</span>
               </div>
               <span className="text-sm text-muted-foreground">
-                {new Date(latestOffer.offer.offeredDate).toLocaleDateString()}
+                {new Date(latestOffer.offer.offeredDate || latestOffer.offer.submittedDate || 0).toLocaleDateString()}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-muted-foreground">Offer Amount</p>
-                <p className="font-bold">{formatPKR(latestOffer.offer.offerAmount)}</p>
+                <p className="font-bold">{formatPKR(latestOffer.offer.offerAmount || latestOffer.offer.amount)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {((latestOffer.offer.offerAmount / match.askingPrice) * 100).toFixed(1)}% of asking
+                  {(((latestOffer.offer.offerAmount || latestOffer.offer.amount) / (match.askingPrice || match.monthlyRent || (property.price as number) || 1)) * 100).toFixed(1)}% of asking
                 </p>
               </div>
               {latestOffer.offer.counterOfferAmount && (

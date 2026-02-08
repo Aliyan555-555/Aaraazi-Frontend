@@ -114,7 +114,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
   // Calculate metrics
   const metrics = useMemo(() => {
     const totalCommissions = allCommissions.reduce((sum, c) => sum + c.amount, 0);
-    
+
     const pending = allCommissions.filter(c => c.status === 'pending');
     const pendingCount = pending.length;
     const pendingAmount = pending.reduce((sum, c) => sum + c.amount, 0);
@@ -176,7 +176,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
         const matchesName = commission.name.toLowerCase().includes(query);
         const matchesDeal = commission.dealNumber?.toLowerCase().includes(query);
         const matchesProperty = commission.propertyTitle?.toLowerCase().includes(query);
-        
+
         if (!matchesName && !matchesDeal && !matchesProperty) {
           return false;
         }
@@ -210,7 +210,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       const commissionsByDeal = new Map<string, CommissionAgent[]>();
       selectedCommissionObjects.forEach(commission => {
         if (!commission.dealId) return;
-        
+
         const existing = commissionsByDeal.get(commission.dealId) || [];
         existing.push(commission);
         commissionsByDeal.set(commission.dealId, existing);
@@ -223,7 +223,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
         if (!deal) continue;
 
         // Update commission statuses
-        const updatedAgents = deal.financial.commission.agents.map((agent: { agentId?: string; id?: string; [k: string]: any }) => {
+        const updatedAgents = (deal.financial.commission.agents || []).map((agent: Record<string, any>) => {
           const agentKey = agent.agentId ?? agent.id;
           const matchingCommission = commissions.find(c => c.agentId === agentKey);
           if (!matchingCommission) return agent;
@@ -245,7 +245,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
         updateDeal(dealId, {
           financial: {
             ...deal.financial,
-            commission: { ...deal.financial.commission, agents: updatedAgents },
+            commission: { ...deal.financial.commission, agents: updatedAgents as any },
           },
         });
         successCount += commissions.length;
@@ -274,7 +274,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       const deal = getDealById(commission.dealId);
       if (!deal) return;
 
-      const updatedAgents = deal.financial.commission.agents.map((agent: { agentId?: string; id?: string; [k: string]: any }) =>
+      const updatedAgents = (deal.financial.commission.agents || []).map((agent: { agentId?: string; id?: string;[k: string]: any }) =>
         (agent.agentId ?? agent.id) === commission.agentId
           ? { ...agent, status: 'approved' as const, approvedAt: new Date().toISOString() }
           : agent
@@ -283,7 +283,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       updateDeal(deal.id, {
         financial: {
           ...deal.financial,
-          commission: { ...deal.financial.commission, agents: updatedAgents },
+          commission: { ...deal.financial.commission, agents: updatedAgents as any },
         },
       });
       toast.success(`Commission approved for ${commission.name}`);
@@ -302,7 +302,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       const deal = getDealById(commission.dealId);
       if (!deal) return;
 
-      const updatedAgents = deal.financial.commission.agents.map((agent: { agentId?: string; id?: string; [k: string]: any }) =>
+      const updatedAgents = (deal.financial.commission.agents || []).map((agent: { agentId?: string; id?: string;[k: string]: any }) =>
         (agent.agentId ?? agent.id) === commission.agentId
           ? { ...agent, status: 'pending' as const }
           : agent
@@ -311,7 +311,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       updateDeal(deal.id, {
         financial: {
           ...deal.financial,
-          commission: { ...deal.financial.commission, agents: updatedAgents },
+          commission: { ...deal.financial.commission, agents: updatedAgents as any },
         },
       });
       toast.success(`Commission rejected for ${commission.name}`);
@@ -330,7 +330,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       const deal = getDealById(commission.dealId);
       if (!deal) return;
 
-      const updatedAgents = deal.financial.commission.agents.map((agent: { agentId?: string; id?: string; [k: string]: any }) =>
+      const updatedAgents = (deal.financial.commission.agents || []).map((agent: { agentId?: string; id?: string;[k: string]: any }) =>
         (agent.agentId ?? agent.id) === commission.agentId
           ? { ...agent, status: 'paid' as const, paidAt: new Date().toISOString() }
           : agent
@@ -339,7 +339,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       updateDeal(deal.id, {
         financial: {
           ...deal.financial,
-          commission: { ...deal.financial.commission, agents: updatedAgents },
+          commission: { ...deal.financial.commission, agents: updatedAgents as any },
         },
       });
       toast.success(`Commission marked as paid for ${commission.name}`);
@@ -362,22 +362,22 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       if (!deal) return;
 
       const now = new Date().toISOString();
-      const updatedAgents = deal.financial.commission.agents.map(agent =>
-        (agent.agentId ?? (agent as { id?: string }).id) === commission.agentId
+      const updatedAgents = (deal.financial.commission.agents || []).map((agent: Record<string, any>) =>
+        (agent.agentId ?? agent.id) === commission.agentId
           ? {
-              ...agent,
-              status,
-              ...(status === 'approved' && { approvedAt: now }),
-              ...(status === 'paid' && { paidAt: now }),
-              ...((status === 'pending' || status === 'cancelled') && { approvedAt: undefined, paidAt: undefined }),
-            }
+            ...agent,
+            status,
+            ...(status === 'approved' && { approvedAt: now }),
+            ...(status === 'paid' && { paidAt: now }),
+            ...((status === 'pending' || status === 'cancelled') && { approvedAt: undefined, paidAt: undefined }),
+          }
           : agent
       );
 
       updateDeal(deal.id, {
         financial: {
           ...deal.financial,
-          commission: { ...deal.financial.commission, agents: updatedAgents },
+          commission: { ...deal.financial.commission, agents: updatedAgents as any },
         },
       });
 
@@ -466,7 +466,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
               { value: 'paid', label: 'Paid', count: allCommissions.filter(c => c.status === 'paid').length },
             ],
             value: statusFilter,
-            onChange: setStatusFilter,
+            onChange: (value) => setStatusFilter(value as string[]),
           },
           {
             id: 'agent',
@@ -478,7 +478,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
               count: allCommissions.filter(c => c.agentId === agent.id).length,
             })),
             value: agentFilter,
-            onChange: setAgentFilter,
+            onChange: (value) => setAgentFilter(value as string[]),
           },
         ]}
         onClearAll={() => {
@@ -536,12 +536,16 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
         {filteredCommissions.length === 0 ? (
           <WorkspaceEmptyState
             {...(searchQuery || statusFilter.length > 0 || agentFilter.length > 0
-              ? EmptyStatePresets.noResults()
+              ? EmptyStatePresets.noResults(() => {
+                setSearchQuery('');
+                setStatusFilter([]);
+                setAgentFilter([]);
+              })
               : {
-                  variant: 'empty' as const,
-                  title: 'No Commissions Yet',
-                  description: 'Commissions will appear here once deals are created with commission structures.',
-                }
+                variant: 'empty' as const,
+                title: 'No Commissions Yet',
+                description: 'Commissions will appear here once deals are created with commission structures.',
+              }
             )}
           />
         ) : (

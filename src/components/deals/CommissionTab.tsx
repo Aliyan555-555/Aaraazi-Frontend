@@ -17,13 +17,14 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Deal, User } from '../../types';
+import { User } from '../../types';
+import { Deal, CommissionAgent } from '../../types/deals';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Badge } from '../ui/badge';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -38,7 +39,6 @@ import { AddAgentToCommissionModal } from './AddAgentToCommissionModal';
 import { formatPKR } from '../../lib/currency';
 import { updateDeal } from '../../lib/deals';
 import {
-  CommissionAgent,
   validateCommissionSplits,
   addAgentToCommission,
   removeAgentFromCommission,
@@ -80,7 +80,7 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
     deal.financial.commission.payoutTrigger || 'full-payment'
   );
   const [agents, setAgents] = useState<CommissionAgent[]>([]);
-  
+
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [addAgentModalOpen, setAddAgentModalOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<{
@@ -94,13 +94,13 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
   // Initialize and migrate legacy structure
   useEffect(() => {
     let currentDeal = deal;
-    
+
     // Migrate legacy structure if needed
     if (!deal.financial.commission.agents || deal.financial.commission.agents.length === 0) {
       currentDeal = migrateLegacyCommission(deal);
       onUpdate(currentDeal);
     }
-    
+
     // Set agents from deal
     if (currentDeal.financial.commission.agents) {
       setAgents([...currentDeal.financial.commission.agents]);
@@ -189,7 +189,7 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
   // Handle add agent
   const handleAddAgent = (newAgent: Omit<CommissionAgent, 'amount' | 'status'>) => {
     try {
-      const updatedDeal = addAgentToCommission(deal.id, newAgent, totalCommission);
+      const updatedDeal = addAgentToCommission(deal.id, { ...newAgent, status: 'pending' }, totalCommission);
       setAgents(updatedDeal.financial.commission.agents || []);
       onUpdate(updatedDeal);
       setAddAgentModalOpen(false);
@@ -218,22 +218,22 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
     if (!selectedAgent || !isAdmin) return;
 
     const now = new Date().toISOString();
-    
+
     try {
       const updatedAgents = [...agents];
       const agent = updatedAgents[selectedAgent.index];
-      
+
       agent.status = newStatus;
-      
+
       if (newStatus === 'approved') {
         agent.approvedBy = user.name;
         agent.approvedAt = now;
       }
-      
+
       if (newStatus === 'paid') {
         agent.paidDate = now;
       }
-      
+
       if (reason) {
         agent.notes = reason;
       }
@@ -296,18 +296,18 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
               Manage commission splits across multiple agents and track payment status
             </p>
           </div>
-          
+
           {canEdit && !isEditing && (
             <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
               <Edit className="h-4 w-4 mr-2" />
               Edit Commission
             </Button>
           )}
-          
+
           {isEditing && (
             <div className="flex gap-2">
-              <Button 
-                onClick={handleSave} 
+              <Button
+                onClick={handleSave}
                 size="sm"
                 disabled={!validation.valid}
               >
@@ -414,7 +414,7 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
                       email={agent.email}
                       phone={agent.phone}
                     />
-                    
+
                     <div className="flex gap-2">
                       {isAdmin && (
                         <Button
@@ -456,7 +456,7 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
               status={(agency.status as CommissionStatus) || 'pending'}
               notes={agency.notes}
             />
-            
+
             {isAdmin && (
               <Button
                 variant="outline"
@@ -534,19 +534,17 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
                     <h4 className="font-medium">Commission Distribution</h4>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600">Total:</span>
-                      <span className={`font-semibold ${
-                        Math.abs(usedPercentage - 100) < 0.01 ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <span className={`font-semibold ${Math.abs(usedPercentage - 100) < 0.01 ? 'text-green-600' : 'text-red-600'
+                        }`}>
                         {usedPercentage.toFixed(1)}%
                       </span>
                     </div>
                   </div>
 
-                  <Progress 
-                    value={usedPercentage} 
-                    className={`h-2 ${
-                      Math.abs(usedPercentage - 100) < 0.01 ? '' : 'bg-red-100'
-                    }`}
+                  <Progress
+                    value={usedPercentage}
+                    className={`h-2 ${Math.abs(usedPercentage - 100) < 0.01 ? '' : 'bg-red-100'
+                      }`}
                   />
 
                   {/* Agents List */}
@@ -576,7 +574,7 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                   <p className="font-medium">{agent.name}</p>
-                                  <Badge 
+                                  <Badge
                                     variant="secondary"
                                     className={agent.type === 'external' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}
                                   >

@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { addInstallment, AddInstallmentInput } from '../../lib/dealPayments';
-import { Deal } from '../../types';
+import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { Info, Plus } from 'lucide-react';
@@ -39,7 +39,7 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({
   const handleSubmit = async () => {
     // Validation
     const numAmount = parseFloat(amount);
-    
+
     if (!amount || isNaN(numAmount) || numAmount <= 0) {
       toast.error('Please enter a valid amount');
       return;
@@ -68,7 +68,7 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({
         dueDate,
         description: description.trim(),
         reason: reason.trim(),
-        notes: notes.trim() || undefined,
+        // notes field removed as it is not supported by AddInstallmentInput
       };
 
       const updatedDeal = addInstallment(

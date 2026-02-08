@@ -63,6 +63,8 @@ export interface Property {
     | "for-rent"
     | "wanted"
     | "investor";
+  rentAmount?: number;
+  securityDeposit?: number;
   listedDate?: string;
   notes?: string;
   acquisitionType?: "direct" | "investor-purchase" | "joint-venture";

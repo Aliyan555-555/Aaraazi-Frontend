@@ -22,6 +22,7 @@
 import React, { useMemo, useState } from 'react';
 import { DetailPageTemplate } from '../layout/DetailPageTemplate';
 import { User, Contact, CRMInteraction, CRMTask } from '../../types';
+import { Deal } from '../../types/deals';
 import { getContacts, getProperties, updateContact, getContactInteractions, getContactTasks, deleteInteraction, deleteTask, updateTask } from '../../lib/data';
 import { getDeals } from '../../lib/deals';
 import { formatPKR } from '../../lib/currency';
@@ -34,7 +35,19 @@ import { getTasksByEntity, updateTask as updateTaskV4 } from '../../lib/tasks';
 import type { TaskV4 } from '../../types/tasks';
 
 /** Contact with legacy UI/tracking fields not on schema Contact */
-type ContactWithLegacy = Contact & { nextFollowUp?: string; totalCommissionEarned?: number; totalTransactions?: number };
+type ContactWithLegacy = Contact & {
+  nextFollowUp?: string;
+  totalCommissionEarned?: number;
+  totalTransactions?: number;
+  source?: string;
+  notes?: string;
+};
+
+/** Deal with legacy UI fields not on schema Deal */
+type DealWithLegacy = any & {
+  propertyAddress?: string;
+  finalPrice?: number;
+};
 import { TaskQuickAddWidget } from '../tasks/TaskQuickAddWidget';
 import { TaskListView } from '../tasks/TaskListView';
 import {
@@ -127,6 +140,25 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
     console.log('✅ Features: Tag Management, Follow-up Tracking, Status Controls');
   }, []);
 
+  // Helper functions to handle tags (stored as string in schema, used as array in UI)
+  const parseTags = (tagsString: string): string[] => {
+    if (!tagsString || tagsString.trim() === '') return [];
+    try {
+      // Try parsing as JSON array first
+      const parsed = JSON.parse(tagsString);
+      if (Array.isArray(parsed)) return parsed;
+      // If not array, treat as comma-separated
+      return tagsString.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+    } catch {
+      // If JSON parse fails, treat as comma-separated
+      return tagsString.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+    }
+  };
+
+  const serializeTags = (tags: string[]): string => {
+    return JSON.stringify(tags);
+  };
+
   // ============================================================================
   // Data Loading
   // ============================================================================
@@ -149,10 +181,13 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
   const relatedDeals = useMemo(() => {
     if (!contact) return [];
     const allDeals = getDeals(user.role === 'admin' ? undefined : user.id, user.role);
-    type DealWithParties = { buyerContactId?: string | null; sellerContactId?: string | null; primaryAgentId?: string; secondaryAgentId?: string | null };
-    return allDeals.filter((d): boolean => {
-      const deal = d as DealWithParties;
-      return deal.buyerContactId === contact.id || deal.sellerContactId === contact.id || deal.primaryAgentId === contact.id || deal.secondaryAgentId === contact.id;
+    return allDeals.filter((d: Deal): boolean => {
+      const buyerId = d.parties?.buyer?.id;
+      const sellerId = d.parties?.seller?.id;
+      const primaryId = d.agents?.primary?.id;
+      const secondaryId = d.agents?.secondary?.id;
+
+      return buyerId === contact.id || sellerId === contact.id || primaryId === contact.id || secondaryId === contact.id;
     });
   }, [contact, user.id, user.role]);
 
@@ -219,7 +254,7 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
 
   const metrics = useMemo(() => {
     const legacy = contact as ContactWithLegacy;
-    const totalValue = relatedDeals.reduce((sum, d) => sum + ((d as { finalPrice?: number }).finalPrice || 0), 0);
+    const totalValue = relatedDeals.reduce((sum, d) => sum + (d.financial?.agreedPrice || 0), 0);
     const commission = legacy.totalCommissionEarned || 0;
 
     return [
@@ -300,18 +335,18 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
     }
   };
 
-  const handleChangeStatus = (newStatus: 'active' | 'inactive' | 'archived') => {
+  const handleChangeStatus = (newStatus: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED') => {
     updateContact(contact.id, { status: newStatus } as Parameters<typeof updateContact>[1]);
-    toast.success(`Contact status changed to ${newStatus}`);
+    toast.success(`Contact status changed to ${newStatus.toLowerCase()}`);
     setRefreshTrigger(prev => prev + 1);
   };
 
   const handleAddTag = () => {
     if (newTag.trim()) {
-      const currentTags = contact.tags || [];
+      const currentTags = parseTags(contact.tags);
       if (!currentTags.includes(newTag.trim())) {
         updateContact(contact.id, {
-          tags: [...currentTags, newTag.trim()],
+          tags: serializeTags([...currentTags, newTag.trim()]),
         });
         toast.success(`Tag "${newTag}" added`);
         setNewTag('');
@@ -324,9 +359,9 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    const currentTags = contact.tags || [];
+    const currentTags = parseTags(contact.tags);
     updateContact(contact.id, {
-      tags: currentTags.filter(t => t !== tagToRemove),
+      tags: serializeTags(currentTags.filter((t: string) => t !== tagToRemove)),
     });
     toast.success(`Tag "${tagToRemove}" removed`);
     setRefreshTrigger(prev => prev + 1);
@@ -409,14 +444,14 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
       onClick: handleEditClick,
     },
     {
-      label: contact.status === 'active' ? 'Mark Inactive' : 'Mark Active',
-      icon: contact.status === 'active' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />,
-      onClick: () => handleChangeStatus(contact.status === 'active' ? 'inactive' : 'active'),
+      label: contact.status === 'ACTIVE' ? 'Mark Inactive' : 'Mark Active',
+      icon: contact.status === 'ACTIVE' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />,
+      onClick: () => handleChangeStatus(contact.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'),
     },
     {
-      label: contact.status === 'archived' ? 'Unarchive' : 'Archive',
+      label: contact.status === 'ARCHIVED' ? 'Unarchive' : 'Archive',
       icon: <Archive className="h-4 w-4" />,
-      onClick: () => handleChangeStatus(contact.status === 'archived' ? 'active' : 'archived'),
+      onClick: () => handleChangeStatus(contact.status === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED'),
     },
     {
       label: 'Delete Contact',
@@ -435,14 +470,14 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
       {/* Follow-up Alert */}
       {followUpStatus && (
         <Card className={`border-2 ${followUpStatus === 'overdue' ? 'border-red-500 bg-red-50' :
-            followUpStatus === 'due' ? 'border-yellow-500 bg-yellow-50' :
-              'border-blue-500 bg-blue-50'
+          followUpStatus === 'due' ? 'border-yellow-500 bg-yellow-50' :
+            'border-blue-500 bg-blue-50'
           }`}>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <Bell className={`h-5 w-5 ${followUpStatus === 'overdue' ? 'text-red-600' :
-                  followUpStatus === 'due' ? 'text-yellow-600' :
-                    'text-blue-600'
+                followUpStatus === 'due' ? 'text-yellow-600' :
+                  'text-blue-600'
                 }`} />
               <div>
                 <p className="font-medium">
@@ -535,8 +570,8 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <Badge variant={
-                  contact.status === 'active' ? 'default' :
-                    contact.status === 'inactive' ? 'secondary' :
+                  contact.status === 'ACTIVE' ? 'default' :
+                    contact.status === 'INACTIVE' ? 'secondary' :
                       'outline'
                 }>
                   {contact.status.charAt(0).toUpperCase() + contact.status.slice(1)}
@@ -544,12 +579,12 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
               </div>
             </div>
 
-            {contact.source && (
+            {(contact as ContactWithLegacy).source && (
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm text-muted-foreground">Source</p>
-                  <p className="font-medium">{contact.source}</p>
+                  <p className="font-medium">{(contact as ContactWithLegacy).source}</p>
                 </div>
               </div>
             )}
@@ -601,9 +636,9 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                 Add Tag
               </Button>
             </div>
-            {contact.tags && contact.tags.length > 0 ? (
+            {parseTags(contact.tags).length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {contact.tags.map((tag, index) => (
+                {parseTags(contact.tags).map((tag: string, index: number) => (
                   <Badge key={index} variant="outline" className="gap-1">
                     {tag}
                     <button
@@ -620,12 +655,12 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
             )}
           </div>
 
-          {contact.notes && (
+          {(contact as ContactWithLegacy).notes && (
             <>
               <Separator />
               <div>
                 <p className="text-sm text-muted-foreground mb-2">Notes</p>
-                <p className="text-sm">{contact.notes}</p>
+                <p className="text-sm">{(contact as ContactWithLegacy).notes}</p>
               </div>
             </>
           )}
@@ -705,7 +740,7 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge variant="outline">{property.currentStatus}</Badge>
+                    <Badge variant="outline">{property.status}</Badge>
                   </div>
                 </div>
               ))}
@@ -736,18 +771,18 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${deal.status === 'closed' ? 'bg-green-100' : 'bg-blue-100'
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${deal.lifecycle?.status === 'completed' ? 'bg-green-100' : 'bg-blue-100'
                       }`}>
-                      {deal.status === 'closed' ? (
+                      {deal.lifecycle?.status === 'completed' ? (
                         <CheckCircle2 className="h-5 w-5 text-green-600" />
                       ) : (
                         <Clock className="h-5 w-5 text-blue-600" />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{deal.propertyAddress || 'Property'}</p>
+                      <p className="font-medium">{deal.cycles?.sellCycle?.propertyId || (deal as any).propertyAddress || 'Property'}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(deal.createdAt).toLocaleDateString('en-US', {
+                        {new Date(deal.metadata?.createdAt || (deal as any).createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
@@ -756,9 +791,9 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatPKR(deal.finalPrice || 0)}</p>
-                    <Badge variant={deal.status === 'closed' ? 'default' : 'secondary'}>
-                      {deal.status}
+                    <p className="font-medium">{formatPKR((deal as DealWithLegacy).finalPrice || deal.financial?.agreedPrice || 0)}</p>
+                    <Badge variant={deal.lifecycle?.status === 'completed' ? 'default' : 'secondary'}>
+                      {deal.lifecycle?.status || 'active'}
                     </Badge>
                   </div>
                 </div>
@@ -783,12 +818,12 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${followUpStatus === 'overdue' ? 'bg-red-100' :
-                      followUpStatus === 'due' ? 'bg-yellow-100' :
-                        'bg-blue-100'
+                    followUpStatus === 'due' ? 'bg-yellow-100' :
+                      'bg-blue-100'
                     }`}>
                     <Bell className={`h-4 w-4 ${followUpStatus === 'overdue' ? 'text-red-600' :
-                        followUpStatus === 'due' ? 'text-yellow-600' :
-                          'text-blue-600'
+                      followUpStatus === 'due' ? 'text-yellow-600' :
+                        'text-blue-600'
                       }`} />
                   </div>
                 </div>
@@ -854,12 +889,12 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                   </div>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Transaction: {deal.propertyAddress}</p>
+                  <p className="text-sm font-medium">Transaction: {(deal as any).propertyAddress || deal.cycles?.sellCycle?.propertyId || 'Property'}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatPKR(deal.finalPrice || 0)} • {deal.status}
+                    {formatPKR((deal as any).finalPrice || deal.financial?.agreedPrice || 0)} • {deal.lifecycle?.status || (deal as any).status || 'active'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(deal.createdAt).toLocaleDateString('en-US', {
+                    {new Date(deal.metadata?.createdAt || (deal as any).createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
@@ -912,8 +947,7 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                       {interaction.type === 'call' && <Phone className="h-4 w-4 text-blue-500" />}
                       {interaction.type === 'email' && <Mail className="h-4 w-4 text-green-500" />}
                       {interaction.type === 'meeting' && <Users className="h-4 w-4 text-purple-500" />}
-                      {interaction.type === 'whatsapp' && <MessageSquare className="h-4 w-4 text-green-600" />}
-                      {interaction.type === 'viewing' && <Home className="h-4 w-4 text-orange-500" />}
+                      {interaction.type === 'sms' && <MessageSquare className="h-4 w-4 text-blue-600" />}
                       {interaction.type === 'note' && <FileText className="h-4 w-4 text-gray-500" />}
                       <span className="font-medium">{interaction.subject}</span>
                       <Badge variant="outline" className="text-xs">
@@ -1116,12 +1150,14 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
   return (
     <>
       <DetailPageTemplate
-        title={contact.name}
-        breadcrumbs={breadcrumbs}
-        onBack={onBack}
-        metrics={metrics}
-        primaryActions={primaryActions}
-        secondaryActions={secondaryActions}
+        pageHeader={{
+          title: contact.name,
+          breadcrumbs,
+          onBack,
+          metrics,
+          primaryActions,
+          secondaryActions,
+        }}
         tabs={tabs}
         defaultTab="overview"
       />

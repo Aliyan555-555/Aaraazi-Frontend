@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Deal, PaymentInstallment } from '../../types';
+import { Deal, PaymentInstallment } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -38,7 +38,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
     open: boolean;
     installment?: PaymentInstallment;
   }>({ open: false });
-  
+
   const [modifyInstallmentModal, setModifyInstallmentModal] = useState<{
     open: boolean;
     installment?: PaymentInstallment;
@@ -117,15 +117,15 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
     if (installment.status === 'paid') {
       return <CheckCircle2 className="h-5 w-5 text-green-600" />;
     }
-    
+
     if (isOverdue) {
       return <AlertCircle className="h-5 w-5 text-red-600" />;
     }
-    
+
     if (installment.status === 'partial') {
       return <Clock className="h-5 w-5 text-blue-600" />;
     }
-    
+
     return <Circle className="h-5 w-5 text-muted-foreground" />;
   };
 
@@ -139,7 +139,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
             {paymentPlan.installments.length} installment{paymentPlan.installments.length !== 1 ? 's' : ''}
           </p>
         </div>
-        
+
         {isPrimaryAgent && (
           <Button onClick={onAddInstallment} size="sm" variant="outline">
             <Plus className="h-4 w-4 mr-2" />
@@ -170,7 +170,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
               {/* Left: Icon + Info */}
               <div className="flex items-start gap-3 flex-1">
                 {getStatusIcon(installment)}
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium">#{installment.sequence}</h4>
@@ -181,13 +181,13 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
                       <Badge variant="outline" className="text-xs">Modified</Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       <span>Due: {new Date(installment.dueDate).toLocaleDateString()}</span>
                     </div>
-                    
+
                     {installment.paidDate && (
                       <div className="flex items-center gap-1 text-green-600">
                         <CheckCircle2 className="h-3 w-3" />
@@ -201,19 +201,19 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
                       <p className="text-xs text-muted-foreground">Expected</p>
                       <p className="font-medium">{formatPKR(installment.amount)}</p>
                     </div>
-                    
-                    {installment.paidAmount > 0 && (
+
+                    {(installment.paidAmount ?? 0) > 0 && (
                       <div>
                         <p className="text-xs text-muted-foreground">Paid</p>
-                        <p className="font-medium text-green-600">{formatPKR(installment.paidAmount)}</p>
+                        <p className="font-medium text-green-600">{formatPKR(installment.paidAmount ?? 0)}</p>
                       </div>
                     )}
-                    
-                    {installment.status !== 'paid' && installment.amount > installment.paidAmount && (
+
+                    {installment.status !== 'paid' && installment.amount > (installment.paidAmount ?? 0) && (
                       <div>
                         <p className="text-xs text-muted-foreground">Outstanding</p>
                         <p className="font-medium text-orange-600">
-                          {formatPKR(installment.amount - installment.paidAmount)}
+                          {formatPKR(installment.amount - (installment.paidAmount ?? 0))}
                         </p>
                       </div>
                     )}
@@ -232,7 +232,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
               {/* Right: Status + Actions */}
               <div className="flex flex-col items-end gap-2">
                 {getStatusBadge(installment)}
-                
+
                 {isPrimaryAgent && (
                   <div className="flex gap-1">
                     {/* Record Payment Button */}
@@ -309,7 +309,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Installment?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete "{deleteConfirmModal.installment.description}"? 
+                Are you sure you want to delete "{deleteConfirmModal.installment.description}"?
                 This action cannot be undone. All subsequent installments will be renumbered.
               </AlertDialogDescription>
             </AlertDialogHeader>

@@ -18,11 +18,11 @@ import { FileText, Download, X, ChevronLeft, ChevronRight, Check, Plus, GripVert
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
 import { getContacts } from '../lib/data';
-import { 
-  getDefaultClauses, 
-  saveGeneratedDocument, 
-  replacePlaceholders, 
-  generateDocumentName 
+import {
+  getDefaultClauses,
+  saveGeneratedDocument,
+  replacePlaceholders,
+  generateDocumentName
 } from '../lib/documents';
 import { GeneratedDocument } from '../types/documents';
 import { toast } from 'sonner';
@@ -67,7 +67,7 @@ function autoFillSalesDocument(
   if (!property) return {};
 
   const seller = contacts?.find(c => c.id === property.currentOwnerId);
-  const buyer = contacts?.find(c => c.id === transaction?.buyerId);
+  const buyer = contacts?.find(c => c.id === (transaction as any)?.buyerId);
 
   return {
     sellerName: seller?.name || property.agentName || '',
@@ -99,7 +99,7 @@ function autoFillRentalAgreement(
   if (!property) return {};
 
   const landlord = contacts?.find(c => c.id === property.currentOwnerId);
-  const tenant = contacts?.find(c => c.id === transaction?.buyerId); // buyerId represents tenant in rental context
+  const tenant = contacts?.find(c => c.id === (transaction as any)?.buyerId); // buyerId represents tenant in rental context
 
   return {
     landlordName: landlord?.name || property.agentName || '',
@@ -115,7 +115,7 @@ function autoFillRentalAgreement(
     propertySize: property.area?.toString() || '',
     propertySizeUnit: property.areaUnit || 'Sq. Yards',
     monthlyRent: property.rentAmount || 0,
-    securityDeposit: property.securityDeposit || property.rentAmount * 2 || 0,
+    securityDeposit: property.securityDeposit || (property.rentAmount || 0) * 2 || 0,
     leasePeriod: '1 Year',
   };
 }
@@ -154,7 +154,7 @@ function autoFillPaymentReceipt(
 ): Partial<DocumentDetails> {
   if (!transaction) return {};
 
-  const payer = contacts?.find(c => c.id === transaction.buyerId);
+  const payer = contacts?.find(c => c.id === (transaction as any)?.buyerId);
   const payee = contacts?.find(c => c.id === property?.currentOwnerId);
 
   return {
@@ -193,7 +193,7 @@ export function DocumentGeneratorModal({
 
       // Auto-fill based on document type
       let autoFilledDetails: Partial<DocumentDetails> = {};
-      
+
       if (property) {
         switch (documentType) {
           case 'sales-agreement':
@@ -212,12 +212,12 @@ export function DocumentGeneratorModal({
         }
 
         setDetails(prev => ({ ...prev, ...autoFilledDetails } as DocumentDetails));
-        
+
         // Set read-only if we have significant data
         const hasData = Object.values(autoFilledDetails).some(val => val && val !== 0);
         setIsReadOnly(hasData);
       }
-      
+
       setIsInitialized(true);
     } catch (error) {
       logger.error('Error initializing modal:', error);
@@ -250,14 +250,14 @@ export function DocumentGeneratorModal({
   const handleFieldChange = (field: keyof DocumentDetails, value: any) => {
     setDetails(prev => {
       const updated = { ...prev, [field]: value };
-      
+
       // Auto-calculate for sales documents
       if (documentType === 'sales-agreement' || documentType === 'final-sale-deed') {
         if (field === 'salePrice' || field === 'tokenMoney') {
           updated.remainingAmount = (updated.salePrice || 0) - (updated.tokenMoney || 0);
         }
       }
-      
+
       return updated;
     });
   };
@@ -289,7 +289,7 @@ export function DocumentGeneratorModal({
     try {
       const customClauseCount = clauses.filter(c => c.isCustom).length + 1;
       const uniqueId = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       const newClause: DocumentClause = {
         id: uniqueId,
         title: `Custom Clause ${customClauseCount}`,
@@ -297,7 +297,7 @@ export function DocumentGeneratorModal({
         isCustom: true,
         order: clauses.length + 1
       };
-      
+
       setClauses(prev => [...prev, newClause]);
       toast.success('Custom clause added');
     } catch (error) {
@@ -318,14 +318,14 @@ export function DocumentGeneratorModal({
   const handleDragEnd = (event: DragEndEvent) => {
     try {
       const { active, over } = event;
-      
+
       if (!over || active.id === over.id) {
         return;
       }
 
       const oldIndex = clauses.findIndex((c) => c.id === active.id);
       const newIndex = clauses.findIndex((c) => c.id === over.id);
-      
+
       if (oldIndex === -1 || newIndex === -1) {
         return;
       }
@@ -1196,7 +1196,7 @@ function Step2EditClauses({
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-4">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -1205,13 +1205,13 @@ function Step2EditClauses({
         </p>
       </div>
 
-      <DndContext 
-        sensors={sensors} 
-        collisionDetection={closestCenter} 
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
         onDragEnd={onDragEnd}
       >
-        <SortableContext 
-          items={clauses.map(c => c.id)} 
+        <SortableContext
+          items={clauses.map(c => c.id)}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-3">

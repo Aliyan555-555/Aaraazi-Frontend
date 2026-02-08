@@ -183,7 +183,7 @@ export const CloneBudgetModal: React.FC<CloneBudgetModalProps> = ({
                 <h3 className="text-gray-900">Source Budget</h3>
                 <Badge variant="secondary">Original</Badge>
               </div>
-              
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <div className="text-sm text-gray-600">Category</div>
@@ -207,7 +207,7 @@ export const CloneBudgetModal: React.FC<CloneBudgetModalProps> = ({
               {/* Period */}
               <div className="space-y-2">
                 <Label>New Period *</Label>
-                <Select value={period} onValueChange={setPeriod}>
+                <Select value={period} onValueChange={(val) => setPeriod(val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select period..." />
                   </SelectTrigger>
@@ -227,8 +227,8 @@ export const CloneBudgetModal: React.FC<CloneBudgetModalProps> = ({
               {/* Adjustment Type */}
               <div className="space-y-2">
                 <Label>Amount Adjustment</Label>
-                <Select 
-                  value={adjustmentType} 
+                <Select
+                  value={adjustmentType}
                   onValueChange={(val: any) => setAdjustmentType(val)}
                 >
                   <SelectTrigger>
@@ -248,8 +248,8 @@ export const CloneBudgetModal: React.FC<CloneBudgetModalProps> = ({
               {adjustmentType !== 'none' && (
                 <div className="space-y-2">
                   <Label>
-                    {adjustmentType === 'percentage' 
-                      ? 'Percentage (%)' 
+                    {adjustmentType === 'percentage'
+                      ? 'Percentage (%)'
                       : 'Amount (PKR)'}
                   </Label>
                   <div className="relative">
@@ -298,7 +298,7 @@ export const CloneBudgetModal: React.FC<CloneBudgetModalProps> = ({
                     {formatPKR(sourceBudget.amount)}
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="text-sm text-blue-800">New Amount</div>
                   <div className="text-2xl text-blue-900 mt-1">
@@ -324,7 +324,7 @@ export const CloneBudgetModal: React.FC<CloneBudgetModalProps> = ({
                         </>
                       ) : difference < 0 ? (
                         <>
-                          <Badge variant="danger">
+                          <Badge variant="destructive">
                             <TrendingDown className="h-3 w-3 mr-1" />
                             {formatPKR(Math.round(difference))}
                           </Badge>

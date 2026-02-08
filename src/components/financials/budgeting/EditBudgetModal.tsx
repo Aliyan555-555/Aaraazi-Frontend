@@ -89,9 +89,9 @@ const EXPENSE_CATEGORIES = [
 ];
 
 const PERIODS = [
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'quarterly', label: 'Quarterly' },
-  { value: 'yearly', label: 'Yearly' },
+  { value: 'Monthly', label: 'Monthly' },
+  { value: 'Quarterly', label: 'Quarterly' },
+  { value: 'Yearly', label: 'Yearly' },
 ];
 
 export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
@@ -113,7 +113,11 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
     if (open && budget) {
       setCategory(budget.category);
       setAmount(budget.amount.toString());
-      setPeriod(budget.period);
+
+      // Normalize period to capitalized format
+      const normalizedPeriod = budget.period.charAt(0).toUpperCase() + budget.period.slice(1).toLowerCase();
+      setPeriod(normalizedPeriod as 'Monthly' | 'Quarterly' | 'Yearly');
+
       setNotes(budget.notes || '');
       setIsActive(budget.isActive ?? true);
     }
@@ -122,7 +126,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
   // Calculate changes - handles null budget
   const changes = useMemo(() => {
     if (!budget) return [];
-    
+
     const oldSnapshot: BudgetSnapshot = {
       category: budget.category,
       amount: budget.amount,
@@ -152,20 +156,20 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
   // Validation
   const errors = useMemo(() => {
     const errs: string[] = [];
-    
+
     if (!category) {
       errs.push('Category is required');
     }
-    
+
     const amountNum = parseFloat(amount);
     if (!amount || isNaN(amountNum) || amountNum <= 0) {
       errs.push('Amount must be greater than 0');
     }
-    
+
     if (!period) {
       errs.push('Period is required');
     }
-    
+
     return errs;
   }, [category, amount, period]);
 
@@ -207,7 +211,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
 
       // Save budget
       onSave(budget.id, updates);
-      
+
       toast.success('Budget updated successfully');
       onClose();
     } catch (error) {
@@ -255,7 +259,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
                                   +{formatPKR(amountDiff)}
                                 </Badge>
                               ) : amountDiff < 0 ? (
-                                <Badge variant="danger" className="text-xs">
+                                <Badge variant="destructive" className="text-xs">
                                   <TrendingDown className="h-3 w-3 mr-1" />
                                   {formatPKR(amountDiff)}
                                 </Badge>
@@ -315,7 +319,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
             {/* Period */}
             <div className="space-y-2">
               <Label>Period *</Label>
-              <Select value={period} onValueChange={setPeriod}>
+              <Select value={period} onValueChange={(val: any) => setPeriod(val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select period..." />
                 </SelectTrigger>
@@ -332,8 +336,8 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
             {/* Status */}
             <div className="col-span-2 space-y-2">
               <Label>Status</Label>
-              <Select 
-                value={isActive ? 'active' : 'inactive'} 
+              <Select
+                value={isActive ? 'active' : 'inactive'}
                 onValueChange={(val) => setIsActive(val === 'active')}
               >
                 <SelectTrigger>

@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { createPaymentPlan, CreatePaymentPlanInput } from '../../lib/dealPayments';
-import { Deal } from '../../types';
+import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { AlertCircle, Calculator, Calendar } from 'lucide-react';
@@ -112,7 +112,7 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
           {/* Down Payment Configuration */}
           <div className="space-y-4">
             <Label>Down Payment</Label>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="downPaymentPercentage">Percentage</Label>
@@ -149,7 +149,7 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
           {/* Installments Configuration */}
           <div className="space-y-4">
             <Label>Installment Plan</Label>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="numberOfInstallments">Number of Installments</Label>
@@ -214,7 +214,7 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
               </div>
 
               {Array.from({ length: numberOfInstallments }).map((_, i) => {
-                const dueDate = firstInstallmentDate 
+                const dueDate = firstInstallmentDate
                   ? new Date(new Date(firstInstallmentDate).getTime() + i * (frequency === 'monthly' ? 30 : 90) * 24 * 60 * 60 * 1000)
                   : null;
 

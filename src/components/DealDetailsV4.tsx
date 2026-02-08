@@ -1,31 +1,6 @@
-/**
- * Deal Details - V5.0 with DetailPageTemplate ✅
- * 
- * COMPLETE REDESIGN using DetailPageTemplate system:
- * - DetailPageTemplate for consistent structure
- * - ContactCard for buyer and seller information
- * - QuickActionsPanel for sidebar actions
- * - MetricCardsGroup for statistics
- * - PaymentSummaryPanel for financial overview
- * - DataTable for tasks display
- * - DocumentList for document management
- * - NotesPanel for notes management
- * - ActivityTimeline for activity feed
- * - CommissionTab for commission management
- * - All 5 UX Laws applied
- * - 8px grid system
- * - Responsive 2/3 + 1/3 layout
- * 
- * TABS:
- * 1. Overview - Summary + InfoPanels + Sidebar
- * 2. Payments - Payment schedules and tracking
- * 3. Tasks - Task management
- * 4. Activity - Timeline, documents, notes
- * 5. Commission - Commission splits and status management
- */
-
 import React, { useState, useMemo } from 'react';
-import { Deal, User } from '../types';
+import { User } from '../types';
+import { Deal } from '../types/deals';
 import { PropertyAddressDisplay, useFormattedAddress } from './PropertyAddressDisplay';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -63,7 +38,8 @@ import { CommissionTabV2 } from './deals/CommissionTabV2';
 import { AgentRatingModal } from './sharing/AgentRatingModal';
 
 // Tasks Module V4 Integration
-import { getTasksByEntity, updateTask as updateTaskV4, TaskV4 } from '../lib/tasks';
+import { getTasksByEntity, updateTask as updateTaskV4 } from '../lib/tasks';
+import { TaskV4 } from '../types/tasks';
 import { TaskQuickAddWidget } from './tasks/TaskQuickAddWidget';
 import { TaskListView } from './tasks/TaskListView';
 
@@ -221,7 +197,7 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
       'agreement-signing',
       'documentation',
       'payment-processing',
-      'handover-preparation',
+      'handover-prep',
       'transfer-registration',
       'final-handover',
     ];
@@ -277,7 +253,7 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
 
     try {
       const now = new Date().toISOString();
-      
+
       // Update commission split statuses
       const updatedCommission = {
         ...deal.financial.commission,
@@ -289,9 +265,9 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
           },
           secondaryAgent: deal.financial.commission.split.secondaryAgent
             ? {
-                ...deal.financial.commission.split.secondaryAgent,
-                status: 'paid' as const,
-              }
+              ...deal.financial.commission.split.secondaryAgent,
+              status: 'paid' as const,
+            }
             : undefined,
         },
         receivedFromClient: true,
@@ -376,7 +352,14 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
           },
         ]
         : [],
-    status: deal.lifecycle.status,
+    status: {
+      label: deal.lifecycle.status,
+      variant: (deal.lifecycle.status === 'active' ? 'success'
+        : deal.lifecycle.status === 'completed' ? 'success'
+          : deal.lifecycle.status === 'cancelled' ? 'destructive'
+            : deal.lifecycle.status === 'on-hold' ? 'warning'
+              : 'default') as "default" | "success" | "destructive" | "warning" | "info",
+    },
     onBack,
   };
 
@@ -490,7 +473,7 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
                 : [
                   'documentation',
                   'payment-processing',
-                  'handover-preparation',
+                  'handover-prep',
                   'transfer-registration',
                   'final-handover',
                 ].includes(deal.lifecycle.stage)
@@ -504,7 +487,7 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
                 ? 'current'
                 : [
                   'payment-processing',
-                  'handover-preparation',
+                  'handover-prep',
                   'transfer-registration',
                   'final-handover',
                 ].includes(deal.lifecycle.stage)
@@ -516,7 +499,7 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
             status:
               deal.lifecycle.stage === 'payment-processing'
                 ? 'current'
-                : ['handover-preparation', 'transfer-registration', 'final-handover'].includes(
+                : ['handover-prep', 'transfer-registration', 'final-handover'].includes(
                   deal.lifecycle.stage
                 )
                   ? 'complete'

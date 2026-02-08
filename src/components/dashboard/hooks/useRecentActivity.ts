@@ -1,8 +1,8 @@
 /**
  * useRecentActivity Hook
- * 
+ *
  * Loads recent activity data for workflow cards.
- * 
+ *
  * FEATURES:
  * - Loads data from localStorage
  * - Filters to last 7 days
@@ -10,13 +10,22 @@
  * - Used by QuickLaunchSection
  */
 
-import { useState, useEffect } from 'react';
-import { User, Property, Contact, Document } from '../../../types';
-import { LeadV4 } from '../../../types/leads';
-import { CRMTask } from '../../../types';
-import { getProperties, getContacts } from '../../../lib/data';
-import { getLeadsV4 } from '../../../lib/leadsV4';
-import { getAllTasks } from '../../../lib/data';
+import { useState, useEffect } from "react";
+import { User, Property, Contact } from "../../../types";
+import { LeadV4 } from "../../../types/leads";
+import { CRMTask } from "../../../types";
+import { getProperties, getContacts } from "../../../lib/data";
+import { getLeadsV4 } from "../../../lib/leadsV4";
+import { getAllTasks } from "../../../lib/data";
+
+// Document type (not in main types)
+interface Document {
+  id: string;
+  name?: string;
+  createdAt?: string;
+  uploadedAt?: string;
+  uploadDate?: string;
+}
 
 export interface RecentActivityData {
   properties: Property[];
@@ -24,7 +33,7 @@ export interface RecentActivityData {
   contacts: Contact[];
   tasks: CRMTask[];
   documents: Document[];
-  payments: any[];      // TODO: Add proper payment type
+  payments: any[]; // TODO: Add proper payment type
   loading: boolean;
 }
 
@@ -44,7 +53,7 @@ export function useRecentActivity(user: User): RecentActivityData {
     try {
       setLoading(true);
 
-      const userId = user.role === 'admin' ? undefined : user.id;
+      const userId = user.role === "admin" ? undefined : user.id;
       const userRole = user.role;
 
       // Calculate date 7 days ago
@@ -53,41 +62,43 @@ export function useRecentActivity(user: User): RecentActivityData {
       // Load properties (last 7 days)
       const allProperties = getProperties(userId, userRole);
       const recentProperties = allProperties.filter(
-        p => new Date(p.createdAt) >= oneWeekAgo
+        (p) => new Date(p.createdAt) >= oneWeekAgo,
       );
       setProperties(recentProperties);
 
       // Load leads (last 7 days)
       const allLeads = getLeadsV4(userId, userRole);
       const recentLeads = allLeads.filter(
-        l => new Date(l.createdAt) >= oneWeekAgo
+        (l) => new Date(l.createdAt) >= oneWeekAgo,
       );
       setLeads(recentLeads);
 
       // Load contacts (last 7 days)
       const allContacts = getContacts(userId, userRole);
       const recentContacts = allContacts.filter(
-        c => new Date(c.createdAt) >= oneWeekAgo
+        (c) => new Date(c.createdAt) >= oneWeekAgo,
       );
       setContacts(recentContacts);
 
       // Load tasks (last 7 days)
       const allTasks = getAllTasks(userId, userRole);
       const recentTasks = allTasks.filter(
-        t => new Date(t.createdAt) >= oneWeekAgo
+        (t) => new Date(t.createdAt) >= oneWeekAgo,
       );
       setTasks(recentTasks);
 
       // Load documents (last 7 days)
       // Note: getDocuments requires propertyId, so we get all documents directly
-      const documentsKey = 'estate_documents';
-      const allDocuments = JSON.parse(localStorage.getItem(documentsKey) || '[]') as Document[];
-      const recentDocuments = allDocuments.filter(
-        d => {
-          const createdDate = new Date(d.createdAt || d.uploadedAt || d.uploadDate || 0);
-          return createdDate >= oneWeekAgo;
-        }
-      );
+      const documentsKey = "estate_documents";
+      const allDocuments = JSON.parse(
+        localStorage.getItem(documentsKey) || "[]",
+      ) as Document[];
+      const recentDocuments = allDocuments.filter((d) => {
+        const createdDate = new Date(
+          d.createdAt || d.uploadedAt || d.uploadDate || 0,
+        );
+        return createdDate >= oneWeekAgo;
+      });
       setDocuments(recentDocuments);
 
       // Load payments (last 7 days)
@@ -96,7 +107,7 @@ export function useRecentActivity(user: User): RecentActivityData {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error loading recent activity:', error);
+      console.error("Error loading recent activity:", error);
       setLoading(false);
     }
   }, [user.id, user.role]);

@@ -39,16 +39,16 @@ export function CreateInstallmentPlanModal({
     frequency: 'monthly' as 'monthly' | 'quarterly' | 'bi-annual' | 'annual' | 'custom',
     startDate: '',
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [remainingAmount, setRemainingAmount] = useState(0);
   const [installmentAmount, setInstallmentAmount] = useState(0);
 
   // Calculate remaining amount and installment amount
   useEffect(() => {
-    const remaining = formData.totalAmount - formData.downPayment;
+    const remaining = (formData.totalAmount || 0) - (formData.downPayment || 0);
     setRemainingAmount(remaining);
-    
+
     if (formData.numberOfInstallments > 0) {
       setInstallmentAmount(remaining / formData.numberOfInstallments);
     }
@@ -66,33 +66,33 @@ export function CreateInstallmentPlanModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.startDate || formData.numberOfInstallments < 1) {
       toast.error('Please fill in all required fields');
       return;
     }
-    
-    if (formData.downPayment >= formData.totalAmount) {
+
+    if (formData.downPayment >= (formData.totalAmount || 0)) {
       toast.error('Down payment cannot be equal to or greater than total amount');
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       createInstallmentPlan({
         sellCycleId: sellCycle.id,
         propertyId: sellCycle.propertyId,
         buyerId: acceptedOffer.buyerId,
         buyerName: acceptedOffer.buyerName,
-        totalAmount: formData.totalAmount,
+        totalAmount: formData.totalAmount!,
         downPayment: formData.downPayment,
         numberOfInstallments: formData.numberOfInstallments,
         startDate: formData.startDate,
         frequency: formData.frequency,
         createdBy: user.id,
       });
-      
+
       toast.success('Installment plan created successfully');
       onSuccess();
       handleClose();
@@ -121,10 +121,10 @@ export function CreateInstallmentPlanModal({
 
   const calculateEndDate = () => {
     if (!formData.startDate) return '';
-    
+
     const start = new Date(formData.startDate);
     let months = 0;
-    
+
     switch (formData.frequency) {
       case 'monthly':
         months = formData.numberOfInstallments;
@@ -141,10 +141,10 @@ export function CreateInstallmentPlanModal({
       default:
         months = formData.numberOfInstallments;
     }
-    
+
     const end = new Date(start);
     end.setMonth(end.getMonth() + months);
-    
+
     return end.toLocaleDateString();
   };
 
@@ -209,7 +209,7 @@ export function CreateInstallmentPlanModal({
                   step="1000"
                 />
                 <p className="text-xs text-muted-foreground">
-                  {((formData.downPayment / formData.totalAmount) * 100).toFixed(1)}% of total
+                  {(((formData.downPayment || 0) / (formData.totalAmount || 1)) * 100).toFixed(1)}% of total
                 </p>
               </div>
             </div>
@@ -283,7 +283,7 @@ export function CreateInstallmentPlanModal({
             {/* Calculation Summary */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg space-y-2">
               <h4 className="font-medium text-sm mb-2">Payment Plan Summary</h4>
-              
+
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="space-y-1">
                   <div className="flex justify-between">
@@ -295,7 +295,7 @@ export function CreateInstallmentPlanModal({
                     <span className="font-medium">{formData.numberOfInstallments}</span>
                   </div>
                 </div>
-                
+
                 <div className="space-y-1">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Frequency:</span>

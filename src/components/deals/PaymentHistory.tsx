@@ -1,12 +1,12 @@
 import React from 'react';
-import { Deal } from '../../types';
+import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { 
-  Receipt, 
-  Calendar, 
-  CreditCard, 
+import {
+  Receipt,
+  Calendar,
+  CreditCard,
   FileText,
   DollarSign,
   Download,
@@ -83,7 +83,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
 
   // Sort payments by date (most recent first)
   const sortedPayments = [...payments].sort(
-    (a, b) => new Date(b.paidDate).getTime() - new Date(a.paidDate).getTime()
+    (a, b) => new Date(b.paidDate ?? 0).getTime() - new Date(a.paidDate ?? 0).getTime()
   );
 
   return (
@@ -95,7 +95,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
             {payments.length} payment{payments.length !== 1 ? 's' : ''} recorded
           </p>
         </div>
-        
+
         <div className="text-right">
           <p className="text-xs text-muted-foreground">Total Received</p>
           <p className="font-medium text-green-600">{formatPKR(deal.financial.totalPaid)}</p>
@@ -105,7 +105,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
       <div className="space-y-3">
         {sortedPayments.map((payment) => {
           // Find linked installment if exists
-          const linkedInstallment = payment.installmentId 
+          const linkedInstallment = payment.installmentId
             ? deal.financial.paymentPlan?.installments.find(i => i.id === payment.installmentId)
             : undefined;
 
@@ -119,12 +119,12 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
                   <div className="p-2 bg-green-50 rounded-lg">
                     <Receipt className="h-4 w-4 text-green-600" />
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium">{formatPKR(payment.amount)}</h4>
                       <Badge variant="outline" className="text-xs">
-                        {getPaymentTypeLabel(payment.type)}
+                        {getPaymentTypeLabel(payment.type ?? 'ad-hoc')}
                       </Badge>
                     </div>
 
@@ -137,12 +137,12 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        <span>{new Date(payment.paidDate).toLocaleDateString()}</span>
+                        <span>{new Date(payment.paidDate ?? new Date()).toLocaleDateString()}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-1">
-                        {getPaymentMethodIcon(payment.paymentMethod)}
-                        <span>{getPaymentMethodLabel(payment.paymentMethod)}</span>
+                        {getPaymentMethodIcon(payment.paymentMethod ?? 'unknown')}
+                        <span>{getPaymentMethodLabel(payment.paymentMethod ?? 'unknown')}</span>
                       </div>
                     </div>
                   </div>
@@ -169,7 +169,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
 
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Recorded By</span>
-                  <span>{payment.recordedBy.agentName}</span>
+                  <span>{typeof payment.recordedBy === 'string' ? payment.recordedBy : payment.recordedBy.agentName}</span>
                 </div>
 
                 {payment.notes && (

@@ -26,21 +26,21 @@ import {
   CommandItem,
 } from '../ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { 
-  User, 
-  Users, 
-  Search, 
-  CheckCircle2, 
+import {
+  User,
+  Users,
+  Search,
+  CheckCircle2,
   AlertCircle,
   Building2
 } from 'lucide-react';
 import {
-  CommissionAgent,
   getAvailableInternalAgents,
   getAvailableExternalBrokers,
   calculateCommissionAmount,
 } from '../../lib/commissionAgents';
 import { formatPKR } from '../../lib/currency';
+import { CommissionAgent } from '../../types/deals';
 import { toast } from 'sonner';
 
 interface AddAgentToCommissionModalProps {
@@ -77,7 +77,7 @@ export function AddAgentToCommissionModal({
   );
 
   const availableExternalBrokers = useMemo(
-    () => externalBrokers.filter(b => !currentAgents.some(ca => ca.id === b.id)),
+    () => externalBrokers.filter((b: any) => !currentAgents.some(ca => ca.id === b.id)),
     [externalBrokers, currentAgents]
   );
 
@@ -129,16 +129,16 @@ export function AddAgentToCommissionModal({
       };
 
       console.log('🔧 Adding agent to commission:', newAgent);
-      
+
       // Call the onAdd callback - this will handle the actual addition
       onAdd(newAgent);
-      
+
       // Only reset and close if successful (no error thrown)
       // Note: The parent component (CommissionTabV2) will show success toast
       setSelectedAgent(null);
       setPercentage('');
       setNotes('');
-      
+
     } catch (error: any) {
       console.error('❌ Error adding agent:', error);
       toast.error(error.message || 'Failed to add agent');
@@ -256,7 +256,7 @@ export function AddAgentToCommissionModal({
                       <CommandInput placeholder="Search brokers..." />
                       <CommandEmpty>No external brokers found.</CommandEmpty>
                       <CommandGroup>
-                        {availableExternalBrokers.map((broker) => (
+                        {availableExternalBrokers.map((broker: any) => (
                           <CommandItem
                             key={broker.id}
                             value={broker.name}

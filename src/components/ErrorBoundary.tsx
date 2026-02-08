@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
-    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+    if (process.env.NODE_ENV === 'development') {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
 
@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Error Details (only in development) */}
-              {typeof import.meta !== 'undefined' && import.meta.env?.DEV && this.state.error && (
+              {process.env.NODE_ENV === 'development' && this.state.error && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                   <p className="text-sm font-medium text-red-900 mb-2">
                     Error Details (Development Mode)

@@ -1,15 +1,15 @@
 import React from 'react';
-import { Deal } from '../../types';
+import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { getPaymentSummary } from '../../lib/dealPayments';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown, 
-  AlertCircle, 
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
   Calendar,
   CheckCircle2,
   FileText,
@@ -42,13 +42,13 @@ export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
           bgColor: 'bg-muted',
           icon: Clock,
         };
-      case 'plan-draft':
-        return {
-          label: 'Plan Draft',
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50',
-          icon: FileText,
-        };
+      // case 'plan-draft':
+      //   return {
+      //     label: 'Plan Draft',
+      //     color: 'text-blue-600',
+      //     bgColor: 'bg-blue-50',
+      //     icon: FileText,
+      //   };
       case 'plan-active':
         return {
           label: 'Plan Active',
@@ -118,7 +118,7 @@ export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
               <p className="text-sm text-muted-foreground mb-3">
                 Create a flexible payment plan during the Sales Agreement stage, or record ad-hoc payments as they come in.
               </p>
-              
+
               {isPrimaryAgent && (
                 <div className="flex gap-2">
                   {onCreatePlan && (
@@ -170,7 +170,7 @@ export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
               <p className="text-xs text-muted-foreground mb-1">Total Amount</p>
               <p className="font-medium">{formatPKR(summary.totalAmount)}</p>
             </div>
-            
+
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <TrendingUp className="h-3 w-3 text-green-600" />
@@ -178,7 +178,7 @@ export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
               </div>
               <p className="font-medium text-green-600">{formatPKR(summary.totalPaid)}</p>
             </div>
-            
+
             <div className="text-center p-3 bg-orange-50 rounded-lg">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <TrendingDown className="h-3 w-3 text-orange-600" />
@@ -204,7 +204,7 @@ export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
                     <div className="text-right">
                       <p className="text-xs text-blue-600">Due Date</p>
                       <p className="font-medium text-blue-900">
-                        {new Date(summary.nextPaymentDue.dueDate).toLocaleDateString()}
+                        {new Date(summary.nextPaymentDue.date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

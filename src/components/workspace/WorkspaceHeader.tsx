@@ -86,24 +86,27 @@ export interface WorkspaceHeaderProps {
   title: string;
   description?: string;
   breadcrumbs?: Breadcrumb[];
-  
+
   // Stats (Miller's Law: max 5)
   stats?: Stat[];
-  
+
   // Actions (Hick's Law: max 3 primary)
   primaryAction?: Action;
   secondaryActions?: Action[];
-  
+
   // View controls
   viewMode?: 'table' | 'grid' | 'kanban';
   onViewModeChange?: (mode: 'table' | 'grid' | 'kanban') => void;
   availableViews?: Array<'table' | 'grid' | 'kanban'>;
-  
+
   // Filters
   showFilters?: boolean;
   onToggleFilters?: () => void;
   filterCount?: number;
-  
+
+  // Navigation
+  onBack?: () => void;
+
   // Styling
   className?: string;
 }
@@ -209,11 +212,10 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
                     <button
                       key={mode}
                       onClick={() => onViewModeChange(mode)}
-                      className={`px-3 py-2 transition-colors ${
-                        viewMode === mode
+                      className={`px-3 py-2 transition-colors ${viewMode === mode
                           ? 'bg-muted text-foreground'
                           : 'text-muted-foreground hover:text-foreground hover:bg-neutral-50'
-                      } ${mode !== availableViews[0] ? 'border-l border-border' : ''}`}
+                        } ${mode !== availableViews[0] ? 'border-l border-border' : ''}`}
                       aria-label={`${mode} view`}
                       aria-pressed={viewMode === mode}
                     >

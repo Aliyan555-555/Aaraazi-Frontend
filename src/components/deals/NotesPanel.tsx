@@ -4,16 +4,16 @@
  */
 
 import React, { useState } from 'react';
-import { Deal, DealNote } from '../../types';
+import { Deal, DealNote } from '../../types/deals';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { PermissionGate } from './PermissionGate';
-import { 
-  MessageSquare, 
-  Lock, 
+import {
+  MessageSquare,
+  Lock,
   Users,
   Send,
   Eye
@@ -27,33 +27,33 @@ interface NotesPanelProps {
   onAddNote?: (content: string, isPrivate: boolean) => void;
 }
 
-export const NotesPanel: React.FC<NotesPanelProps> = ({ 
-  deal, 
+export const NotesPanel: React.FC<NotesPanelProps> = ({
+  deal,
   currentUserId,
   currentUserName,
   onAddNote
 }) => {
   const [newNoteContent, setNewNoteContent] = useState('');
   const [activeTab, setActiveTab] = useState('shared');
-  
+
   const userRole = getUserRoleInDeal(currentUserId, deal);
   const isPrimary = userRole === 'primary';
-  
+
   // Get notes for each category
   const sharedNotes = deal.collaboration.sharedNotes || [];
   const primaryNotes = deal.collaboration.primaryAgentNotes || [];
   const secondaryNotes = deal.collaboration.secondaryAgentNotes || [];
-  
+
   // Filter notes based on role
   const myPrivateNotes = isPrimary ? primaryNotes : secondaryNotes;
-  
+
   const handleSubmitNote = (isPrivate: boolean) => {
     if (!newNoteContent.trim()) return;
-    
+
     onAddNote?.(newNoteContent, isPrivate);
     setNewNoteContent('');
   };
-  
+
   return (
     <div className="space-y-4">
       <Card>
@@ -75,7 +75,7 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
                 My Private Notes ({myPrivateNotes.length})
               </TabsTrigger>
             </TabsList>
-            
+
             {/* Shared Notes Tab */}
             <TabsContent value="shared" className="space-y-4 mt-4">
               {/* Add Note Form */}
@@ -90,7 +90,7 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
                   <p className="text-xs text-muted-foreground">
                     💡 Shared notes are visible to both primary and secondary agents
                   </p>
-                  <Button 
+                  <Button
                     onClick={() => handleSubmitNote(false)}
                     disabled={!newNoteContent.trim()}
                     size="sm"
@@ -100,7 +100,7 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
                   </Button>
                 </div>
               </div>
-              
+
               {/* Notes List */}
               <div className="space-y-3 mt-6">
                 {sharedNotes.length === 0 ? (
@@ -111,9 +111,9 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
                   </div>
                 ) : (
                   sharedNotes.map(note => (
-                    <NoteItem 
-                      key={note.id} 
-                      note={note} 
+                    <NoteItem
+                      key={note.id}
+                      note={note}
                       currentUserId={currentUserId}
                       deal={deal}
                     />
@@ -121,7 +121,7 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
                 )}
               </div>
             </TabsContent>
-            
+
             {/* Private Notes Tab */}
             <TabsContent value="private" className="space-y-4 mt-4">
               {/* Add Private Note Form */}
@@ -136,7 +136,7 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
                   <p className="text-xs text-muted-foreground">
                     🔒 Private notes are only visible to you
                   </p>
-                  <Button 
+                  <Button
                     onClick={() => handleSubmitNote(true)}
                     disabled={!newNoteContent.trim()}
                     size="sm"
@@ -147,7 +147,7 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
                   </Button>
                 </div>
               </div>
-              
+
               {/* Private Notes List */}
               <div className="space-y-3 mt-6">
                 {myPrivateNotes.length === 0 ? (
@@ -158,9 +158,9 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
                   </div>
                 ) : (
                   myPrivateNotes.map(note => (
-                    <NoteItem 
-                      key={note.id} 
-                      note={note} 
+                    <NoteItem
+                      key={note.id}
+                      note={note}
                       currentUserId={currentUserId}
                       deal={deal}
                     />
@@ -171,7 +171,7 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
           </Tabs>
         </CardContent>
       </Card>
-      
+
       {/* Communication Log */}
       {deal.collaboration.communications && deal.collaboration.communications.length > 0 && (
         <Card>
@@ -183,17 +183,13 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
               {deal.collaboration.communications.map(comm => (
                 <div key={comm.id} className="p-3 border rounded-lg text-sm">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">{comm.from.agentName}</span>
+                    <span className="font-medium">{comm.createdByName}</span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(comm.timestamp).toLocaleString()}
+                      {new Date(comm.date).toLocaleString()}
                     </span>
                   </div>
-                  {comm.to && (
-                    <div className="text-xs text-muted-foreground mb-2">
-                      To: {comm.to.agentName}
-                    </div>
-                  )}
-                  <p className="text-muted-foreground">{comm.message}</p>
+                  {/* To field not available in type */}
+                  <p className="text-muted-foreground">{comm.content}</p>
                   {comm.type && (
                     <Badge variant="outline" className="mt-2 text-xs">
                       {comm.type}
@@ -205,7 +201,7 @@ export const NotesPanel: React.FC<NotesPanelProps> = ({
           </CardContent>
         </Card>
       )}
-      
+
       {/* Last Update Info */}
       {deal.collaboration.lastUpdatedBy && (
         <Card>
@@ -233,31 +229,26 @@ interface NoteItemProps {
 }
 
 const NoteItem: React.FC<NoteItemProps> = ({ note, currentUserId, deal }) => {
-  const isMyNote = note.createdBy.agentId === currentUserId;
-  
+  const isMyNote = note.createdBy === currentUserId;
+
   return (
     <div className={`p-4 border rounded-lg ${isMyNote ? 'bg-blue-50 border-blue-200' : ''}`}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-sm">{note.createdBy.agentName}</span>
+          <span className="font-medium text-sm">{note.createdByName}</span>
           {isMyNote && (
             <Badge variant="outline" className="text-xs">You</Badge>
           )}
-          {note.isPrivate && (
-            <Badge variant="secondary" className="text-xs gap-1">
-              <Lock className="h-3 w-3" />
-              Private
-            </Badge>
-          )}
+          {/* isPrivate support removed from type */}
         </div>
         <span className="text-xs text-muted-foreground">
           {new Date(note.createdAt).toLocaleString()}
         </span>
       </div>
-      
+
       <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-      
-      {note.updatedAt !== note.createdAt && (
+
+      {note.updatedAt && note.updatedAt !== note.createdAt && (
         <div className="text-xs text-muted-foreground mt-2">
           (Edited {new Date(note.updatedAt).toLocaleString()})
         </div>

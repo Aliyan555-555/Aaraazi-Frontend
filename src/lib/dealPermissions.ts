@@ -12,7 +12,8 @@
  * - Cannot edit or record payments
  */
 
-import { Deal, AgentRole, DealPermissions } from '../types';
+import { AgentRole } from '../types';
+import { Deal, DealPermissions } from '../types/deals';
 
 /**
  * Get permissions based on agent role

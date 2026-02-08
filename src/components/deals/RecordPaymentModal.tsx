@@ -6,7 +6,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 import { recordAdHocPayment, recordInstallmentPayment, RecordAdHocPaymentInput, RecordInstallmentPaymentInput } from '../../lib/dealPayments';
-import { Deal, PaymentInstallment } from '../../types';
+import { Deal, PaymentInstallment } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { AlertCircle, DollarSign, Receipt } from 'lucide-react';
@@ -40,7 +40,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
   const [overpaymentWarning, setOverpaymentWarning] = useState<string | null>(null);
 
   const isAdHoc = !selectedInstallment;
-  const expectedAmount = selectedInstallment ? selectedInstallment.amount - selectedInstallment.paidAmount : 0;
+  const expectedAmount = selectedInstallment ? selectedInstallment.amount - (selectedInstallment.paidAmount ?? 0) : 0;
 
   // Check for overpayment
   useEffect(() => {
@@ -65,7 +65,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
   const handleSubmit = async () => {
     // Validation
     const numAmount = parseFloat(amount);
-    
+
     if (!amount || isNaN(numAmount) || numAmount <= 0) {
       toast.error('Please enter a valid payment amount');
       return;
@@ -106,7 +106,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
 
         // Find the newly created payment to get receipt number
         const newPayment = updatedDeal.financial.payments[updatedDeal.financial.payments.length - 1];
-        
+
         toast.success(
           `Payment recorded successfully! Receipt ${newPayment.receiptNumber} generated.`,
           { duration: 5000 }
@@ -133,7 +133,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
         // Check for overpayment
         if (numAmount > expectedAmount) {
           const excess = numAmount - expectedAmount;
-          
+
           // Get updated installment
           const updatedInstallment = updatedDeal.financial.paymentPlan?.installments.find(
             i => i.id === selectedInstallment!.id
@@ -142,7 +142,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           if (updatedInstallment) {
             // Find next pending installment
             const nextPending = updatedDeal.financial.paymentPlan?.installments.find(
-              i => i.sequence > updatedInstallment.sequence && (i.status === 'pending' || i.status === 'partial')
+              i => (i.sequence ?? 0) > (updatedInstallment.sequence ?? 0) && (i.status === 'pending' || i.status === 'partial')
             );
 
             if (nextPending) {
@@ -179,7 +179,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
             {isAdHoc ? 'Record Ad-Hoc Payment' : 'Record Installment Payment'}
           </DialogTitle>
           <DialogDescription>
-            {isAdHoc 
+            {isAdHoc
               ? 'Record a payment that is not part of a formal payment plan'
               : `Record payment for: ${selectedInstallment?.description}`
             }
@@ -200,10 +200,10 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
                   {new Date(selectedInstallment.dueDate).toLocaleDateString()}
                 </span>
               </div>
-              {selectedInstallment.paidAmount > 0 && (
+              {(selectedInstallment.paidAmount ?? 0) > 0 && (
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Already Paid</span>
-                  <span className="text-sm text-green-600">{formatPKR(selectedInstallment.paidAmount)}</span>
+                  <span className="text-sm text-green-600">{formatPKR(selectedInstallment.paidAmount ?? 0)}</span>
                 </div>
               )}
             </div>

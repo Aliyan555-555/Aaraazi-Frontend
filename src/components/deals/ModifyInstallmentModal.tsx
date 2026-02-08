@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { modifyInstallment, ModifyInstallmentInput } from '../../lib/dealPayments';
-import { Deal, PaymentInstallment } from '../../types';
+import { Deal, PaymentInstallment } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { AlertCircle, Edit, History } from 'lucide-react';
@@ -35,8 +35,8 @@ export const ModifyInstallmentModal: React.FC<ModifyInstallmentModalProps> = ({
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const hasChanges = 
-    parseFloat(amount) !== installment.amount || 
+  const hasChanges =
+    parseFloat(amount) !== installment.amount ||
     dueDate !== installment.dueDate.split('T')[0];
 
   const amountDifference = parseFloat(amount) - installment.amount;
@@ -44,7 +44,7 @@ export const ModifyInstallmentModal: React.FC<ModifyInstallmentModalProps> = ({
   const handleSubmit = async () => {
     // Validation
     const numAmount = parseFloat(amount);
-    
+
     if (!amount || isNaN(numAmount) || numAmount <= 0) {
       toast.error('Please enter a valid amount');
       return;
@@ -70,10 +70,10 @@ export const ModifyInstallmentModal: React.FC<ModifyInstallmentModalProps> = ({
     try {
       const input: ModifyInstallmentInput = {
         installmentId: installment.id,
-        amount: numAmount !== installment.amount ? numAmount : undefined,
-        dueDate: dueDate !== installment.dueDate.split('T')[0] ? dueDate : undefined,
+        newAmount: numAmount !== installment.amount ? numAmount : undefined,
+        newDueDate: dueDate !== installment.dueDate.split('T')[0] ? dueDate : undefined,
         reason: reason.trim(),
-        notes: notes.trim() || undefined,
+        // notes field removed as it is not supported by ModifyInstallmentInput
       };
 
       const updatedDeal = modifyInstallment(
@@ -136,10 +136,10 @@ export const ModifyInstallmentModal: React.FC<ModifyInstallmentModalProps> = ({
               <span className="text-muted-foreground">Status</span>
               <span className="capitalize">{installment.status}</span>
             </div>
-            {installment.paidAmount > 0 && (
+            {(installment.paidAmount ?? 0) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Paid Amount</span>
-                <span className="text-green-600">{formatPKR(installment.paidAmount)}</span>
+                <span className="text-green-600">{formatPKR(installment.paidAmount ?? 0)}</span>
               </div>
             )}
           </div>
@@ -245,8 +245,8 @@ export const ModifyInstallmentModal: React.FC<ModifyInstallmentModalProps> = ({
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting || installment.status === 'paid' || !hasChanges}
           >
             {isSubmitting ? 'Modifying...' : 'Modify Installment'}

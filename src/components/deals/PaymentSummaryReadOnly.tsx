@@ -1,15 +1,15 @@
 import React from 'react';
-import { Deal } from '../../types';
+import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { getPaymentSummary } from '../../lib/dealPayments';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Button } from '../ui/button';
-import { 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown, 
-  AlertCircle, 
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
   Calendar,
   CheckCircle2,
   Clock,
@@ -107,7 +107,7 @@ export const PaymentSummaryReadOnly: React.FC<PaymentSummaryReadOnlyProps> = ({
         {summary.paymentPlanStatus !== 'no-plan' && (
           <>
             <Progress value={summary.percentagePaid} className="h-1.5" />
-            
+
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <p className="text-xs text-muted-foreground">Total</p>
@@ -214,7 +214,7 @@ export const PaymentSummaryReadOnly: React.FC<PaymentSummaryReadOnlyProps> = ({
               <p className="text-xs text-muted-foreground mb-1">Total Amount</p>
               <p className="font-medium">{formatPKR(summary.totalAmount)}</p>
             </div>
-            
+
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <TrendingUp className="h-3 w-3 text-green-600" />
@@ -222,7 +222,7 @@ export const PaymentSummaryReadOnly: React.FC<PaymentSummaryReadOnlyProps> = ({
               </div>
               <p className="font-medium text-green-600">{formatPKR(summary.totalPaid)}</p>
             </div>
-            
+
             <div className="text-center p-3 bg-orange-50 rounded-lg">
               <div className="flex items-center justify-center gap-1 mb-1">
                 <TrendingDown className="h-3 w-3 text-orange-600" />
@@ -248,7 +248,7 @@ export const PaymentSummaryReadOnly: React.FC<PaymentSummaryReadOnlyProps> = ({
                     <div className="text-right">
                       <p className="text-xs text-blue-600">Due Date</p>
                       <p className="font-medium text-blue-900">
-                        {new Date(summary.nextPaymentDue.dueDate).toLocaleDateString()}
+                        {new Date(summary.nextPaymentDue.date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -308,9 +308,9 @@ export const PaymentSummaryReadOnly: React.FC<PaymentSummaryReadOnlyProps> = ({
       {/* View Full Details Link */}
       {onViewFullDetails && (
         <div className="pt-2 border-t">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onViewFullDetails}
             className="w-full"
           >

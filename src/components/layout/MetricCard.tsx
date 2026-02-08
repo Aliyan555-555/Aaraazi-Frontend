@@ -11,7 +11,7 @@ export interface MetricCardProps {
     period?: string;
   };
   onClick?: () => void;
-  variant?: 'default' | 'compact' | 'inline';
+  variant?: 'default' | 'compact' | 'inline' | 'success' | 'warning' | 'danger' | 'info';
   className?: string;
 }
 
@@ -26,11 +26,11 @@ export interface MetricCardProps {
  *   trend={{ value: 12, direction: 'up', period: 'this month' }}
  * />
  */
-export function MetricCard({ 
-  label, 
-  value, 
-  icon, 
-  trend, 
+export function MetricCard({
+  label,
+  value,
+  icon,
+  trend,
   onClick,
   variant = 'default',
   className = ''
@@ -39,20 +39,39 @@ export function MetricCard({
 
   // Variant styles
   const variantStyles = {
-    default: 'p-4',
-    compact: 'p-3',
-    inline: 'p-2'
+    default: 'p-4 bg-white border-gray-200',
+    compact: 'p-3 bg-white border-gray-200',
+    inline: 'p-2 bg-white border-gray-200',
+    success: 'p-4 bg-white border-green-200',
+    warning: 'p-4 bg-white border-yellow-200',
+    danger: 'p-4 bg-white border-red-200',
+    info: 'p-4 bg-white border-blue-200'
+  };
+
+  const iconStyles = {
+    default: 'text-gray-400',
+    compact: 'text-gray-400',
+    inline: 'text-gray-400',
+    success: 'text-green-500',
+    warning: 'text-yellow-500',
+    danger: 'text-red-500',
+    info: 'text-blue-500'
   };
 
   const baseClasses = `
-    bg-white border border-gray-200 rounded-lg 
+    border rounded-lg 
     ${variantStyles[variant]}
-    ${isClickable ? 'cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all' : ''}
+    ${isClickable ? 'cursor-pointer hover:shadow-sm transition-all' : ''}
+    ${isClickable && variant === 'default' ? 'hover:border-gray-300' : ''}
+    ${isClickable && variant === 'success' ? 'hover:border-green-300' : ''}
+    ${isClickable && variant === 'warning' ? 'hover:border-yellow-300' : ''}
+    ${isClickable && variant === 'danger' ? 'hover:border-red-300' : ''}
+    ${isClickable && variant === 'info' ? 'hover:border-blue-300' : ''}
     ${className}
   `;
 
   return (
-    <div 
+    <div
       className={baseClasses}
       onClick={onClick}
       role={isClickable ? 'button' : undefined}
@@ -63,11 +82,11 @@ export function MetricCard({
       <div className="flex items-center justify-between mb-2">
         <span className="text-gray-600">{label}</span>
         {icon && (
-          <div className="text-gray-400">
-            {React.cloneElement(icon as React.ReactElement, { 
+          <div className={iconStyles[variant]}>
+            {React.cloneElement(icon as React.ReactElement, {
               className: 'w-4 h-4',
               'aria-hidden': 'true'
-            })}
+            } as any)}
           </div>
         )}
       </div>
@@ -77,12 +96,11 @@ export function MetricCard({
         <span className="text-2xl text-[#030213]">
           {typeof value === 'number' ? value.toLocaleString() : value}
         </span>
-        
+
         {/* Trend Indicator */}
         {trend && (
-          <div className={`flex items-center gap-1 text-sm ${
-            trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
-          }`}>
+          <div className={`flex items-center gap-1 text-sm ${trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
+            }`}>
             {trend.direction === 'up' ? (
               <TrendingUp className="w-3 h-3" aria-label="Trending up" />
             ) : (

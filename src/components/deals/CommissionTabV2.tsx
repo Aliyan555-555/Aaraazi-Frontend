@@ -25,14 +25,15 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Deal, User } from '../../types';
+import { User } from '../../types';
+import { Deal, CommissionAgent } from '../../types/deals';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -45,7 +46,6 @@ import { AddAgentToCommissionModal } from './AddAgentToCommissionModal';
 import { formatPKR } from '../../lib/currency';
 import { updateDeal } from '../../lib/deals';
 import {
-  CommissionAgent,
   validateCommissionSplits,
   addAgentToCommission,
   removeAgentFromCommission,
@@ -103,10 +103,10 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
   const [payoutTrigger, setPayoutTrigger] = useState<string>(
     deal.financial.commission.payoutTrigger || 'full-payment'
   );
-  
+
   // Agent edit states
   const [agentEditStates, setAgentEditStates] = useState<Record<string, AgentEditState>>({});
-  
+
   // Agency edit state
   const [agencyMode, setAgencyMode] = useState<InputMode>('percentage');
   const [agencyValue, setAgencyValue] = useState(
@@ -214,7 +214,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
   const toggleAgentMode = (agentId: string, currentMode: InputMode, agent: CommissionAgent) => {
     const newMode: InputMode = currentMode === 'percentage' ? 'amount' : 'percentage';
     const currentState = agentEditStates[agentId];
-    
+
     let newValue: string;
     if (currentState) {
       const val = parseFloat(currentState.value) || 0;
@@ -227,8 +227,8 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
       }
     } else {
       // Initialize from agent data
-      newValue = newMode === 'percentage' 
-        ? agent.percentage.toString() 
+      newValue = newMode === 'percentage'
+        ? agent.percentage.toString()
         : agent.amount.toString();
     }
 
@@ -250,7 +250,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
   // Toggle agency mode
   const toggleAgencyMode = () => {
     const newMode: InputMode = agencyMode === 'percentage' ? 'amount' : 'percentage';
-    
+
     let newValue: string;
     const val = parseFloat(agencyValue) || 0;
     if (agencyMode === 'percentage') {
@@ -324,7 +324,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
   // Add agent
   const handleAddAgent = (newAgent: Omit<CommissionAgent, 'amount' | 'status'>) => {
     try {
-      const updatedDeal = addAgentToCommission(deal.id, newAgent, totalCommission);
+      const updatedDeal = addAgentToCommission(deal.id, { ...newAgent, status: 'pending' }, totalCommission);
       setAgents(updatedDeal.financial.commission.agents || []);
       onUpdate(updatedDeal);
       setAddAgentModalOpen(false);
@@ -346,7 +346,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
     try {
       const updatedDeal = removeAgentFromCommission(deal.id, agentId);
       setAgents(updatedDeal.financial.commission.agents || []);
-      
+
       // Remove from edit states
       setAgentEditStates(prev => {
         const newState = { ...prev };
@@ -366,24 +366,24 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
     if (!isAdmin) return;
 
     const now = new Date().toISOString();
-    
+
     try {
       if (selectedAgentForStatus) {
         // Update agent status
         const updatedAgents = [...agents];
         const agent = updatedAgents[selectedAgentForStatus.index];
-        
+
         agent.status = newStatus;
-        
+
         if (newStatus === 'approved') {
           agent.approvedBy = user.name;
           agent.approvedAt = now;
         }
-        
+
         if (newStatus === 'paid') {
           agent.paidDate = now;
         }
-        
+
         if (reason) {
           agent.notes = reason;
         }
@@ -485,8 +485,8 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
               <CheckCircle2 className="h-4 w-4 text-gray-600" />
               Payout Trigger
             </Label>
-            <Select 
-              value={payoutTrigger} 
+            <Select
+              value={payoutTrigger}
               onValueChange={setPayoutTrigger}
               disabled={!canEdit}
             >
@@ -509,7 +509,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
         {/* Save Button */}
         {canEdit && (
           <div className="flex justify-end">
-            <Button 
+            <Button
               onClick={handleSaveConfiguration}
               disabled={!isValid}
               size="sm"
@@ -529,28 +529,25 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-sm text-gray-600">Allocated</p>
-                <p className={`font-semibold ${
-                  isValid ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <p className={`font-semibold ${isValid ? 'text-green-600' : 'text-red-600'
+                  }`}>
                   {totalAllocatedPercentage.toFixed(2)}%
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600">Remaining</p>
-                <p className={`font-semibold ${
-                  Math.abs(remainingPercentage) < 0.01 ? 'text-green-600' : 'text-orange-600'
-                }`}>
+                <p className={`font-semibold ${Math.abs(remainingPercentage) < 0.01 ? 'text-green-600' : 'text-orange-600'
+                  }`}>
                   {remainingPercentage.toFixed(2)}%
                 </p>
               </div>
             </div>
           </div>
 
-          <Progress 
-            value={Math.min(totalAllocatedPercentage, 100)} 
-            className={`h-3 ${
-              isValid ? 'bg-green-100' : 'bg-red-100'
-            }`}
+          <Progress
+            value={Math.min(totalAllocatedPercentage, 100)}
+            className={`h-3 ${isValid ? 'bg-green-100' : 'bg-red-100'
+              }`}
           />
 
           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -560,9 +557,8 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
             </div>
             <div>
               <p className="text-gray-600">Remaining Amount</p>
-              <p className={`font-semibold ${
-                Math.abs(remainingAmount) < 1 ? 'text-green-600' : 'text-orange-600'
-              }`}>
+              <p className={`font-semibold ${Math.abs(remainingAmount) < 1 ? 'text-green-600' : 'text-orange-600'
+                }`}>
                 {formatPKR(remainingAmount)}
               </p>
             </div>
@@ -608,7 +604,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
               const originalAgent = agents[index];
 
               return (
-                <div 
+                <div
                   key={agent.id}
                   className="bg-gray-50 border border-gray-200 rounded-lg p-4"
                 >
@@ -616,16 +612,16 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-medium text-gray-900">{agent.name}</p>
-                        <Badge 
+                        <Badge
                           variant="secondary"
-                          className={agent.type === 'external' 
-                            ? 'bg-orange-100 text-orange-800 border-orange-200' 
+                          className={agent.type === 'external'
+                            ? 'bg-orange-100 text-orange-800 border-orange-200'
                             : 'bg-blue-100 text-blue-800 border-blue-200'
                           }
                         >
                           {agent.type === 'internal' ? 'Internal' : 'External'}
                         </Badge>
-                        <div 
+                        <div
                           className="cursor-pointer"
                           onClick={() => {
                             if (isAdmin) {
@@ -634,9 +630,8 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
                             }
                           }}
                         >
-                          <CommissionStatusBadge 
+                          <CommissionStatusBadge
                             status={originalAgent.status}
-                            clickable={isAdmin}
                           />
                         </div>
                       </div>
@@ -693,7 +688,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
                         {mode === 'percentage' ? 'Amount' : '%'}
                       </p>
                       <p className="text-sm font-medium text-gray-900">
-                        {mode === 'percentage' 
+                        {mode === 'percentage'
                           ? formatPKR(agent.displayAmount)
                           : `${agent.displayPercentage.toFixed(2)}%`
                         }
@@ -732,7 +727,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
               <div className="flex items-center gap-2 mb-1">
                 <Building2 className="h-5 w-5 text-gray-600" />
                 <p className="font-medium text-gray-900">Agency Split</p>
-                <div 
+                <div
                   className="cursor-pointer"
                   onClick={() => {
                     if (isAdmin) {
@@ -741,9 +736,8 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
                     }
                   }}
                 >
-                  <CommissionStatusBadge 
+                  <CommissionStatusBadge
                     status={(deal.financial.commission.split.agency.status as CommissionStatus) || 'pending'}
-                    clickable={isAdmin}
                   />
                 </div>
               </div>
@@ -791,7 +785,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
                 {agencyMode === 'percentage' ? 'Amount' : '%'}
               </p>
               <p className="text-sm font-medium text-gray-900">
-                {agencyMode === 'percentage' 
+                {agencyMode === 'percentage'
                   ? formatPKR(agencyAmount)
                   : `${agencyPercentage.toFixed(2)}%`
                 }
@@ -812,11 +806,10 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
       </Card>
 
       {/* Validation Footer */}
-      <Card className={`p-4 ${
-        isValid 
-          ? 'bg-green-50 border-green-200' 
-          : 'bg-red-50 border-red-200'
-      }`}>
+      <Card className={`p-4 ${isValid
+        ? 'bg-green-50 border-green-200'
+        : 'bg-red-50 border-red-200'
+        }`}>
         <div className="flex items-start gap-3">
           {isValid ? (
             <>
@@ -838,7 +831,7 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
                   Commission allocation incomplete
                 </p>
                 <p className="text-sm text-red-700 mt-1">
-                  {totalAllocatedPercentage > 100 
+                  {totalAllocatedPercentage > 100
                     ? `Over-allocated by ${(totalAllocatedPercentage - 100).toFixed(2)}% (${formatPKR(Math.abs(remainingAmount))})`
                     : `Under-allocated by ${(100 - totalAllocatedPercentage).toFixed(2)}% (${formatPKR(remainingAmount)})`
                   }
@@ -868,8 +861,8 @@ export function CommissionTabV2({ deal, user, isPrimary, onUpdate }: CommissionT
             setSelectedAgentForStatus(null);
           }}
           currentStatus={
-            selectedAgentForStatus 
-              ? selectedAgentForStatus.agent.status 
+            selectedAgentForStatus
+              ? selectedAgentForStatus.agent.status
               : (deal.financial.commission.split.agency.status as CommissionStatus) || 'pending'
           }
           agentName={selectedAgentForStatus ? selectedAgentForStatus.agent.name : 'Agency'}

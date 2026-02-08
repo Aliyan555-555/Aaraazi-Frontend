@@ -85,7 +85,7 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
   const previews = useMemo(() => {
     return selectedBudgets.map(budget => {
       const percentage = parseFloat(adjustPercentage) || 0;
-      const newAmount = percentage !== 0 
+      const newAmount = percentage !== 0
         ? Math.round(budget.amount * (1 + percentage / 100))
         : budget.amount;
 
@@ -116,10 +116,10 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
 
   // Check if any changes are selected
   const hasChanges = useMemo(() => {
-    return (adjustPercentage && parseFloat(adjustPercentage) !== 0) || 
-           changePeriod || 
-           changeStatus || 
-           addNotes;
+    return (adjustPercentage && parseFloat(adjustPercentage) !== 0) ||
+      changePeriod ||
+      changeStatus ||
+      addNotes;
   }, [adjustPercentage, changePeriod, changeStatus, addNotes]);
 
   // Handle save
@@ -161,9 +161,9 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
           ...preview.budget,
           ...changes,
         });
-        
+
         const changesList = compareSnapshots(oldSnapshot, newSnapshot);
-        
+
         if (changesList.length > 0) {
           saveBudgetVersion(
             preview.budget.id,
@@ -241,7 +241,7 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
                 </div>
               </div>
             </div>
-            
+
             {totals.difference !== 0 && (
               <div className="mt-3 pt-3 border-t border-purple-300">
                 <div className="flex items-center justify-between">
@@ -253,7 +253,7 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
                         +{formatPKR(totals.difference)}
                       </Badge>
                     ) : (
-                      <Badge variant="danger">
+                      <Badge variant="destructive">
                         <TrendingDown className="h-3 w-3 mr-1" />
                         {formatPKR(totals.difference)}
                       </Badge>
@@ -277,7 +277,7 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
                 <Label>Adjust Budget Amounts</Label>
                 <Badge variant="secondary">Optional</Badge>
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Percentage Adjustment (%)</Label>
                 <div className="relative">
@@ -335,8 +335,8 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
               </div>
 
               {changeStatus && (
-                <Select 
-                  value={newStatus ? 'active' : 'inactive'} 
+                <Select
+                  value={newStatus ? 'active' : 'inactive'}
                   onValueChange={(val) => setNewStatus(val === 'active')}
                 >
                   <SelectTrigger>
@@ -374,7 +374,7 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
           {/* Preview */}
           <div className="space-y-3">
             <h3 className="text-gray-900">Preview Changes</h3>
-            
+
             <div className="border border-gray-300 rounded-lg overflow-hidden">
               <div className="max-h-96 overflow-y-auto">
                 <table className="w-full">
@@ -401,7 +401,7 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
                         </td>
                         <td className="px-4 py-3 text-sm text-right">
                           {preview.amountDiff !== 0 ? (
-                            <Badge variant={preview.amountDiff > 0 ? 'success' : 'danger'}>
+                            <Badge variant={preview.amountDiff > 0 ? 'success' : 'destructive'}>
                               {preview.amountDiff > 0 ? '+' : ''}
                               {formatPKR(preview.amountDiff)}
                             </Badge>
@@ -441,7 +441,7 @@ export const BulkEditBudgetsModal: React.FC<BulkEditBudgetsModalProps> = ({
               <div className="flex items-start gap-2">
                 <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-green-900">
-                  Ready to apply changes to {selectedBudgets.length} budget{selectedBudgets.length !== 1 ? 's' : ''}. 
+                  Ready to apply changes to {selectedBudgets.length} budget{selectedBudgets.length !== 1 ? 's' : ''}.
                   All changes will be tracked in version history.
                 </div>
               </div>

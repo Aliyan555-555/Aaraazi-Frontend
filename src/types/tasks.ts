@@ -1,6 +1,6 @@
 /**
  * Comprehensive Task Management Types
- * 
+ *
  * ERP-standard task management with advanced features:
  * - Task dependencies
  * - Recurring tasks
@@ -10,65 +10,65 @@
  * - Automation rules
  */
 
-import { CRMTask } from './crm';
+import { CRMTask } from "./crm";
 
 /**
  * Task Priority with numeric scoring
  */
-export type TaskPriority = 'urgent' | 'high' | 'medium' | 'low';
+export type TaskPriority = "urgent" | "high" | "medium" | "low";
 
 /**
  * Task Status
  */
-export type TaskStatus = 
-  | 'not-started'
-  | 'in-progress'
-  | 'waiting'
-  | 'completed'
-  | 'cancelled'
-  | 'overdue';
+export type TaskStatus =
+  | "not-started"
+  | "in-progress"
+  | "waiting"
+  | "completed"
+  | "cancelled"
+  | "overdue";
 
 /**
  * Task Category for organization
  */
-export type TaskCategory = 
-  | 'follow-up'
-  | 'viewing'
-  | 'documentation'
-  | 'negotiation'
-  | 'inspection'
-  | 'meeting'
-  | 'administrative'
-  | 'marketing'
-  | 'financial'
-  | 'legal'
-  | 'custom';
+export type TaskCategory =
+  | "follow-up"
+  | "viewing"
+  | "documentation"
+  | "negotiation"
+  | "inspection"
+  | "meeting"
+  | "administrative"
+  | "marketing"
+  | "financial"
+  | "legal"
+  | "custom";
 
 /**
  * Entity types that tasks can be linked to
  */
-export type TaskEntityType = 
-  | 'property'
-  | 'lead'
-  | 'contact'
-  | 'deal'
-  | 'sell-cycle'
-  | 'purchase-cycle'
-  | 'rent-cycle'
-  | 'buyer-requirement'
-  | 'rent-requirement'
-  | 'project';
+export type TaskEntityType =
+  | "property"
+  | "lead"
+  | "contact"
+  | "deal"
+  | "sell-cycle"
+  | "purchase-cycle"
+  | "rent-cycle"
+  | "buyer-requirement"
+  | "rent-requirement"
+  | "project";
 
 /**
  * Recurrence pattern
  */
-export type RecurrencePattern = 
-  | 'daily'
-  | 'weekly'
-  | 'biweekly'
-  | 'monthly'
-  | 'quarterly'
-  | 'yearly';
+export type RecurrencePattern =
+  | "daily"
+  | "weekly"
+  | "biweekly"
+  | "monthly"
+  | "quarterly"
+  | "yearly";
 
 /**
  * Recurrence configuration
@@ -88,7 +88,7 @@ export interface RecurrenceConfig {
 export interface TaskReminder {
   id: string;
   taskId: string;
-  type: 'email' | 'notification' | 'sms';
+  type: "email" | "notification" | "sms";
   triggerBefore: number; // minutes before due date
   sent: boolean;
   sentAt?: string;
@@ -100,7 +100,7 @@ export interface TaskReminder {
 export interface TaskDependency {
   taskId: string; // The task that depends
   dependsOnTaskId: string; // The task it depends on
-  type: 'finish-to-start' | 'start-to-start' | 'finish-to-finish';
+  type: "finish-to-start" | "start-to-start" | "finish-to-finish";
 }
 
 /**
@@ -157,74 +157,77 @@ export interface TaskAttachment {
 /**
  * Enhanced Task (extends CRMTask with advanced features)
  */
-export interface TaskV4 extends Omit<CRMTask, 'dueDate' | 'priority'> {
+export interface TaskV4 extends Omit<
+  CRMTask,
+  "dueDate" | "priority" | "status"
+> {
   // Enhanced fields
   priority: TaskPriority;
   status: TaskStatus;
   category: TaskCategory;
-  
+
   // Dates (all as ISO strings)
   dueDate: string;
   startDate?: string;
   completedAt?: string;
-  
+
   // Assignment
   agentId: string; // Primary assignee
   assignedTo: string[]; // Multiple assignees
   createdBy: string;
-  
+
   // Progress tracking
   progress: number; // 0-100
   estimatedMinutes?: number;
   actualMinutes?: number;
-  
+
   // Entity relationships
   entityType?: TaskEntityType;
   entityId?: string;
   entityName?: string;
-  
+
   // Legacy compatibility
   contactId?: string;
   propertyId?: string;
   leadId?: string;
   dealId?: string;
-  
+
   // Subtasks
   parentTaskId?: string;
   hasSubtasks: boolean;
-  
+
   // Recurrence
   isRecurring: boolean;
   recurrenceConfig?: RecurrenceConfig;
   recurrenceParentId?: string;
-  
+
   // Checklist
   checklist: TaskChecklistItem[];
-  
+
   // Dependencies
   blockedBy: string[]; // Task IDs that must complete first
   blocking: string[]; // Task IDs that are waiting for this
-  
+
   // Collaboration
   watchers: string[]; // User IDs watching this task
   comments: TaskComment[];
-  
+
   // Time tracking
   timeEntries: TaskTimeEntry[];
-  
+
   // Attachments
   attachments: TaskAttachment[];
-  
+
   // Reminders
   reminders: TaskReminder[];
-  
+
   // Tags for organization
   tags: string[];
-  
+
   // Template
   isTemplate: boolean;
   templateName?: string;
-  
+
   // Metadata
   createdAt: string;
   updatedAt: string;
@@ -247,10 +250,10 @@ export interface TaskTemplate {
   checklist: TaskChecklistItem[];
   tags: string[];
   defaultAssignee?: string;
-  
+
   // For recurring templates
   recurrenceConfig?: RecurrenceConfig;
-  
+
   // Template metadata
   usageCount: number;
   createdBy: string;
@@ -267,15 +270,16 @@ export interface TaskAutomationRule {
   name: string;
   description: string;
   enabled: boolean;
-  
+
   // Trigger
   trigger: {
-    type: 
-      | 'entity-created' // When property/lead/deal is created
-      | 'entity-status-changed' // When status changes
-      | 'date-based' // Specific date or X days after
-      | 'manual'; // Manually triggered
-    
+    type:
+      | "entity-created" // When property/lead/deal is created
+      | "entity-status-changed" // When status changes
+      | "date-based" // Specific date or X days after
+      | "manual" // Manually triggered
+      | "payment-overdue"; // Payment overdue trigger
+
     entityType?: TaskEntityType;
     statusChange?: {
       from?: string;
@@ -283,14 +287,19 @@ export interface TaskAutomationRule {
     };
     dateOffset?: number; // Days offset from trigger date
   };
-  
+
   // Conditions
   conditions?: {
     field: string;
-    operator: 'equals' | 'not-equals' | 'contains' | 'greater-than' | 'less-than';
+    operator:
+      | "equals"
+      | "not-equals"
+      | "contains"
+      | "greater-than"
+      | "less-than";
     value: any;
   }[];
-  
+
   // Action: Create task
   taskTemplate: {
     title: string;
@@ -298,12 +307,12 @@ export interface TaskAutomationRule {
     category: TaskCategory;
     priority: TaskPriority;
     dueInDays: number; // Due X days from trigger
-    assignTo: 'creator' | 'agent' | 'specific-user';
+    assignTo: "creator" | "agent" | "specific-user";
     specificUserId?: string;
     tags: string[];
     checklist?: TaskChecklistItem[];
   };
-  
+
   // Metadata
   createdBy: string;
   createdAt: string;
@@ -336,17 +345,17 @@ export interface TaskFilters {
 /**
  * Task sort options
  */
-export type TaskSortField = 
-  | 'dueDate'
-  | 'priority'
-  | 'status'
-  | 'createdAt'
-  | 'title'
-  | 'progress';
+export type TaskSortField =
+  | "dueDate"
+  | "priority"
+  | "status"
+  | "createdAt"
+  | "title"
+  | "progress";
 
 export interface TaskSortOptions {
   field: TaskSortField;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
 /**
@@ -395,16 +404,16 @@ export interface TaskCalendarEvent {
  */
 export interface BulkTaskOperation {
   taskIds: string[];
-  operation: 
-    | 'update-status'
-    | 'update-priority'
-    | 'assign'
-    | 'add-tags'
-    | 'remove-tags'
-    | 'delete'
-    | 'complete'
-    | 'duplicate';
-  
+  operation:
+    | "update-status"
+    | "update-priority"
+    | "assign"
+    | "add-tags"
+    | "remove-tags"
+    | "delete"
+    | "complete"
+    | "duplicate";
+
   payload?: {
     status?: TaskStatus;
     priority?: TaskPriority;
@@ -421,25 +430,25 @@ export interface TaskActivity {
   taskId: string;
   userId: string;
   userName: string;
-  action: 
-    | 'created'
-    | 'updated'
-    | 'completed'
-    | 'cancelled'
-    | 'assigned'
-    | 'comment-added'
-    | 'attachment-added'
-    | 'checklist-updated'
-    | 'time-logged'
-    | 'status-changed'
-    | 'priority-changed';
-  
+  action:
+    | "created"
+    | "updated"
+    | "completed"
+    | "cancelled"
+    | "assigned"
+    | "comment-added"
+    | "attachment-added"
+    | "checklist-updated"
+    | "time-logged"
+    | "status-changed"
+    | "priority-changed";
+
   changes?: {
     field: string;
     oldValue: any;
     newValue: any;
   }[];
-  
+
   metadata?: any;
   timestamp: string;
 }
@@ -450,29 +459,29 @@ export interface TaskActivity {
 export interface AgentWorkload {
   agentId: string;
   agentName: string;
-  
+
   // Task counts
   totalTasks: number;
   overdueTasks: number;
   dueTodayTasks: number;
   dueThisWeekTasks: number;
   inProgressTasks: number;
-  
+
   // Priority breakdown
   urgentTasks: number;
   highPriorityTasks: number;
-  
+
   // Time metrics
   totalEstimatedHours: number;
   totalActualHours: number;
   availableHours: number;
   utilizationRate: number; // percentage
-  
+
   // Completion metrics
   completedThisWeek: number;
   completionRate: number;
   avgCompletionTime: number; // hours
-  
+
   // Status
-  workloadStatus: 'light' | 'moderate' | 'heavy' | 'overloaded';
+  workloadStatus: "light" | "moderate" | "heavy" | "overloaded";
 }

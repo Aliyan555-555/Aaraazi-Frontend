@@ -8,11 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { User, Property, Commission, Expense } from '../types';
-import { getProperties, getCommissions, getExpenses, addExpense, getAllAgents } from '../lib/data';
-import { 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown, 
+import { getProperties, getCommissions, getExpenses, addExpense } from '../lib/data';
+import { getAllAgents } from '../lib/auth';
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
   Calendar,
   Plus,
   Download,
@@ -43,17 +44,17 @@ export const Financials: React.FC<FinancialsProps> = ({ user }) => {
     const totalCommission = soldProperties.reduce((sum, p) => sum + (p.commissionEarned || 0), 0);
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
     const netIncome = totalCommission - totalExpenses;
-    
+
     const thisMonth = new Date().getMonth();
     const thisYear = new Date().getFullYear();
-    
+
     const monthlyCommission = soldProperties
       .filter(p => {
         const saleDate = new Date(p.updatedAt);
         return saleDate.getMonth() === thisMonth && saleDate.getFullYear() === thisYear;
       })
       .reduce((sum, p) => sum + (p.commissionEarned || 0), 0);
-    
+
     const monthlyExpenses = expenses
       .filter(e => {
         const expenseDate = new Date(e.date);
@@ -75,11 +76,15 @@ export const Financials: React.FC<FinancialsProps> = ({ user }) => {
   const handleAddExpense = (e: React.FormEvent) => {
     e.preventDefault();
     addExpense({
+      id: Date.now().toString(),
       agentId: user.id,
       description: expenseForm.description,
       amount: parseFloat(expenseForm.amount),
-      category: expenseForm.category,
-      date: expenseForm.date
+      category: expenseForm.category as any,
+      date: expenseForm.date,
+      status: 'paid',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
     setExpenseForm({
       description: '',
@@ -365,7 +370,7 @@ export const Financials: React.FC<FinancialsProps> = ({ user }) => {
                     required
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="amount">Amount</Label>
@@ -379,7 +384,7 @@ export const Financials: React.FC<FinancialsProps> = ({ user }) => {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="date">Date</Label>
                     <Input
@@ -391,11 +396,11 @@ export const Financials: React.FC<FinancialsProps> = ({ user }) => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select 
-                    value={expenseForm.category} 
+                  <Select
+                    value={expenseForm.category}
                     onValueChange={(value) => setExpenseForm(prev => ({ ...prev, category: value }))}
                   >
                     <SelectTrigger>
@@ -410,11 +415,11 @@ export const Financials: React.FC<FinancialsProps> = ({ user }) => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="flex gap-2 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => setShowAddExpense(false)}
                     className="flex-1"
                   >

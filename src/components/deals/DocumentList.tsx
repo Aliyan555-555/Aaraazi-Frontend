@@ -4,15 +4,15 @@
  */
 
 import React, { useState } from 'react';
-import { Deal, DealDocument } from '../../types';
+import { Deal, DealDocument } from '../../types/deals';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { PermissionGate } from './PermissionGate';
-import { 
-  FileText, 
-  Upload, 
-  Download, 
+import {
+  FileText,
+  Upload,
+  Download,
   Eye,
   CheckCircle2,
   Clock,
@@ -29,8 +29,8 @@ interface DocumentListProps {
   onDownloadDocument?: (document: DealDocument) => void;
 }
 
-export const DocumentList: React.FC<DocumentListProps> = ({ 
-  deal, 
+export const DocumentList: React.FC<DocumentListProps> = ({
+  deal,
   currentUserId,
   onUploadDocument,
   onViewDocument,
@@ -38,27 +38,27 @@ export const DocumentList: React.FC<DocumentListProps> = ({
 }) => {
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  
+
   // Filter documents
   const filteredDocuments = deal.documents.filter(doc => {
     // Stage filter
     if (filterStage !== 'all' && doc.stage !== filterStage) {
       return false;
     }
-    
+
     // Status filter
     if (filterStatus !== 'all' && doc.status !== filterStatus) {
       return false;
     }
-    
+
     return true;
   });
-  
+
   // Group by status
-  const requiredDocs = filteredDocuments.filter(d => d.status === 'required');
+  const requiredDocs = filteredDocuments.filter(d => d.status === 'pending' && d.required);
   const uploadedDocs = filteredDocuments.filter(d => d.status === 'uploaded');
   const verifiedDocs = filteredDocuments.filter(d => d.status === 'verified');
-  
+
   return (
     <div className="space-y-4">
       {/* Header & Filters */}
@@ -69,7 +69,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
               <FileText className="h-5 w-5" />
               Documents ({filteredDocuments.length})
             </CardTitle>
-            
+
             <PermissionGate
               deal={deal}
               userId={currentUserId}
@@ -101,7 +101,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
                 <SelectItem value="final-handover">Final Handover</SelectItem>
               </SelectContent>
             </Select>
-            
+
             {/* Status Filter */}
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger>
@@ -109,15 +109,16 @@ export const DocumentList: React.FC<DocumentListProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="required">Required</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="uploaded">Uploaded</SelectItem>
                 <SelectItem value="verified">Verified</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -128,7 +129,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -137,7 +138,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -147,7 +148,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Document List */}
       <Card>
         <CardContent className="pt-6">
@@ -160,7 +161,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
           ) : (
             <div className="space-y-3">
               {filteredDocuments.map(doc => (
-                <DocumentItem 
+                <DocumentItem
                   key={doc.id}
                   document={doc}
                   deal={deal}
@@ -186,37 +187,39 @@ interface DocumentItemProps {
   onDownload?: (document: DealDocument) => void;
 }
 
-const DocumentItem: React.FC<DocumentItemProps> = ({ 
-  document, 
-  deal, 
+const DocumentItem: React.FC<DocumentItemProps> = ({
+  document,
+  deal,
   currentUserId,
   onView,
   onDownload
 }) => {
-  const getStatusColor = (status: DealDocument['status']) => {
+  const getStatusColor = (status: DealDocument['status'], required: boolean) => {
+    if (status === 'pending' && required) return 'bg-orange-100 text-orange-800';
     switch (status) {
-      case 'required': return 'bg-orange-100 text-orange-800';
       case 'uploaded': return 'bg-blue-100 text-blue-800';
       case 'verified': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-  
-  const getStatusIcon = (status: DealDocument['status']) => {
+
+  const getStatusIcon = (status: DealDocument['status'], required: boolean) => {
+    if (status === 'pending' && required) return <AlertCircle className="h-4 w-4" />;
     switch (status) {
-      case 'required': return <AlertCircle className="h-4 w-4" />;
       case 'uploaded': return <Clock className="h-4 w-4" />;
       case 'verified': return <CheckCircle2 className="h-4 w-4" />;
+      case 'rejected': return <AlertCircle className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
   };
-  
+
   const getStageDisplay = (stage: string) => {
     return stage.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
-  
+
   const isUploaded = document.status === 'uploaded' || document.status === 'verified';
-  
+
   return (
     <div className="p-4 border rounded-lg hover:bg-accent/50 transition-colors">
       <div className="flex items-start justify-between gap-4">
@@ -226,48 +229,40 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
           <div className="mt-1">
             <FileText className="h-5 w-5 text-muted-foreground" />
           </div>
-          
+
           {/* Document Info */}
           <div className="flex-1 space-y-2">
             {/* Name & Status */}
             <div className="flex items-start justify-between gap-2">
               <h4 className="font-medium">{document.name}</h4>
-              <Badge className={`${getStatusColor(document.status)} gap-1 flex-shrink-0`}>
-                {getStatusIcon(document.status)}
-                {document.status}
+              <Badge className={`${getStatusColor(document.status, document.required)} gap-1 flex-shrink-0`}>
+                {getStatusIcon(document.status, document.required)}
+                {document.status === 'pending' && document.required ? 'Required' : document.status}
               </Badge>
             </div>
-            
+
             {/* Type & Stage */}
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>Type: {document.type}</span>
-              <span>Stage: {getStageDisplay(document.stage)}</span>
+              <span>Stage: {document.stage ? getStageDisplay(document.stage) : 'N/A'}</span>
             </div>
-            
+
             {/* Upload Info */}
             {isUploaded && (
               <div className="text-xs text-muted-foreground">
-                {document.uploadedBy && (
-                  <div>Uploaded by: {document.uploadedBy.agentName}</div>
+                {document.uploadedByName && (
+                  <div>Uploaded by: {document.uploadedByName}</div>
                 )}
                 {document.uploadedAt && (
                   <div>Uploaded: {new Date(document.uploadedAt).toLocaleDateString()}</div>
                 )}
-                {document.fileSize && (
-                  <div>Size: {(document.fileSize / 1024).toFixed(2)} KB</div>
-                )}
               </div>
             )}
-            
-            {/* Verification Info */}
-            {document.status === 'verified' && document.verifiedBy && (
-              <div className="text-xs text-green-600">
-                ✓ Verified by {document.verifiedBy.agentName} on {new Date(document.verifiedAt!).toLocaleDateString()}
-              </div>
-            )}
+
+            {/* Verification Info - Removed as verifiedBy/verifiedAt not in type */}
           </div>
         </div>
-        
+
         {/* Right Side - Actions */}
         <div className="flex items-center gap-2">
           {isUploaded && (
@@ -290,8 +285,8 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
               </Button>
             </>
           )}
-          
-          {document.status === 'required' && (
+
+          {document.status === 'pending' && document.required && (
             <PermissionGate
               deal={deal}
               userId={currentUserId}

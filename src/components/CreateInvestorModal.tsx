@@ -37,8 +37,33 @@ import {
   formatCNIC,
   formatPakistaniPhone
 } from '../lib/investors';
-import { Investor } from '../types';
+// import { Investor } from '../types';
 import { toast } from 'sonner';
+
+// Investor interface (not in types yet)
+interface Investor {
+  id: string;
+  name: string;
+  cnic?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  investorType?: 'individual' | 'company' | 'partnership' | 'trust';
+  totalInvestmentCapacity?: number;
+  investmentHorizon?: 'short-term' | 'medium-term' | 'long-term';
+  riskProfile?: 'conservative' | 'moderate' | 'aggressive';
+  minimumInvestmentAmount?: number;
+  maximumInvestmentAmount?: number;
+  preferredPropertyTypes?: string[];
+  preferredLocations?: string[];
+  bankName?: string;
+  accountTitle?: string;
+  accountNumber?: string;
+  iban?: string;
+  previousInvestments?: string;
+  notes?: string;
+}
 
 interface CreateInvestorModalProps {
   isOpen: boolean;
@@ -435,10 +460,10 @@ export default function CreateInvestorModal({
                 <div
                   key={step.id}
                   className={`flex items-center gap-1 ${step.id === currentStep
-                      ? 'text-[var(--color-primary)] font-medium'
-                      : step.id < currentStep
-                        ? 'text-green-600'
-                        : ''
+                    ? 'text-[var(--color-primary)] font-medium'
+                    : step.id < currentStep
+                      ? 'text-green-600'
+                      : ''
                     }`}
                 >
                   {step.id < currentStep && <Check className="w-3 h-3" />}
@@ -739,8 +764,8 @@ export default function CreateInvestorModal({
                       <div
                         key={type.value}
                         className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${formData.preferredPropertyTypes.includes(type.value)
-                            ? 'border-[var(--color-primary)] bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-[var(--color-primary)] bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
                           }`}
                         onClick={() => togglePropertyType(type.value)}
                       >
@@ -770,8 +795,8 @@ export default function CreateInvestorModal({
                       <div
                         key={location.value}
                         className={`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${formData.preferredLocations.includes(location.value)
-                            ? 'border-[var(--color-primary)] bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-[var(--color-primary)] bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
                           }`}
                         onClick={() => toggleLocation(location.value)}
                       >

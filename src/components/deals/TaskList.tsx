@@ -4,16 +4,16 @@
  */
 
 import React, { useState } from 'react';
-import { Deal, DealTask } from '../../types';
+import { Deal, DealTask } from '../../types/deals';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
 import { PermissionGate } from './PermissionGate';
-import { 
-  CheckSquare, 
-  Square, 
-  Clock, 
+import {
+  CheckSquare,
+  Square,
+  Clock,
   AlertCircle,
   Plus,
   Filter
@@ -27,8 +27,8 @@ interface TaskListProps {
   onAddTask?: () => void;
 }
 
-export const TaskList: React.FC<TaskListProps> = ({ 
-  deal, 
+export const TaskList: React.FC<TaskListProps> = ({
+  deal,
   currentUserId,
   onToggleTask,
   onAddTask
@@ -36,7 +36,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   const [filterStage, setFilterStage] = useState<string>('current');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
-  
+
   // Filter tasks
   const filteredTasks = deal.tasks.filter(task => {
     // Stage filter
@@ -45,24 +45,26 @@ export const TaskList: React.FC<TaskListProps> = ({
     } else if (filterStage !== 'current' && filterStage !== 'all' && task.stage !== filterStage) {
       return false;
     }
-    
+
     // Status filter
-    if (filterStatus !== 'all' && task.status !== filterStatus) {
+    if (filterStatus === 'pending' && task.status === 'completed') {
+      return false;
+    } else if (filterStatus === 'completed' && task.status !== 'completed') {
       return false;
     }
-    
+
     // Priority filter
     if (filterPriority !== 'all' && task.priority !== filterPriority) {
       return false;
     }
-    
+
     return true;
   });
-  
+
   // Group by status
-  const pendingTasks = filteredTasks.filter(t => t.status === 'pending');
+  const pendingTasks = filteredTasks.filter(t => t.status !== 'completed');
   const completedTasks = filteredTasks.filter(t => t.status === 'completed');
-  
+
   const getPriorityColor = (priority: DealTask['priority']) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800';
@@ -72,15 +74,15 @@ export const TaskList: React.FC<TaskListProps> = ({
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   const isOverdue = (dueDate: string) => {
     return new Date(dueDate) < new Date();
   };
-  
+
   const getStageDisplay = (stage: string) => {
     return stage.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
-  
+
   return (
     <div className="space-y-4">
       {/* Header & Filters */}
@@ -91,7 +93,7 @@ export const TaskList: React.FC<TaskListProps> = ({
               <CheckSquare className="h-5 w-5" />
               Tasks ({filteredTasks.length})
             </CardTitle>
-            
+
             <PermissionGate
               deal={deal}
               userId={currentUserId}
@@ -124,7 +126,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                 <SelectItem value="final-handover">Final Handover</SelectItem>
               </SelectContent>
             </Select>
-            
+
             {/* Status Filter */}
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger>
@@ -136,7 +138,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
-            
+
             {/* Priority Filter */}
             <Select value={filterPriority} onValueChange={setFilterPriority}>
               <SelectTrigger>
@@ -153,7 +155,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -164,7 +166,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -173,7 +175,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -185,7 +187,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Pending Tasks */}
       {pendingTasks.length > 0 && (
         <Card>
@@ -195,7 +197,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           <CardContent>
             <div className="space-y-3">
               {pendingTasks.map(task => (
-                <TaskItem 
+                <TaskItem
                   key={task.id}
                   task={task}
                   deal={deal}
@@ -207,7 +209,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           </CardContent>
         </Card>
       )}
-      
+
       {/* Completed Tasks */}
       {completedTasks.length > 0 && (
         <Card>
@@ -217,7 +219,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           <CardContent>
             <div className="space-y-3">
               {completedTasks.map(task => (
-                <TaskItem 
+                <TaskItem
                   key={task.id}
                   task={task}
                   deal={deal}
@@ -229,7 +231,7 @@ export const TaskList: React.FC<TaskListProps> = ({
           </CardContent>
         </Card>
       )}
-      
+
       {/* Empty State */}
       {filteredTasks.length === 0 && (
         <Card>
@@ -257,7 +259,7 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({ task, deal, currentUserId, onToggle }) => {
   const isCompleted = task.status === 'completed';
   const overdue = !isCompleted && new Date(task.dueDate) < new Date();
-  
+
   const getPriorityColor = (priority: DealTask['priority']) => {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800';
@@ -267,11 +269,11 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, deal, currentUserId, onToggle
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   const getStageDisplay = (stage: string) => {
     return stage.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
-  
+
   return (
     <div className={`p-4 border rounded-lg ${isCompleted ? 'bg-gray-50' : overdue ? 'border-red-300 bg-red-50' : ''}`}>
       <div className="flex items-start gap-3">
@@ -297,7 +299,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, deal, currentUserId, onToggle
             className="mt-1"
           />
         </PermissionGate>
-        
+
         {/* Task Content */}
         <div className="flex-1 space-y-2">
           {/* Title & Badges */}
@@ -317,14 +319,14 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, deal, currentUserId, onToggle
               )}
             </div>
           </div>
-          
+
           {/* Description */}
           {task.description && (
             <p className={`text-sm ${isCompleted ? 'text-gray-500' : 'text-muted-foreground'}`}>
               {task.description}
             </p>
           )}
-          
+
           {/* Meta Info */}
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
@@ -334,9 +336,9 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, deal, currentUserId, onToggle
             <div>
               Stage: {getStageDisplay(task.stage)}
             </div>
-            {task.assignedTo && (
+            {task.assignedToName && (
               <div>
-                Assigned to: {task.assignedTo.agentName}
+                Assigned to: {task.assignedToName}
               </div>
             )}
             {isCompleted && task.completedAt && (

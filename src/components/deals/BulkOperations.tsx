@@ -4,15 +4,15 @@
  */
 
 import React, { useState } from 'react';
-import { Deal } from '../../types';
+import { Deal } from '../../types/deals';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Checkbox } from '../ui/checkbox';
-import { 
-  CheckSquare, 
-  Trash2, 
+import {
+  CheckSquare,
+  Trash2,
   Archive,
   Download,
   Mail,
@@ -28,26 +28,26 @@ interface BulkOperationsProps {
   onBulkAction: (action: BulkAction, dealIds: string[]) => Promise<void>;
 }
 
-export type BulkAction = 
+export type BulkAction =
   | 'export'
   | 'archive'
   | 'delete'
   | 'notify-agents'
   | 'generate-reports';
 
-export const BulkOperations: React.FC<BulkOperationsProps> = ({ 
-  selectedDeals, 
+export const BulkOperations: React.FC<BulkOperationsProps> = ({
+  selectedDeals,
   onClearSelection,
   onBulkAction
 }) => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<BulkAction | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   if (selectedDeals.length === 0) {
     return null;
   }
-  
+
   const handleActionClick = (action: BulkAction) => {
     // Actions that require confirmation
     if (action === 'delete' || action === 'archive') {
@@ -58,14 +58,14 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
       executeBulkAction(action);
     }
   };
-  
+
   const executeBulkAction = async (action: BulkAction) => {
     setIsProcessing(true);
-    
+
     try {
       const dealIds = selectedDeals.map(d => d.id);
       await onBulkAction(action, dealIds);
-      
+
       // Success messages
       switch (action) {
         case 'export':
@@ -84,7 +84,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
           toast.success(`Generated reports for ${selectedDeals.length} deals`);
           break;
       }
-      
+
       onClearSelection();
       setShowConfirmDialog(false);
       setPendingAction(null);
@@ -94,7 +94,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
       setIsProcessing(false);
     }
   };
-  
+
   const getActionLabel = (action: BulkAction) => {
     switch (action) {
       case 'export': return 'Export Data';
@@ -104,7 +104,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
       case 'generate-reports': return 'Generate Reports';
     }
   };
-  
+
   const getActionIcon = (action: BulkAction) => {
     switch (action) {
       case 'export': return <Download className="h-4 w-4" />;
@@ -114,7 +114,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
       case 'generate-reports': return <Tag className="h-4 w-4" />;
     }
   };
-  
+
   return (
     <>
       {/* Bulk Operations Bar */}
@@ -128,7 +128,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
                 {selectedDeals.length} {selectedDeals.length === 1 ? 'deal' : 'deals'} selected
               </span>
             </div>
-            
+
             {/* Actions */}
             <div className="flex items-center gap-2">
               <Button
@@ -140,7 +140,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              
+
               <Button
                 size="sm"
                 variant="secondary"
@@ -150,7 +150,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
                 <Mail className="h-4 w-4 mr-2" />
                 Notify
               </Button>
-              
+
               <Button
                 size="sm"
                 variant="secondary"
@@ -160,9 +160,9 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
                 <Tag className="h-4 w-4 mr-2" />
                 Reports
               </Button>
-              
+
               <div className="h-6 w-px bg-primary-foreground/20 mx-1" />
-              
+
               <Button
                 size="sm"
                 variant="secondary"
@@ -172,7 +172,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
                 <Archive className="h-4 w-4 mr-2" />
                 Archive
               </Button>
-              
+
               <Button
                 size="sm"
                 variant="destructive"
@@ -182,9 +182,9 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
               </Button>
-              
+
               <div className="h-6 w-px bg-primary-foreground/20 mx-1" />
-              
+
               <Button
                 size="sm"
                 variant="ghost"
@@ -197,7 +197,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent>
@@ -216,13 +216,13 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
               )}
             </DialogTitle>
             <DialogDescription>
-              {pendingAction === 'delete' 
+              {pendingAction === 'delete'
                 ? `Review the ${selectedDeals.length} deal(s) you are about to permanently delete.`
                 : `Review the ${selectedDeals.length} deal(s) you are about to archive.`
               }
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <Alert className={pendingAction === 'delete' ? 'border-red-200 bg-red-50' : 'border-orange-200 bg-orange-50'}>
               <AlertTriangle className={`h-4 w-4 ${pendingAction === 'delete' ? 'text-red-600' : 'text-orange-600'}`} />
@@ -230,19 +230,19 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
                 {pendingAction === 'delete' ? (
                   <>
                     <div className="font-medium mb-2">Warning: This action cannot be undone!</div>
-                    <p>You are about to permanently delete {selectedDeals.length} {selectedDeals.length === 1 ? 'deal' : 'deals'}. 
-                    All associated data including tasks, documents, and payment records will be lost.</p>
+                    <p>You are about to permanently delete {selectedDeals.length} {selectedDeals.length === 1 ? 'deal' : 'deals'}.
+                      All associated data including tasks, documents, and payment records will be lost.</p>
                   </>
                 ) : (
                   <>
                     <div className="font-medium mb-2">Archive Deals</div>
-                    <p>You are about to archive {selectedDeals.length} {selectedDeals.length === 1 ? 'deal' : 'deals'}. 
-                    Archived deals can be restored later if needed.</p>
+                    <p>You are about to archive {selectedDeals.length} {selectedDeals.length === 1 ? 'deal' : 'deals'}.
+                      Archived deals can be restored later if needed.</p>
                   </>
                 )}
               </AlertDescription>
             </Alert>
-            
+
             {/* Deal List */}
             <div className="max-h-64 overflow-y-auto border rounded-lg">
               <div className="divide-y">
@@ -267,16 +267,16 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowConfirmDialog(false)}
               disabled={isProcessing}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant={pendingAction === 'delete' ? 'destructive' : 'default'}
               onClick={() => pendingAction && executeBulkAction(pendingAction)}
               disabled={isProcessing}
@@ -308,7 +308,7 @@ export const exportDealsToCSV = (deals: Deal[]): void => {
     'Created Date',
     'Expected Closing',
   ];
-  
+
   const rows = deals.map(deal => [
     deal.dealNumber,
     deal.lifecycle.status,
@@ -322,15 +322,15 @@ export const exportDealsToCSV = (deals: Deal[]): void => {
     deal.financial.commission.total,
     deal.agents.primary.name,
     deal.agents.secondary?.name || 'N/A',
-    new Date(deal.createdAt).toLocaleDateString(),
+    new Date(deal.metadata.createdAt).toLocaleDateString(),
     new Date(deal.lifecycle.timeline.expectedClosingDate).toLocaleDateString(),
   ]);
-  
+
   const csv = [
     headers.join(','),
     ...rows.map(row => row.join(','))
   ].join('\n');
-  
+
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');

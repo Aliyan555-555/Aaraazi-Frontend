@@ -7,13 +7,14 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Deal, User } from '../types';
+import { User } from '../types';
+import { Deal } from '../types/deals';
 import { getDeals, getDealStageStats, getDealStatusStats } from '../lib/deals';
 import { getProperties } from '../lib/data';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { 
+import {
   Eye,
   DollarSign,
   FileText,
@@ -85,11 +86,11 @@ export function DealDashboard({
         const sellerName = d.parties.seller.name.toLowerCase();
         const dealNumber = d.dealNumber.toLowerCase();
         const query = searchQuery.toLowerCase();
-        
+
         return propertyTitle.includes(query) ||
-               buyerName.includes(query) ||
-               sellerName.includes(query) ||
-               dealNumber.includes(query);
+          buyerName.includes(query) ||
+          sellerName.includes(query) ||
+          dealNumber.includes(query);
       });
     }
 
@@ -125,7 +126,7 @@ export function DealDashboard({
   // Stats calculation
   const stats = useMemo(() => {
     const statusStats = getDealStatusStats(deals);
-    
+
     return [
       { label: 'Total', value: deals.length, variant: 'default' as const },
       { label: 'In Progress', value: statusStats.active || 0, variant: 'warning' as const },
@@ -224,7 +225,7 @@ export function DealDashboard({
               { value: 'final-handover', label: 'Final Handover', count: stageStats['final-handover'] || 0 },
             ],
             value: selectedStage,
-            onChange: setSelectedStage,
+            onChange: (val) => setSelectedStage(val as string[]),
             multiple: true,
           },
           {
@@ -237,7 +238,7 @@ export function DealDashboard({
               { value: 'cancelled', label: 'Cancelled', count: statusStats.cancelled || 0 },
             ],
             value: selectedStatus,
-            onChange: setSelectedStatus,
+            onChange: (val) => setSelectedStatus(val as string[]),
             multiple: true,
           },
         ]}
@@ -258,7 +259,7 @@ export function DealDashboard({
           // PHASE 4: New WorkspaceEmptyState ✅
           deals.length === 0 ? (
             <WorkspaceEmptyState
-              {...EmptyStatePresets.deals(onCreateDeal || (() => {}))}
+              {...EmptyStatePresets.deals(onCreateDeal || (() => { }))}
             />
           ) : (
             <WorkspaceEmptyState

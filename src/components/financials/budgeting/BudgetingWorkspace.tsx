@@ -93,17 +93,17 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
         const expenses = getExpenses(user.id, user.role);
         const updatedBudgets = loadedBudgets.map((budget: BudgetCategory) => {
           // Match expenses to budget category by name
-          const categoryExpenses = expenses.filter(e => 
+          const categoryExpenses = expenses.filter(e =>
             e.category.toLowerCase().includes(budget.name.toLowerCase()) ||
             budget.name.toLowerCase().includes(e.category.toLowerCase())
           );
-          
+
           const actualSpend = categoryExpenses.reduce((sum, e) => sum + e.amount, 0);
           const variance = budget.budgetAmount - actualSpend;
-          const variancePercentage = budget.budgetAmount > 0 
-            ? (variance / budget.budgetAmount) * 100 
+          const variancePercentage = budget.budgetAmount > 0
+            ? (variance / budget.budgetAmount) * 100
             : 0;
-          
+
           // Determine status
           let status: 'on-track' | 'warning' | 'over-budget' = 'on-track';
           if (actualSpend > budget.budgetAmount) {
@@ -141,7 +141,7 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
     const variance = totalBudget - actualSpend;
     const variancePercentage = totalBudget > 0 ? (variance / totalBudget) * 100 : 0;
     const remainingBudget = variance;
-    
+
     // Get unique periods
     const periods = [...new Set(budgets.map(b => b.period))];
     const budgetPeriod = periods.length === 1 ? periods[0] : `${periods.length} periods`;
@@ -161,14 +161,14 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
     const onTrackCount = budgets.filter(b => b.status === 'on-track').length;
     const warningCount = budgets.filter(b => b.status === 'warning').length;
     const overBudgetCount = budgets.filter(b => b.status === 'over-budget').length;
-    const utilizationRate = metrics.totalBudget > 0 
+    const utilizationRate = metrics.totalBudget > 0
       ? ((metrics.actualSpend / metrics.totalBudget) * 100).toFixed(1)
       : '0.0';
 
     return [
       { label: 'Total Budget', value: formatPKR(metrics.totalBudget), variant: 'default' as const },
       { label: 'Actual Spend', value: formatPKR(metrics.actualSpend), variant: 'info' as const },
-      { label: 'Remaining', value: formatPKR(metrics.remainingBudget), variant: metrics.remainingBudget >= 0 ? 'success' as const : 'danger' as const },
+      { label: 'Remaining', value: formatPKR(metrics.remainingBudget), variant: metrics.remainingBudget >= 0 ? 'success' as const : 'destructive' as const },
       { label: 'Utilization', value: `${utilizationRate}%`, variant: parseFloat(utilizationRate) > 90 ? 'warning' as const : 'default' as const },
       { label: 'Categories', value: `${budgets.length}`, variant: 'default' as const },
     ];
@@ -259,7 +259,7 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
     if (!selectedBudgetId) return null;
     const budget = budgets.find(b => b.id === selectedBudgetId);
     if (!budget) return null;
-    
+
     // Convert BudgetCategory to Budget type for modals
     return {
       id: budget.id,
@@ -322,7 +322,7 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
   };
 
   // Handle clone budget save
-  const handleCloneBudgetSave = (clonedBudget: Omit<Budget, 'id'>) => {
+  const handleCloneBudgetSave = (clonedBudget: Omit<Budget, 'id' | 'createdAt' | 'createdBy'>) => {
     const newBudget: BudgetCategory = {
       id: Date.now().toString(),
       name: clonedBudget.category,
@@ -377,7 +377,7 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
               { value: 'over-budget', label: 'Over Budget', count: budgets.filter(b => b.status === 'over-budget').length },
             ],
             value: statusFilter,
-            onChange: setStatusFilter,
+            onChange: (value) => setStatusFilter(value as string[]),
           },
           ...(uniquePeriods.length > 1 ? [{
             id: 'period',
@@ -389,7 +389,7 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
               count: budgets.filter(b => b.period === period).length,
             })),
             value: periodFilter,
-            onChange: setPeriodFilter,
+            onChange: (value: string | string[] | boolean) => setPeriodFilter(value as string[]),
           }] : []),
         ]}
         onClearAll={() => {
@@ -407,23 +407,27 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
         {filteredBudgets.length === 0 ? (
           <WorkspaceEmptyState
             {...(searchQuery || statusFilter.length > 0 || periodFilter.length > 0
-              ? EmptyStatePresets.noResults()
+              ? EmptyStatePresets.noResults(() => {
+                setSearchQuery('');
+                setStatusFilter([]);
+                setPeriodFilter([]);
+              })
               : {
-                  variant: 'empty' as const,
-                  title: 'No Budgets Yet',
-                  description: 'Start planning your finances by creating your first budget category. Track spending against targets and monitor variance in real-time.',
-                  primaryAction: {
-                    label: 'Create Budget',
-                    onClick: () => setShowCreateModal(true),
-                  },
-                  guideItems: [
-                    'Set budget amounts for each category',
-                    'Track actual spending automatically from expenses',
-                    'Monitor variance and utilization rates',
-                    'Get alerts when approaching budget limits',
-                    'Export reports for financial analysis',
-                  ],
-                }
+                variant: 'empty' as const,
+                title: 'No Budgets Yet',
+                description: 'Start planning your finances by creating your first budget category. Track spending against targets and monitor variance in real-time.',
+                primaryAction: {
+                  label: 'Create Budget',
+                  onClick: () => setShowCreateModal(true),
+                },
+                guideItems: [
+                  { title: 'Set budget amounts', description: 'Set budget amounts for each category' },
+                  { title: 'Track spending', description: 'Track actual spending automatically from expenses' },
+                  { title: 'Monitor variance', description: 'Monitor variance and utilization rates' },
+                  { title: 'Get alerts', description: 'Get alerts when approaching budget limits' },
+                  { title: 'Export reports', description: 'Export reports for financial analysis' },
+                ],
+              }
             )}
           />
         ) : (
@@ -452,31 +456,37 @@ export const BudgetingWorkspace: React.FC<BudgetingWorkspaceProps> = ({
       />
 
       {/* Edit Budget Modal */}
-      <EditBudgetModal
-        open={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        budget={selectedBudget}
-        user={user}
-        onSave={handleEditBudgetSave}
-      />
+      {selectedBudget && (
+        <EditBudgetModal
+          open={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          budget={selectedBudget}
+          user={user}
+          onSave={handleEditBudgetSave}
+        />
+      )}
 
       {/* Budget History Modal */}
-      <BudgetHistoryModal
-        open={showHistoryModal}
-        onClose={() => setShowHistoryModal(false)}
-        budget={selectedBudget}
-        user={user}
-        onRestore={handleEditBudgetSave}
-      />
+      {selectedBudget && (
+        <BudgetHistoryModal
+          open={showHistoryModal}
+          onClose={() => setShowHistoryModal(false)}
+          budget={selectedBudget}
+          user={user}
+          onRestore={handleEditBudgetSave}
+        />
+      )}
 
       {/* Clone Budget Modal */}
-      <CloneBudgetModal
-        open={showCloneModal}
-        onClose={() => setShowCloneModal(false)}
-        sourceBudget={selectedBudget}
-        user={user}
-        onCreate={handleCloneBudgetSave}
-      />
+      {selectedBudget && (
+        <CloneBudgetModal
+          open={showCloneModal}
+          onClose={() => setShowCloneModal(false)}
+          sourceBudget={selectedBudget}
+          user={user}
+          onCreate={handleCloneBudgetSave}
+        />
+      )}
     </div>
   );
 };

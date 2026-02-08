@@ -4,13 +4,13 @@
  */
 
 import React from 'react';
-import { Deal, DealStage } from '../../types';
+import { Deal, DealStage } from '../../types/deals';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { 
-  CheckCircle2, 
-  Circle, 
+import {
+  CheckCircle2,
+  Circle,
   Clock,
   Calendar,
   TrendingUp
@@ -27,54 +27,54 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
     label: string;
     icon: React.ReactNode;
   }> = [
-    { 
-      key: 'offerAccepted', 
-      stage: 'offer-accepted', 
-      label: 'Offer Accepted',
-      icon: <CheckCircle2 className="h-5 w-5" />
-    },
-    { 
-      key: 'agreementSigning', 
-      stage: 'agreement-signing', 
-      label: 'Agreement Signing',
-      icon: <CheckCircle2 className="h-5 w-5" />
-    },
-    { 
-      key: 'documentation', 
-      stage: 'documentation', 
-      label: 'Documentation',
-      icon: <CheckCircle2 className="h-5 w-5" />
-    },
-    { 
-      key: 'paymentProcessing', 
-      stage: 'payment-processing', 
-      label: 'Payment Processing',
-      icon: <CheckCircle2 className="h-5 w-5" />
-    },
-    { 
-      key: 'handoverPrep', 
-      stage: 'handover-preparation', 
-      label: 'Handover Preparation',
-      icon: <CheckCircle2 className="h-5 w-5" />
-    },
-    { 
-      key: 'transferRegistration', 
-      stage: 'transfer-registration', 
-      label: 'Transfer & Registration',
-      icon: <CheckCircle2 className="h-5 w-5" />
-    },
-    { 
-      key: 'finalHandover', 
-      stage: 'final-handover', 
-      label: 'Final Handover',
-      icon: <CheckCircle2 className="h-5 w-5" />
-    },
-  ];
-  
+      {
+        key: 'offerAccepted',
+        stage: 'offer-accepted',
+        label: 'Offer Accepted',
+        icon: <CheckCircle2 className="h-5 w-5" />
+      },
+      {
+        key: 'agreementSigning',
+        stage: 'agreement-signing',
+        label: 'Agreement Signing',
+        icon: <CheckCircle2 className="h-5 w-5" />
+      },
+      {
+        key: 'documentation',
+        stage: 'documentation',
+        label: 'Documentation',
+        icon: <CheckCircle2 className="h-5 w-5" />
+      },
+      {
+        key: 'paymentProcessing',
+        stage: 'payment-processing',
+        label: 'Payment Processing',
+        icon: <CheckCircle2 className="h-5 w-5" />
+      },
+      {
+        key: 'handoverPrep',
+        stage: 'handover-prep',
+        label: 'Handover Preparation',
+        icon: <CheckCircle2 className="h-5 w-5" />
+      },
+      {
+        key: 'transferRegistration',
+        stage: 'transfer-registration',
+        label: 'Transfer & Registration',
+        icon: <CheckCircle2 className="h-5 w-5" />
+      },
+      {
+        key: 'finalHandover',
+        stage: 'final-handover',
+        label: 'Final Handover',
+        icon: <CheckCircle2 className="h-5 w-5" />
+      },
+    ];
+
   const getStageStatus = (key: keyof Deal['lifecycle']['timeline']['stages']) => {
     return deal.lifecycle.timeline.stages[key];
   };
-  
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'text-green-600 bg-green-100';
@@ -83,15 +83,15 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
       default: return 'text-gray-400 bg-gray-100';
     }
   };
-  
+
   const isCurrentStage = (stage: DealStage) => {
     return deal.lifecycle.stage === stage;
   };
-  
+
   // Calculate overall completion
   const completedStages = stages.filter(s => getStageStatus(s.key).status === 'completed').length;
   const overallProgress = (completedStages / stages.length) * 100;
-  
+
   return (
     <div className="space-y-6">
       {/* Overall Progress */}
@@ -108,7 +108,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
             <span className="text-sm font-medium">{Math.round(overallProgress)}%</span>
           </div>
           <Progress value={overallProgress} className="h-3" />
-          
+
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div>
               <div className="text-sm text-muted-foreground">Start Date</div>
@@ -123,7 +123,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
               </div>
             </div>
           </div>
-          
+
           {deal.lifecycle.timeline.actualClosingDate && (
             <div className="pt-2 border-t">
               <div className="text-sm text-muted-foreground">Actual Closing Date</div>
@@ -134,14 +134,14 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
           )}
         </CardContent>
       </Card>
-      
+
       {/* Timeline */}
       <Card>
         <CardContent className="pt-6">
           <div className="relative">
             {/* Vertical Line */}
             <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
-            
+
             {/* Stages */}
             <div className="space-y-6">
               {stages.map((stageInfo, index) => {
@@ -150,7 +150,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
                 const isCompleted = stageProgress.status === 'completed';
                 const isInProgress = stageProgress.status === 'in-progress';
                 const isNotStarted = stageProgress.status === 'not-started';
-                
+
                 return (
                   <div key={stageInfo.key} className="relative flex gap-4">
                     {/* Circle Indicator */}
@@ -166,7 +166,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
                         <Circle className="h-6 w-6" />
                       )}
                     </div>
-                    
+
                     {/* Content */}
                     <div className={`flex-1 pb-6 ${isCurrent ? 'ring-2 ring-blue-500 rounded-lg p-4 bg-blue-50' : 'p-4'}`}>
                       {/* Stage Header */}
@@ -183,7 +183,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
                           {stageProgress.status.replace('-', ' ')}
                         </Badge>
                       </div>
-                      
+
                       {/* Progress Bar */}
                       {(isInProgress || isCompleted) && (
                         <div className="mb-3">
@@ -194,14 +194,14 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
                           <Progress value={stageProgress.completionPercentage} className="h-2" />
                         </div>
                       )}
-                      
+
                       {/* Tasks Info */}
                       {stageProgress.totalTasks > 0 && (
                         <div className="text-sm text-muted-foreground mb-2">
                           Tasks: {stageProgress.tasksCompleted} / {stageProgress.totalTasks} completed
                         </div>
                       )}
-                      
+
                       {/* Dates */}
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         {stageProgress.startedAt && (
@@ -217,7 +217,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Duration */}
                       {stageProgress.startedAt && stageProgress.completedAt && (
                         <div className="text-xs text-muted-foreground mt-1">
@@ -232,7 +232,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -243,7 +243,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -254,7 +254,7 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
@@ -276,7 +276,7 @@ const calculateDuration = (start: string, end: string): string => {
   const endDate = new Date(end);
   const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 1) return '1 day';
   if (diffDays < 7) return `${diffDays} days`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks`;

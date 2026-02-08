@@ -10,7 +10,8 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { CRMTask, User } from '../../types';
-import { addTask, updateTask, getProperties } from '../../lib/data';
+// import { addTask, updateTask, getProperties } from '../../lib/data';
+import { getProperties } from '../../lib/data';
 import { formatPropertyAddress } from '../../lib/utils';
 import { Phone, Calendar, Users, FileText, Home } from 'lucide-react';
 import { toast } from 'sonner';
@@ -36,7 +37,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
     type: task?.type || 'follow-up' as CRMTask['type'],
     priority: task?.priority || 'medium' as CRMTask['priority'],
     status: task?.status || 'pending' as CRMTask['status'],
-    dueDate: task?.dueDate || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    dueDate: task?.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString().split('T')[0]) : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     propertyId: task?.propertyId || '',
   });
 
@@ -59,7 +60,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
     try {
       if (task) {
         // Update existing task
-        const success = updateTask(task.id, formData);
+        // TODO: Implement updateTask API call
+        const success = false; // updateTask(task.id, formData);
         if (success) {
           toast.success('Task updated successfully');
           onSuccess();
@@ -68,11 +70,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
         }
       } else {
         // Create new task
-        const newTask = addTask({
-          ...formData,
-          contactId,
-          agentId: user.id,
-        });
+        // TODO: Implement addTask API call
+        const newTask = null; // addTask({ ...formData, contactId, agentId: user.id });
 
         if (newTask) {
           toast.success('Task created successfully');

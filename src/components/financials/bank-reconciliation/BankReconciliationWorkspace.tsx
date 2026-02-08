@@ -102,7 +102,7 @@ export const BankReconciliationWorkspace: React.FC<BankReconciliationWorkspacePr
     }, 0);
 
     // Calculate bank balance (last transaction balance)
-    const sortedByDate = [...allTransactions].sort((a, b) => 
+    const sortedByDate = [...allTransactions].sort((a, b) =>
       new Date(b.date).getTime() - new Date(a.date).getTime()
     );
     const bankBalance = sortedByDate.length > 0 ? sortedByDate[0].balance : 0;
@@ -121,16 +121,16 @@ export const BankReconciliationWorkspace: React.FC<BankReconciliationWorkspacePr
 
   // Stats for WorkspaceHeader
   const stats = useMemo(() => {
-    const reconciliationRate = metrics.totalTransactions > 0 
+    const reconciliationRate = metrics.totalTransactions > 0
       ? ((metrics.reconciledCount / metrics.totalTransactions) * 100).toFixed(1)
       : '0.0';
-    
+
     return [
       { label: 'Total Transactions', value: `${metrics.totalTransactions}`, variant: 'default' as const },
       { label: 'Reconciled', value: `${metrics.reconciledCount} (${reconciliationRate}%)`, variant: 'success' as const },
       { label: 'Unreconciled', value: `${metrics.unreconciledCount}`, variant: metrics.unreconciledCount > 0 ? 'warning' as const : 'default' as const },
       { label: 'Bank Balance', value: formatPKR(metrics.bankBalance), variant: 'success' as const },
-      { label: 'Variance', value: formatPKR(Math.abs(metrics.variance)), variant: Math.abs(metrics.variance) < 1 ? 'success' as const : 'danger' as const },
+      { label: 'Variance', value: formatPKR(Math.abs(metrics.variance)), variant: Math.abs(metrics.variance) < 1 ? 'success' as const : 'destructive' as const },
     ];
   }, [metrics]);
 
@@ -166,12 +166,12 @@ export const BankReconciliationWorkspace: React.FC<BankReconciliationWorkspacePr
   const handleReconcile = async (transactionId: string) => {
     const updated = allTransactions.map(t =>
       t.id === transactionId
-        ? { 
-            ...t, 
-            status: 'Reconciled' as const, 
-            reconciledBy: user.name,
-            reconciledDate: new Date().toISOString(),
-          }
+        ? {
+          ...t,
+          status: 'Reconciled' as const,
+          reconciledBy: user.name,
+          reconciledDate: new Date().toISOString(),
+        }
         : t
     );
     saveTransactions(updated);
@@ -183,12 +183,12 @@ export const BankReconciliationWorkspace: React.FC<BankReconciliationWorkspacePr
   const handleUnreconcile = async (transactionId: string) => {
     const updated = allTransactions.map(t =>
       t.id === transactionId
-        ? { 
-            ...t, 
-            status: 'Unreconciled' as const,
-            reconciledBy: undefined,
-            reconciledDate: undefined,
-          }
+        ? {
+          ...t,
+          status: 'Unreconciled' as const,
+          reconciledBy: undefined,
+          reconciledDate: undefined,
+        }
         : t
     );
     saveTransactions(updated);
@@ -202,12 +202,12 @@ export const BankReconciliationWorkspace: React.FC<BankReconciliationWorkspacePr
 
     const updated = allTransactions.map(t =>
       selectedTransactions.includes(t.id) && t.status !== 'Reconciled'
-        ? { 
-            ...t, 
-            status: 'Reconciled' as const, 
-            reconciledBy: user.name,
-            reconciledDate: new Date().toISOString(),
-          }
+        ? {
+          ...t,
+          status: 'Reconciled' as const,
+          reconciledBy: user.name,
+          reconciledDate: new Date().toISOString(),
+        }
         : t
     );
     saveTransactions(updated);
@@ -283,7 +283,7 @@ export const BankReconciliationWorkspace: React.FC<BankReconciliationWorkspacePr
               { value: 'Pending', label: 'Pending', count: allTransactions.filter(t => t.status === 'Pending').length },
             ],
             value: statusFilter,
-            onChange: setStatusFilter,
+            onChange: (value) => setStatusFilter(value as string[]),
           },
           {
             id: 'type',
@@ -294,7 +294,7 @@ export const BankReconciliationWorkspace: React.FC<BankReconciliationWorkspacePr
               { value: 'withdrawal', label: 'Withdrawal', count: allTransactions.filter(t => t.type === 'withdrawal').length },
             ],
             value: typeFilter,
-            onChange: setTypeFilter,
+            onChange: (value) => setTypeFilter(value as string[]),
           },
         ]}
         onClearAll={() => {
@@ -332,16 +332,20 @@ export const BankReconciliationWorkspace: React.FC<BankReconciliationWorkspacePr
         {filteredTransactions.length === 0 ? (
           <WorkspaceEmptyState
             {...(searchQuery || statusFilter.length > 0 || typeFilter.length > 0
-              ? EmptyStatePresets.noResults()
+              ? EmptyStatePresets.noResults(() => {
+                setSearchQuery('');
+                setStatusFilter([]);
+                setTypeFilter([]);
+              })
               : {
-                  variant: 'empty' as const,
-                  title: 'No Bank Transactions Yet',
-                  description: 'Import your first bank statement or transactions will be automatically created from financial activities.',
-                  primaryAction: {
-                    label: 'Import Statement',
-                    onClick: handleImportStatement,
-                  },
-                }
+                variant: 'empty' as const,
+                title: 'No Bank Transactions Yet',
+                description: 'Import your first bank statement or transactions will be automatically created from financial activities.',
+                primaryAction: {
+                  label: 'Import Statement',
+                  onClick: handleImportStatement,
+                },
+              }
             )}
           />
         ) : (

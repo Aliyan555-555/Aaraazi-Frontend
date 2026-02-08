@@ -8,7 +8,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Separator } from './ui/separator';
-import { 
+import {
   ArrowLeft,
   Calendar,
   DollarSign,
@@ -268,11 +268,11 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
   // Update overdue status based on current date
   const updatedInstallments = installmentPlan.installments.map(installment => ({
     ...installment,
-    status: installment.status === 'paid' 
-      ? 'paid' 
-      : isOverdue(installment.dueDate, installment.status) 
-        ? 'overdue' 
-        : 'due'
+    status: (installment.status === 'paid'
+      ? 'paid'
+      : isOverdue(installment.dueDate, installment.status)
+        ? 'overdue'
+        : 'due') as Installment['status']
   }));
 
   return (
@@ -308,7 +308,7 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
       <div className="p-6 space-y-6">
         {/* Customer and Unit Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           {/* Customer Information */}
           <Card>
             <CardHeader className="pb-4">
@@ -402,8 +402,8 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
                 <p className="text-sm text-gray-600">Progress</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-600 h-2 rounded-full" 
+                    <div
+                      className="bg-green-600 h-2 rounded-full"
                       style={{ width: `${paymentStats.completionPercentage}%` }}
                     ></div>
                   </div>
@@ -493,11 +493,10 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
                 </TableHeader>
                 <TableBody>
                   {updatedInstallments.map((installment) => (
-                    <TableRow 
-                      key={installment.id} 
-                      className={`hover:bg-gray-50 ${
-                        installment.status === 'overdue' ? 'bg-red-50' : ''
-                      }`}
+                    <TableRow
+                      key={installment.id}
+                      className={`hover:bg-gray-50 ${installment.status === 'overdue' ? 'bg-red-50' : ''
+                        }`}
                     >
                       <TableCell className="font-medium">
                         {installment.name}
@@ -543,11 +542,10 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
                           <Button
                             size="sm"
                             onClick={() => handleRecordPayment(installment)}
-                            className={`gap-2 ${
-                              installment.status === 'overdue' 
-                                ? 'bg-red-600 hover:bg-red-700' 
+                            className={`gap-2 ${installment.status === 'overdue'
+                                ? 'bg-red-600 hover:bg-red-700'
                                 : 'bg-blue-600 hover:bg-blue-700'
-                            }`}
+                              }`}
                           >
                             <CreditCard className="h-4 w-4" />
                             Record Payment
@@ -590,9 +588,9 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
                 id="amountPaid"
                 type="number"
                 value={paymentData.amountPaid || ''}
-                onChange={(e) => setPaymentData(prev => ({ 
-                  ...prev, 
-                  amountPaid: parseFloat(e.target.value) || 0 
+                onChange={(e) => setPaymentData(prev => ({
+                  ...prev,
+                  amountPaid: parseFloat(e.target.value) || 0
                 }))}
                 placeholder="Enter amount paid"
               />
@@ -604,20 +602,20 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
                 id="paymentDate"
                 type="date"
                 value={paymentData.paymentDate}
-                onChange={(e) => setPaymentData(prev => ({ 
-                  ...prev, 
-                  paymentDate: e.target.value 
+                onChange={(e) => setPaymentData(prev => ({
+                  ...prev,
+                  paymentDate: e.target.value
                 }))}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="paymentMethod">Payment Method *</Label>
-              <Select 
-                value={paymentData.paymentMethod} 
-                onValueChange={(value) => setPaymentData(prev => ({ 
-                  ...prev, 
-                  paymentMethod: value 
+              <Select
+                value={paymentData.paymentMethod}
+                onValueChange={(value) => setPaymentData(prev => ({
+                  ...prev,
+                  paymentMethod: value
                 }))}
               >
                 <SelectTrigger>
@@ -638,9 +636,9 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
               <Input
                 id="receiptNumber"
                 value={paymentData.receiptNumber}
-                onChange={(e) => setPaymentData(prev => ({ 
-                  ...prev, 
-                  receiptNumber: e.target.value 
+                onChange={(e) => setPaymentData(prev => ({
+                  ...prev,
+                  receiptNumber: e.target.value
                 }))}
                 placeholder="Enter receipt number"
               />
@@ -651,9 +649,9 @@ export const CustomerInstallmentDetails: React.FC<CustomerInstallmentDetailsProp
               <textarea
                 id="notes"
                 value={paymentData.notes}
-                onChange={(e) => setPaymentData(prev => ({ 
-                  ...prev, 
-                  notes: e.target.value 
+                onChange={(e) => setPaymentData(prev => ({
+                  ...prev,
+                  notes: e.target.value
                 }))}
                 placeholder="Additional notes (optional)"
                 rows={3}

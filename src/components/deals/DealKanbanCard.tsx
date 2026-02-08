@@ -6,14 +6,14 @@
  */
 
 import React from 'react';
-import { 
+import {
   DollarSign,
   Users,
   Calendar,
   TrendingUp,
   AlertCircle,
 } from 'lucide-react';
-import { Deal } from '../../types';
+import { Deal } from '../../types/deals';
 import { WorkspaceKanbanCard } from '../workspace/cards/WorkspaceKanbanCard';
 import { formatPKR } from '../../lib/currency';
 
@@ -59,11 +59,11 @@ export const DealKanbanCard: React.FC<DealKanbanCardProps> = ({
 
   // Build tags (as strings for WorkspaceKanbanCard)
   const tags: string[] = [];
-  
+
   if (deal.cycles.purchaseCycle) {
     tags.push('Dual Agent');
   }
-  
+
   if (paymentProgress === 100) {
     tags.push('Paid');
   } else if (paymentProgress > 0) {
@@ -113,6 +113,7 @@ export const DealKanbanCard: React.FC<DealKanbanCardProps> = ({
 
   return (
     <WorkspaceKanbanCard
+      id={deal.id}
       title={title}
       reference={formatPKR(deal.financial.agreedPrice)}
       priority={priority}
