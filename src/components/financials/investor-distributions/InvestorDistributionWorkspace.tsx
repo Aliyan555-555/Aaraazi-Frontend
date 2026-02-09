@@ -8,7 +8,7 @@ import { InvestorDistributionList, InvestorDistributionRecord } from './Investor
 import { DistributionFormModal } from './DistributionFormModal';
 import { BulkDistributionActions } from './BulkDistributionActions';
 import { Button } from '../../ui/button';
-import { getInvestors } from '../../../lib/investors';
+import { getInvestors, getPropertyInvestments } from '../../../lib/investors';
 import { getProperties } from '../../../lib/data';
 import { formatPKR } from '../../../lib/currency';
 import { toast } from 'sonner';
@@ -114,14 +114,17 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
   const properties = useMemo(() => {
     return getProperties(user.id, user.role)
       .filter(p => p.acquisitionType === 'investor-purchase')
-      .map(p => ({
-        id: p.id,
-        title: p.title || p.address,
-        investors: (p.purchaseDetails?.assignedInvestors || []).map((investorId: string, index: number) => ({
-          investorId,
-          percentage: (p.purchaseDetails?.investorShares || [])[index] || 0,
-        })),
-      }));
+      .map(p => {
+        const investments = getPropertyInvestments(p.id);
+        return {
+          id: p.id,
+          title: p.title || p.address,
+          investors: investments.map(inv => ({
+            investorId: inv.investorId,
+            percentage: inv.sharePercentage || 0,
+          })),
+        };
+      });
   }, [user.id, user.role, refreshKey]);
 
   // Calculate metrics
@@ -216,11 +219,11 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
           case 'reject':
             return { ...dist, status: 'Scheduled' as const, notes: reason, updatedAt: new Date().toISOString() };
           case 'mark-paid':
-            return { 
-              ...dist, 
-              status: 'Paid' as const, 
+            return {
+              ...dist,
+              status: 'Paid' as const,
               distributionDate: new Date().toISOString(),
-              updatedAt: new Date().toISOString() 
+              updatedAt: new Date().toISOString()
             };
           default:
             return dist;
@@ -267,12 +270,12 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
   const handleMarkPaid = async (distributionId: string) => {
     const updated = allDistributions.map(dist =>
       dist.id === distributionId
-        ? { 
-            ...dist, 
-            status: 'Paid' as const, 
-            distributionDate: new Date().toISOString(),
-            updatedAt: new Date().toISOString() 
-          }
+        ? {
+          ...dist,
+          status: 'Paid' as const,
+          distributionDate: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
         : dist
     );
     saveDistributions(updated);
@@ -298,6 +301,12 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
       console.error('Save distribution failed:', error);
       throw error;
     }
+  };
+
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter([]);
+    setTypeFilter([]);
   };
 
   // Export functions
@@ -382,7 +391,7 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
               { value: 'Paid', label: 'Paid', count: allDistributions.filter(d => d.status === 'Paid').length },
             ],
             value: statusFilter,
-            onChange: setStatusFilter,
+            onChange: (val) => setStatusFilter(val as string[]),
           },
           {
             id: 'type',
@@ -395,14 +404,10 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
               { value: 'annual-dividend', label: 'Annual', count: allDistributions.filter(d => d.distributionType === 'annual-dividend').length },
             ],
             value: typeFilter,
-            onChange: setTypeFilter,
+            onChange: (val) => setTypeFilter(val as string[]),
           },
         ]}
-        onClearAll={() => {
-          setSearchQuery('');
-          setStatusFilter([]);
-          setTypeFilter([]);
-        }}
+        onClearAll={handleClearFilters}
       />
 
       <div className="p-6 space-y-6">
@@ -453,16 +458,16 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
         {filteredDistributions.length === 0 ? (
           <WorkspaceEmptyState
             {...(searchQuery || statusFilter.length > 0 || typeFilter.length > 0
-              ? EmptyStatePresets.noResults()
+              ? EmptyStatePresets.noResults(handleClearFilters)
               : {
-                  variant: 'empty' as const,
-                  title: 'No Distributions Yet',
-                  description: 'Start tracking investor profit distributions by scheduling your first distribution.',
-                  primaryAction: {
-                    label: 'Schedule Distribution',
-                    onClick: () => setShowAddModal(true),
-                  },
-                }
+                variant: 'empty' as const,
+                title: 'No Distributions Yet',
+                description: 'Start tracking investor profit distributions by scheduling your first distribution.',
+                primaryAction: {
+                  label: 'Schedule Distribution',
+                  onClick: () => setShowAddModal(true),
+                },
+              }
             )}
           />
         ) : (

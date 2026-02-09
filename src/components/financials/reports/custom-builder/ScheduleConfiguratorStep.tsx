@@ -14,17 +14,19 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  ReportConfiguration, 
-  ScheduleConfig,
-  ScheduleFrequency 
+import {
+  ReportConfiguration,
 } from '../../../../types/custom-reports';
+import {
+  ScheduleConfig,
+  ScheduleFrequency
+} from '../../../../types/reports';
 import { User } from '../../../../types';
 import { Button } from '../../../ui/button';
 import { Label } from '../../../ui/label';
 import { Input } from '../../../ui/input';
 import { Checkbox } from '../../../ui/checkbox';
-import { 
+import {
   Clock,
   Calendar,
   AlertCircle,
@@ -45,31 +47,31 @@ const FREQUENCY_OPTIONS: Array<{
   description: string;
   icon: string;
 }> = [
-  {
-    value: 'daily',
-    label: 'Daily',
-    description: 'Run every day at a specific time',
-    icon: '📅',
-  },
-  {
-    value: 'weekly',
-    label: 'Weekly',
-    description: 'Run once a week on a specific day',
-    icon: '📆',
-  },
-  {
-    value: 'monthly',
-    label: 'Monthly',
-    description: 'Run once a month on a specific date',
-    icon: '🗓️',
-  },
-  {
-    value: 'quarterly',
-    label: 'Quarterly',
-    description: 'Run every quarter (every 3 months)',
-    icon: '📊',
-  },
-];
+    {
+      value: 'daily',
+      label: 'Daily',
+      description: 'Run every day at a specific time',
+      icon: '📅',
+    },
+    {
+      value: 'weekly',
+      label: 'Weekly',
+      description: 'Run once a week on a specific day',
+      icon: '📆',
+    },
+    {
+      value: 'monthly',
+      label: 'Monthly',
+      description: 'Run once a month on a specific date',
+      icon: '🗓️',
+    },
+    {
+      value: 'quarterly',
+      label: 'Quarterly',
+      description: 'Run every quarter (every 3 months)',
+      icon: '📊',
+    },
+  ];
 
 // Days of week
 const DAYS_OF_WEEK = [
@@ -104,6 +106,7 @@ export const ScheduleConfiguratorStep: React.FC<ScheduleConfiguratorStepProps> =
       dayOfMonth: 1,
       time: '09:00',
       timezone: 'Asia/Karachi',
+      dateRangeMode: 'rolling',
     };
 
     onChange({ schedule: defaultSchedule });
@@ -141,7 +144,7 @@ export const ScheduleConfiguratorStep: React.FC<ScheduleConfiguratorStepProps> =
 
     const now = new Date();
     const [hours, minutes] = config.schedule.time.split(':').map(Number);
-    
+
     let nextRun = new Date();
     nextRun.setHours(hours, minutes, 0, 0);
 
@@ -157,18 +160,18 @@ export const ScheduleConfiguratorStep: React.FC<ScheduleConfiguratorStepProps> =
         const targetDay = config.schedule.dayOfWeek ?? 1;
         const currentDay = nextRun.getDay();
         let daysUntilTarget = targetDay - currentDay;
-        
+
         if (daysUntilTarget < 0 || (daysUntilTarget === 0 && nextRun <= now)) {
           daysUntilTarget += 7;
         }
-        
+
         nextRun.setDate(nextRun.getDate() + daysUntilTarget);
         break;
 
       case 'monthly':
         const targetDate = config.schedule.dayOfMonth ?? 1;
         nextRun.setDate(targetDate);
-        
+
         // If this month's date has passed, go to next month
         if (nextRun <= now) {
           nextRun.setMonth(nextRun.getMonth() + 1);
@@ -181,10 +184,10 @@ export const ScheduleConfiguratorStep: React.FC<ScheduleConfiguratorStepProps> =
         const quarterStartMonth = Math.floor(currentMonth / 3) * 3;
         const targetMonthInQuarter = config.schedule.monthOfQuarter ?? 1;
         const targetMonth = quarterStartMonth + (targetMonthInQuarter - 1);
-        
+
         nextRun.setMonth(targetMonth);
         nextRun.setDate(config.schedule.dayOfMonth ?? 1);
-        
+
         // If this quarter's date has passed, go to next quarter
         if (nextRun <= now) {
           nextRun.setMonth(nextRun.getMonth() + 3);
@@ -222,8 +225,8 @@ export const ScheduleConfiguratorStep: React.FC<ScheduleConfiguratorStepProps> =
             className="mt-1"
           />
           <div className="flex-1">
-            <Label 
-              htmlFor="enable-schedule" 
+            <Label
+              htmlFor="enable-schedule"
               className="cursor-pointer text-gray-900"
             >
               Enable Automated Scheduling
@@ -407,7 +410,7 @@ export const ScheduleConfiguratorStep: React.FC<ScheduleConfiguratorStepProps> =
             <div>
               <p className="text-yellow-900 mb-1">Performance Notice</p>
               <p className="text-sm text-yellow-700">
-                This report has multiple filters and may take longer to generate. 
+                This report has multiple filters and may take longer to generate.
                 Consider scheduling during off-peak hours for better performance.
               </p>
             </div>

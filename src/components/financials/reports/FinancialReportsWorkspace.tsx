@@ -672,14 +672,14 @@ export const FinancialReportsWorkspace: React.FC<FinancialReportsWorkspaceProps>
               { value: 'custom', label: 'Custom', count: enhancedTemplates.filter((t: any) => t.category === 'custom').length },
             ],
             value: categoryFilter,
-            onChange: setCategoryFilter,
+            onChange: (value) => setCategoryFilter(value as string[]),
           },
           {
             id: 'favorites',
             label: 'Show Favorites Only',
             type: 'toggle',
             value: showFavoritesOnly,
-            onChange: setShowFavoritesOnly,
+            onChange: (value) => setShowFavoritesOnly(value as boolean),
           },
         ]}
         onClearAll={() => {
@@ -795,7 +795,7 @@ export const FinancialReportsWorkspace: React.FC<FinancialReportsWorkspaceProps>
           setRefreshKey((prev: number) => prev + 1);
         }}
         user={user}
-        editingTemplate={editingTemplate}
+        editTemplate={editingTemplate}
       />
 
       {/* Run Custom Report Modal */}

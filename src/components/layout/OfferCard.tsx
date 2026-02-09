@@ -82,8 +82,9 @@ export function OfferCard({
   const percentageOfAsking = ((offer.offerAmount / askingPrice) * 100).toFixed(1);
 
   // Check if expired
-  const isExpired =
-    offer.expiryDate && new Date(offer.expiryDate) < new Date() && offer.status === 'pending';
+  const isExpired = Boolean(
+    offer.expiryDate && new Date(offer.expiryDate) < new Date() && offer.status === 'pending'
+  );
 
   // Format date
   const formatDate = (dateStr: string) => {
@@ -96,9 +97,8 @@ export function OfferCard({
 
   return (
     <Card
-      className={`${isAccepted ? 'border-green-500 border-2' : ''} ${
-        isExpired ? 'border-orange-300' : ''
-      } ${className}`}
+      className={`${isAccepted ? 'border-green-500 border-2' : ''} ${isExpired ? 'border-orange-300' : ''
+        } ${className}`}
     >
       <CardContent className="p-6">
         {/* Header Section */}
@@ -182,9 +182,8 @@ export function OfferCard({
                 <span>Expiry Date</span>
               </div>
               <p
-                className={`text-sm font-medium ${
-                  isExpired ? 'text-orange-600' : ''
-                }`}
+                className={`text-sm font-medium ${isExpired ? 'text-orange-600' : ''
+                  }`}
               >
                 {formatDate(offer.expiryDate)}
               </p>

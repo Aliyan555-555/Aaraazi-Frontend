@@ -37,39 +37,14 @@ import {
   formatCNIC,
   formatPakistaniPhone
 } from '../lib/investors';
-// import { Investor } from '../types';
+import { Investor } from '../types';
 import { toast } from 'sonner';
-
-// Investor interface (not in types yet)
-interface Investor {
-  id: string;
-  name: string;
-  cnic?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  investorType?: 'individual' | 'company' | 'partnership' | 'trust';
-  totalInvestmentCapacity?: number;
-  investmentHorizon?: 'short-term' | 'medium-term' | 'long-term';
-  riskProfile?: 'conservative' | 'moderate' | 'aggressive';
-  minimumInvestmentAmount?: number;
-  maximumInvestmentAmount?: number;
-  preferredPropertyTypes?: string[];
-  preferredLocations?: string[];
-  bankName?: string;
-  accountTitle?: string;
-  accountNumber?: string;
-  iban?: string;
-  previousInvestments?: string;
-  notes?: string;
-}
 
 interface CreateInvestorModalProps {
   isOpen: boolean;
   onClose: () => void;
   editingInvestor?: Investor | null;
-  onInvestorCreated?: () => void;
+  onInvestorCreated?: (investor: Investor) => void;
 }
 
 interface FormData {
@@ -82,9 +57,9 @@ interface FormData {
   city: string;
 
   // Investment Profile
-  investorType: 'individual' | 'company' | 'partnership' | 'trust';
+  investorType: 'individual' | 'corporate' | 'institutional' | 'company' | 'partnership' | 'trust';
   totalInvestmentCapacity: string;
-  investmentHorizon: 'short-term' | 'medium-term' | 'long-term';
+  investmentHorizon: 'short-term' | 'medium-term' | 'long-term' | string;
   riskProfile: 'conservative' | 'moderate' | 'aggressive';
 
   // Investment Preferences
@@ -381,21 +356,23 @@ export default function CreateInvestorModal({
         notes: formData.notes.trim() || undefined
       };
 
+      let savedInvestor: Investor;
+
       if (editingInvestor) {
-        updateInvestor(editingInvestor.id, investorData);
+        savedInvestor = updateInvestor(editingInvestor.id, investorData);
         toast.success('Investor Updated', {
           description: `${investorData.name} has been updated successfully`
         });
       } else {
         const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-        createInvestor(investorData, currentUser.id || 'system', currentUser.name || 'System');
+        savedInvestor = createInvestor(investorData, currentUser.id || 'system', currentUser.name || 'System');
         toast.success('Investor Created', {
           description: `${investorData.name} has been added to the registry`
         });
       }
 
       if (onInvestorCreated) {
-        onInvestorCreated();
+        onInvestorCreated(savedInvestor);
       }
       onClose();
     } catch (error: any) {

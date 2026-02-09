@@ -4,11 +4,11 @@
  */
 
 import { useMemo, useState } from 'react';
-import { 
-  ArrowLeft, 
-  Building2, 
-  TrendingUp, 
-  Wallet, 
+import {
+  ArrowLeft,
+  Building2,
+  TrendingUp,
+  Wallet,
   PieChart,
   Calendar,
   ExternalLink,
@@ -30,7 +30,7 @@ import {
 import { formatPKR } from '../lib/currency';
 import { formatDate } from '../lib/validation';
 import { formatPropertyAddress } from '../lib/utils';
-import { 
+import {
   getInvestorInvestments,
   calculateInvestorPortfolioValue,
   calculateInvestorROI,
@@ -47,29 +47,29 @@ interface InvestorPortfolioDashboardProps {
 
 type StatusFilter = 'all' | 'active' | 'sold' | 'rented';
 
-export default function InvestorPortfolioDashboard({ 
-  investor, 
-  onBack, 
-  onNavigate 
+export default function InvestorPortfolioDashboard({
+  investor,
+  onBack,
+  onNavigate
 }: InvestorPortfolioDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   // Load investment data
   const investments = getInvestorInvestments(investor.id);
   const properties = getProperties();
-  
+
   // Enrich investments with property details
   const enrichedInvestments = useMemo(() => {
     return investments.map(investment => {
       const property = properties.find(p => p.id === investment.propertyId);
       const details = property ? getInvestorPropertyDetails(investor.id, investment.propertyId) : null;
-      
+
       return {
         ...investment,
         property,
         currentValue: details?.currentValue || 0,
         projectedROI: details?.projectedROI || 0,
-        status: property?.currentStatus || 'Unknown'
+        propertyStatus: property?.status || 'Unknown'
       };
     }).sort((a, b) => new Date(b.investmentDate).getTime() - new Date(a.investmentDate).getTime());
   }, [investments, properties, investor.id]);
@@ -77,9 +77,9 @@ export default function InvestorPortfolioDashboard({
   // Filter investments
   const filteredInvestments = useMemo(() => {
     if (statusFilter === 'all') return enrichedInvestments;
-    
+
     return enrichedInvestments.filter(inv => {
-      const status = inv.status.toLowerCase();
+      const status = inv.propertyStatus.toLowerCase();
       if (statusFilter === 'active') {
         return status.includes('available') || status.includes('listed') || status.includes('for sale');
       } else if (statusFilter === 'sold') {
@@ -97,13 +97,13 @@ export default function InvestorPortfolioDashboard({
     const portfolioValue = calculateInvestorPortfolioValue(investor.id);
     const roi = calculateInvestorROI(investor.id);
     const totalGain = portfolioValue - totalInvested;
-    
+
     const propertyCount = investments.length;
     const activeProperties = enrichedInvestments.filter(inv => {
-      const status = inv.status.toLowerCase();
+      const status = inv.propertyStatus.toLowerCase();
       return status.includes('available') || status.includes('listed') || status.includes('for sale');
     }).length;
-    
+
     const avgSharePercentage = propertyCount > 0
       ? investments.reduce((sum, inv) => sum + inv.sharePercentage, 0) / propertyCount
       : 0;
@@ -161,7 +161,7 @@ export default function InvestorPortfolioDashboard({
               {investor.cnic && <p className="text-xs text-[var(--color-text-secondary)]">CNIC: {investor.cnic}</p>}
             </div>
           </div>
-          
+
           {investor.address && (
             <div>
               <p className="text-[var(--color-text-secondary)] mb-1">Address</p>
@@ -169,12 +169,12 @@ export default function InvestorPortfolioDashboard({
               {investor.city && <p className="text-sm text-[var(--color-text-secondary)]">{investor.city}</p>}
             </div>
           )}
-          
+
           <div>
             <p className="text-[var(--color-text-secondary)] mb-1">Member Since</p>
             <p className="text-sm">{formatDate(investor.createdAt)}</p>
           </div>
-          
+
           {investor.notes && (
             <div>
               <p className="text-[var(--color-text-secondary)] mb-1">Notes</p>
@@ -265,7 +265,7 @@ export default function InvestorPortfolioDashboard({
             <Building2 className="w-12 h-12 text-[var(--color-text-secondary)] mx-auto mb-4" />
             <h3 className="mb-2">No Investments Found</h3>
             <p className="text-[var(--color-text-secondary)]">
-              {statusFilter !== 'all' 
+              {statusFilter !== 'all'
                 ? 'No properties match the selected filter'
                 : 'This investor has not made any investments yet'}
             </p>
@@ -291,14 +291,14 @@ export default function InvestorPortfolioDashboard({
             const shareOfTotal = portfolioMetrics.totalInvested > 0
               ? (investment.investmentAmount / portfolioMetrics.totalInvested) * 100
               : 0;
-            
+
             // Format property address
             const propertyAddress = investment.property?.address
-              ? (typeof investment.property.address === 'string' 
-                  ? investment.property.address 
-                  : formatPropertyAddress(investment.property.address))
+              ? (typeof investment.property.address === 'string'
+                ? investment.property.address
+                : formatPropertyAddress(investment.property.address))
               : 'Unknown Property';
-            
+
             return (
               <div key={investment.id}>
                 <div className="flex items-center justify-between mb-2 text-sm">
@@ -331,14 +331,14 @@ interface InvestmentCardProps {
     property?: any;
     currentValue: number;
     projectedROI: number;
-    status: string;
+    propertyStatus: string;
   };
   onPropertyClick: (propertyId: string) => void;
 }
 
 function InvestmentCard({ investment, onPropertyClick }: InvestmentCardProps) {
   const { property } = investment;
-  
+
   const gain = investment.currentValue - investment.investmentAmount;
   const gainPercentage = investment.investmentAmount > 0
     ? (gain / investment.investmentAmount) * 100
@@ -374,8 +374,8 @@ function InvestmentCard({ investment, onPropertyClick }: InvestmentCardProps) {
                 )}
               </div>
             </div>
-            <Badge variant={investment.status.includes('sold') ? 'secondary' : 'default'}>
-              {investment.status}
+            <Badge variant={investment.propertyStatus.toLowerCase().includes('sold') ? 'secondary' : 'default'}>
+              {investment.propertyStatus}
             </Badge>
           </div>
         </div>
@@ -418,7 +418,7 @@ function InvestmentCard({ investment, onPropertyClick }: InvestmentCardProps) {
           <Calendar className="w-4 h-4" />
           Invested on {formatDate(investment.investmentDate)}
         </div>
-        
+
         {property && (
           <Button
             variant="outline"

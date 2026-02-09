@@ -37,6 +37,7 @@ import { addContact } from '../lib/data';
 import { toast } from 'sonner';
 import { Loader2, UserPlus } from 'lucide-react';
 import { ContactType, ContactCategory } from '@/types/schema';
+import type { Contact } from '@/types/contacts';
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -53,10 +54,10 @@ interface ContactFormData {
 interface ContactFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (contact: any) => void;
+  onSuccess?: (contact: Contact) => void;
   agentId: string;
   defaultType?: 'buyer' | 'seller' | 'tenant' | 'landlord' | 'investor' | 'vendor' | 'external-broker';
-  editingContact?: any; // Contact being edited
+  editingContact?: Contact | null;
 }
 
 const LEAD_SOURCES = [
@@ -85,7 +86,7 @@ export function ContactFormModal({
     name: editingContact?.name || '',
     phone: editingContact?.phone || '',
     email: editingContact?.email || '',
-    type: editingContact?.type || defaultType || '',
+    type: (editingContact?.type ?? defaultType ?? '') as ContactFormData['type'],
     company: editingContact?.company || '',
     address: editingContact?.address || '',
     notes: editingContact?.notes || '',
@@ -225,7 +226,7 @@ export function ContactFormModal({
         toast.success('Contact added successfully!');
 
         if (onSuccess) {
-          onSuccess(payload);
+          onSuccess(payload as unknown as Contact);
         }
       }
 

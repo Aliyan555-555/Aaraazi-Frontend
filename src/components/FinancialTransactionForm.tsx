@@ -177,7 +177,7 @@ export const FinancialTransactionForm: React.FC<FinancialTransactionFormProps> =
               <Label htmlFor="type">Transaction Type</Label>
               <Select
                 value={formData.type}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, type: value, category: '', subcategory: '' }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as 'income' | 'expense', category: '', subcategory: '' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
@@ -297,7 +297,7 @@ export const FinancialTransactionForm: React.FC<FinancialTransactionFormProps> =
               <Label htmlFor="paymentMethod">Payment Method</Label>
               <Select
                 value={formData.paymentMethod}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value as 'cash' | 'cheque' | 'bank-transfer' | 'card' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select payment method" />
@@ -315,7 +315,7 @@ export const FinancialTransactionForm: React.FC<FinancialTransactionFormProps> =
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'pending' | 'approved' | 'paid' | 'rejected' }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />

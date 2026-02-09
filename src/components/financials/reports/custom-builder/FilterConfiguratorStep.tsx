@@ -16,12 +16,13 @@
 import React, { useState, useMemo } from 'react';
 import { ReportConfiguration, FilterRule, SelectedField } from '../../../../types/custom-reports';
 import { User } from '../../../../types';
+import { FilterOperator } from '../../../../types/reports';
 import { Button } from '../../../ui/button';
 import { Input } from '../../../ui/input';
 import { Label } from '../../../ui/label';
-import { 
-  Plus, 
-  X, 
+import {
+  Plus,
+  X,
   Filter,
   AlertCircle,
   Zap
@@ -101,7 +102,7 @@ export const FilterConfiguratorStep: React.FC<FilterConfiguratorStepProps> = ({
       id: generateFilterId(),
       field: firstField.field,
       fieldType: firstField.type,
-      operator: 'equals',
+      operator: 'equals' as FilterOperator,
       value: '',
       logicalOperator: filters.length === 0 ? 'AND' : 'AND',
     };
@@ -111,8 +112,8 @@ export const FilterConfiguratorStep: React.FC<FilterConfiguratorStepProps> = ({
 
   // Remove filter
   const handleRemoveFilter = (filterId: string) => {
-    onChange({ 
-      filters: filters.filter(f => f.id !== filterId) 
+    onChange({
+      filters: filters.filter(f => f.id !== filterId)
     });
   };
 
@@ -128,7 +129,7 @@ export const FilterConfiguratorStep: React.FC<FilterConfiguratorStepProps> = ({
               ...f,
               ...updates,
               fieldType: field.type,
-              operator: 'equals',
+              operator: 'equals' as FilterOperator,
               value: '',
             };
           }
@@ -257,7 +258,7 @@ export const FilterConfiguratorStep: React.FC<FilterConfiguratorStepProps> = ({
       }
 
       case 'active-only': {
-        const statusField = selectedFields.find(f => 
+        const statusField = selectedFields.find(f =>
           f.field.includes('status') || f.label.toLowerCase().includes('status')
         );
         if (statusField) {
@@ -484,7 +485,7 @@ export const FilterConfiguratorStep: React.FC<FilterConfiguratorStepProps> = ({
           <div>
             <p className="text-blue-900 mb-1">Pro Tip</p>
             <p className="text-sm text-blue-700">
-              Use AND to make filters more restrictive (all conditions must match). 
+              Use AND to make filters more restrictive (all conditions must match).
               Use OR to make filters more inclusive (any condition can match).
             </p>
           </div>

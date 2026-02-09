@@ -10,12 +10,12 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Phone, 
-  Mail, 
-  Clock, 
-  TrendingUp, 
-  CheckCircle2, 
+import {
+  Phone,
+  Mail,
+  Clock,
+  TrendingUp,
+  CheckCircle2,
   XCircle,
   Edit,
   MessageSquare,
@@ -68,7 +68,7 @@ export function LeadDetailsV4({
 }: LeadDetailsV4Props) {
   const [activeTab, setActiveTab] = useState('overview');
   const [leadTasks, setLeadTasks] = useState<TaskV4[]>([]);
-  
+
   // Load lead
   const lead = useMemo(() => getLeadById(leadId), [leadId]);
 
@@ -91,7 +91,7 @@ export function LeadDetailsV4({
 
   // SLA status
   const slaStatus = useMemo(() => getLeadSLAStatus(lead), [lead]);
-  
+
   // Conversion preview
   const conversionPreview = useMemo(() => previewLeadConversion(leadId), [leadId]);
 
@@ -100,7 +100,7 @@ export function LeadDetailsV4({
     const created = new Date(lead.createdAt);
     const now = new Date();
     const hours = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-    
+
     if (hours < 24) {
       return `${Math.round(hours)} hours old`;
     } else {
@@ -120,20 +120,20 @@ export function LeadDetailsV4({
       label: 'Qualification Score',
       value: `${lead.qualificationScore}/100`,
       icon: <TrendingUp className="w-4 h-4" />,
-      variant: lead.qualificationScore >= 70 ? 'success' : 
-               lead.qualificationScore >= 40 ? 'warning' : 'danger',
+      variant: lead.qualificationScore >= 70 ? 'success' :
+        lead.qualificationScore >= 40 ? 'warning' : 'danger',
     },
     {
       label: 'Priority',
       value: lead.priority.toUpperCase(),
-      variant: lead.priority === 'high' ? 'danger' : 
-               lead.priority === 'medium' ? 'warning' : 'info',
+      variant: lead.priority === 'high' ? 'danger' :
+        lead.priority === 'medium' ? 'warning' : 'info',
     },
     {
       label: 'Status',
       value: lead.status.charAt(0).toUpperCase() + lead.status.slice(1),
       variant: lead.status === 'converted' ? 'success' :
-               lead.status === 'lost' ? 'danger' : 'info',
+        lead.status === 'lost' ? 'danger' : 'info',
     },
     {
       label: 'Lead Age',
@@ -145,7 +145,7 @@ export function LeadDetailsV4({
 
   // Primary actions
   const primaryActions = [];
-  
+
   if (lead.status === 'new' || lead.status === 'qualifying') {
     primaryActions.push({
       label: 'Qualify Lead',
@@ -153,7 +153,7 @@ export function LeadDetailsV4({
       onClick: () => onQualify(leadId),
     });
   }
-  
+
   if (lead.status === 'qualified') {
     primaryActions.push({
       label: 'Convert Lead',
@@ -163,7 +163,7 @@ export function LeadDetailsV4({
   }
 
   // Secondary actions
-  const secondaryActions = [
+  const secondaryActions: any[] = [
     {
       label: 'Add Interaction',
       icon: <MessageSquare className="w-4 h-4" />,
@@ -181,13 +181,13 @@ export function LeadDetailsV4({
       label: 'Mark as Lost',
       icon: <XCircle className="w-4 h-4" />,
       onClick: () => onMarkLost(leadId),
-      destructive: true,
+      variant: 'destructive',
     });
   }
 
   // Connected entities (if converted)
   const connectedEntities = [];
-  
+
   if (lead.routedTo) {
     if (lead.routedTo.contactId) {
       connectedEntities.push({
@@ -197,7 +197,7 @@ export function LeadDetailsV4({
         onClick: () => onNavigate('contact-details', lead.routedTo!.contactId),
       });
     }
-    
+
     if (lead.routedTo.buyerRequirementId) {
       connectedEntities.push({
         type: 'requirement' as const,
@@ -206,7 +206,7 @@ export function LeadDetailsV4({
         onClick: () => onNavigate('requirement-details', lead.routedTo!.buyerRequirementId),
       });
     }
-    
+
     if (lead.routedTo.rentRequirementId) {
       connectedEntities.push({
         type: 'requirement' as const,
@@ -215,7 +215,7 @@ export function LeadDetailsV4({
         onClick: () => onNavigate('requirement-details', lead.routedTo!.rentRequirementId),
       });
     }
-    
+
     if (lead.routedTo.propertyId) {
       connectedEntities.push({
         type: 'property' as const,
@@ -307,18 +307,20 @@ export function LeadDetailsV4({
 
           {/* Interactions Tab */}
           <TabsContent value="interactions" className="mt-6">
-            <InteractionsList 
-              interactions={lead.interactions} 
-              onAddInteraction={() => onAddInteraction(leadId)} 
+            <InteractionsList
+              interactions={lead.interactions}
+              onAddInteraction={() => onAddInteraction(leadId)}
             />
           </TabsContent>
 
           {/* Tasks Tab */}
           <TabsContent value="tasks" className="mt-6">
             <TaskQuickAddWidget
-              entity="lead"
+              user={user as any}
+              entityType="lead"
               entityId={leadId}
-              onAddTask={(task) => {
+              entityName={lead.name}
+              onTaskCreated={(task: TaskV4) => {
                 setLeadTasks([...leadTasks, task]);
               }}
             />
@@ -341,7 +343,7 @@ export function LeadDetailsV4({
               onStatusChange={(taskId, status) => {
                 const task = leadTasks.find(t => t.id === taskId);
                 if (task) {
-                  updateTask(taskId, { status }, user);
+                  updateTask(taskId, { status }, user as any);
                   const updatedTasks = getTasksByEntity('lead', leadId);
                   setLeadTasks(updatedTasks);
                   toast.success('Task status updated');
@@ -368,7 +370,7 @@ function LeadContactInfo({ lead }: { lead: Lead }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-4">Contact Information</h3>
-      
+
       <div className="space-y-3">
         <div className="flex items-start gap-3">
           <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -418,27 +420,27 @@ function LeadSourceInfo({ lead }: { lead: Lead }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-4">Source & Attribution</h3>
-      
+
       <dl className="space-y-2">
         <div className="flex justify-between">
           <dt className="text-gray-500">Source</dt>
           <dd className="text-gray-900 capitalize">{lead.source.replace(/-/g, ' ')}</dd>
         </div>
-        
+
         {lead.sourceDetails && (
           <div className="flex justify-between">
             <dt className="text-gray-500">Details</dt>
             <dd className="text-gray-900">{lead.sourceDetails}</dd>
           </div>
         )}
-        
+
         {lead.campaign && (
           <div className="flex justify-between">
             <dt className="text-gray-500">Campaign</dt>
             <dd className="text-gray-900">{lead.campaign}</dd>
           </div>
         )}
-        
+
         {lead.referredBy && (
           <div className="flex justify-between">
             <dt className="text-gray-500">Referred By</dt>
@@ -458,7 +460,7 @@ function LeadIntentInfo({ lead }: { lead: Lead }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-4">Intent & Timeline</h3>
-      
+
       <dl className="space-y-2">
         <div className="flex justify-between">
           <dt className="text-gray-500">Intent</dt>
@@ -468,7 +470,7 @@ function LeadIntentInfo({ lead }: { lead: Lead }) {
             </Badge>
           </dd>
         </div>
-        
+
         <div className="flex justify-between">
           <dt className="text-gray-500">Timeline</dt>
           <dd>
@@ -527,7 +529,7 @@ function LeadScoreCard({ lead }: { lead: Lead }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-4">Qualification Score</h3>
-      
+
       <div className="text-center mb-4">
         <div className="text-4xl font-bold text-gray-900 mb-1">
           {lead.qualificationScore}
@@ -537,13 +539,12 @@ function LeadScoreCard({ lead }: { lead: Lead }) {
 
       <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
         <div
-          className={`h-3 rounded-full transition-all ${
-            lead.qualificationScore >= 70
-              ? 'bg-green-500'
-              : lead.qualificationScore >= 40
+          className={`h-3 rounded-full transition-all ${lead.qualificationScore >= 70
+            ? 'bg-green-500'
+            : lead.qualificationScore >= 40
               ? 'bg-yellow-500'
               : 'bg-red-500'
-          }`}
+            }`}
           style={{ width: `${lead.qualificationScore}%` }}
         />
       </div>
@@ -554,15 +555,15 @@ function LeadScoreCard({ lead }: { lead: Lead }) {
             lead.qualificationScore >= 70
               ? 'success'
               : lead.qualificationScore >= 40
-              ? 'warning'
-              : 'destructive'
+                ? 'warning'
+                : 'destructive'
           }
         >
           {lead.qualificationScore >= 70
             ? 'High Quality Lead'
             : lead.qualificationScore >= 40
-            ? 'Medium Quality Lead'
-            : 'Low Quality Lead'}
+              ? 'Medium Quality Lead'
+              : 'Low Quality Lead'}
         </Badge>
       </div>
     </div>
@@ -577,7 +578,7 @@ function LeadSLACard({ lead, slaStatus }: { lead: Lead; slaStatus: any }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-4">SLA Tracking</h3>
-      
+
       <div className="space-y-3">
         <SLACheckpoint
           label="First Contact"
@@ -585,14 +586,14 @@ function LeadSLACard({ lead, slaStatus }: { lead: Lead; slaStatus: any }) {
           timestamp={lead.sla.firstContactAt}
           target="2 hours"
         />
-        
+
         <SLACheckpoint
           label="Qualification"
           completed={!!lead.sla.qualifiedAt}
           timestamp={lead.sla.qualifiedAt}
           target="24 hours"
         />
-        
+
         <SLACheckpoint
           label="Conversion"
           completed={!!lead.sla.convertedAt}
@@ -618,15 +619,15 @@ function LeadSLACard({ lead, slaStatus }: { lead: Lead; slaStatus: any }) {
   );
 }
 
-function SLACheckpoint({ 
-  label, 
-  completed, 
-  timestamp, 
-  target 
-}: { 
-  label: string; 
-  completed: boolean; 
-  timestamp?: string; 
+function SLACheckpoint({
+  label,
+  completed,
+  timestamp,
+  target
+}: {
+  label: string;
+  completed: boolean;
+  timestamp?: string;
   target: string;
 }) {
   return (
@@ -658,20 +659,20 @@ function LeadAssignmentCard({ lead }: { lead: Lead }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-4">Assignment</h3>
-      
+
       <div className="space-y-2">
         <div className="flex justify-between">
           <span className="text-gray-500">Agent</span>
           <span className="text-gray-900 font-medium">{lead.agentName}</span>
         </div>
-        
+
         <div className="flex justify-between">
           <span className="text-gray-500">Created</span>
           <span className="text-gray-900">
             {format(new Date(lead.createdAt), 'MMM d, yyyy')}
           </span>
         </div>
-        
+
         <div className="flex justify-between">
           <span className="text-gray-500">Updated</span>
           <span className="text-gray-900">
@@ -724,7 +725,7 @@ function QualificationScoreBreakdown({ lead }: { lead: Lead }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-6">Score Breakdown</h3>
-      
+
       <div className="space-y-6">
         {factors.map((factor) => (
           <div key={factor.label}>
@@ -739,13 +740,12 @@ function QualificationScoreBreakdown({ lead }: { lead: Lead }) {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className={`h-2 rounded-full ${
-                  factor.score >= factor.max * 0.7
-                    ? 'bg-green-500'
-                    : factor.score >= factor.max * 0.4
+                className={`h-2 rounded-full ${factor.score >= factor.max * 0.7
+                  ? 'bg-green-500'
+                  : factor.score >= factor.max * 0.4
                     ? 'bg-yellow-500'
                     : 'bg-red-500'
-                }`}
+                  }`}
                 style={{ width: `${(factor.score / factor.max) * 100}%` }}
               />
             </div>
@@ -764,7 +764,7 @@ function QualificationDetails({ lead }: { lead: Lead }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-4">Qualification Checklist</h3>
-      
+
       <div className="space-y-3">
         <ChecklistItem
           label="Phone Verified"
@@ -812,11 +812,11 @@ function ChecklistItem({ label, completed }: { label: string; completed: boolean
 // INTERACTIONS LIST
 // ============================================
 
-function InteractionsList({ 
-  interactions, 
-  onAddInteraction 
-}: { 
-  interactions: LeadInteraction[]; 
+function InteractionsList({
+  interactions,
+  onAddInteraction
+}: {
+  interactions: LeadInteraction[];
   onAddInteraction: () => void;
 }) {
   if (interactions.length === 0) {
@@ -846,8 +846,8 @@ function InteractionsList({
 
       <div className="bg-white rounded-lg border border-gray-200">
         {interactions.map((interaction, index) => (
-          <InteractionItem 
-            key={interaction.id} 
+          <InteractionItem
+            key={interaction.id}
             interaction={interaction}
             isLast={index === interactions.length - 1}
           />
@@ -857,10 +857,10 @@ function InteractionsList({
   );
 }
 
-function InteractionItem({ 
-  interaction, 
-  isLast 
-}: { 
+function InteractionItem({
+  interaction,
+  isLast
+}: {
   interaction: LeadInteraction;
   isLast: boolean;
 }) {
@@ -879,13 +879,13 @@ function InteractionItem({
               {formatDistanceToNow(new Date(interaction.timestamp), { addSuffix: true })}
             </span>
           </div>
-          
+
           <div className="font-medium text-gray-900 mb-1">{interaction.summary}</div>
-          
+
           {interaction.notes && (
             <p className="text-gray-600 whitespace-pre-wrap">{interaction.notes}</p>
           )}
-          
+
           <div className="text-gray-500 mt-2">by {interaction.agentName}</div>
         </div>
       </div>
@@ -944,7 +944,7 @@ function LeadTimeline({ lead }: { lead: Lead }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="font-medium text-gray-900 mb-6">Timeline</h3>
-      
+
       <div className="space-y-4">
         {events.map((event, index) => (
           <div key={index} className="flex gap-4">

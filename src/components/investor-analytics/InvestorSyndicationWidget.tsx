@@ -40,14 +40,14 @@ export function InvestorSyndicationWidget({ user, onViewDetails }: InvestorSyndi
     const activeInvestments = allInvestments.filter((inv) => inv.status === 'active');
 
     const allDistributions = getAllInvestorDistributions();
-    const pendingDistributions = allDistributions.filter((d) => d.distributionStatus === 'pending');
+    const pendingDistributions = allDistributions.filter((d) => d.status === 'pending');
 
     const totalInvested = activeInvestments.reduce((sum, inv) => sum + inv.investmentAmount, 0);
     const totalUnrealizedProfit = activeInvestments.reduce(
       (sum, inv) => sum + (inv.unrealizedProfit || 0),
       0
     );
-    const pendingAmount = pendingDistributions.reduce((sum, d) => sum + d.totalReturn, 0);
+    const pendingAmount = pendingDistributions.reduce((sum, d) => sum + d.amount, 0);
 
     const uniqueInvestors = new Set(allInvestments.map((inv) => inv.investorId));
 

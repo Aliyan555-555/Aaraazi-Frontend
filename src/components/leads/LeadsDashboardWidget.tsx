@@ -14,11 +14,11 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { Progress } from '../ui/progress';
-import { 
-  UserPlus, 
-  TrendingUp, 
-  Clock, 
-  AlertTriangle, 
+import {
+  UserPlus,
+  TrendingUp,
+  Clock,
+  AlertTriangle,
   CheckCircle2,
   ArrowRight,
   Users,
@@ -30,11 +30,11 @@ import {
   Zap
 } from 'lucide-react';
 import { getLeads, getLeadsByStatus } from '../../lib/leads';
-import { 
-  getSLAPerformance, 
-  getSLAAlerts, 
+import {
+  getSLAPerformance,
+  getSLAAlerts,
   getLeadsByPriority,
-  filterLeads 
+  filterLeads
 } from '../../lib/leadUtils';
 import type { Lead, LeadStatus } from '../../types/leads';
 
@@ -48,10 +48,10 @@ interface LeadsDashboardWidgetProps {
   variant?: 'compact' | 'full';
 }
 
-export function LeadsDashboardWidget({ 
-  user, 
+export function LeadsDashboardWidget({
+  user,
   onNavigate,
-  variant = 'full' 
+  variant = 'full'
 }: LeadsDashboardWidgetProps) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,8 +59,11 @@ export function LeadsDashboardWidget({
   // Load leads data
   useEffect(() => {
     try {
-      const allLeads = getLeads(user.id, user.role);
-      setLeads(allLeads);
+      const allLeads = getLeads();
+      const filteredLeads = user.role === 'agent'
+        ? allLeads.filter(l => l.agentId === user.id)
+        : allLeads;
+      setLeads(filteredLeads);
     } catch (error) {
       console.error('Error loading leads:', error);
     } finally {
@@ -70,41 +73,41 @@ export function LeadsDashboardWidget({
 
   // Calculate metrics
   const metrics = useMemo(() => {
-    const activeLeads = leads.filter(l => 
+    const activeLeads = leads.filter(l =>
       ['new', 'qualifying', 'qualified'].includes(l.status)
     );
-    
+
     const requiresAction = filterLeads({
       status: ['new', 'qualifying'],
       slaCompliant: false
-    }).length;
-    
+    }, leads).length;
+
     const newLeads = leads.filter(l => l.status === 'new').length;
     const qualifyingLeads = leads.filter(l => l.status === 'qualifying').length;
     const qualifiedLeads = leads.filter(l => l.status === 'qualified').length;
-    
-    const highPriority = getLeadsByPriority('high').length;
-    
-    const slaPerformance = getSLAPerformance();
-    const slaAlerts = getSLAAlerts();
-    
+
+    const highPriority = leads.filter(l => l.priority === 'high').length;
+
+    const slaPerformance = getSLAPerformance(leads);
+    const slaAlerts = getSLAAlerts(leads);
+
     // Conversion rate (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const recentLeads = leads.filter(l => 
+
+    const recentLeads = leads.filter(l =>
       new Date(l.createdAt) >= thirtyDaysAgo
     );
-    
+
     const recentConversions = recentLeads.filter(l => l.status === 'converted');
-    const conversionRate = recentLeads.length > 0 
-      ? (recentConversions.length / recentLeads.length) * 100 
+    const conversionRate = recentLeads.length > 0
+      ? (recentConversions.length / recentLeads.length) * 100
       : 0;
-    
+
     // Average score
     const scoresSum = activeLeads.reduce((sum, l) => sum + l.qualificationScore, 0);
     const avgScore = activeLeads.length > 0 ? scoresSum / activeLeads.length : 0;
-    
+
     return {
       total: leads.length,
       active: activeLeads.length,
@@ -115,7 +118,7 @@ export function LeadsDashboardWidget({
       highPriority,
       slaCompliance: slaPerformance.complianceRate,
       slaAlerts: slaAlerts.length,
-      overdueLeads: slaAlerts.filter(a => a.isOverdue).length,
+      overdueLeads: slaAlerts.length,
       conversionRate,
       avgScore,
       recentConversions: recentConversions.length,
@@ -158,7 +161,7 @@ export function LeadsDashboardWidget({
               Track and convert new opportunities
             </CardDescription>
           </div>
-          <Button 
+          <Button
             onClick={() => onNavigate('leads')}
             variant="outline"
             size="sm"
@@ -183,7 +186,7 @@ export function LeadsDashboardWidget({
                   {metrics.overdueLeads} {metrics.overdueLeads === 1 ? 'is' : 'are'} overdue on SLA targets
                 </p>
               </div>
-              <Button 
+              <Button
                 onClick={() => onNavigate('leads', 'requires-action')}
                 size="sm"
                 variant="destructive"
@@ -277,7 +280,7 @@ export function LeadsDashboardWidget({
             </div>
             <Progress value={metrics.avgScore} className="h-2" />
           </div>
-          
+
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">SLA Performance</span>
@@ -285,13 +288,13 @@ export function LeadsDashboardWidget({
                 {metrics.slaCompliance.toFixed(0)}%
               </span>
             </div>
-            <Progress 
-              value={metrics.slaCompliance} 
+            <Progress
+              value={metrics.slaCompliance}
               className="h-2"
               // @ts-ignore - custom color based on performance
               indicatorClassName={
                 metrics.slaCompliance >= 90 ? 'bg-green-500' :
-                metrics.slaCompliance >= 70 ? 'bg-yellow-500' : 'bg-red-500'
+                  metrics.slaCompliance >= 70 ? 'bg-yellow-500' : 'bg-red-500'
               }
             />
           </div>
@@ -299,7 +302,7 @@ export function LeadsDashboardWidget({
 
         {/* Quick Actions */}
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={() => onNavigate('leads', 'create')}
             size="sm"
             className="flex-1"
@@ -307,7 +310,7 @@ export function LeadsDashboardWidget({
             <UserPlus className="h-4 w-4 mr-2" />
             New Lead
           </Button>
-          <Button 
+          <Button
             onClick={() => onNavigate('leads')}
             size="sm"
             variant="outline"
@@ -372,7 +375,7 @@ interface PipelineStageProps {
 
 function PipelineStage({ label, count, total, color, icon, onClick }: PipelineStageProps) {
   const percentage = total > 0 ? (count / total) * 100 : 0;
-  
+
   const colorClasses = {
     blue: 'bg-blue-500',
     yellow: 'bg-yellow-500',
@@ -396,7 +399,7 @@ function PipelineStage({ label, count, total, color, icon, onClick }: PipelineSt
         <span className="text-lg font-bold">{count}</span>
       </div>
       <div className="w-full bg-gray-100 rounded-full h-2">
-        <div 
+        <div
           className={`h-2 rounded-full ${colorClasses[color]} transition-all`}
           style={{ width: `${percentage}%` }}
         />
@@ -426,7 +429,7 @@ function CompactWidget({ metrics, onNavigate }: CompactWidgetProps) {
             <UserPlus className="h-4 w-4" />
             Leads
           </CardTitle>
-          <Button 
+          <Button
             onClick={() => onNavigate('leads')}
             variant="ghost"
             size="sm"
@@ -473,7 +476,7 @@ function CompactWidget({ metrics, onNavigate }: CompactWidgetProps) {
         </div>
 
         {/* Quick Action */}
-        <Button 
+        <Button
           onClick={() => onNavigate('leads', 'create')}
           size="sm"
           className="w-full"

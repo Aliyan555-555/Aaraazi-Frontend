@@ -319,6 +319,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
           [ContactType.INVESTOR]: 'bg-purple-100 text-purple-800',
           [ContactType.VENDOR]: 'bg-gray-100 text-gray-800',
           [ContactType.PARTNER]: 'bg-gray-100 text-gray-800',
+          [ContactType.AGENT]: 'bg-indigo-100 text-indigo-800',
         };
         return (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[c.type]}`}>

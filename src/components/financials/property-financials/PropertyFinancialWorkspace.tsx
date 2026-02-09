@@ -74,29 +74,29 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
   const propertyFinancials = useMemo(() => {
     const properties = getProperties(user.id, user.role);
     const agencyTransactions = getAllAgencyTransactions();
-    
+
     // Calculate real financial summaries from agency transactions
     const financials: PropertyFinancialSummary[] = properties.map(property => {
       const propertyTransactions = agencyTransactions.filter(t => t.propertyId === property.id);
-      
+
       // Calculate total investment (purchases + expenses)
       const totalInvestment = propertyTransactions
-        .filter(t => t.type === 'purchase' || t.type === 'expense')
+        .filter(t => t.category === 'acquisition' || t.category === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-      
+
       // Calculate total revenue (sales + rental income)
       const totalRevenue = propertyTransactions
-        .filter(t => t.type === 'sale' || t.type === 'revenue' || t.type === 'rental-income')
+        .filter(t => t.category === 'sale' || t.category === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
-      
+
       // Calculate total expenses (operating expenses)
       const totalExpenses = propertyTransactions
-        .filter(t => t.type === 'expense' || t.category === 'operating-expense')
+        .filter(t => t.category === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-      
+
       const netProfit = totalRevenue - totalInvestment - totalExpenses;
       const roi = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0;
-      
+
       return {
         propertyId: property.id,
         propertyTitle: property.title || 'Untitled Property',
@@ -107,7 +107,7 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
         totalExpenses,
         netProfit,
         roi,
-        acquisitionDate: property.metadata?.createdAt || property.createdAt,
+        acquisitionDate: property.createdAt,
         transactionCount: propertyTransactions.length,
       };
     });
@@ -122,8 +122,8 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
     const totalRevenue = propertyFinancials.reduce((sum, p) => sum + p.totalRevenue, 0);
     const totalExpenses = propertyFinancials.reduce((sum, p) => sum + p.totalExpenses, 0);
     const netProfit = propertyFinancials.reduce((sum, p) => sum + p.netProfit, 0);
-    const averageROI = totalProperties > 0 
-      ? propertyFinancials.reduce((sum, p) => sum + p.roi, 0) / totalProperties 
+    const averageROI = totalProperties > 0
+      ? propertyFinancials.reduce((sum, p) => sum + p.roi, 0) / totalProperties
       : 0;
     const propertiesWithProfit = propertyFinancials.filter(p => p.netProfit > 0).length;
     const averageHoldingPeriod = 180; // Placeholder
@@ -144,7 +144,7 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
   const stats = useMemo(() => [
     { label: 'Total Properties', value: `${metrics.totalProperties}`, variant: 'default' as const },
     { label: 'Total Investment', value: formatPKR(metrics.totalInvestment), variant: 'default' as const },
-    { label: 'Net Profit', value: formatPKR(metrics.netProfit), variant: metrics.netProfit >= 0 ? 'success' as const : 'danger' as const },
+    { label: 'Net Profit', value: formatPKR(metrics.netProfit), variant: metrics.netProfit >= 0 ? 'success' as const : 'destructive' as const },
     { label: 'Average ROI', value: `${metrics.averageROI.toFixed(2)}%`, variant: metrics.averageROI >= 10 ? 'success' as const : 'default' as const },
     { label: 'Profitable Properties', value: `${metrics.propertiesWithProfit}/${metrics.totalProperties}`, variant: 'default' as const },
   ], [metrics]);
@@ -157,7 +157,7 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
         const query = searchQuery.toLowerCase();
         const matchesTitle = property.propertyTitle.toLowerCase().includes(query);
         const matchesAddress = property.propertyAddress.toLowerCase().includes(query);
-        
+
         if (!matchesTitle && !matchesAddress) {
           return false;
         }
@@ -211,6 +211,11 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
     toast.success('Property financials exported to JSON');
   };
 
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter([]);
+  };
+
   const handleViewProfitLoss = (propertyId: string) => {
     const property = filteredProperties.find(p => p.propertyId === propertyId);
     if (property) {
@@ -251,30 +256,27 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
             label: 'Status',
             type: 'multi-select',
             options: [
-              { 
-                value: 'active', 
-                label: 'Active', 
-                count: propertyFinancials.filter(p => p.status === 'active').length 
+              {
+                value: 'active',
+                label: 'Active',
+                count: propertyFinancials.filter(p => p.status === 'active').length
               },
-              { 
-                value: 'sold', 
-                label: 'Sold', 
-                count: propertyFinancials.filter(p => p.status === 'sold').length 
+              {
+                value: 'sold',
+                label: 'Sold',
+                count: propertyFinancials.filter(p => p.status === 'sold').length
               },
-              { 
-                value: 'rented', 
-                label: 'Rented', 
-                count: propertyFinancials.filter(p => p.status === 'rented').length 
+              {
+                value: 'rented',
+                label: 'Rented',
+                count: propertyFinancials.filter(p => p.status === 'rented').length
               },
             ],
             value: statusFilter,
-            onChange: setStatusFilter,
+            onChange: (val) => setStatusFilter(val as string[]),
           },
         ]}
-        onClearAll={() => {
-          setSearchQuery('');
-          setStatusFilter([]);
-        }}
+        onClearAll={handleClearFilters}
       />
 
       <div className="p-6 space-y-6">
@@ -288,7 +290,7 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
             <div>
               <p className="text-blue-900 mb-1">Property Financial Tracking</p>
               <p className="text-blue-700">
-                Track all financial transactions for each property from acquisition to sale. 
+                Track all financial transactions for each property from acquisition to sale.
                 View detailed P&L reports by clicking "View P&L Report" in the actions menu.
               </p>
             </div>
@@ -299,12 +301,12 @@ export const PropertyFinancialWorkspace: React.FC<PropertyFinancialWorkspaceProp
         {filteredProperties.length === 0 ? (
           <WorkspaceEmptyState
             {...(searchQuery || statusFilter.length > 0
-              ? EmptyStatePresets.noResults()
+              ? EmptyStatePresets.noResults(handleClearFilters)
               : {
-                  variant: 'empty' as const,
-                  title: 'No Properties Yet',
-                  description: 'Property financial data will appear here once properties are added to the system.',
-                }
+                variant: 'empty' as const,
+                title: 'No Properties Yet',
+                description: 'Property financial data will appear here once properties are added to the system.',
+              }
             )}
           />
         ) : (

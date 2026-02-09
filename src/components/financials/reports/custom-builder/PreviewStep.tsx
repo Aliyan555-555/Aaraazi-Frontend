@@ -28,19 +28,20 @@ export const PreviewStep: React.FC<PreviewStepProps> = ({
       if (!config.dataSources || !config.fields || config.fields.length === 0) {
         return null;
       }
-      
+
       const report = generateReport(
         config as ReportConfiguration,
         user.id,
         user.role
       );
-      
+
       // Limit to first 10 rows for preview
+      const rows = report.data.rows;
       return {
         ...report,
-        data: report.data.slice(0, 10),
-        isLimited: report.data.length > 10,
-        totalRows: report.data.length,
+        data: rows.slice(0, 10),
+        isLimited: rows.length > 10,
+        rowCount: rows.length,
       };
     } catch (error) {
       console.error('Error generating preview:', error);
@@ -66,14 +67,14 @@ export const PreviewStep: React.FC<PreviewStepProps> = ({
             {config.dataSources?.length || 0}
           </div>
         </div>
-        
+
         <div className="p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-500 mb-1">Fields Selected</div>
           <div className="text-gray-900">
             {config.fields?.length || 0}
           </div>
         </div>
-        
+
         <div className="p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-500 mb-1">Filters Applied</div>
           <div className="text-gray-900">

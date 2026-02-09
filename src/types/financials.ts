@@ -71,6 +71,7 @@ export interface Expense {
   vendor?: string;
   dueDate?: string;
   paymentMethod?: "cash" | "bank-transfer" | "cheque" | "online";
+  notes?: string;
 }
 
 export interface Payment {

@@ -50,55 +50,55 @@ export const ReportAnalyticsDashboard: React.FC<ReportAnalyticsDashboardProps> =
     const history = getReportHistory();
     const sharingStats = getSharingStatistics(user.id);
     const distributionStats = getDistributionStatistics();
-    
+
     // Overall statistics
     const totalGenerations = history.length;
     const uniqueTemplates = new Set(history.map(h => h.templateId)).size;
-    
+
     // Time-based statistics
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
-    
+
     const thisMonthGenerations = history.filter(h => {
       const date = new Date(h.generatedAt);
       return date.getMonth() === thisMonth && date.getFullYear() === thisYear;
     }).length;
-    
+
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1);
     const lastMonthGenerations = history.filter(h => {
       const date = new Date(h.generatedAt);
       return date.getMonth() === lastMonth.getMonth() && date.getFullYear() === lastMonth.getFullYear();
     }).length;
-    
+
     const monthOverMonthChange = lastMonthGenerations > 0
       ? ((thisMonthGenerations - lastMonthGenerations) / lastMonthGenerations) * 100
       : 0;
-    
+
     // Performance statistics
     const executionTimes = history
-      .filter(h => h.executionTime !== undefined)
-      .map(h => h.executionTime!);
-    
+      .filter(h => h.executionTimeMs !== undefined)
+      .map(h => h.executionTimeMs!);
+
     const avgExecutionTime = executionTimes.length > 0
       ? executionTimes.reduce((a, b) => a + b, 0) / executionTimes.length
       : 0;
-    
+
     const maxExecutionTime = executionTimes.length > 0
       ? Math.max(...executionTimes)
       : 0;
-    
+
     // Template popularity
     const templateUsage = history.reduce((acc, h) => {
       acc[h.templateId] = (acc[h.templateId] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     const mostUsedTemplateId = Object.entries(templateUsage)
       .sort((a, b) => b[1] - a[1])[0]?.[0];
-    
+
     const mostUsedTemplate = templates.find(t => t.id === mostUsedTemplateId);
-    
+
     // Top 5 templates by usage
     const topTemplates = Object.entries(templateUsage)
       .sort((a, b) => b[1] - a[1])
@@ -108,11 +108,11 @@ export const ReportAnalyticsDashboard: React.FC<ReportAnalyticsDashboardProps> =
         count,
       }))
       .filter(item => item.template);
-    
+
     // Generation type breakdown
-    const manualGenerations = history.filter(h => h.generationType === 'manual').length;
-    const scheduledGenerations = history.filter(h => h.generationType === 'scheduled').length;
-    
+    const manualGenerations = history.filter(h => h.executionType === 'manual').length;
+    const scheduledGenerations = history.filter(h => h.executionType === 'scheduled').length;
+
     return {
       totalGenerations,
       uniqueTemplates,
@@ -200,7 +200,7 @@ export const ReportAnalyticsDashboard: React.FC<ReportAnalyticsDashboardProps> =
                 {analytics.sharingStats.totalShares}
               </div>
               <div className="text-xs text-orange-700 mt-1">
-                {analytics.sharingStats.uniqueUsersSharedWith} users
+                {analytics.sharingStats.usersSharedWith} users
               </div>
             </div>
           </div>

@@ -64,7 +64,7 @@ export function InvestorPortfolioDashboard({
 
   // Active investments
   const activeInvestments = investments.filter(inv => inv.status === 'active');
-  const exitedInvestments = investments.filter(inv => inv.status === 'exited');
+  const exitedInvestments = investments.filter(inv => inv.status === 'sold');
 
   // Calculate total unrealized profit
   const totalUnrealizedProfit = activeInvestments.reduce(
@@ -79,8 +79,8 @@ export function InvestorPortfolioDashboard({
   );
 
   // Pending distributions
-  const pendingDistributions = distributions.filter(d => d.distributionStatus === 'pending');
-  const pendingAmount = pendingDistributions.reduce((sum, d) => sum + d.totalReturn, 0);
+  const pendingDistributions = distributions.filter(d => d.status === 'pending');
+  const pendingAmount = pendingDistributions.reduce((sum, d) => sum + d.amount, 0);
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -293,7 +293,7 @@ export function InvestorPortfolioDashboard({
                         {formatPKR(totalReturns.totalReturned - pendingAmount)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {distributions.filter(d => d.distributionStatus === 'paid').length} paid
+                        {distributions.filter(d => d.status === 'paid').length} paid
                       </p>
                     </div>
                   </div>
@@ -507,12 +507,12 @@ function ExitedInvestmentCard({
                   <Badge
                     variant="outline"
                     className={
-                      distribution.distributionStatus === 'paid'
+                      distribution.status === 'paid'
                         ? 'bg-green-100 text-green-800 border-green-200'
                         : 'bg-yellow-100 text-yellow-800 border-yellow-200'
                     }
                   >
-                    {distribution.distributionStatus === 'paid' ? 'Paid' : 'Pending'}
+                    {distribution.status === 'paid' ? 'Paid' : 'Pending'}
                   </Badge>
                 )}
               </div>
@@ -521,7 +521,7 @@ function ExitedInvestmentCard({
               <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                 <span>
                   <Calendar className="w-3 h-3 inline mr-1" />
-                  Held: {formatDate(investment.investmentDate)} - {formatDate(investment.exitDate)}
+                  Held: {formatDate(investment.investmentDate)} - {formatDate(investment.soldDate || investment.exitDate)}
                 </span>
               </div>
             </div>
@@ -575,28 +575,28 @@ function ExitedInvestmentCard({
             <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Capital Gain:</span>
-                <span className={distribution.capitalGain >= 0 ? 'text-green-600' : 'text-red-600'}>
-                  {formatPKR(distribution.capitalGain)}
+                <span className={(distribution.capitalGain || 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {formatPKR(distribution.capitalGain || 0)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Rental Income:</span>
-                <span className="text-green-600">+{formatPKR(distribution.rentalIncome)}</span>
+                <span className="text-green-600">+{formatPKR(distribution.rentalIncome || 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Expenses:</span>
-                <span className="text-red-600">-{formatPKR(distribution.totalExpenses)}</span>
+                <span className="text-red-600">-{formatPKR(distribution.totalExpenses || 0)}</span>
               </div>
-              {distribution.distributionDate && (
+              {distribution.date && (
                 <div className="flex justify-between pt-1 border-t">
                   <span className="text-muted-foreground">Paid On:</span>
-                  <span>{formatDate(distribution.distributionDate)}</span>
+                  <span>{formatDate(distribution.date)}</span>
                 </div>
               )}
             </div>
           )}
         </div>
       </CardContent>
-    </Card>
+    </Card >
   );
 }

@@ -8,24 +8,25 @@
  */
 
 import React, { useMemo } from 'react';
-import { 
-  BarChart, 
-  Bar, 
-  LineChart, 
-  Line, 
-  PieChart, 
-  Pie, 
-  AreaChart, 
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  AreaChart,
   Area,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import { ChartConfig, ReportRow, ReportColumn } from '../../../../types/custom-reports';
+import { ChartConfig, ReportColumn } from '../../../../types/custom-reports';
+import { ReportRow } from '../../../../types/reports';
 
 interface ReportChartProps {
   data: ReportRow[];
@@ -56,14 +57,17 @@ export const ReportChart: React.FC<ReportChartProps> = ({
       return [];
     }
 
+    const xAxis = chartConfig.xAxis;
+    const yAxis = chartConfig.yAxis;
+
     return data.map(row => {
       const item: any = {};
-      
+
       // X-axis value
-      const xColumn = columns.find(c => c.id === chartConfig.xAxis);
+      const xColumn = columns.find(c => c.id === xAxis);
       if (xColumn) {
-        item.name = row[chartConfig.xAxis];
-        
+        item.name = row[xAxis];
+
         // Format dates for better display
         if (xColumn.type === 'date' && item.name) {
           const date = new Date(item.name);
@@ -72,10 +76,10 @@ export const ReportChart: React.FC<ReportChartProps> = ({
       }
 
       // Y-axis value(s)
-      if (chartConfig.yAxis) {
-        const yColumn = columns.find(c => c.id === chartConfig.yAxis);
+      if (yAxis) {
+        const yColumn = columns.find(c => c.id === yAxis);
         if (yColumn) {
-          item.value = Number(row[chartConfig.yAxis]) || 0;
+          item.value = Number(row[yAxis]) || 0;
           item.label = yColumn.label;
         }
       }
@@ -148,9 +152,9 @@ export const ReportChart: React.FC<ReportChartProps> = ({
               <YAxis stroke="#6b7280" tickFormatter={formatValue} />
               <Tooltip content={<CustomTooltip />} />
               {chartConfig.showLegend && <Legend />}
-              <Bar 
-                dataKey="value" 
-                fill={colors[0]} 
+              <Bar
+                dataKey="value"
+                fill={colors[0]}
                 name={chartData[0]?.label || 'Value'}
               />
             </BarChart>
@@ -166,10 +170,10 @@ export const ReportChart: React.FC<ReportChartProps> = ({
               <YAxis stroke="#6b7280" tickFormatter={formatValue} />
               <Tooltip content={<CustomTooltip />} />
               {chartConfig.showLegend && <Legend />}
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke={colors[0]} 
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={colors[0]}
                 strokeWidth={2}
                 name={chartData[0]?.label || 'Value'}
               />
@@ -210,10 +214,10 @@ export const ReportChart: React.FC<ReportChartProps> = ({
               <YAxis stroke="#6b7280" tickFormatter={formatValue} />
               <Tooltip content={<CustomTooltip />} />
               {chartConfig.showLegend && <Legend />}
-              <Area 
-                type="monotone" 
-                dataKey="value" 
-                stroke={colors[0]} 
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={colors[0]}
                 fill={colors[0]}
                 fillOpacity={0.3}
                 name={chartData[0]?.label || 'Value'}

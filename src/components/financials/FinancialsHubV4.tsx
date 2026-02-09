@@ -102,8 +102,8 @@ export const FinancialsHubV4: React.FC<FinancialsHubV4Props> = ({ user, onNaviga
     const totalRevenue = deals
       .filter(d => {
         if (d.lifecycle.status !== 'completed') return false;
-        if (!d.metadata.completedAt) return false;
-        const completedDate = new Date(d.metadata.completedAt);
+        if (!d.lifecycle.timeline.actualClosingDate) return false;
+        const completedDate = new Date(d.lifecycle.timeline.actualClosingDate);
         return completedDate.getFullYear() === thisYear;
       })
       .reduce((sum, d) => sum + d.financial.agreedPrice, 0);
@@ -119,11 +119,11 @@ export const FinancialsHubV4: React.FC<FinancialsHubV4Props> = ({ user, onNaviga
     // Pending Commissions (all deals)
     const pendingCommissions = deals.reduce((sum, d) => {
       if (!d.financial.commission.agents) return sum;
-      
+
       const pending = d.financial.commission.agents
         .filter(a => a.status === 'pending')
         .reduce((agentSum, a) => agentSum + a.amount, 0);
-      
+
       return sum + pending;
     }, 0);
 
@@ -136,8 +136,8 @@ export const FinancialsHubV4: React.FC<FinancialsHubV4Props> = ({ user, onNaviga
     const monthlyRevenue = deals
       .filter(d => {
         if (d.lifecycle.status !== 'completed') return false;
-        if (!d.metadata.completedAt) return false;
-        const completedDate = new Date(d.metadata.completedAt);
+        if (!d.lifecycle.timeline.actualClosingDate) return false;
+        const completedDate = new Date(d.lifecycle.timeline.actualClosingDate);
         return completedDate.getMonth() === thisMonth && completedDate.getFullYear() === thisYear;
       })
       .reduce((sum, d) => sum + d.financial.agreedPrice, 0);
@@ -150,30 +150,30 @@ export const FinancialsHubV4: React.FC<FinancialsHubV4Props> = ({ user, onNaviga
       .reduce((sum, d) => sum + d.financial.balanceRemaining, 0);
 
     return [
-      { 
-        label: 'Total Revenue (YTD)', 
-        value: formatCurrencyShort(totalRevenue), 
-        variant: 'success' as const 
+      {
+        label: 'Total Revenue (YTD)',
+        value: formatCurrencyShort(totalRevenue),
+        variant: 'success' as const
       },
-      { 
-        label: 'Monthly Expenses', 
-        value: formatCurrencyShort(monthlyExpenses), 
-        variant: 'default' as const 
+      {
+        label: 'Monthly Expenses',
+        value: formatCurrencyShort(monthlyExpenses),
+        variant: 'default' as const
       },
-      { 
-        label: 'Net Cash Flow', 
-        value: formatCurrencyShort(netCashFlow), 
-        variant: netCashFlow >= 0 ? 'success' as const : 'destructive' as const 
+      {
+        label: 'Net Cash Flow',
+        value: formatCurrencyShort(netCashFlow),
+        variant: netCashFlow >= 0 ? 'success' as const : 'destructive' as const
       },
-      { 
-        label: 'Pending Commissions', 
-        value: `${pendingCommissionCount} (${formatCurrencyShort(pendingCommissions)})`, 
-        variant: pendingCommissionCount > 0 ? 'warning' as const : 'default' as const 
+      {
+        label: 'Pending Commissions',
+        value: `${pendingCommissionCount} (${formatCurrencyShort(pendingCommissions)})`,
+        variant: pendingCommissionCount > 0 ? 'warning' as const : 'default' as const
       },
-      { 
-        label: 'Accounts Receivable', 
-        value: formatCurrencyShort(accountsReceivable), 
-        variant: 'default' as const 
+      {
+        label: 'Accounts Receivable',
+        value: formatCurrencyShort(accountsReceivable),
+        variant: 'default' as const
       },
     ];
   }, [user.id, user.role]);
@@ -215,29 +215,29 @@ export const FinancialsHubV4: React.FC<FinancialsHubV4Props> = ({ user, onNaviga
     // Property financials stats - calculate from agency transactions
     const agencyTransactions = getAllAgencyTransactions();
     const propertiesWithFinancials = properties.length;
-    
+
     // Calculate average ROI from property transactions
     const propertyROIs = properties.map(property => {
       const propertyTransactions = agencyTransactions.filter(t => t.propertyId === property.id);
       const investments = propertyTransactions
-        .filter(t => t.type === 'purchase' || t.type === 'expense')
+        .filter(t => t.category === 'acquisition' || t.category === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
       const revenues = propertyTransactions
-        .filter(t => t.type === 'sale' || t.type === 'revenue')
+        .filter(t => t.category === 'sale' || t.category === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
       const profit = revenues - investments;
       return investments > 0 ? (profit / investments) * 100 : 0;
     }).filter(roi => !isNaN(roi) && isFinite(roi));
-    
-    const avgROI = propertyROIs.length > 0 
-      ? propertyROIs.reduce((sum, roi) => sum + roi, 0) / propertyROIs.length 
+
+    const avgROI = propertyROIs.length > 0
+      ? propertyROIs.reduce((sum, roi) => sum + roi, 0) / propertyROIs.length
       : 0;
 
     // Investor stats - calculate from all investor investments
     const allInvestments = getAllInvestorInvestments();
     const uniqueInvestors = new Set(allInvestments.map(inv => inv.investorId));
     const totalInvestors = uniqueInvestors.size;
-    
+
     // Calculate pending distributions (unpaid profit distributions)
     const pendingDistributions = allInvestments
       .filter(inv => inv.status === 'active' && inv.pendingDistribution && inv.pendingDistribution > 0)
@@ -245,7 +245,14 @@ export const FinancialsHubV4: React.FC<FinancialsHubV4Props> = ({ user, onNaviga
 
     // General Ledger stats - calculate from journal entries
     const journalEntries = getJournalEntries(user.id, user.role);
-    const uniqueAccounts = new Set(journalEntries.map(entry => entry.account));
+    const uniqueAccounts = new Set<string>();
+    journalEntries.forEach(entry => {
+      if (entry.debitAccount) uniqueAccounts.add(entry.debitAccount);
+      if (entry.creditAccount) uniqueAccounts.add(entry.creditAccount);
+      if (entry.entries) {
+        entry.entries.forEach(e => uniqueAccounts.add(e.accountName));
+      }
+    });
     const totalAccounts = uniqueAccounts.size;
     const totalEntries = journalEntries.length;
 
@@ -256,7 +263,7 @@ export const FinancialsHubV4: React.FC<FinancialsHubV4Props> = ({ user, onNaviga
       .filter(e => e.status === 'paid')
       .reduce((sum, e) => sum + e.amount, 0);
     const cashPosition = Math.max(0, totalPaid - paidExpenses);
-    
+
     // Count unique bank accounts (from transactions or deals)
     const bankAccounts = 1; // Default to 1, can be enhanced with bank account tracking
 
@@ -272,10 +279,10 @@ export const FinancialsHubV4: React.FC<FinancialsHubV4Props> = ({ user, onNaviga
         const now = new Date();
         thisMonthReports = Array.isArray(reports)
           ? reports.filter((r: { generatedAt?: string }) => {
-              if (!r.generatedAt) return false;
-              const d = new Date(r.generatedAt);
-              return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            }).length
+            if (!r.generatedAt) return false;
+            const d = new Date(r.generatedAt);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+          }).length
           : 0;
       }
     } catch (_) { /* ignore */ }

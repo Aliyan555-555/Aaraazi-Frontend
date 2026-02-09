@@ -36,15 +36,15 @@ interface QualifyLeadModalProps {
   onSuccess: () => void;
 }
 
-export function QualifyLeadModal({ 
-  open, 
-  onClose, 
+export function QualifyLeadModal({
+  open,
+  onClose,
   leadId,
-  onSuccess 
+  onSuccess
 }: QualifyLeadModalProps) {
   const [loading, setLoading] = useState(false);
   const [lead, setLead] = useState(() => getLeadById(leadId));
-  
+
   const [formData, setFormData] = useState({
     intent: lead?.intent || 'unknown' as LeadIntent,
     timeline: lead?.timeline || 'unknown' as LeadTimeline,
@@ -60,12 +60,12 @@ export function QualifyLeadModal({
       bedrooms: lead?.details?.bedrooms || undefined,
       bathrooms: lead?.details?.bathrooms || undefined,
       mustHaveFeatures: lead?.details?.mustHaveFeatures?.join(', ') || '',
-      
+
       // Renting
       monthlyBudget: lead?.details?.monthlyBudget || undefined,
       leaseDuration: lead?.details?.leaseDuration || undefined,
       moveInDate: lead?.details?.moveInDate || '',
-      
+
       // Selling
       propertyAddress: lead?.details?.propertyAddress || '',
       propertyType: lead?.details?.propertyType || '',
@@ -73,11 +73,11 @@ export function QualifyLeadModal({
       propertyAreaUnit: lead?.details?.propertyAreaUnit || 'sqft',
       expectedPrice: lead?.details?.expectedPrice || undefined,
       reasonForSelling: lead?.details?.reasonForSelling || '',
-      
+
       // Leasing Out
       rentalPropertyAddress: lead?.details?.rentalPropertyAddress || '',
       expectedRent: lead?.details?.expectedRent || undefined,
-      
+
       // Investing
       investmentBudget: lead?.details?.investmentBudget || undefined,
       investmentType: lead?.details?.investmentType || '',
@@ -113,7 +113,7 @@ export function QualifyLeadModal({
           .map(a => a.trim())
           .filter(Boolean);
       }
-      
+
       if (formData.details.propertyTypes) {
         details.propertyTypes = formData.details.propertyTypes
           .split(',')
@@ -140,7 +140,7 @@ export function QualifyLeadModal({
       if (formData.intent === 'investing') {
         details.investmentBudget = formData.details.investmentBudget;
         details.investmentType = formData.details.investmentType;
-        details.riskTolerance = formData.details.riskTolerance;
+        details.riskTolerance = formData.details.riskTolerance as any;
       }
 
       if (formData.intent === 'renting') {
@@ -153,7 +153,7 @@ export function QualifyLeadModal({
         details.propertyAddress = formData.details.propertyAddress;
         details.propertyType = formData.details.propertyType;
         details.propertyArea = formData.details.propertyArea;
-        details.propertyAreaUnit = formData.details.propertyAreaUnit;
+        details.propertyAreaUnit = formData.details.propertyAreaUnit as any;
         details.expectedPrice = formData.details.expectedPrice;
         details.reasonForSelling = formData.details.reasonForSelling;
       }
@@ -191,7 +191,7 @@ export function QualifyLeadModal({
             },
           },
           updatedLead,
-          { id: updatedLead.agentId, name: updatedLead.agentName, role: 'agent' }
+          { id: updatedLead.agentId, name: updatedLead.agentName, role: 'agent', email: 'agent@example.com' } as any
         );
 
         if (createdTasks.length > 0) {
@@ -227,7 +227,7 @@ export function QualifyLeadModal({
           {/* Intent & Timeline */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Intent & Timeline</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="intent">
@@ -278,13 +278,13 @@ export function QualifyLeadModal({
           {/* Verification Status */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Contact Verification</h3>
-            
+
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="phoneVerified"
                   checked={formData.phoneVerified}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFormData({ ...formData, phoneVerified: checked as boolean })
                   }
                 />
@@ -297,7 +297,7 @@ export function QualifyLeadModal({
                 <Checkbox
                   id="emailVerified"
                   checked={formData.emailVerified}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFormData({ ...formData, emailVerified: checked as boolean })
                   }
                 />
@@ -312,7 +312,7 @@ export function QualifyLeadModal({
           {formData.intent !== 'unknown' && (
             <div className="space-y-4">
               <h3 className="font-medium text-gray-900">Qualification Details</h3>
-              
+
               {/* Buying Intent */}
               {(formData.intent === 'buying' || formData.intent === 'investing') && (
                 <div className="space-y-4">
@@ -450,7 +450,7 @@ export function QualifyLeadModal({
                       value={formData.details.riskTolerance}
                       onValueChange={(value) => setFormData({
                         ...formData,
-                        details: { ...formData.details, riskTolerance: value }
+                        details: { ...formData.details, riskTolerance: value as any }
                       })}
                     >
                       <SelectTrigger>
@@ -490,7 +490,7 @@ export function QualifyLeadModal({
                         value={formData.details.leaseDuration || ''}
                         onChange={(e) => setFormData({
                           ...formData,
-                          details: { ...formData.details, leaseDuration: e.target.value ? Number(e.target.value) : undefined }
+                          details: { ...formData.details, leaseDuration: e.target.value || undefined }
                         })}
                         placeholder="12"
                       />
@@ -609,7 +609,7 @@ export function QualifyLeadModal({
                         value={formData.details.propertyAreaUnit}
                         onValueChange={(value) => setFormData({
                           ...formData,
-                          details: { ...formData.details, propertyAreaUnit: value }
+                          details: { ...formData.details, propertyAreaUnit: value as any }
                         })}
                       >
                         <SelectTrigger>
@@ -617,7 +617,7 @@ export function QualifyLeadModal({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="sqft">Sq Ft</SelectItem>
-                          <SelectItem value="sqyd">Sq Yd</SelectItem>
+                          <SelectItem value="sqyards">Sq Yd</SelectItem>
                           <SelectItem value="marla">Marla</SelectItem>
                           <SelectItem value="kanal">Kanal</SelectItem>
                         </SelectContent>

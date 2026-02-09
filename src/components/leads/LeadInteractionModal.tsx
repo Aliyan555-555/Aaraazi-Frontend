@@ -39,16 +39,16 @@ interface LeadInteractionModalProps {
   onSuccess: () => void;
 }
 
-export function LeadInteractionModal({ 
-  open, 
-  onClose, 
+export function LeadInteractionModal({
+  open,
+  onClose,
   leadId,
   user,
-  onSuccess 
+  onSuccess
 }: LeadInteractionModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    type: 'phone-call' as LeadInteractionType,
+    type: 'call' as LeadInteractionType,
     direction: 'outbound' as LeadInteractionDirection,
     summary: '',
     notes: '',
@@ -69,7 +69,7 @@ export function LeadInteractionModal({
 
     // Validate
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.summary.trim()) {
       newErrors.summary = 'Summary is required';
     }
@@ -87,7 +87,7 @@ export function LeadInteractionModal({
         direction: formData.direction,
         summary: formData.summary.trim(),
         notes: formData.notes.trim() || undefined,
-        duration: formData.duration ? Number(formData.duration) : undefined,
+        durationMinutes: formData.duration ? Number(formData.duration) : undefined,
         agentId: user.id,
         agentName: user.name,
       });
@@ -105,7 +105,7 @@ export function LeadInteractionModal({
 
   const handleClose = () => {
     setFormData({
-      type: 'phone-call',
+      type: 'call',
       direction: 'outbound',
       summary: '',
       notes: '',
@@ -117,7 +117,7 @@ export function LeadInteractionModal({
 
   // Interaction type options
   const interactionTypes = [
-    { value: 'phone-call', label: 'Phone Call', icon: Phone },
+    { value: 'call', label: 'Phone Call', icon: Phone },
     { value: 'email', label: 'Email', icon: Mail },
     { value: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
     { value: 'meeting', label: 'Meeting', icon: Calendar },
@@ -128,10 +128,10 @@ export function LeadInteractionModal({
   const TypeIcon = selectedType?.icon || FileText;
 
   // Show direction for applicable types
-  const showDirection = ['phone-call', 'email', 'whatsapp'].includes(formData.type);
-  
+  const showDirection = ['call', 'email', 'whatsapp'].includes(formData.type);
+
   // Show duration for applicable types
-  const showDuration = ['phone-call', 'meeting'].includes(formData.type);
+  const showDuration = ['call', 'meeting'].includes(formData.type);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -201,11 +201,11 @@ export function LeadInteractionModal({
               value={formData.summary}
               onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
               placeholder={
-                formData.type === 'phone-call' ? 'Brief summary of the call...' :
-                formData.type === 'email' ? 'Email subject or key point...' :
-                formData.type === 'whatsapp' ? 'WhatsApp conversation summary...' :
-                formData.type === 'meeting' ? 'Meeting topic or purpose...' :
-                'Note summary...'
+                formData.type === 'call' ? 'Brief summary of the call...' :
+                  formData.type === 'email' ? 'Email subject or key point...' :
+                    formData.type === 'whatsapp' ? 'WhatsApp conversation summary...' :
+                      formData.type === 'meeting' ? 'Meeting topic or purpose...' :
+                        'Note summary...'
               }
               className={errors.summary ? 'border-red-500' : ''}
             />
@@ -239,18 +239,18 @@ export function LeadInteractionModal({
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder={
-                formData.type === 'phone-call' ? 'Call details, topics discussed, follow-up actions...' :
-                formData.type === 'email' ? 'Email content or key points discussed...' :
-                formData.type === 'whatsapp' ? 'WhatsApp conversation details...' :
-                formData.type === 'meeting' ? 'Meeting notes, decisions made, action items...' :
-                'Additional details...'
+                formData.type === 'call' ? 'Call details, topics discussed, follow-up actions...' :
+                  formData.type === 'email' ? 'Email content or key points discussed...' :
+                    formData.type === 'whatsapp' ? 'WhatsApp conversation details...' :
+                      formData.type === 'meeting' ? 'Meeting notes, decisions made, action items...' :
+                        'Additional details...'
               }
               rows={5}
             />
           </div>
 
           {/* Quick Templates */}
-          {formData.type === 'phone-call' && (
+          {formData.type === 'call' && (
             <div className="bg-gray-50 rounded-lg p-3">
               <Label className="mb-2 block text-sm">Quick Templates</Label>
               <div className="flex flex-wrap gap-2">
@@ -300,7 +300,7 @@ export function LeadInteractionModal({
                   <p>Notes are internal-only and won't trigger status changes.</p>
                 ) : (
                   <p>
-                    {formData.type === 'phone-call' && 'This will count as first contact if this is the first interaction.'}
+                    {formData.type === 'call' && 'This will count as first contact if this is the first interaction.'}
                     {formData.type === 'email' && 'Email interactions help track communication history.'}
                     {formData.type === 'whatsapp' && 'WhatsApp interactions are logged for follow-up tracking.'}
                     {formData.type === 'meeting' && 'Meeting interactions show engagement level.'}

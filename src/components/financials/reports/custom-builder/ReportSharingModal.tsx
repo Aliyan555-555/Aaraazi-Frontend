@@ -76,11 +76,11 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedPermission, setSelectedPermission] = useState<SharePermission>('view');
-  
+
   // Load contacts and shares
   const contacts = useMemo(() => {
-    return getContacts().filter(contact => 
-      contact.type === 'agent' && contact.id !== user.id
+    return getContacts().filter(contact =>
+      contact.type === 'AGENT' && contact.id !== user.id
     );
   }, [user.id]);
 
@@ -104,7 +104,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
   // Filter available users based on search
   const filteredUsers = useMemo(() => {
     if (!searchQuery) return availableUsers;
-    
+
     const query = searchQuery.toLowerCase();
     return availableUsers.filter(user =>
       user.name.toLowerCase().includes(query) ||
@@ -118,13 +118,13 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
       toast.error('Please select a user');
       return;
     }
-    
+
     const selectedUser = contacts.find(c => c.id === selectedUserId);
     if (!selectedUser) {
       toast.error('User not found');
       return;
     }
-    
+
     try {
       shareReport(
         template,
@@ -133,7 +133,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
         selectedUser.name,
         selectedPermission
       );
-      
+
       toast.success(`Shared with ${selectedUser.name}`);
       loadShares();
       setSelectedUserId('');
@@ -162,7 +162,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
     if (!confirm(`Revoke access for ${share.sharedWithName}?`)) {
       return;
     }
-    
+
     try {
       revokeShare(share.id);
       toast.success('Access revoked');
@@ -200,7 +200,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
           {/* Add User */}
           <div className="space-y-3 p-4 border border-gray-300 rounded-lg">
             <Label>Share with User</Label>
-            
+
             <div className="space-y-3">
               {/* User Search */}
               <div className="relative">
@@ -261,7 +261,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
                       {contacts.find(c => c.id === selectedUserId)?.name}
                     </Badge>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
                       <Label>Permission</Label>
@@ -288,7 +288,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="flex items-end">
                       <Button onClick={handleShare} className="w-full">
                         <UserPlus className="h-4 w-4 mr-2" />
@@ -304,7 +304,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
           {/* Current Shares */}
           <div className="space-y-3">
             <Label>Shared With ({shares.length})</Label>
-            
+
             {shares.length === 0 ? (
               <div className="p-8 text-center border border-gray-300 rounded-lg">
                 <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
@@ -346,7 +346,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         <Select
                           value={share.permission}
@@ -372,7 +372,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                        
+
                         <Button
                           variant="ghost"
                           size="sm"

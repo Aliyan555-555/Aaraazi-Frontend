@@ -6,6 +6,7 @@ import { Label } from '../../ui/label';
 import { Textarea } from '../../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { ExpenseItem } from './ExpenseList';
+import { ExpenseCategory } from '../../../types/financials';
 
 interface ExpenseFormModalProps {
   open: boolean;
@@ -16,19 +17,16 @@ interface ExpenseFormModalProps {
   mode: 'add' | 'edit';
 }
 
-const EXPENSE_CATEGORIES = [
+const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   'Utilities',
-  'Maintenance',
-  'Repairs',
-  'Marketing',
-  'Legal Fees',
-  'Insurance',
-  'Property Tax',
-  'Management Fee',
+  'maintenance',
+  'marketing',
+  'Professional Fees',
   'Office Expenses',
-  'Salaries',
-  'Technology',
-  'Other',
+  'Salaries & Wages',
+  'Transportation',
+  'Depreciation',
+  'other',
 ];
 
 /**
@@ -74,14 +72,14 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
   mode,
 }) => {
   const [date, setDate] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState<ExpenseCategory | ''>('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [propertyId, setPropertyId] = useState<string>('');
   const [vendor, setVendor] = useState('');
   const [receiptNumber, setReceiptNumber] = useState('');
   const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState<'Pending' | 'Approved' | 'Paid'>('Pending');
+  const [status, setStatus] = useState<'pending' | 'paid' | 'cancelled'>('pending');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -106,7 +104,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
       setVendor('');
       setReceiptNumber('');
       setNotes('');
-      setStatus('Pending');
+      setStatus('pending');
     }
   }, [expense, mode, open]);
 
@@ -128,7 +126,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
     try {
       const expenseData: Omit<ExpenseItem, 'id' | 'createdAt' | 'updatedAt'> = {
         date,
-        category,
+        category: category as ExpenseCategory,
         description,
         amount: amountNum,
         status,
@@ -155,7 +153,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
         <DialogHeader>
           <DialogTitle>{mode === 'add' ? 'Add Expense' : 'Edit Expense'}</DialogTitle>
           <DialogDescription>
-            {mode === 'add' 
+            {mode === 'add'
               ? 'Record a new expense for tracking and approval'
               : 'Update expense details'}
           </DialogDescription>
@@ -177,7 +175,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
 
             <div>
               <Label htmlFor="category">Category *</Label>
-              <Select value={category} onValueChange={setCategory}>
+              <Select value={category} onValueChange={(val) => setCategory(val as ExpenseCategory)}>
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -226,9 +224,9 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Approved">Approved</SelectItem>
-                  <SelectItem value="Paid">Paid</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>

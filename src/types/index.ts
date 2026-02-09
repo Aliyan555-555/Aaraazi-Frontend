@@ -112,6 +112,7 @@ export * from "./crm";
 export * from "./custom-reports";
 export * from "./deals";
 export * from "./documents";
+export * from "./investors";
 export * from "./inventory";
 export * from "./leads";
 export * from "./leadsIntegration";

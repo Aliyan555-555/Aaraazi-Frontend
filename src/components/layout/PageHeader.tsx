@@ -38,26 +38,26 @@ export interface PageHeaderProps {
   // Navigation
   onBack: () => void;
   breadcrumbs?: PageHeaderBreadcrumb[];
-  
+
   // Title section
   icon?: React.ReactNode;
   title: string;
   subtitle?: string;
-  status?: { 
-    label: string; 
+  status?: {
+    label: string;
     variant?: 'success' | 'warning' | 'destructive' | 'default' | 'info';
   };
-  
+
   // Metrics (Miller's Law: max 5)
   metrics?: PageHeaderMetric[];
-  
+
   // Actions (Hick's Law: max 3 primary)
   primaryActions?: PageHeaderAction[];
   secondaryActions?: PageHeaderAction[];
-  
+
   // Connected entities
   connectedEntities?: ConnectedEntity[];
-  
+
   className?: string;
 }
 
@@ -219,7 +219,7 @@ export function PageHeader({
           {/* Icon */}
           {icon && (
             <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-muted text-foreground flex-shrink-0">
-              {React.cloneElement(icon as React.ReactElement, { 
+              {React.cloneElement(icon as React.ReactElement<any>, {
                 className: 'w-6 h-6',
                 'aria-hidden': 'true'
               })}
@@ -233,8 +233,8 @@ export function PageHeader({
                 {title}
               </h1>
               {status && (
-                <StatusBadge 
-                  status={status.label} 
+                <StatusBadge
+                  status={status.label}
                   variant={status.variant}
                 />
               )}

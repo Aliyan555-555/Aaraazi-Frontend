@@ -1,9 +1,9 @@
 /**
  * Custom Report Builder - Type Definitions
- * 
+ *
  * Defines all TypeScript interfaces for the custom report builder feature.
  * Supports multi-source data integration, filtering, grouping, and aggregation.
- * 
+ *
  * @module types/custom-reports
  */
 
@@ -14,8 +14,8 @@ import {
   ScheduleConfig as BaseScheduleConfig,
   ScheduleFrequency as BaseScheduleFrequency,
   ReportCategory as BaseReportCategory,
-  ValidationError as BaseValidationError
-} from './reports';
+  ValidationError as BaseValidationError,
+} from "./reports";
 
 /**
  * Main custom report template
@@ -44,14 +44,14 @@ export interface CustomReportTemplate {
 export interface GroupingConfig {
   groupBy: string[]; // Field paths to group by
   aggregations: AggregationConfig[];
-  sortGroupsBy: 'name' | 'value';
-  sortDirection: 'asc' | 'desc';
+  sortGroupsBy: "name" | "value";
+  sortDirection: "asc" | "desc";
 }
 
 /**
  * Chart types
  */
-export type ChartType = 'bar' | 'line' | 'pie' | 'area' | 'scatter';
+export type ChartType = "bar" | "line" | "pie" | "area" | "scatter";
 
 /**
  * Chart configuration
@@ -65,7 +65,7 @@ export interface ChartConfig {
   title?: string;
   showLegend: boolean;
   showGrid: boolean;
-  colorScheme?: 'default' | 'blue' | 'green' | 'red' | 'purple';
+  colorScheme?: "default" | "blue" | "green" | "red" | "purple";
 }
 
 /**
@@ -86,7 +86,14 @@ export interface ReportConfiguration {
  * Supports multiple sources for join-like queries
  */
 export interface DataSource {
-  source: 'deals' | 'properties' | 'expenses' | 'commissions' | 'investors' | 'budgets' | 'ledger';
+  source:
+    | "deals"
+    | "properties"
+    | "expenses"
+    | "commissions"
+    | "investors"
+    | "budgets"
+    | "ledger";
   alias?: string;
   joins?: JoinConfig[];
 }
@@ -97,7 +104,7 @@ export interface DataSource {
  */
 export interface JoinConfig {
   targetSource: string;
-  joinType: 'inner' | 'left' | 'right';
+  joinType: "inner" | "left" | "right";
   onField: string;
   targetField: string;
 }
@@ -111,7 +118,7 @@ export interface SelectedField {
   source: string;
   field: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'currency' | 'percentage' | 'boolean';
+  type: "text" | "number" | "date" | "currency" | "percentage" | "boolean";
   aggregation?: AggregationFunction;
 
   // Display formatting
@@ -121,7 +128,13 @@ export interface SelectedField {
 /**
  * Aggregation functions for grouping
  */
-export type AggregationFunction = 'sum' | 'avg' | 'count' | 'min' | 'max' | 'none';
+export type AggregationFunction =
+  | "sum"
+  | "avg"
+  | "count"
+  | "min"
+  | "max"
+  | "none";
 
 /**
  * Field formatting options
@@ -140,10 +153,10 @@ export interface FieldFormat {
 export interface FilterRule {
   id: string;
   field: string;
-  fieldType: 'text' | 'number' | 'date' | 'currency' | 'boolean';
+  fieldType: "text" | "number" | "date" | "currency" | "percentage" | "boolean";
   operator: FilterOperator;
   value: any;
-  logicalOperator?: 'AND' | 'OR';
+  logicalOperator?: "AND" | "OR";
 }
 
 /**
@@ -160,7 +173,7 @@ export interface AggregationConfig {
  */
 export interface SortConfig {
   field: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
   priority: number; // For multi-column sorting
 }
 
@@ -178,11 +191,11 @@ export interface FormattingConfig {
   thousandsSeparator?: string;
 
   // Date formatting
-  dateFormat?: 'short' | 'medium' | 'long' | 'iso';
+  dateFormat?: "short" | "medium" | "long" | "iso";
 
   // Styling
   headerBackgroundColor?: string;
-  fontSize?: 'small' | 'medium' | 'large';
+  fontSize?: "small" | "medium" | "large";
 }
 
 /**
@@ -194,7 +207,7 @@ export interface AvailableField {
   source: string;
   field: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'currency' | 'percentage' | 'boolean';
+  type: "text" | "number" | "date" | "currency" | "percentage" | "boolean";
   description?: string;
 
   // Metadata
@@ -209,8 +222,12 @@ export interface AvailableField {
  * Result of executing a report configuration
  * Note: Uses customized GeneratedReport that wraps ReportConfiguration
  */
-export interface CustomGeneratedReport extends Omit<BaseGeneratedReport, 'config'> {
+export interface CustomGeneratedReport extends Omit<
+  BaseGeneratedReport,
+  "config"
+> {
   config: ReportConfiguration;
+  columns: ReportColumn[];
 }
 
 /**
@@ -219,9 +236,9 @@ export interface CustomGeneratedReport extends Omit<BaseGeneratedReport, 'config
 export interface ReportColumn {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'currency' | 'percentage' | 'boolean';
+  type: "text" | "number" | "date" | "currency" | "percentage" | "boolean";
   width?: number;
-  align?: 'left' | 'center' | 'right';
+  align?: "left" | "center" | "right";
 }
 
 /**
@@ -250,11 +267,11 @@ export interface QuickFilterPreset {
  * Export options
  */
 export interface ExportOptions {
-  format: 'pdf' | 'csv' | 'excel';
+  format: "pdf" | "csv" | "excel";
   includeHeader: boolean;
   includeFooter: boolean;
-  paperSize?: 'a4' | 'letter' | 'legal';
-  orientation?: 'portrait' | 'landscape';
+  paperSize?: "a4" | "letter" | "legal";
+  orientation?: "portrait" | "landscape";
 
   // PDF-specific
   title?: string;
@@ -262,6 +279,6 @@ export interface ExportOptions {
   logo?: string;
 
   // CSV-specific
-  delimiter?: ',' | ';' | '\t';
-  encoding?: 'utf-8' | 'utf-16';
+  delimiter?: "," | ";" | "\t";
+  encoding?: "utf-8" | "utf-16";
 }

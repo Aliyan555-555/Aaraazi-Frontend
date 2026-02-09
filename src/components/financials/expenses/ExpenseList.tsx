@@ -11,15 +11,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../../ui/dropdown-menu';
+import { ExpenseCategory } from '../../../types/financials';
 
 // Expense interface based on current usage
 export interface ExpenseItem {
   id: string;
   date: string;
-  category: string;
+  category: ExpenseCategory;
   description: string;
   amount: number;
-  status: 'Pending' | 'Approved' | 'Paid';
+  status: 'pending' | 'paid' | 'cancelled';
   propertyId?: string;
   propertyTitle?: string;
   agentId?: string;
@@ -209,18 +210,18 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                           View Property
                         </DropdownMenuItem>
                       )}
-                      
+
                       {onEdit && (
                         <DropdownMenuItem onClick={() => onEdit(expense)}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
                       )}
-                      
+
                       {userRole === 'admin' && (
                         <>
-                          {expense.status === 'Pending' && onApprove && (
-                            <DropdownMenuItem 
+                          {expense.status === 'pending' && onApprove && (
+                            <DropdownMenuItem
                               onClick={() => onApprove(expense.id)}
                               className="text-green-600"
                             >
@@ -228,9 +229,9 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                               Approve
                             </DropdownMenuItem>
                           )}
-                          
-                          {expense.status === 'Pending' && onReject && (
-                            <DropdownMenuItem 
+
+                          {expense.status === 'pending' && onReject && (
+                            <DropdownMenuItem
                               onClick={() => onReject(expense.id)}
                               className="text-red-600"
                             >
@@ -238,9 +239,9 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({
                               Reject
                             </DropdownMenuItem>
                           )}
-                          
+
                           {onDelete && (
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => onDelete(expense.id)}
                               className="text-red-600"
                             >

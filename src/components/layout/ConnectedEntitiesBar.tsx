@@ -10,7 +10,7 @@ import {
 } from '../ui/dialog';
 
 export interface ConnectedEntity {
-  type: 'property' | 'agent' | 'client' | 'deal' | 'investor' | 'owner' | 'seller' | 'buyer' | 'tenant' | 'landlord' | 'location' | 'purchaser';
+  type: 'property' | 'agent' | 'client' | 'deal' | 'investor' | 'owner' | 'seller' | 'buyer' | 'tenant' | 'landlord' | 'location' | 'purchaser' | 'contact' | 'requirement';
   id?: string;
   name: string;
   role?: string;
@@ -39,8 +39,8 @@ export interface ConnectedEntitiesBarProps {
  *   maxVisible={5}
  * />
  */
-export function ConnectedEntitiesBar({ 
-  entities, 
+export function ConnectedEntitiesBar({
+  entities,
   maxVisible = 5,
   onViewAll,
   className = ''
@@ -65,7 +65,7 @@ export function ConnectedEntitiesBar({
 
   return (
     <>
-      <div 
+      <div
         className={`flex items-center gap-2 px-4 py-2 bg-[#f8f8f9] border-y border-gray-200 ${className}`}
         role="navigation"
         aria-label="Connected entities"

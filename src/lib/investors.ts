@@ -1,18 +1,23 @@
 /**
  * Investor Syndication Service
- * 
+ *
  * NOTE: This service supports investor syndication for property purchase cycles only.
  * The standalone "Investors Management" section has been removed from navigation.
- * 
+ *
  * Investors can be assigned to properties during purchase cycles (investor-purchase type)
  * and this service handles their allocations, investments, and profit distributions.
  */
 
-import { Investor, InvestorInvestment, Property, InvestorShare } from '../types';
-import { getProperties, getContacts } from './data';
+import {
+  Investor,
+  InvestorInvestment,
+  Property,
+  InvestorShare,
+} from "../types";
+import { getProperties, getContacts } from "./data";
 
-const INVESTORS_KEY = 'estate_investors';
-const INVESTMENTS_KEY = 'estate_investor_investments';
+const INVESTORS_KEY = "estate_investors";
+const INVESTMENTS_KEY = "estate_investor_investments";
 
 // ============================================
 // INITIALIZATION
@@ -21,7 +26,7 @@ const INVESTMENTS_KEY = 'estate_investor_investments';
 /**
  * Initialize investor data on app startup
  * Creates default structure if needed
- * 
+ *
  * Used for investor syndication in purchase cycles
  */
 export function initializeInvestorData(): void {
@@ -30,7 +35,7 @@ export function initializeInvestorData(): void {
   if (!investorsJson) {
     localStorage.setItem(INVESTORS_KEY, JSON.stringify([]));
   }
-  
+
   // Check if investments exist, if not create empty array
   const investmentsJson = localStorage.getItem(INVESTMENTS_KEY);
   if (!investmentsJson) {
@@ -48,7 +53,7 @@ export function initializeInvestorData(): void {
 export function validateCNIC(cnic: string): boolean {
   if (!cnic) return false;
   // Remove dashes for validation
-  const cleaned = cnic.replace(/-/g, '');
+  const cleaned = cnic.replace(/-/g, "");
   // Must be exactly 13 digits
   return /^\d{13}$/.test(cleaned);
 }
@@ -60,7 +65,7 @@ export function validateCNIC(cnic: string): boolean {
 export function validatePakistaniPhone(phone: string): boolean {
   if (!phone) return false;
   // Remove spaces, dashes, and plus
-  const cleaned = phone.replace(/[\s\-+]/g, '');
+  const cleaned = phone.replace(/[\s\-+]/g, "");
   // Must be 10 digits (03XXXXXXXXX) or 11 digits (923XXXXXXXXX) or 12 digits (923XXXXXXXXX)
   return /^(0?3\d{9}|92?3\d{9})$/.test(cleaned);
 }
@@ -77,24 +82,31 @@ export function validateEmail(email: string): boolean {
 /**
  * Check if email is already used by another investor
  */
-export function isDuplicateEmail(email: string, excludeInvestorId?: string): boolean {
+export function isDuplicateEmail(
+  email: string,
+  excludeInvestorId?: string,
+): boolean {
   if (!email) return false;
   const investors = getInvestors();
-  return investors.some(inv => 
-    inv.email?.toLowerCase() === email.toLowerCase() && 
-    inv.id !== excludeInvestorId
+  return investors.some(
+    (inv) =>
+      inv.email?.toLowerCase() === email.toLowerCase() &&
+      inv.id !== excludeInvestorId,
   );
 }
 
 /**
  * Check if phone is already used by another investor
  */
-export function isDuplicatePhone(phone: string, excludeInvestorId?: string): boolean {
+export function isDuplicatePhone(
+  phone: string,
+  excludeInvestorId?: string,
+): boolean {
   if (!phone) return false;
   const investors = getInvestors();
-  const cleanedPhone = phone.replace(/[\s\-+]/g, '');
-  return investors.some(inv => {
-    const invPhone = inv.phone?.replace(/[\s\-+]/g, '');
+  const cleanedPhone = phone.replace(/[\s\-+]/g, "");
+  return investors.some((inv) => {
+    const invPhone = inv.phone?.replace(/[\s\-+]/g, "");
     return invPhone === cleanedPhone && inv.id !== excludeInvestorId;
   });
 }
@@ -102,12 +114,15 @@ export function isDuplicatePhone(phone: string, excludeInvestorId?: string): boo
 /**
  * Check if CNIC is already used by another investor
  */
-export function isDuplicateCNIC(cnic: string, excludeInvestorId?: string): boolean {
+export function isDuplicateCNIC(
+  cnic: string,
+  excludeInvestorId?: string,
+): boolean {
   if (!cnic) return false;
   const investors = getInvestors();
-  const cleanedCNIC = cnic.replace(/-/g, '');
-  return investors.some(inv => {
-    const invCNIC = inv.cnic?.replace(/-/g, '');
+  const cleanedCNIC = cnic.replace(/-/g, "");
+  return investors.some((inv) => {
+    const invCNIC = inv.cnic?.replace(/-/g, "");
     return invCNIC === cleanedCNIC && inv.id !== excludeInvestorId;
   });
 }
@@ -120,9 +135,9 @@ export function isDuplicateCNIC(cnic: string, excludeInvestorId?: string): boole
  * Format CNIC with dashes (XXXXX-XXXXXXX-X)
  */
 export function formatCNIC(cnic: string): string {
-  if (!cnic) return '';
+  if (!cnic) return "";
   // Remove any existing dashes
-  const cleaned = cnic.replace(/-/g, '');
+  const cleaned = cnic.replace(/-/g, "");
   // Add dashes in correct positions
   if (cleaned.length >= 13) {
     return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 12)}-${cleaned.slice(12, 13)}`;
@@ -134,20 +149,20 @@ export function formatCNIC(cnic: string): string {
  * Format Pakistani phone number (03XX-XXXXXXX)
  */
 export function formatPakistaniPhone(phone: string): string {
-  if (!phone) return '';
+  if (!phone) return "";
   // Remove any spaces, dashes, plus signs
-  let cleaned = phone.replace(/[\s\-+]/g, '');
-  
+  let cleaned = phone.replace(/[\s\-+]/g, "");
+
   // Handle international format (92XXXXXXXXXX)
-  if (cleaned.startsWith('92')) {
-    cleaned = '0' + cleaned.slice(2);
+  if (cleaned.startsWith("92")) {
+    cleaned = "0" + cleaned.slice(2);
   }
-  
+
   // Add dash after 4th digit (03XX-XXXXXXX)
-  if (cleaned.length >= 11 && cleaned.startsWith('0')) {
+  if (cleaned.length >= 11 && cleaned.startsWith("0")) {
     return `${cleaned.slice(0, 4)}-${cleaned.slice(4)}`;
   }
-  
+
   return phone;
 }
 
@@ -161,14 +176,14 @@ export function formatPakistaniPhone(phone: string): string {
 export function getInvestors(userId?: string, userRole?: string): Investor[] {
   const json = localStorage.getItem(INVESTORS_KEY);
   const investors: Investor[] = json ? JSON.parse(json) : [];
-  
+
   // Admin sees everything
-  if (!userId || userRole === 'admin') {
+  if (!userId || userRole === "admin") {
     return investors;
   }
-  
+
   // Agents see only their managed investors
-  return investors.filter(inv => inv.managingAgentId === userId);
+  return investors.filter((inv) => inv.managingAgentId === userId);
 }
 
 /**
@@ -176,19 +191,23 @@ export function getInvestors(userId?: string, userRole?: string): Investor[] {
  */
 export function getInvestorById(id: string): Investor | undefined {
   const investors = getInvestors();
-  return investors.find(inv => inv.id === id);
+  return investors.find((inv) => inv.id === id);
 }
 
 /**
  * Create a new investor
  */
-export function createInvestor(data: Partial<Investor>, userId: string, userName: string): Investor {
+export function createInvestor(
+  data: Partial<Investor>,
+  userId: string,
+  userName: string,
+): Investor {
   const investors = getInvestors();
-  
+
   const newInvestor: Investor = {
     id: `investor_${Date.now()}`,
     contactId: data.contactId || `contact_${Date.now()}`,
-    
+
     // Basic info
     name: data.name!,
     email: data.email,
@@ -196,30 +215,30 @@ export function createInvestor(data: Partial<Investor>, userId: string, userName
     cnic: data.cnic,
     address: data.address,
     city: data.city,
-    
+
     // Investor-specific
-    investorType: data.investorType || 'individual',
-    riskProfile: data.riskProfile || 'moderate',
+    investorType: data.investorType || "individual",
+    riskProfile: data.riskProfile || "moderate",
     investmentGoals: data.investmentGoals || [],
     preferredPropertyTypes: data.preferredPropertyTypes || [],
     preferredLocations: data.preferredLocations || [],
     minimumROIExpectation: data.minimumROIExpectation,
-    
+
     // Investment capacity
     totalInvestmentCapacity: data.totalInvestmentCapacity,
     minimumInvestmentAmount: data.minimumInvestmentAmount,
     maximumInvestmentAmount: data.maximumInvestmentAmount,
     investmentHorizon: data.investmentHorizon,
-    
+
     // Banking information
     bankName: data.bankName,
     accountTitle: data.accountTitle,
     accountNumber: data.accountNumber,
     iban: data.iban,
-    
+
     // Previous experience
     previousInvestments: data.previousInvestments,
-    
+
     // Portfolio summary (initial zeros)
     totalInvested: 0,
     currentPortfolioValue: 0,
@@ -228,32 +247,32 @@ export function createInvestor(data: Partial<Investor>, userId: string, userName
     totalROI: 0,
     activeProperties: 0,
     soldProperties: 0,
-    
+
     // Investment tracking
     investments: [],
-    
+
     // Relationship
     managingAgentId: data.managingAgentId || userId,
     managingAgentName: data.managingAgentName || userName,
-    relationshipStatus: data.relationshipStatus || 'active',
-    
+    relationshipStatus: data.relationshipStatus || "active",
+
     // Preferences
     communicationPreference: data.communicationPreference,
     reportingFrequency: data.reportingFrequency,
-    
+
     // Metadata
-    joinedDate: new Date().toISOString().split('T')[0],
+    joinedDate: new Date().toISOString().split("T")[0],
     lastReviewDate: undefined,
     nextReviewDate: undefined,
-    status: data.status || 'active',
+    status: data.status || "active",
     notes: data.notes,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  
+
   investors.push(newInvestor);
   localStorage.setItem(INVESTORS_KEY, JSON.stringify(investors));
-  
+
   return newInvestor;
 }
 
@@ -262,33 +281,42 @@ export function createInvestor(data: Partial<Investor>, userId: string, userName
  */
 export function addInvestor(data: Partial<Investor>): Investor {
   // Use a default user if not provided in data
-  const userId = data.agentId || 'system';
-  const userName = data.agentName || 'System';
+  const userId = data.agentId || "system";
+  const userName = data.agentName || "System";
   return createInvestor(data, userId, userName);
 }
 
 /**
  * Update an existing investor
  */
-export function updateInvestor(id: string, updates: Partial<Investor>): void {
+export function updateInvestor(
+  id: string,
+  updates: Partial<Investor>,
+): Investor {
   const investors = getInvestors();
-  const index = investors.findIndex(inv => inv.id === id);
-  
-  if (index !== -1) {
-    investors[index] = {
-      ...investors[index],
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
-    localStorage.setItem(INVESTORS_KEY, JSON.stringify(investors));
+  const index = investors.findIndex((inv) => inv.id === id);
+
+  if (index === -1) {
+    throw new Error(`Investor with ID ${id} not found`);
   }
+
+  const updatedInvestor = {
+    ...investors[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  } as Investor;
+
+  investors[index] = updatedInvestor;
+  localStorage.setItem(INVESTORS_KEY, JSON.stringify(investors));
+
+  return updatedInvestor;
 }
 
 /**
  * Delete an investor (soft delete - mark as archived)
  */
 export function deleteInvestor(id: string): void {
-  updateInvestor(id, { status: 'archived' });
+  updateInvestor(id, { status: "archived" });
 }
 
 // ============================================
@@ -321,17 +349,21 @@ function saveInvestments(investments: InvestorInvestment[]): void {
 /**
  * Get all investments for a specific investor
  */
-export function getInvestorInvestments(investorId: string): InvestorInvestment[] {
+export function getInvestorInvestments(
+  investorId: string,
+): InvestorInvestment[] {
   const investments = getAllInvestments();
-  return investments.filter(inv => inv.investorId === investorId);
+  return investments.filter((inv) => inv.investorId === investorId);
 }
 
 /**
  * Get all investments for a specific property
  */
-export function getPropertyInvestments(propertyId: string): InvestorInvestment[] {
+export function getPropertyInvestments(
+  propertyId: string,
+): InvestorInvestment[] {
   const investments = getAllInvestments();
-  return investments.filter(inv => inv.propertyId === propertyId);
+  return investments.filter((inv) => inv.propertyId === propertyId);
 }
 
 /**
@@ -347,71 +379,78 @@ export function addInvestorInvestment(
     acquisitionPrice: number;
     purchaseCycleId?: string;
     notes?: string;
-  }
+  },
 ): InvestorInvestment {
   const investments = getAllInvestments();
-  
+
   const newInvestment: InvestorInvestment = {
     id: `investment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     investorId,
     propertyId,
     propertyAddress: details.propertyAddress,
-    
+
     // Investment details
     sharePercentage: details.sharePercentage,
     investmentAmount: details.investmentAmount,
-    investmentDate: new Date().toISOString().split('T')[0],
+    investmentDate: new Date().toISOString().split("T")[0],
     acquisitionPrice: details.acquisitionPrice,
-    
+
     // Current status
-    status: 'active',
+    status: "active",
     currentValue: details.acquisitionPrice, // Start with acquisition price
-    
+
     // Returns (initial zeros)
     rentalIncome: 0,
     appreciationValue: 0,
     unrealizedProfit: 0,
     roi: 0,
-    
+
     // Links
     purchaseCycleId: details.purchaseCycleId,
-    
+
     // Metadata
     notes: details.notes,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  
+
   investments.push(newInvestment);
   saveInvestments(investments);
-  
+
   // Update investor's portfolio summary
   recalculateInvestorPortfolio(investorId);
-  
+
   return newInvestment;
 }
 
 /**
  * Update an investment's current value (for appreciation tracking)
  */
-export function updateInvestmentValue(investmentId: string, newValue: number): void {
+export function updateInvestmentValue(
+  investmentId: string,
+  newValue: number,
+): void {
   const investments = getAllInvestments();
-  const index = investments.findIndex(inv => inv.id === investmentId);
-  
+  const index = investments.findIndex((inv) => inv.id === investmentId);
+
   if (index !== -1) {
     const investment = investments[index];
-    const acquisitionValue = investment.acquisitionPrice * (investment.sharePercentage / 100);
+    const acquisitionValue =
+      investment.acquisitionPrice * (investment.sharePercentage / 100);
     const currentValue = newValue * (investment.sharePercentage / 100);
-    
+
     investments[index] = {
       ...investment,
       currentValue: newValue,
       appreciationValue: currentValue - acquisitionValue,
       unrealizedProfit: currentValue - investment.investmentAmount,
-      roi: ((currentValue - investment.investmentAmount) / investment.investmentAmount) * 100,
+      roi:
+        ((currentValue - investment.investmentAmount) /
+          investment.investmentAmount) *
+        100,
       updatedAt: new Date().toISOString(),
     };
-    
+
     saveInvestments(investments);
     recalculateInvestorPortfolio(investment.investorId);
   }
@@ -423,21 +462,21 @@ export function updateInvestmentValue(investmentId: string, newValue: number): v
 export function closeInvestment(
   investmentId: string,
   salePrice: number,
-  sellCycleId?: string
+  sellCycleId?: string,
 ): void {
   const investments = getAllInvestments();
-  const index = investments.findIndex(inv => inv.id === investmentId);
-  
+  const index = investments.findIndex((inv) => inv.id === investmentId);
+
   if (index !== -1) {
     const investment = investments[index];
     const investorShare = salePrice * (investment.sharePercentage / 100);
     const profit = investorShare - investment.investmentAmount;
     const roi = (profit / investment.investmentAmount) * 100;
-    
+
     investments[index] = {
       ...investment,
-      status: 'sold',
-      soldDate: new Date().toISOString().split('T')[0],
+      status: "sold",
+      soldDate: new Date().toISOString().split("T")[0],
       soldPrice: salePrice,
       saleProfit: profit,
       realizedProfit: profit,
@@ -445,7 +484,7 @@ export function closeInvestment(
       sellCycleId,
       updatedAt: new Date().toISOString(),
     };
-    
+
     saveInvestments(investments);
     recalculateInvestorPortfolio(investment.investorId);
   }
@@ -456,18 +495,18 @@ export function closeInvestment(
  */
 export function addRentalIncome(investmentId: string, amount: number): void {
   const investments = getAllInvestments();
-  const index = investments.findIndex(inv => inv.id === investmentId);
-  
+  const index = investments.findIndex((inv) => inv.id === investmentId);
+
   if (index !== -1) {
     const investment = investments[index];
     const newRentalIncome = (investment.rentalIncome || 0) + amount;
-    
+
     investments[index] = {
       ...investment,
       rentalIncome: newRentalIncome,
       updatedAt: new Date().toISOString(),
     };
-    
+
     saveInvestments(investments);
     recalculateInvestorPortfolio(investment.investorId);
   }
@@ -482,27 +521,40 @@ export function addRentalIncome(investmentId: string, amount: number): void {
  */
 export function recalculateInvestorPortfolio(investorId: string): void {
   const investments = getInvestorInvestments(investorId);
-  
-  const activeInvestments = investments.filter(inv => inv.status === 'active');
-  const soldInvestments = investments.filter(inv => inv.status === 'sold');
-  
-  const totalInvested = investments.reduce((sum, inv) => sum + inv.investmentAmount, 0);
-  
+
+  const activeInvestments = investments.filter(
+    (inv) => inv.status === "active",
+  );
+  const soldInvestments = investments.filter((inv) => inv.status === "sold");
+
+  const totalInvested = investments.reduce(
+    (sum, inv) => sum + inv.investmentAmount,
+    0,
+  );
+
   const currentPortfolioValue = activeInvestments.reduce((sum, inv) => {
-    return sum + (inv.currentValue || inv.acquisitionPrice) * (inv.sharePercentage / 100);
+    return (
+      sum +
+      (inv.currentValue || inv.acquisitionPrice) * (inv.sharePercentage / 100)
+    );
   }, 0);
-  
-  const realizedGains = soldInvestments.reduce((sum, inv) => sum + (inv.realizedProfit || 0), 0);
-  
+
+  const realizedGains = soldInvestments.reduce(
+    (sum, inv) => sum + (inv.realizedProfit || 0),
+    0,
+  );
+
   const unrealizedGains = activeInvestments.reduce((sum, inv) => {
-    const currentValue = (inv.currentValue || inv.acquisitionPrice) * (inv.sharePercentage / 100);
+    const currentValue =
+      (inv.currentValue || inv.acquisitionPrice) * (inv.sharePercentage / 100);
     return sum + (currentValue - inv.investmentAmount);
   }, 0);
-  
-  const totalROI = totalInvested > 0
-    ? ((realizedGains + unrealizedGains) / totalInvested) * 100
-    : 0;
-  
+
+  const totalROI =
+    totalInvested > 0
+      ? ((realizedGains + unrealizedGains) / totalInvested) * 100
+      : 0;
+
   updateInvestor(investorId, {
     totalInvested,
     currentPortfolioValue,
@@ -535,34 +587,40 @@ export function calculateInvestorPortfolioValue(investorId: string): number {
  */
 export function getInvestorProperties(investorId: string): Property[] {
   const investments = getInvestorInvestments(investorId);
-  const activeInvestments = investments.filter(inv => inv.status === 'active');
-  const propertyIds = activeInvestments.map(inv => inv.propertyId);
-  
+  const activeInvestments = investments.filter(
+    (inv) => inv.status === "active",
+  );
+  const propertyIds = activeInvestments.map((inv) => inv.propertyId);
+
   const allProperties = getProperties();
-  return allProperties.filter(prop => propertyIds.includes(prop.id));
+  return allProperties.filter((prop) => propertyIds.includes(prop.id));
 }
 
 /**
  * Get detailed property information for an investor's investment
  */
-export function getInvestorPropertyDetails(investorId: string, propertyId: string): {
+export function getInvestorPropertyDetails(
+  investorId: string,
+  propertyId: string,
+): {
   property: Property | undefined;
   investment: InvestorInvestment | undefined;
   sharePercentage: number;
   investmentAmount: number;
   currentValue: number;
   roi: number;
+  projectedROI: number;
 } | null {
   const investments = getInvestorInvestments(investorId);
-  const investment = investments.find(inv => inv.propertyId === propertyId);
-  
+  const investment = investments.find((inv) => inv.propertyId === propertyId);
+
   if (!investment) {
     return null;
   }
-  
+
   const allProperties = getProperties();
-  const property = allProperties.find(p => p.id === propertyId);
-  
+  const property = allProperties.find((p) => p.id === propertyId);
+
   return {
     property,
     investment,
@@ -570,6 +628,7 @@ export function getInvestorPropertyDetails(investorId: string, propertyId: strin
     investmentAmount: investment.investmentAmount,
     currentValue: investment.currentValue || investment.acquisitionPrice,
     roi: investment.roi || 0,
+    projectedROI: 0,
   };
 }
 
@@ -584,6 +643,11 @@ export function getInvestorPortfolioSummary(investorId: string): {
   totalROI: number;
   activeProperties: number;
   soldProperties: number;
+  totalInvestments: number;
+  activeInvestments: number;
+  exitedInvestments: number;
+  totalRentalIncome: number;
+  totalExpenses: number;
   averageInvestment: number;
   bestPerformingProperty?: {
     address: string;
@@ -592,7 +656,7 @@ export function getInvestorPortfolioSummary(investorId: string): {
 } {
   const investor = getInvestorById(investorId);
   const investments = getInvestorInvestments(investorId);
-  
+
   if (!investor) {
     return {
       totalInvested: 0,
@@ -602,19 +666,38 @@ export function getInvestorPortfolioSummary(investorId: string): {
       totalROI: 0,
       activeProperties: 0,
       soldProperties: 0,
+      totalInvestments: 0,
+      activeInvestments: 0,
+      exitedInvestments: 0,
+      totalRentalIncome: 0,
+      totalExpenses: 0,
       averageInvestment: 0,
     };
   }
-  
-  const averageInvestment = investments.length > 0
-    ? investor.totalInvested / investments.length
-    : 0;
-  
+
+  const averageInvestment =
+    investments.length > 0 ? investor.totalInvested / investments.length : 0;
+
+  const activeInvestmentsCount = investments.filter(
+    (inv) => inv.status === "active",
+  ).length;
+  const exitedInvestmentsCount = investments.filter(
+    (inv) => inv.status === "sold",
+  ).length;
+  const totalRentalIncome = investments.reduce(
+    (sum, inv) => sum + (inv.rentalIncome || 0),
+    0,
+  );
+  const totalExpenses = investments.reduce(
+    (sum, inv) => sum + (inv.totalExpenses || 0),
+    0,
+  );
+
   // Find best performing property
   const bestPerforming = investments
-    .filter(inv => inv.roi !== undefined && inv.roi > 0)
+    .filter((inv) => inv.roi !== undefined && inv.roi > 0)
     .sort((a, b) => (b.roi || 0) - (a.roi || 0))[0];
-  
+
   return {
     totalInvested: investor.totalInvested,
     currentValue: investor.currentPortfolioValue,
@@ -623,11 +706,21 @@ export function getInvestorPortfolioSummary(investorId: string): {
     totalROI: investor.totalROI,
     activeProperties: investor.activeProperties,
     soldProperties: investor.soldProperties,
+
+    // New fields
+    totalInvestments: investments.length,
+    activeInvestments: activeInvestmentsCount,
+    exitedInvestments: exitedInvestmentsCount,
+    totalRentalIncome,
+    totalExpenses,
+
     averageInvestment,
-    bestPerformingProperty: bestPerforming ? {
-      address: bestPerforming.propertyAddress,
-      roi: bestPerforming.roi || 0,
-    } : undefined,
+    bestPerformingProperty: bestPerforming
+      ? {
+          address: bestPerforming.propertyAddress,
+          roi: bestPerforming.roi || 0,
+        }
+      : undefined,
   };
 }
 
@@ -638,7 +731,10 @@ export function getInvestorPortfolioSummary(investorId: string): {
 /**
  * Get investor statistics
  */
-export function getInvestorStats(userId?: string, userRole?: string): {
+export function getInvestorStats(
+  userId?: string,
+  userRole?: string,
+): {
   totalInvestors: number;
   activeInvestors: number;
   totalCapitalInvested: number;
@@ -648,18 +744,32 @@ export function getInvestorStats(userId?: string, userRole?: string): {
   totalSoldProperties: number;
 } {
   const investors = getInvestors(userId, userRole);
-  const activeInvestors = investors.filter(inv => inv.status === 'active');
-  
-  const totalCapitalInvested = investors.reduce((sum, inv) => sum + inv.totalInvested, 0);
-  const totalPortfolioValue = investors.reduce((sum, inv) => sum + inv.currentPortfolioValue, 0);
-  
-  const averageROI = activeInvestors.length > 0
-    ? activeInvestors.reduce((sum, inv) => sum + inv.totalROI, 0) / activeInvestors.length
-    : 0;
-  
-  const totalActiveProperties = investors.reduce((sum, inv) => sum + inv.activeProperties, 0);
-  const totalSoldProperties = investors.reduce((sum, inv) => sum + inv.soldProperties, 0);
-  
+  const activeInvestors = investors.filter((inv) => inv.status === "active");
+
+  const totalCapitalInvested = investors.reduce(
+    (sum, inv) => sum + inv.totalInvested,
+    0,
+  );
+  const totalPortfolioValue = investors.reduce(
+    (sum, inv) => sum + inv.currentPortfolioValue,
+    0,
+  );
+
+  const averageROI =
+    activeInvestors.length > 0
+      ? activeInvestors.reduce((sum, inv) => sum + inv.totalROI, 0) /
+        activeInvestors.length
+      : 0;
+
+  const totalActiveProperties = investors.reduce(
+    (sum, inv) => sum + inv.activeProperties,
+    0,
+  );
+  const totalSoldProperties = investors.reduce(
+    (sum, inv) => sum + inv.soldProperties,
+    0,
+  );
+
   return {
     totalInvestors: investors.length,
     activeInvestors: activeInvestors.length,
@@ -676,8 +786,10 @@ export function getInvestorStats(userId?: string, userRole?: string): {
  */
 export function getTopPerformingInvestors(limit: number = 5): Investor[] {
   const investors = getInvestors();
-  const activeInvestors = investors.filter(inv => inv.status === 'active' && inv.totalInvested > 0);
-  
+  const activeInvestors = investors.filter(
+    (inv) => inv.status === "active" && inv.totalInvested > 0,
+  );
+
   return activeInvestors
     .sort((a, b) => b.totalROI - a.totalROI)
     .slice(0, limit);
@@ -706,14 +818,18 @@ export function saveInvestor(investor: Investor): void {
 /**
  * @deprecated Use getInvestorInvestments instead
  */
-export function getPropertyInvestmentsByInvestor(investorId: string): InvestorInvestment[] {
+export function getPropertyInvestmentsByInvestor(
+  investorId: string,
+): InvestorInvestment[] {
   return getInvestorInvestments(investorId);
 }
 
 /**
  * @deprecated Use getPropertyInvestments instead
  */
-export function getPropertyInvestmentsByProperty(propertyId: string): InvestorInvestment[] {
+export function getPropertyInvestmentsByProperty(
+  propertyId: string,
+): InvestorInvestment[] {
   return getPropertyInvestments(propertyId);
 }
 
@@ -722,14 +838,16 @@ export function getPropertyInvestmentsByProperty(propertyId: string): InvestorIn
  */
 export function savePropertyInvestment(investment: InvestorInvestment): void {
   const investments = getAllInvestments();
-  const existingIndex = investments.findIndex(inv => inv.id === investment.id);
-  
+  const existingIndex = investments.findIndex(
+    (inv) => inv.id === investment.id,
+  );
+
   if (existingIndex >= 0) {
     investments[existingIndex] = investment;
   } else {
     investments.push(investment);
   }
-  
+
   saveInvestments(investments);
   recalculateInvestorPortfolio(investment.investorId);
 }
@@ -739,10 +857,10 @@ export function savePropertyInvestment(investment: InvestorInvestment): void {
  */
 export function deletePropertyInvestment(investmentId: string): void {
   const investments = getAllInvestments();
-  const investment = investments.find(inv => inv.id === investmentId);
-  
+  const investment = investments.find((inv) => inv.id === investmentId);
+
   if (investment) {
-    const filtered = investments.filter(inv => inv.id !== investmentId);
+    const filtered = investments.filter((inv) => inv.id !== investmentId);
     saveInvestments(filtered);
     recalculateInvestorPortfolio(investment.investorId);
   }
@@ -769,7 +887,7 @@ export function getProfitDistributionByProperty(propertyId: string): any[] {
  */
 export function saveProfitDistribution(distribution: any): void {
   // No-op for compatibility
-  console.warn('saveProfitDistribution is deprecated and does nothing');
+  console.warn("saveProfitDistribution is deprecated and does nothing");
 }
 
 /**

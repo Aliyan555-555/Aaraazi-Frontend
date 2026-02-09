@@ -5,12 +5,17 @@
 /**
  * Account types for classification in Chart of Accounts
  */
-export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
+export type AccountType =
+  | "asset"
+  | "liability"
+  | "equity"
+  | "revenue"
+  | "expense";
 
 /**
  * Normal balance for each account type (for double-entry validation)
  */
-export type NormalBalance = 'debit' | 'credit';
+export type NormalBalance = "debit" | "credit";
 
 /**
  * Individual account balance in Trial Balance
@@ -45,11 +50,11 @@ export interface TrialBalance {
  * Equity transaction types
  */
 export type EquityTransactionType =
-  | 'owner-contribution'    // Owner invests cash/assets
-  | 'owner-withdrawal'      // Owner withdraws cash/assets
-  | 'dividend'              // Profit distribution to owners
-  | 'net-income'            // Profit from operations (from P&L)
-  | 'net-loss';             // Loss from operations (from P&L)
+  | "owner-contribution" // Owner invests cash/assets
+  | "owner-withdrawal" // Owner withdraws cash/assets
+  | "dividend" // Profit distribution to owners
+  | "net-income" // Profit from operations (from P&L)
+  | "net-loss"; // Loss from operations (from P&L)
 
 /**
  * Equity transaction record
@@ -68,7 +73,12 @@ export interface EquityTransaction {
   ownerName?: string;
 
   // Payment details
-  paymentMethod?: 'cash' | 'bank-transfer' | 'cheque' | 'online' | 'asset-transfer';
+  paymentMethod?:
+    | "cash"
+    | "bank-transfer"
+    | "cheque"
+    | "online"
+    | "asset-transfer";
   referenceNumber?: string;
 
   // Link to related transactions
@@ -97,13 +107,13 @@ export interface ChangesInEquity {
   beginningBalance: number;
 
   // Changes during period
-  netIncome: number;          // From P&L Statement (positive = profit)
-  contributions: number;      // Owner investments
-  withdrawals: number;        // Owner withdrawals
-  dividends: number;          // Profit distributions
+  netIncome: number; // From P&L Statement (positive = profit)
+  contributions: number; // Owner investments
+  withdrawals: number; // Owner withdrawals
+  dividends: number; // Profit distributions
 
   // Ending balance
-  endingBalance: number;      // Beginning + netIncome + contributions - withdrawals - dividends
+  endingBalance: number; // Beginning + netIncome + contributions - withdrawals - dividends
 
   // Detailed transactions
   transactions: EquityTransaction[];
@@ -111,6 +121,18 @@ export interface ChangesInEquity {
   // Metadata
   generatedAt: string;
   generatedBy: string;
+}
+
+/**
+ * Individual line in a journal entry
+ */
+export interface JournalEntryLine {
+  accountName: string;
+  accountType: "assets" | "liabilities" | "equity" | "revenue" | "expenses";
+  description: string;
+  debit: number;
+  credit: number;
+  propertyId?: string;
 }
 
 /**
@@ -132,26 +154,26 @@ export interface JournalEntry {
   reference?: string;
 
   // Nested format (used in accounting.ts library for complex reports)
-  entries?: {
-    accountCode: string;
-    accountName: string;
-    accountType: AccountType;
-    debit: number;
-    credit: number;
-    propertyId?: string;
-  }[];
+  entries?: JournalEntryLine[];
 
   // Common details
   referenceNumber?: string;
   notes?: string;
 
   // Status
-  status: 'draft' | 'posted' | 'reversed';
+  status: "draft" | "posted" | "reversed";
   reversalOfEntryId?: string; // If this reverses another entry
-  reversedByEntryId?: string;  // If this was reversed by another entry
+  reversedByEntryId?: string; // If this was reversed by another entry
 
   // Source tracking
-  sourceType?: 'manual' | 'property-sale' | 'commission' | 'expense' | 'payment' | 'equity' | 'other';
+  sourceType?:
+    | "manual"
+    | "property-sale"
+    | "commission"
+    | "expense"
+    | "payment"
+    | "equity"
+    | "other";
   sourceId?: string; // ID of the originating transaction
 
   // Audit trail
@@ -173,22 +195,35 @@ export interface AccountPayment {
   dueDate?: string; // Expected by aged reports
 
   // Transaction classification
-  transactionType: 'payment-received' | 'payment-made';
-  type?: 'payment-received' | 'payment-made' | 'receivable' | 'payable'; // Enhanced for compatibility
-  category: 'commission' | 'expense' | 'rent' | 'sale-proceed' | 'purchase-payment' | 'other';
+  transactionType: "payment-received" | "payment-made";
+  type?: "payment-received" | "payment-made" | "receivable" | "payable"; // Enhanced for compatibility
+  category:
+    | "commission"
+    | "expense"
+    | "rent"
+    | "sale-proceed"
+    | "purchase-payment"
+    | "other";
 
   // Financial details
   amount: number;
   description: string;
 
   // Party information
-  partyType: 'contact' | 'vendor' | 'buyer' | 'seller' | 'tenant' | 'landlord' | 'other';
+  partyType:
+    | "contact"
+    | "vendor"
+    | "buyer"
+    | "seller"
+    | "tenant"
+    | "landlord"
+    | "other";
   partyId?: string;
   partyName: string;
   payee?: string; // Alias for compatibility
 
   // Payment details
-  paymentMethod: 'cash' | 'bank-transfer' | 'cheque' | 'online';
+  paymentMethod: "cash" | "bank-transfer" | "cheque" | "online";
   paymentDate: string;
   referenceNumber?: string;
   bankAccount?: string;
@@ -202,7 +237,7 @@ export interface AccountPayment {
   expenseId?: string;
 
   // Reconciliation
-  status: 'pending' | 'cleared' | 'reconciled' | 'cancelled';
+  status: "pending" | "cleared" | "reconciled" | "cancelled";
   reconciledAt?: string;
   reconciledBy?: string;
 
@@ -293,7 +328,7 @@ export interface AccountingPeriod {
   month?: number; // 1-12
 
   // Period status
-  status: 'open' | 'closed' | 'locked';
+  status: "open" | "closed" | "locked";
   closedAt?: string;
   closedBy?: string;
 
@@ -324,7 +359,7 @@ export interface AccountingSettings {
   decimalPlaces: number; // Usually 2 for PKR
 
   // Accounting method
-  accountingMethod: 'cash' | 'accrual';
+  accountingMethod: "cash" | "accrual";
 
   // Auto-generation settings
   autoGenerateJournalEntries: boolean;

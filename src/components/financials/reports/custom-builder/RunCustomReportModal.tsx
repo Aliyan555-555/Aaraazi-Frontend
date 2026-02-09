@@ -10,7 +10,7 @@
 import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../../ui/dialog';
 import { Button } from '../../../ui/button';
-import { CustomReportTemplate, GeneratedReport } from '../../../../types/custom-reports';
+import { CustomReportTemplate, CustomGeneratedReport } from '../../../../types/custom-reports';
 import { User } from '../../../../types';
 import { generateReport, incrementReportGeneration } from '../../../../lib/custom-report-builder';
 import { addReportHistoryEntry } from '../../../../lib/report-history';
@@ -40,18 +40,18 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
   // Generate report data
   const report = useMemo(() => {
     if (!template) return null;
-    
+
     try {
       const startTime = performance.now();
       const generated = generateReport(template.config, user.id, user.role);
       const executionTime = performance.now() - startTime;
-      
+
       // Update generation count
       incrementReportGeneration(template.id);
-      
+
       // Add to history
       addReportHistoryEntry(generated, 'manual', executionTime);
-      
+
       return generated;
     } catch (error) {
       console.error('Error generating report:', error);
@@ -63,11 +63,11 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
   // Export to CSV
   const handleExportCSV = () => {
     if (!report || !template) return;
-    
+
     setIsExporting(true);
     try {
       // Transform report data to CSV format
-      const csvData = report.data.map(row => {
+      const csvData = report.data.rows.map(row => {
         const transformedRow: any = {};
         report.columns.forEach(col => {
           transformedRow[col.label] = row[col.id];
@@ -113,7 +113,7 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
           {/* Report Stats */}
           <div className="grid grid-cols-4 gap-4 py-4 border-y">
             <div className="text-center">
-              <div className="text-2xl text-gray-900">{report.rowCount}</div>
+              <div className="text-2xl text-gray-900">{report.data.rowCount}</div>
               <div className="text-sm text-gray-500">Total Rows</div>
             </div>
             <div className="text-center">
@@ -133,16 +133,16 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
           {/* Report Content with Tabs */}
           <Tabs defaultValue="table" className="flex-1 flex flex-col overflow-hidden">
             <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
-              <TabsTrigger 
-                value="table" 
+              <TabsTrigger
+                value="table"
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent"
               >
                 <Table className="h-4 w-4 mr-2" />
                 Table View
               </TabsTrigger>
               {template.config.chart?.enabled && (
-                <TabsTrigger 
-                  value="chart" 
+                <TabsTrigger
+                  value="chart"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent"
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
@@ -168,17 +168,17 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {report.data.length === 0 ? (
+                  {report.data.rows.length === 0 ? (
                     <tr>
-                      <td 
-                        colSpan={report.columns.length} 
+                      <td
+                        colSpan={report.columns.length}
                         className="px-4 py-8 text-center text-gray-500"
                       >
                         No data matches the specified filters
                       </td>
                     </tr>
                   ) : (
-                    report.data.map((row, index) => (
+                    report.data.rows.map((row, index) => (
                       <tr key={index} className="border-b last:border-b-0 hover:bg-gray-50">
                         {report.columns.map(column => (
                           <td
@@ -186,8 +186,8 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
                             className="px-4 py-3 text-gray-700 whitespace-nowrap"
                             style={{ textAlign: column.align || 'left' }}
                           >
-                            {row[column.id] !== null && row[column.id] !== undefined 
-                              ? String(row[column.id]) 
+                            {row[column.id] !== null && row[column.id] !== undefined
+                              ? String(row[column.id])
                               : '-'}
                           </td>
                         ))}
@@ -203,7 +203,7 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
               <TabsContent value="chart" className="flex-1 mt-4">
                 <div className="h-96 border rounded-lg p-6 bg-white">
                   <ReportChart
-                    data={report.data}
+                    data={report.data.rows}
                     columns={report.columns}
                     chartConfig={template.config.chart}
                   />
@@ -217,12 +217,12 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
             <div className="text-sm text-gray-500">
               Generated {new Date(report.generatedAt).toLocaleString()}
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 onClick={handleExportCSV}
-                disabled={isExporting || report.data.length === 0}
+                disabled={isExporting || report.data.rows.length === 0}
               >
                 {isExporting ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -234,7 +234,7 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
               <Button
                 variant="outline"
                 onClick={handleExportPDF}
-                disabled={report.data.length === 0}
+                disabled={report.data.rows.length === 0}
               >
                 <FileText className="h-4 w-4 mr-2" />
                 Export PDF
@@ -242,7 +242,7 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
               <Button
                 variant="outline"
                 onClick={() => setIsDistributionModalOpen(true)}
-                disabled={report.data.length === 0}
+                disabled={report.data.rows.length === 0}
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Distribute
@@ -257,7 +257,7 @@ export const RunCustomReportModal: React.FC<RunCustomReportModalProps> = ({
       <ReportDistributionModal
         open={isDistributionModalOpen}
         onClose={() => setIsDistributionModalOpen(false)}
-        reportData={report.data}
+        reportData={report.data.rows}
         template={template}
         user={user}
       />

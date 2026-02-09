@@ -12,7 +12,7 @@ import { formatPKR } from '../../../lib/currency';
 import { getDealById } from '../../../lib/deals';
 import { getPropertyById } from '../../../lib/data';
 import { Eye, Building2, DollarSign, Users, User, Briefcase, CheckCircle, Clock } from 'lucide-react';
-import { Deal } from '../../../types';
+import type { Deal } from '../../../types/deals';
 
 interface DealCommissionDetailModalProps {
   open: boolean;

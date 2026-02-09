@@ -109,7 +109,7 @@ export const GeneralLedgerWorkspace: React.FC<GeneralLedgerWorkspaceProps> = ({
       return entryDate.getMonth() === thisMonth && entryDate.getFullYear() === thisYear;
     }).length;
 
-    const sortedEntries = [...allEntries].sort((a, b) => 
+    const sortedEntries = [...allEntries].sort((a, b) =>
       new Date(b.date).getTime() - new Date(a.date).getTime()
     );
     const lastEntryDate = sortedEntries.length > 0 ? sortedEntries[0].date : undefined;
@@ -132,7 +132,7 @@ export const GeneralLedgerWorkspace: React.FC<GeneralLedgerWorkspaceProps> = ({
       { label: 'Total Debits', value: formatPKR(metrics.totalDebits), variant: 'info' as const },
       { label: 'Total Credits', value: formatPKR(metrics.totalCredits), variant: 'success' as const },
       { label: 'Net Balance', value: formatPKR(metrics.netBalance), variant: metrics.netBalance >= 0 ? 'success' as const : 'warning' as const },
-      { label: 'Status', value: isBalanced ? 'Balanced' : 'Unbalanced', variant: isBalanced ? 'success' as const : 'danger' as const },
+      { label: 'Status', value: isBalanced ? 'Balanced' : 'Unbalanced', variant: isBalanced ? 'success' as const : 'destructive' as const },
     ];
   }, [metrics]);
 
@@ -239,6 +239,13 @@ export const GeneralLedgerWorkspace: React.FC<GeneralLedgerWorkspaceProps> = ({
     toast.success('Ledger exported to JSON');
   };
 
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setAccountTypeFilter([]);
+    setSourceFilter([]);
+    setDateRange({});
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* WorkspaceHeader */}
@@ -284,7 +291,7 @@ export const GeneralLedgerWorkspace: React.FC<GeneralLedgerWorkspaceProps> = ({
               { value: 'expense', label: 'Expense', count: allEntries.filter(e => e.accountType === 'expense').length },
             ],
             value: accountTypeFilter,
-            onChange: setAccountTypeFilter,
+            onChange: (val) => setAccountTypeFilter(val as string[]),
           },
           {
             id: 'source',
@@ -299,15 +306,10 @@ export const GeneralLedgerWorkspace: React.FC<GeneralLedgerWorkspaceProps> = ({
               { value: 'bank', label: 'Bank', count: allEntries.filter(e => e.source === 'bank').length },
             ],
             value: sourceFilter,
-            onChange: setSourceFilter,
+            onChange: (val) => setSourceFilter(val as string[]),
           },
         ]}
-        onClearAll={() => {
-          setSearchQuery('');
-          setAccountTypeFilter([]);
-          setSourceFilter([]);
-          setDateRange({});
-        }}
+        onClearAll={handleClearFilters}
       />
 
       <div className="p-6 space-y-6">
@@ -318,16 +320,16 @@ export const GeneralLedgerWorkspace: React.FC<GeneralLedgerWorkspaceProps> = ({
         {filteredEntries.length === 0 ? (
           <WorkspaceEmptyState
             {...(searchQuery || accountTypeFilter.length > 0 || sourceFilter.length > 0
-              ? EmptyStatePresets.noResults()
+              ? EmptyStatePresets.noResults(handleClearFilters)
               : {
-                  variant: 'empty' as const,
-                  title: 'No Ledger Entries Yet',
-                  description: 'Start tracking your financial transactions by creating your first manual entry, or entries will be automatically created from commissions, expenses, and other modules.',
-                  primaryAction: {
-                    label: 'Create Manual Entry',
-                    onClick: () => setShowAddModal(true),
-                  },
-                }
+                variant: 'empty' as const,
+                title: 'No Ledger Entries Yet',
+                description: 'Start tracking your financial transactions by creating your first manual entry, or entries will be automatically created from commissions, expenses, and other modules.',
+                primaryAction: {
+                  label: 'Create Manual Entry',
+                  onClick: () => setShowAddModal(true),
+                },
+              }
             )}
           />
         ) : (

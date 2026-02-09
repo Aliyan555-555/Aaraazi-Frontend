@@ -36,22 +36,24 @@ interface CreateLeadModalProps {
   user: {
     id: string;
     name: string;
+    email: string;
+    role: 'admin' | 'agent';
   };
   workspaceId: string;
   onSuccess: (leadId: string) => void;
 }
 
-export function CreateLeadModal({ 
-  open, 
-  onClose, 
-  user, 
+export function CreateLeadModal({
+  open,
+  onClose,
+  user,
   workspaceId,
-  onSuccess 
+  onSuccess
 }: CreateLeadModalProps) {
   // Form state
   const [loading, setLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -90,15 +92,15 @@ export function CreateLeadModal({
 
     // Validate required fields
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
-    
+
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     }
-    
+
     if (!formData.source) {
       newErrors.source = 'Source is required';
     }
@@ -151,7 +153,7 @@ export function CreateLeadModal({
           entityType: 'lead',
         },
         lead,
-        { id: user.id, name: user.name, role: 'agent' }
+        { id: user.id, name: user.name, role: user.role, email: user.email }
       );
 
       if (createdTasks.length > 0) {
@@ -224,7 +226,7 @@ export function CreateLeadModal({
           {/* Contact Information */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Contact Information</h3>
-            
+
             <div>
               <Label htmlFor="name">
                 Full Name <span className="text-red-500">*</span>
@@ -288,7 +290,7 @@ export function CreateLeadModal({
           {/* Source & Attribution */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Source & Attribution</h3>
-            
+
             <div>
               <Label htmlFor="source">
                 Lead Source <span className="text-red-500">*</span>
@@ -357,7 +359,7 @@ export function CreateLeadModal({
           {/* Intent & Timeline */}
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Intent & Timeline</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="intent">Lead Intent</Label>

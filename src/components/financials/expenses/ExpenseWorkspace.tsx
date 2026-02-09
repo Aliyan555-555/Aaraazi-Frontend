@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { User } from '../../../types';
+import { Expense } from '../../../types/financials';
 import { WorkspaceHeader } from '../../workspace/WorkspaceHeader';
 import { WorkspaceSearchBar } from '../../workspace/WorkspaceSearchBar';
 import { WorkspaceEmptyState, EmptyStatePresets } from '../../workspace/WorkspaceEmptyState';
@@ -83,7 +84,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
     const expenses = getExpenses(user.id, user.role);
     return expenses.map(e => ({
       ...e,
-      status: (e as any).status || 'Pending',
+      status: (e as any).status || 'pending',
       propertyTitle: (e as any).propertyTitle,
       vendor: (e as any).vendor,
       receiptNumber: (e as any).receiptNumber,
@@ -116,14 +117,14 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
       })
       .reduce((sum, e) => sum + e.amount, 0);
 
-    const pending = allExpenses.filter(e => e.status === 'Pending');
+    const pending = allExpenses.filter(e => e.status === 'pending');
     const pendingCount = pending.length;
     const pendingAmount = pending.reduce((sum, e) => sum + e.amount, 0);
 
     const approved = allExpenses.filter(e => {
       const expenseDate = new Date(e.date);
       return (
-        e.status === 'Approved' &&
+        e.status === 'paid' &&
         expenseDate.getMonth() === thisMonth &&
         expenseDate.getFullYear() === thisYear
       );
@@ -230,11 +231,11 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
       for (const expense of selectedExpenseObjects) {
         switch (action) {
           case 'approve':
-            updateExpense(expense.id, { status: 'Approved' });
+            updateExpense(expense.id, { status: 'paid' });
             successCount++;
             break;
           case 'reject':
-            updateExpense(expense.id, { status: 'Pending', notes: reason });
+            updateExpense(expense.id, { status: 'pending', notes: reason });
             successCount++;
             break;
           case 'delete':
@@ -259,7 +260,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
   // Handle individual actions
   const handleApprove = async (expenseId: string) => {
     try {
-      updateExpense(expenseId, { status: 'Approved' });
+      updateExpense(expenseId, { status: 'paid' });
       toast.success('Expense approved');
       setRefreshKey(prev => prev + 1);
     } catch (error) {
@@ -270,7 +271,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
 
   const handleReject = async (expenseId: string) => {
     try {
-      updateExpense(expenseId, { status: 'Pending' });
+      updateExpense(expenseId, { status: 'pending' });
       toast.success('Expense rejected');
       setRefreshKey(prev => prev + 1);
     } catch (error) {
@@ -300,7 +301,14 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
         toast.success('Expense updated successfully');
         setEditingExpense(null);
       } else {
-        addExpense({ ...expenseData, agentId: user.id });
+        const newExpense: Expense = {
+          ...expenseData,
+          id: `exp_${Date.now()}`,
+          agentId: user.id,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        addExpense(newExpense);
         toast.success('Expense added successfully');
         setShowAddModal(false);
       }
@@ -349,6 +357,13 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
     toast.success('Expenses exported to JSON');
   };
 
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter([]);
+    setCategoryFilter([]);
+    setPropertyFilter([]);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* WorkspaceHeader */}
@@ -387,12 +402,12 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
             label: 'Status',
             type: 'multi-select',
             options: [
-              { value: 'Pending', label: 'Pending', count: allExpenses.filter(e => e.status === 'Pending').length },
-              { value: 'Approved', label: 'Approved', count: allExpenses.filter(e => e.status === 'Approved').length },
-              { value: 'Paid', label: 'Paid', count: allExpenses.filter(e => e.status === 'Paid').length },
+              { value: 'pending', label: 'Pending', count: allExpenses.filter(e => e.status === 'pending').length },
+              { value: 'paid', label: 'Paid', count: allExpenses.filter(e => e.status === 'paid').length },
+              { value: 'cancelled', label: 'Cancelled', count: allExpenses.filter(e => e.status === 'cancelled').length },
             ],
             value: statusFilter,
-            onChange: setStatusFilter,
+            onChange: (val) => setStatusFilter(val as string[]),
           },
           {
             id: 'category',
@@ -404,7 +419,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
               count: cat.count,
             })),
             value: categoryFilter,
-            onChange: setCategoryFilter,
+            onChange: (val) => setCategoryFilter(val as string[]),
           },
           {
             id: 'property',
@@ -416,15 +431,10 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
               count: prop.count,
             })),
             value: propertyFilter,
-            onChange: setPropertyFilter,
+            onChange: (val) => setPropertyFilter(val as string[]),
           },
         ]}
-        onClearAll={() => {
-          setSearchQuery('');
-          setStatusFilter([]);
-          setCategoryFilter([]);
-          setPropertyFilter([]);
-        }}
+        onClearAll={handleClearFilters}
       />
 
       <div className="p-6 space-y-6">
@@ -443,7 +453,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => setBulkAction('approve')}
-                  disabled={!selectedExpenseObjects.some(e => e.status === 'Pending')}
+                  disabled={!selectedExpenseObjects.some(e => e.status === 'pending')}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Approve
@@ -452,7 +462,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => setBulkAction('reject')}
-                  disabled={!selectedExpenseObjects.some(e => e.status === 'Pending')}
+                  disabled={!selectedExpenseObjects.some(e => e.status === 'pending')}
                 >
                   <XCircle className="h-4 w-4 mr-2" />
                   Reject
@@ -474,16 +484,16 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
         {filteredExpenses.length === 0 ? (
           <WorkspaceEmptyState
             {...(searchQuery || statusFilter.length > 0 || categoryFilter.length > 0 || propertyFilter.length > 0
-              ? EmptyStatePresets.noResults()
+              ? EmptyStatePresets.noResults(handleClearFilters)
               : {
-                  variant: 'empty' as const,
-                  title: 'No Expenses Yet',
-                  description: 'Start tracking expenses by adding your first expense record.',
-                  primaryAction: {
-                    label: 'Add Expense',
-                    onClick: () => setShowAddModal(true),
-                  },
-                }
+                variant: 'empty' as const,
+                title: 'No Expenses Yet',
+                description: 'Start tracking expenses by adding your first expense record.',
+                primaryAction: {
+                  label: 'Add Expense',
+                  onClick: () => setShowAddModal(true),
+                },
+              }
             )}
           />
         ) : (

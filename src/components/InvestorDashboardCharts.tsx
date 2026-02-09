@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Investor, PropertyInvestment } from '../types';
+import { Investor, InvestorInvestment } from '../types';
 import { formatPKR } from '../lib/currency';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, LineChart, Line, CartesianGrid } from 'recharts';
 import { Users, TrendingUp, Building2, Calendar } from 'lucide-react';
 
 interface InvestorDashboardChartsProps {
   investors: Investor[];
-  investments: PropertyInvestment[];
+  investments: InvestorInvestment[];
 }
 
 export const InvestorDashboardCharts: React.FC<InvestorDashboardChartsProps> = ({
@@ -17,7 +17,7 @@ export const InvestorDashboardCharts: React.FC<InvestorDashboardChartsProps> = (
   // Capital by Investor Type
   const capitalByType = useMemo(() => {
     const typeData = investors.reduce((acc, investor) => {
-      const type = investor.type;
+      const type = investor.investorType;
       if (!acc[type]) {
         acc[type] = 0;
       }
@@ -28,7 +28,7 @@ export const InvestorDashboardCharts: React.FC<InvestorDashboardChartsProps> = (
     return Object.entries(typeData).map(([type, value]) => ({
       name: type.charAt(0).toUpperCase() + type.slice(1),
       value,
-      count: investors.filter(i => i.type === type).length
+      count: investors.filter(i => i.investorType === type).length
     }));
   }, [investors]);
 
@@ -45,7 +45,7 @@ export const InvestorDashboardCharts: React.FC<InvestorDashboardChartsProps> = (
   const monthlyTrend = useMemo(() => {
     const months: Record<string, number> = {};
     const today = new Date();
-    
+
     // Initialize last 6 months
     for (let i = 5; i >= 0; i--) {
       const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
@@ -123,7 +123,7 @@ export const InvestorDashboardCharts: React.FC<InvestorDashboardChartsProps> = (
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -145,8 +145,8 @@ export const InvestorDashboardCharts: React.FC<InvestorDashboardChartsProps> = (
             {capitalByType.map((item, index) => (
               <div key={item.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
                   <span className="text-gray-700">{item.name}</span>
@@ -192,9 +192,9 @@ export const InvestorDashboardCharts: React.FC<InvestorDashboardChartsProps> = (
                         'Expired': '#F97316'
                       };
                       return (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={colors[entry.name as keyof typeof colors] || COLORS[index % COLORS.length]} 
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={colors[entry.name as keyof typeof colors] || COLORS[index % COLORS.length]}
                         />
                       );
                     })}
@@ -277,10 +277,10 @@ export const InvestorDashboardCharts: React.FC<InvestorDashboardChartsProps> = (
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip content={<CustomTooltip />} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="amount" 
-                    stroke="#3B82F6" 
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#3B82F6"
                     strokeWidth={2}
                     dot={{ fill: '#3B82F6', r: 4 }}
                     activeDot={{ r: 6 }}

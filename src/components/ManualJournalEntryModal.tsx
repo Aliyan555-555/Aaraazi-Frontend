@@ -37,7 +37,7 @@ export const ManualJournalEntryModal: React.FC<ManualJournalEntryModalProps> = (
   const [reference, setReference] = useState('');
   const [entries, setEntries] = useState<JournalEntryLine[]>([
     {
-      account: '',
+      accountName: '',
       accountType: 'assets',
       description: '',
       debit: 0,
@@ -57,7 +57,7 @@ export const ManualJournalEntryModal: React.FC<ManualJournalEntryModalProps> = (
     setEntries([
       ...entries,
       {
-        account: '',
+        accountName: '',
         accountType: 'assets',
         description: '',
         debit: 0,
@@ -91,7 +91,7 @@ export const ManualJournalEntryModal: React.FC<ManualJournalEntryModalProps> = (
       return;
     }
 
-    if (entries.some(e => !e.account || !e.description)) {
+    if (entries.some(e => !e.accountName || !e.description)) {
       toast.error('Please fill in all journal entry lines');
       return;
     }
@@ -117,7 +117,7 @@ export const ManualJournalEntryModal: React.FC<ManualJournalEntryModalProps> = (
     setReference('');
     setEntries([
       {
-        account: '',
+        accountName: '',
         accountType: 'assets',
         description: '',
         debit: 0,
@@ -214,8 +214,8 @@ export const ManualJournalEntryModal: React.FC<ManualJournalEntryModalProps> = (
                       </TableCell>
                       <TableCell>
                         <Select
-                          value={entry.account}
-                          onValueChange={(value) => updateLine(index, 'account', value)}
+                          value={entry.accountName}
+                          onValueChange={(value) => updateLine(index, 'accountName', value)}
                         >
                           <SelectTrigger className="h-9">
                             <SelectValue placeholder="Select account" />

@@ -31,6 +31,7 @@ export interface InfoPanelItem {
   label: string;
   value: React.ReactNode;
   icon?: React.ReactNode;
+  description?: string;
   copyable?: boolean;
   href?: string;
   onClick?: () => void;
@@ -105,8 +106,8 @@ export function InfoPanel({
             <div
               key={index}
               className={`${itemPaddingClasses[density]} ${index < data.length - columns && showDivider
-                  ? 'border-b border-gray-100'
-                  : ''
+                ? 'border-b border-gray-100'
+                : ''
                 }`}
             >
               {/* Label */}
@@ -135,6 +136,11 @@ export function InfoPanel({
                 ) : (
                   <div className="text-sm text-[#030213] font-medium flex-1">
                     {item.value}
+                    {item.description && (
+                      <p className="text-[10px] text-gray-400 mt-0.5 font-normal">
+                        {item.description}
+                      </p>
+                    )}
                   </div>
                 )}
 

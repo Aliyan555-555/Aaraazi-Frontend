@@ -49,15 +49,15 @@ export function StatusBadge({ status, variant, size = 'md' }: StatusBadgeProps) 
   // Map common statuses to brand-aligned variants
   const getVariant = (status: string): StatusBadgeProps['variant'] => {
     const statusLower = status.toLowerCase().replace(/_/g, ' ');
-    
+
     // SUCCESS (Forest Green #2D6A54) - Positive, ready states
     if ([
-      'available', 
-      'active', 
-      'approved', 
-      'accepted', 
-      'success', 
-      'paid', 
+      'available',
+      'active',
+      'approved',
+      'accepted',
+      'success',
+      'paid',
       'verified',
       'qualified', // Lead status
       'won', // Deal won
@@ -65,14 +65,14 @@ export function StatusBadge({ status, variant, size = 'md' }: StatusBadgeProps) 
     ].includes(statusLower)) {
       return 'success';
     }
-    
+
     // WARNING (Terracotta #C17052) - Attention needed, in negotiation
     if ([
-      'pending', 
-      'in progress', 
-      'review', 
-      'offers received', 
-      'negotiation', 
+      'pending',
+      'in progress',
+      'review',
+      'offers received',
+      'negotiation',
       'under contract',
       'contacted', // Lead status
       'processing',
@@ -81,7 +81,7 @@ export function StatusBadge({ status, variant, size = 'md' }: StatusBadgeProps) 
     ].includes(statusLower)) {
       return 'warning';
     }
-    
+
     // PROGRESS (Warm blue) - Active work in progress
     if ([
       'new',
@@ -91,11 +91,11 @@ export function StatusBadge({ status, variant, size = 'md' }: StatusBadgeProps) 
     ].includes(statusLower)) {
       return 'progress';
     }
-    
+
     // NEUTRAL (Warm gray) - Completed, sold, inactive (not negative)
     if ([
-      'sold', 
-      'completed', 
+      'sold',
+      'completed',
       'closed',
       'archived',
       'finalized',
@@ -104,14 +104,14 @@ export function StatusBadge({ status, variant, size = 'md' }: StatusBadgeProps) 
     ].includes(statusLower)) {
       return 'neutral';
     }
-    
+
     // DESTRUCTIVE (Red) - Errors, rejections, cancellations
     if ([
-      'rejected', 
-      'cancelled', 
-      'overdue', 
-      'failed', 
-      'expired', 
+      'rejected',
+      'cancelled',
+      'overdue',
+      'failed',
+      'expired',
       'inactive',
       'lost', // Deal lost
       'declined',
@@ -119,45 +119,45 @@ export function StatusBadge({ status, variant, size = 'md' }: StatusBadgeProps) 
     ].includes(statusLower)) {
       return 'destructive';
     }
-    
+
     // INFO (Blue) - Informational, matched
     if ([
-      'matched', 
+      'matched',
       'assigned',
       'notified',
       'sent'
     ].includes(statusLower)) {
       return 'info';
     }
-    
+
     return 'default';
   };
 
-  const finalVariant = variant || getVariant(status);
-  
+  const finalVariant = (variant || getVariant(status) || 'default') as keyof typeof variantClasses;
+
   // Variant classes using aaraazi brand palette
   const variantClasses = {
     // SUCCESS: Forest Green - positive, ready states
     success: 'bg-success-bg text-success border-success/20',
-    
+
     // WARNING: Terracotta - attention needed
     warning: 'bg-warning-bg text-warning-foreground border-warning/20',
-    
+
     // PROGRESS: Warm blue - active work
     progress: 'bg-info-bg text-info-foreground border-info/20',
-    
+
     // NEUTRAL: Warm gray - completed (not negative)
     neutral: 'bg-neutral-100 text-slate-700 border-neutral-200',
-    
+
     // DESTRUCTIVE: Red - errors, cancellations
     destructive: 'bg-destructive-bg text-destructive border-destructive/20',
-    
+
     // INFO: Blue - informational
     info: 'bg-info-bg text-info-foreground border-info/20',
-    
+
     // DEFAULT: Light neutral
     default: 'bg-muted text-muted-foreground border-border',
-    
+
     // SECONDARY: Brand secondary
     secondary: 'bg-secondary text-secondary-foreground border-secondary/20'
   };

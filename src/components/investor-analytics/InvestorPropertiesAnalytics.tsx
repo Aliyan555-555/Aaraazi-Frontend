@@ -12,6 +12,7 @@ import { Separator } from '../ui/separator';
 import { User, Property, InvestorInvestment, InvestorDistribution } from '../../types';
 import { getProperties } from '../../lib/data';
 import { getInvestorById } from '../../lib/investors';
+import { getAllInvestorInvestments } from '../../lib/investors';
 import { getAllInvestorDistributions } from '../../lib/saleDistribution';
 import { getPropertyInvestorTransactions } from '../../lib/investorTransactions';
 import { formatPKR } from '../../lib/currency';
@@ -54,7 +55,7 @@ export function InvestorPropertiesAnalytics({
 
   // Load all investments
   const allInvestments = useMemo(() => {
-    return getAllInvestorDistributions();
+    return getAllInvestorInvestments();
   }, []);
 
   // Load all distributions
@@ -70,7 +71,7 @@ export function InvestorPropertiesAnalytics({
 
     // Active investments
     const activeInvestments = allInvestments.filter((inv) => inv.status === 'active');
-    const exitedInvestments = allInvestments.filter((inv) => inv.status === 'exited');
+    const exitedInvestments = allInvestments.filter((inv) => inv.status === 'sold');
 
     // Total investment amounts
     const totalInvestedActive = activeInvestments.reduce(
@@ -108,11 +109,11 @@ export function InvestorPropertiesAnalytics({
 
     // Distributions
     const pendingDistributions = allDistributions.filter(
-      (d) => d.distributionStatus === 'pending'
+      (d) => d.status === 'pending'
     );
-    const paidDistributions = allDistributions.filter((d) => d.distributionStatus === 'paid');
-    const pendingAmount = pendingDistributions.reduce((sum, d) => sum + d.totalReturn, 0);
-    const paidAmount = paidDistributions.reduce((sum, d) => sum + d.totalReturn, 0);
+    const paidDistributions = allDistributions.filter((d) => d.status === 'paid');
+    const pendingAmount = pendingDistributions.reduce((sum, d) => sum + d.amount, 0);
+    const paidAmount = paidDistributions.reduce((sum, d) => sum + d.amount, 0);
 
     // Unique investors count
     const uniqueInvestors = new Set(allInvestments.map((inv) => inv.investorId));
@@ -122,7 +123,7 @@ export function InvestorPropertiesAnalytics({
     const averageROI =
       investmentsWithROI.length > 0
         ? investmentsWithROI.reduce((sum, inv) => sum + (inv.roi || 0), 0) /
-          investmentsWithROI.length
+        investmentsWithROI.length
         : 0;
 
     return {
@@ -140,7 +141,7 @@ export function InvestorPropertiesAnalytics({
       totalInvestedActive,
       totalInvestedExited,
       totalInvested: totalInvestedActive + totalInvestedExited,
-      
+
       // Active portfolio
       totalRentalIncome,
       totalExpenses,
@@ -267,9 +268,8 @@ export function InvestorPropertiesAnalytics({
                     <ArrowDownRight className="w-3 h-3 text-red-600" />
                   )}
                   <span
-                    className={`text-xs ${
-                      analytics.totalUnrealizedProfit >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}
+                    className={`text-xs ${analytics.totalUnrealizedProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}
                   >
                     {formatPKR(Math.abs(analytics.totalUnrealizedProfit))} unrealized
                   </span>
@@ -366,9 +366,8 @@ export function InvestorPropertiesAnalytics({
                 <div className="flex justify-between p-2 bg-primary/5 rounded">
                   <span className="font-medium">Unrealized Profit:</span>
                   <span
-                    className={`font-bold ${
-                      analytics.totalUnrealizedProfit >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}
+                    className={`font-bold ${analytics.totalUnrealizedProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}
                   >
                     {formatPKR(analytics.totalUnrealizedProfit)}
                   </span>
@@ -463,11 +462,10 @@ export function InvestorPropertiesAnalytics({
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-muted-foreground">Net Cash Flow</p>
                     <p
-                      className={`text-xl font-bold ${
-                        analytics.totalRentalIncome - analytics.totalExpenses >= 0
-                          ? 'text-blue-700'
-                          : 'text-red-700'
-                      }`}
+                      className={`text-xl font-bold ${analytics.totalRentalIncome - analytics.totalExpenses >= 0
+                        ? 'text-blue-700'
+                        : 'text-red-700'
+                        }`}
                     >
                       {formatPKR(analytics.totalRentalIncome - analytics.totalExpenses)}
                     </p>
@@ -484,9 +482,8 @@ export function InvestorPropertiesAnalytics({
                   <div className="p-3 bg-muted rounded-lg">
                     <p className="text-sm text-muted-foreground">Unrealized Profit (Active)</p>
                     <p
-                      className={`text-2xl font-bold ${
-                        analytics.totalUnrealizedProfit >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}
+                      className={`text-2xl font-bold ${analytics.totalUnrealizedProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                        }`}
                     >
                       {formatPKR(analytics.totalUnrealizedProfit)}
                     </p>
@@ -550,7 +547,7 @@ function PropertySummaryCard({
   onNavigate?: (propertyId: string) => void;
 }) {
   const investments = useMemo(() => {
-    const allInvestments = getAllInvestorDistributions();
+    const allInvestments = getAllInvestorInvestments();
     return allInvestments.filter((inv) => inv.propertyId === property.id);
   }, [property.id]);
 
@@ -588,9 +585,8 @@ function PropertySummaryCard({
               <div className="p-2 bg-muted rounded">
                 <p className="text-xs text-muted-foreground">Unrealized Profit</p>
                 <p
-                  className={`font-medium ${
-                    totalUnrealizedProfit >= 0 ? 'text-green-600' : 'text-red-600'
-                  }`}
+                  className={`font-medium ${totalUnrealizedProfit >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}
                 >
                   {formatPKR(totalUnrealizedProfit)}
                 </p>

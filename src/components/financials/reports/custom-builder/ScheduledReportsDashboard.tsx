@@ -21,7 +21,7 @@ import { ScheduledReportStatus } from '../../../../types/report-history';
 import { getScheduledReportStatuses, getTemplateHistory } from '../../../../lib/report-history';
 import { WorkspaceHeader } from '../../../workspace/WorkspaceHeader';
 import { Button } from '../../../ui/button';
-import { 
+import {
   Calendar,
   Clock,
   CheckCircle,
@@ -87,25 +87,25 @@ export const ScheduledReportsDashboard: React.FC<ScheduledReportsDashboardProps>
   // Format frequency
   const formatFrequency = (template: CustomReportTemplate): string => {
     if (!template.config.schedule) return 'N/A';
-    
+
     const { frequency, dayOfWeek, dayOfMonth, time } = template.config.schedule;
-    
+
     switch (frequency) {
       case 'daily':
         return `Daily at ${time}`;
-      
+
       case 'weekly':
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const day = days[dayOfWeek ?? 1];
         return `Weekly on ${day} at ${time}`;
-      
+
       case 'monthly':
         const suffix = dayOfMonth === 1 ? 'st' : dayOfMonth === 2 ? 'nd' : dayOfMonth === 3 ? 'rd' : 'th';
         return `Monthly on ${dayOfMonth}${suffix} at ${time}`;
-      
+
       case 'quarterly':
         return `Quarterly at ${time}`;
-      
+
       default:
         return 'Unknown';
     }
@@ -122,7 +122,7 @@ export const ScheduledReportsDashboard: React.FC<ScheduledReportsDashboardProps>
     if (!template.config.schedule) return;
 
     const newEnabled = !template.config.schedule.enabled;
-    
+
     onUpdateTemplate(template.id, {
       config: {
         ...template.config,
@@ -134,8 +134,8 @@ export const ScheduledReportsDashboard: React.FC<ScheduledReportsDashboardProps>
     });
 
     toast.success(
-      newEnabled 
-        ? `Schedule enabled for "${template.name}"` 
+      newEnabled
+        ? `Schedule enabled for "${template.name}"`
         : `Schedule paused for "${template.name}"`
     );
   };
@@ -165,7 +165,7 @@ export const ScheduledReportsDashboard: React.FC<ScheduledReportsDashboardProps>
           {
             label: 'Paused',
             value: scheduledStatuses.filter(s => !s.isActive).length,
-            variant: 'secondary',
+            variant: 'default',
           },
           {
             label: 'Total Runs',
@@ -176,9 +176,9 @@ export const ScheduledReportsDashboard: React.FC<ScheduledReportsDashboardProps>
             label: 'Success Rate',
             value: scheduledStatuses.length > 0
               ? Math.round(
-                  (scheduledStatuses.reduce((sum, s) => sum + s.successfulRuns, 0) /
+                (scheduledStatuses.reduce((sum, s) => sum + s.successfulRuns, 0) /
                   scheduledStatuses.reduce((sum, s) => sum + s.totalRuns, 0)) * 100
-                ) + '%'
+              ) + '%'
               : 'N/A',
             variant: 'info',
           },
@@ -225,7 +225,7 @@ export const ScheduledReportsDashboard: React.FC<ScheduledReportsDashboardProps>
                         <div>
                           <div className="text-gray-900">{status.templateName}</div>
                           <div className="text-xs text-gray-500 mt-0.5">
-                            {template.config.dataSources.length} source{template.config.dataSources.length !== 1 ? 's' : ''} • 
+                            {template.config.dataSources.length} source{template.config.dataSources.length !== 1 ? 's' : ''} •
                             {' '}{template.config.fields.length} field{template.config.fields.length !== 1 ? 's' : ''}
                           </div>
                         </div>
@@ -282,12 +282,11 @@ export const ScheduledReportsDashboard: React.FC<ScheduledReportsDashboardProps>
                                 {successRate}% success
                               </div>
                               <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full ${
-                                    successRate >= 90 ? 'bg-green-500' :
-                                    successRate >= 70 ? 'bg-yellow-500' :
-                                    'bg-red-500'
-                                  }`}
+                                <div
+                                  className={`h-full ${successRate >= 90 ? 'bg-green-500' :
+                                      successRate >= 70 ? 'bg-yellow-500' :
+                                        'bg-red-500'
+                                    }`}
                                   style={{ width: `${successRate}%` }}
                                 />
                               </div>

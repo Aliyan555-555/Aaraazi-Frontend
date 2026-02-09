@@ -4,10 +4,10 @@ import { Button } from '../../ui/button';
 import { Download, Printer, Share2, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatPKR } from '../../../lib/currency';
 import { TrialBalance, ChangesInEquity } from '../../../types/accounting';
-import { 
-  ProfitAndLoss, 
-  BalanceSheet, 
-  CashFlowStatement, 
+import {
+  ProfitAndLoss,
+  BalanceSheet,
+  CashFlowStatement,
   CommissionReport,
   ExpenseSummaryReport,
   PropertyPerformanceReport,
@@ -119,7 +119,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
             <tbody>
               {/* Group by account type */}
               {['asset', 'liability', 'equity', 'revenue', 'expense'].map(type => {
-                const accountsOfType = data.accounts.filter(acc => acc.type === type);
+                const accountsOfType = data.accounts.filter(acc => acc.accountType === type);
                 if (accountsOfType.length === 0) return null;
 
                 return (
@@ -137,17 +137,17 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
                         <td className="py-2 px-4 text-gray-900">{account.accountName}</td>
                         <td className="py-2 px-4 text-center text-xs text-gray-500 uppercase">{account.normalBalance}</td>
                         <td className="py-2 px-4 text-right text-gray-900">
-                          {account.debit > 0 ? formatPKR(account.debit) : '-'}
+                          {account.debitBalance > 0 ? formatPKR(account.debitBalance) : '-'}
                         </td>
                         <td className="py-2 px-4 text-right text-gray-900">
-                          {account.credit > 0 ? formatPKR(account.credit) : '-'}
+                          {account.creditBalance > 0 ? formatPKR(account.creditBalance) : '-'}
                         </td>
                       </tr>
                     ))}
                   </React.Fragment>
                 );
               })}
-              
+
               {/* Totals Row */}
               <tr className="border-t-2 border-gray-900 bg-gray-50">
                 <td colSpan={3} className="py-3 px-4 text-right">
@@ -160,7 +160,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
                   <strong>{formatPKR(data.totalCredits)}</strong>
                 </td>
               </tr>
-              
+
               {/* Balance Status */}
               <tr>
                 <td colSpan={5} className="py-2 px-4 text-center">
@@ -212,7 +212,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
             <span className="text-gray-700">Beginning Balance</span>
             <span className="text-gray-900">{formatPKR(data.beginningBalance)}</span>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex justify-between items-center text-green-600">
               <span>Add: Capital Contributions</span>
@@ -242,7 +242,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
         {data.transactions && data.transactions.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-gray-900">Detailed Transactions</h3>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
@@ -260,19 +260,17 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
                         {new Date(txn.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </td>
                       <td className="py-2 px-4">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          txn.type === 'owner-contribution' ? 'bg-green-100 text-green-700' : 
-                          txn.type === 'owner-withdrawal' ? 'bg-red-100 text-red-700' : 
-                          txn.type === 'dividend' ? 'bg-orange-100 text-orange-700' :
-                          'bg-blue-100 text-blue-700'
-                        }`}>
+                        <span className={`px-2 py-1 rounded text-xs ${txn.type === 'owner-contribution' ? 'bg-green-100 text-green-700' :
+                          txn.type === 'owner-withdrawal' ? 'bg-red-100 text-red-700' :
+                            txn.type === 'dividend' ? 'bg-orange-100 text-orange-700' :
+                              'bg-blue-100 text-blue-700'
+                          }`}>
                           {txn.type}
                         </span>
                       </td>
                       <td className="py-2 px-4 text-gray-900">{txn.description}</td>
-                      <td className={`py-2 px-4 text-right ${
-                        txn.type === 'owner-contribution' || txn.type === 'net-income' ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <td className={`py-2 px-4 text-right ${txn.type === 'owner-contribution' || txn.type === 'net-income' ? 'text-green-600' : 'text-red-600'
+                        }`}>
                         {txn.type === 'owner-contribution' || txn.type === 'net-income' ? '+' : '-'} {formatPKR(txn.amount)}
                       </td>
                     </tr>
@@ -434,7 +432,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
         {/* Assets Section */}
         <div className="bg-blue-50 rounded-lg p-6 space-y-3">
           <h3 className="text-gray-900 pb-2 border-b border-blue-200">Assets</h3>
-          
+
           {/* Current Assets */}
           <div className="space-y-2">
             <p className="text-sm text-gray-700 mt-3">Current Assets</p>
@@ -454,7 +452,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
               <span className="text-gray-800">Total Current Assets</span>
               <span className="text-gray-800">{formatPKR(data.assets.currentAssets.totalCurrentAssets)}</span>
             </div>
-            
+
             {/* Non-Current Assets */}
             <p className="text-sm text-gray-700 mt-4">Non-Current Assets</p>
             <div className="flex justify-between items-center ml-4">
@@ -469,7 +467,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
               <span className="text-gray-800">Total Non-Current Assets</span>
               <span className="text-gray-800">{formatPKR(data.assets.nonCurrentAssets.totalNonCurrentAssets)}</span>
             </div>
-            
+
             <div className="flex justify-between items-center pt-3 border-t-2 border-blue-400">
               <span className="text-gray-900"><strong>Total Assets</strong></span>
               <span className="text-gray-900"><strong>{formatPKR(data.assets.totalAssets)}</strong></span>
@@ -480,7 +478,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
         {/* Liabilities Section */}
         <div className="bg-red-50 rounded-lg p-6 space-y-3">
           <h3 className="text-gray-900 pb-2 border-b border-red-200">Liabilities</h3>
-          
+
           {/* Current Liabilities */}
           <div className="space-y-2">
             <p className="text-sm text-gray-700 mt-3">Current Liabilities</p>
@@ -500,7 +498,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
               <span className="text-gray-800">Total Current Liabilities</span>
               <span className="text-gray-800">{formatPKR(data.liabilities.currentLiabilities.totalCurrentLiabilities)}</span>
             </div>
-            
+
             {/* Long-Term Liabilities */}
             <p className="text-sm text-gray-700 mt-4">Long-Term Liabilities</p>
             <div className="flex justify-between items-center ml-4">
@@ -511,7 +509,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
               <span className="text-gray-800">Total Long-Term Liabilities</span>
               <span className="text-gray-800">{formatPKR(data.liabilities.longTermLiabilities.totalLongTermLiabilities)}</span>
             </div>
-            
+
             <div className="flex justify-between items-center pt-3 border-t-2 border-red-400">
               <span className="text-gray-900"><strong>Total Liabilities</strong></span>
               <span className="text-gray-900"><strong>{formatPKR(data.liabilities.totalLiabilities)}</strong></span>
@@ -786,9 +784,8 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
                     <td className="py-3 px-4 text-gray-900">{comm.propertyTitle}</td>
                     <td className="py-3 px-4 text-gray-700">{comm.agentName}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        comm.dealType === 'sale' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
+                      <span className={`px-2 py-1 rounded text-xs ${comm.dealType === 'sale' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
                         {comm.dealType}
                       </span>
                     </td>
@@ -865,7 +862,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
                     <span className="text-gray-900">{formatPKR(cat.total)} ({cat.percentage.toFixed(1)}%)</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-blue-500 h-2 rounded-full"
                       style={{ width: `${cat.percentage}%` }}
                     ></div>
@@ -1036,11 +1033,10 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
                   <tr key={prop.id} className="border-b border-gray-200 hover:bg-gray-100">
                     <td className="py-3 px-4 text-gray-900">{prop.title}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className={`px-2 py-1 rounded text-xs capitalize ${
-                        prop.status === 'sold' ? 'bg-green-100 text-green-700' :
+                      <span className={`px-2 py-1 rounded text-xs capitalize ${prop.status === 'sold' ? 'bg-green-100 text-green-700' :
                         prop.status === 'available' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
+                          'bg-gray-100 text-gray-700'
+                        }`}>
                         {prop.status}
                       </span>
                     </td>

@@ -9,9 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { Investor, User } from '../types';
-import { 
-  validateCNIC, 
-  validatePakistaniPhone, 
+import {
+  validateCNIC,
+  validatePakistaniPhone,
   validateEmail,
   isDuplicateEmail,
   formatCNIC,
@@ -57,22 +57,22 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
     name: '',
     email: '',
     phone: '',
-    type: 'individual' as 'individual' | 'company' | 'fund' | 'partnership',
-    status: 'active' as 'active' | 'inactive' | 'prospective',
+    investorType: 'individual' as 'individual' | 'company' | 'partnership' | 'trust' | 'corporate' | 'institutional',
+    status: 'active' as 'active' | 'inactive' | 'prospective' | 'archived',
     address: '',
     city: '',
-    
+
     // Legal Info
     nationalId: '',
     taxId: '',
     sourceOfFunds: '',
-    
+
     // Secondary Contact
     secondaryContactName: '',
     secondaryContactPhone: '',
     secondaryContactEmail: '',
     secondaryContactRelationship: '',
-    
+
     // Bank Details
     bankAccountTitle: '',
     bankAccountNumber: '',
@@ -80,13 +80,13 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
     bankBranchName: '',
     bankIban: '',
     bankSwiftCode: '',
-    
+
     // KYC
     kycStatus: 'pending' as 'pending' | 'verified' | 'rejected' | 'expired',
     kycVerifiedDate: '',
     kycExpiryDate: '',
     kycNotes: '',
-    
+
     // Preferences
     prefMinAmount: '',
     prefMaxAmount: '',
@@ -94,7 +94,7 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
     prefLocations: [] as string[],
     prefRiskTolerance: 'medium' as 'low' | 'medium' | 'high',
     prefInvestmentStrategy: 'buy-and-hold' as 'buy-and-hold' | 'flip' | 'rental-income' | 'development',
-    
+
     // Management
     relationshipManager: '',
     tags: [] as string[],
@@ -109,7 +109,7 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
         name: investor.name || '',
         email: investor.email || '',
         phone: investor.phone || '',
-        type: investor.type || 'individual',
+        investorType: investor.investorType || 'individual',
         status: investor.status || 'active',
         address: investor.address || '',
         city: investor.city || '',
@@ -135,7 +135,7 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
         prefPropertyTypes: investor.preferences?.preferredPropertyTypes || [],
         prefLocations: investor.preferences?.preferredLocations || [],
         prefRiskTolerance: investor.preferences?.riskTolerance || 'medium',
-        prefInvestmentStrategy: investor.preferences?.investmentStrategy || 'buy-and-hold',
+        prefInvestmentStrategy: (investor.preferences?.investmentStrategy as any) || 'buy-and-hold',
         relationshipManager: investor.relationshipManager || '',
         tags: investor.tags || [],
         notes: investor.notes || ''
@@ -146,7 +146,7 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
         name: '',
         email: '',
         phone: '',
-        type: 'individual',
+        investorType: 'individual',
         status: 'active',
         address: '',
         city: '',
@@ -242,7 +242,7 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
       name: formData.name.trim(),
       email: formData.email.trim().toLowerCase(),
       phone: formatPakistaniPhone(formData.phone),
-      type: formData.type,
+      investorType: formData.investorType,
       status: formData.status,
       address: formData.address.trim() || undefined,
       city: formData.city.trim() || undefined,
@@ -336,8 +336,8 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
             {investor ? 'Edit Investor' : 'Add New Investor'}
           </DialogTitle>
           <DialogDescription>
-            {investor 
-              ? 'Update investor information and preferences' 
+            {investor
+              ? 'Update investor information and preferences'
               : 'Add a new investor with complete profile information'}
           </DialogDescription>
         </DialogHeader>
@@ -385,16 +385,18 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
               </div>
 
               <div>
-                <Label htmlFor="type">Investor Type</Label>
-                <Select value={formData.type} onValueChange={(value: any) => setFormData({ ...formData, type: value })}>
+                <Label htmlFor="investorType">Investor Type</Label>
+                <Select value={formData.investorType} onValueChange={(value: any) => setFormData({ ...formData, investorType: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="individual">Individual</SelectItem>
                     <SelectItem value="company">Company</SelectItem>
-                    <SelectItem value="fund">Investment Fund</SelectItem>
+                    <SelectItem value="corporate">Corporate</SelectItem>
+                    <SelectItem value="institutional">Institutional</SelectItem>
                     <SelectItem value="partnership">Partnership</SelectItem>
+                    <SelectItem value="trust">Trust</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -739,11 +741,10 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
                   <Badge
                     key={type}
                     variant="outline"
-                    className={`cursor-pointer transition-colors ${
-                      formData.prefPropertyTypes.includes(type)
-                        ? 'bg-blue-100 text-blue-800 border-blue-300'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`cursor-pointer transition-colors ${formData.prefPropertyTypes.includes(type)
+                      ? 'bg-blue-100 text-blue-800 border-blue-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                      }`}
                     onClick={() => togglePropertyType(type)}
                   >
                     {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -759,11 +760,10 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
                   <Badge
                     key={area}
                     variant="outline"
-                    className={`cursor-pointer transition-colors text-xs ${
-                      formData.prefLocations.includes(area)
-                        ? 'bg-green-100 text-green-800 border-green-300'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`cursor-pointer transition-colors text-xs ${formData.prefLocations.includes(area)
+                      ? 'bg-green-100 text-green-800 border-green-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                      }`}
                     onClick={() => {
                       setFormData(prev => ({
                         ...prev,
@@ -837,11 +837,10 @@ export const InvestorFormModal: React.FC<InvestorFormModalProps> = ({
                   <Badge
                     key={tag}
                     variant="outline"
-                    className={`cursor-pointer transition-colors text-xs ${
-                      formData.tags.includes(tag)
-                        ? 'bg-purple-100 text-purple-800 border-purple-300'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`cursor-pointer transition-colors text-xs ${formData.tags.includes(tag)
+                      ? 'bg-purple-100 text-purple-800 border-purple-300'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                      }`}
                     onClick={() => toggleTag(tag)}
                   >
                     {tag}
