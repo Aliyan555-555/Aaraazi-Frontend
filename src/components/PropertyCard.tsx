@@ -62,9 +62,11 @@ export function PropertyCard({
   return (
     <Card className="overflow-visible hover:shadow-lg transition-shadow cursor-pointer group">
       {/* Image */}
-      <button
+      <div
         onClick={onClick}
-        className="relative h-48 bg-muted overflow-hidden w-full text-left border-0 p-0"
+        className="relative h-48 bg-muted overflow-hidden w-full text-left border-0 p-0 cursor-pointer"
+        role="button"
+        tabIndex={0}
         aria-label={`View details for ${property.address || 'property'}`}
       >
         {property.images && property.images.length > 0 ? (
@@ -185,7 +187,7 @@ export function PropertyCard({
           <div className="flex items-center gap-1">
             <Maximize className="h-4 w-4" />
             <span>
-              {formatAreaDisplay(property.area, property.areaUnit)}
+              {formatAreaDisplay(Number(property.area), property.areaUnit)}
             </span>
           </div>
           {property.bedrooms !== undefined && property.bedrooms > 0 && (
@@ -256,7 +258,7 @@ export function PropertyCard({
         {/* Status Footer */}
         <div className="flex items-center justify-between pt-2 border-t">
           <div className="text-muted-foreground">
-            {property.currentStatus || 'Available'}
+            {property.status || 'Available'}
           </div>
 
           {hasInternalMatch && (

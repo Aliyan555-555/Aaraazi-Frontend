@@ -11,7 +11,21 @@ export type PropertyType =
   | "commercial"
   | "land"
   | "industrial";
-export type AreaUnit = "sqft" | "sqyards" | "marla" | "kanal";
+export type AreaUnit =
+  | "sqft"
+  | "sqyards"
+  | "marla"
+  | "kanal"
+  | "sq-feet"
+  | "sq-yards"
+  | "acres"
+  | "SQFT"
+  | "SQMETER"
+  | "SQYARDS"
+  | "MARLA"
+  | "KANAL"
+  | "ACRE"
+  | "HECTARE";
 export type PropertyStatus =
   | "available"
   | "sold"

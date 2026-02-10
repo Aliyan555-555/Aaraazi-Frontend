@@ -53,8 +53,8 @@ export type {
   Address,
   MasterProperty,
   PropertyListing,
-  Deal,
-  Notification,
+  Deal as SchemaDeal,
+  Notification as SchemaNotification,
 } from "./schema";
 
 // ============================================================================
@@ -101,6 +101,7 @@ export * from "./contacts";
 export * from "./cycles";
 export * from "./requirements";
 export * from "./transactions";
+export * from "./payments";
 export * from "./financials";
 
 // ============================================================================
@@ -111,6 +112,7 @@ export * from "./accounting";
 export * from "./crm";
 export * from "./custom-reports";
 export * from "./deals";
+export type { PaymentPlan } from "./payments";
 export * from "./documents";
 export * from "./investors";
 export * from "./inventory";

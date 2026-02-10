@@ -6,6 +6,7 @@ import {
   Lead,
   CRMTask,
   CRMInteraction,
+  PropertyPayment,
 } from "../types";
 import { City, Area, Block, Building } from "../types/locations";
 
@@ -461,4 +462,50 @@ export const toggleBuildingStatus = (id: string) => {
     return list[index];
   }
   return null;
+};
+
+// ================= PROPERTY PAYMENTS =================
+
+const PROPERTY_PAYMENTS_KEY = "aaraazi_property_payments_v4";
+
+export const getPropertyPayments = (propertyId: string): PropertyPayment[] => {
+  if (typeof window === "undefined") return [];
+  const allPayments = getFromStorage<PropertyPayment[]>(
+    PROPERTY_PAYMENTS_KEY,
+    [],
+  );
+  return allPayments.filter((p) => p.propertyId === propertyId);
+};
+
+export const addPropertyPayment = async (
+  input: Omit<PropertyPayment, "id" | "createdAt" | "updatedAt">,
+): Promise<PropertyPayment> => {
+  if (typeof window === "undefined") throw new Error("Cannot run on server");
+  const allPayments = getFromStorage<PropertyPayment[]>(
+    PROPERTY_PAYMENTS_KEY,
+    [],
+  );
+
+  const newPayment: PropertyPayment = {
+    ...input,
+    id: `pay_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  allPayments.push(newPayment);
+  saveToStorage(PROPERTY_PAYMENTS_KEY, allPayments);
+
+  return newPayment;
+};
+
+export const updatePropertyPaymentSummary = (propertyId: string): void => {
+  if (typeof window === "undefined") return;
+  const payments = getPropertyPayments(propertyId);
+  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  window.dispatchEvent(
+    new CustomEvent("propertyPaymentUpdated", {
+      detail: { propertyId, totalPaid },
+    }),
+  );
 };

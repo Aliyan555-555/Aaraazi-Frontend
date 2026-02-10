@@ -3,26 +3,33 @@
  * Handles all operations related to selling properties
  */
 
-import { SellCycle, Offer, Property, SharingSettings, PrivacySettings, CollaborationData } from '../types';
-import { getProperties, updateProperty } from './data';
-import { transferOwnership } from './ownership';
-import { saveTransaction } from './transactions';
-import { syncPropertyStatusFromSellCycle } from './propertyStatusSync';
-import { formatPropertyAddress } from './utils';
-import { formatPKR } from './currency';
-import { createDealFromOffer, getDealById } from './deals';
-import { createNotification } from './notifications';
-import { getBuyerRequirementById } from './buyerRequirements';
-import { 
+import {
+  SellCycle,
+  Offer,
+  Property,
+  SharingSettings,
+  PrivacySettings,
+  CollaborationData,
+} from "../types";
+import { getProperties, updateProperty } from "./data";
+import { transferOwnership } from "./ownership";
+import { saveTransaction } from "./transactions";
+import { syncPropertyStatusFromSellCycle } from "./propertyStatusSync";
+import { formatPropertyAddress } from "./utils";
+import { formatPKR } from "./currency";
+import { createDealFromOffer, getDealById } from "./deals";
+import { createNotification } from "./notifications";
+import { getBuyerRequirementById } from "./buyerRequirements";
+import {
   updatePurchaseCycle,
   createPurchaseCycleFromBuyerRequirement,
   markPurchaseCycleOfferAccepted,
   getPurchaseCycleByBuyerRequirement,
-  getPurchaseCycleById
-} from './purchaseCycle';
-import { updateMatch } from './smartMatching';
+  getPurchaseCycleById,
+} from "./purchaseCycle";
+import { updateMatch } from "./smartMatching";
 
-const SELL_CYCLES_KEY = 'sell_cycles_v3';
+const SELL_CYCLES_KEY = "sell_cycles_v3";
 
 /**
  * Get all sell cycles (with optional filtering by user)
@@ -32,16 +39,17 @@ export function getSellCycles(userId?: string, userRole?: string): SellCycle[] {
   const cycles: SellCycle[] = json ? JSON.parse(json) : [];
 
   // Admin sees everything
-  if (!userId || userRole === 'admin') {
+  if (!userId || userRole === "admin") {
     return cycles;
   }
 
   // Agents see:
   // 1. Their own cycles (regardless of sharing status)
   // 2. ALL shared cycles from other agents in the organization
-  return cycles.filter((c: SellCycle) =>
-    c.agentId === userId ||  // My own cycles
-    c.sharing?.isShared === true  // All shared cycles from other agents
+  return cycles.filter(
+    (c: SellCycle) =>
+      c.agentId === userId || // My own cycles
+      c.sharing?.isShared === true, // All shared cycles from other agents
   );
 }
 
@@ -50,7 +58,7 @@ export function getSellCycles(userId?: string, userRole?: string): SellCycle[] {
  */
 export function getSellCycleById(id: string): SellCycle | undefined {
   const cycles = getSellCycles();
-  return cycles.find(c => c.id === id);
+  return cycles.find((c) => c.id === id);
 }
 
 /**
@@ -61,7 +69,7 @@ export function getSellCyclesByProperty(propertyId: string): SellCycle[] {
   const cycles = getSellCycles();
   // Return ALL cycles for the property - never hide completed/sold cycles
   // This preserves the complete transaction history (Asset-Centric principle)
-  return cycles.filter(c => c.propertyId === propertyId);
+  return cycles.filter((c) => c.propertyId === propertyId);
 }
 
 /**
@@ -75,7 +83,7 @@ export function createSellCycle(data: Partial<SellCycle>): SellCycle {
     propertyId: data.propertyId!,
 
     // Seller info
-    sellerType: data.sellerType || 'client',
+    sellerType: data.sellerType || "client",
     sellerId: data.sellerId!,
     sellerName: data.sellerName!,
 
@@ -87,9 +95,9 @@ export function createSellCycle(data: Partial<SellCycle>): SellCycle {
     // Marketing
     askingPrice: data.askingPrice!,
     commissionRate: data.commissionRate || 2,
-    commissionType: data.commissionType || 'percentage',
-    title: data.title || '',
-    description: data.description || '',
+    commissionType: data.commissionType || "percentage",
+    title: data.title || "",
+    description: data.description || "",
     images: data.images || [],
     amenities: data.amenities || [],
     videoTourUrl: data.videoTourUrl,
@@ -98,16 +106,18 @@ export function createSellCycle(data: Partial<SellCycle>): SellCycle {
     // Publishing
     isPublished: data.isPublished || false,
     publishedOn: data.publishedOn || [],
-    publishedDate: data.isPublished ? new Date().toISOString().split('T')[0] : undefined,
+    publishedDate: data.isPublished
+      ? new Date().toISOString().split("T")[0]
+      : undefined,
 
     // Status
-    status: 'listed',
+    status: "listed",
 
     // Offers
     offers: [],
 
     // Dates
-    listedDate: new Date().toISOString().split('T')[0],
+    listedDate: new Date().toISOString().split("T")[0],
     expectedCloseDate: data.expectedCloseDate,
 
     // Notes
@@ -126,7 +136,7 @@ export function createSellCycle(data: Partial<SellCycle>): SellCycle {
 
   // Update property to link this sell cycle and sync price
   const properties = getProperties();
-  const property = properties.find(p => p.id === data.propertyId);
+  const property = properties.find((p) => p.id === data.propertyId);
   if (property) {
     const updatedProperty: Partial<Property> = {
       activeSellCycleIds: [...(property.activeSellCycleIds || []), newCycle.id],
@@ -140,10 +150,16 @@ export function createSellCycle(data: Partial<SellCycle>): SellCycle {
   syncPropertyStatusFromSellCycle(newCycle.id);
 
   // Dispatch event so UI can update
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('cycleCreated', {
-      detail: { propertyId: data.propertyId, cycleId: newCycle.id, cycleType: 'sell' }
-    }));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("cycleCreated", {
+        detail: {
+          propertyId: data.propertyId,
+          cycleId: newCycle.id,
+          cycleType: "sell",
+        },
+      }),
+    );
   }
 
   return newCycle;
@@ -154,7 +170,7 @@ export function createSellCycle(data: Partial<SellCycle>): SellCycle {
  */
 export function updateSellCycle(id: string, updates: Partial<SellCycle>): void {
   const cycles = getSellCycles();
-  const index = cycles.findIndex(c => c.id === id);
+  const index = cycles.findIndex((c) => c.id === id);
 
   if (index !== -1) {
     const cycle = cycles[index];
@@ -166,8 +182,11 @@ export function updateSellCycle(id: string, updates: Partial<SellCycle>): void {
     localStorage.setItem(SELL_CYCLES_KEY, JSON.stringify(cycles));
 
     // CRITICAL FIX: Update property price if askingPrice changed and this is an active cycle
-    if (updates.askingPrice !== undefined && updates.askingPrice !== cycle.askingPrice) {
-      const property = getProperties().find(p => p.id === cycle.propertyId);
+    if (
+      updates.askingPrice !== undefined &&
+      updates.askingPrice !== cycle.askingPrice
+    ) {
+      const property = getProperties().find((p) => p.id === cycle.propertyId);
       if (property && property.activeSellCycleIds?.includes(id)) {
         // Only update if this is the first/primary active cycle
         const activeCycleId = property.activeSellCycleIds[0];
@@ -182,16 +201,18 @@ export function updateSellCycle(id: string, updates: Partial<SellCycle>): void {
       try {
         syncPropertyStatusFromSellCycle(id);
       } catch (error) {
-        console.error('Error syncing property status from sell cycle:', error);
+        console.error("Error syncing property status from sell cycle:", error);
         // Don't throw - cycle update should succeed even if sync fails
       }
     }
 
     // Dispatch event so UI can update
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('cycleUpdated', {
-        detail: { cycleId: id, cycleType: 'sell' }
-      }));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("cycleUpdated", {
+          detail: { cycleId: id, cycleType: "sell" },
+        }),
+      );
     }
   }
 }
@@ -202,21 +223,24 @@ export function updateSellCycle(id: string, updates: Partial<SellCycle>): void {
 export function addOffer(sellCycleId: string, offer: Partial<Offer>): Offer {
   const cycle = getSellCycleById(sellCycleId);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
   // CRITICAL VALIDATION: Validate offer data before creating
   if (!offer.offerAmount || offer.offerAmount <= 0) {
-    throw new Error('Offer amount must be greater than 0');
+    throw new Error("Offer amount must be greater than 0");
   }
 
-  if (!offer.buyerName || offer.buyerName.trim() === '') {
-    throw new Error('Buyer name is required');
+  if (!offer.buyerName || offer.buyerName.trim() === "") {
+    throw new Error("Buyer name is required");
   }
 
   // CRITICAL: Validate token amount doesn't exceed offer amount
-  if (offer.tokenAmount !== undefined && offer.tokenAmount > offer.offerAmount) {
-    throw new Error('Token money cannot exceed offer amount');
+  if (
+    offer.tokenAmount !== undefined &&
+    offer.tokenAmount > offer.offerAmount
+  ) {
+    throw new Error("Token money cannot exceed offer amount");
   }
 
   const newOffer: Offer = {
@@ -225,17 +249,21 @@ export function addOffer(sellCycleId: string, offer: Partial<Offer>): Offer {
     buyerName: offer.buyerName!,
     buyerContact: offer.buyerContact,
     offerAmount: offer.offerAmount!,
+    amount: offer.offerAmount,
     tokenAmount: offer.tokenAmount,
     conditions: offer.conditions,
-    offeredDate: new Date().toISOString().split('T')[0],
+    offeredDate: new Date().toISOString().split("T")[0],
+    submittedDate: new Date().toISOString().split("T")[0],
     expiryDate: offer.expiryDate,
-    status: 'pending',
+    status: "pending",
     notes: offer.notes,
     agentNotes: offer.agentNotes,
 
     // V3.0: Track buyer requirement source and buyer agent
     buyerRequirementId: offer.buyerRequirementId,
-    sourceType: offer.sourceType || (offer.buyerRequirementId ? 'buyer-requirement' : 'manual'),
+    sourceType:
+      offer.sourceType ||
+      (offer.buyerRequirementId ? "buyer-requirement" : "manual"),
     buyerAgentId: offer.buyerAgentId, // Buyer's agent (for Purchase Cycle creation later)
     buyerAgentName: offer.buyerAgentName,
 
@@ -249,14 +277,16 @@ export function addOffer(sellCycleId: string, offer: Partial<Offer>): Offer {
   const updatedOffers = [...cycle.offers, newOffer];
   updateSellCycle(sellCycleId, {
     offers: updatedOffers,
-    status: cycle.status === 'listed' ? 'offer-received' : cycle.status,
+    status: cycle.status === "listed" ? "offer-received" : cycle.status,
   });
 
   // Dispatch event so UI can update
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('offerCreated', {
-      detail: { sellCycleId, offerId: newOffer.id }
-    }));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("offerCreated", {
+        detail: { sellCycleId, offerId: newOffer.id },
+      }),
+    );
   }
 
   return newOffer;
@@ -268,17 +298,17 @@ export function addOffer(sellCycleId: string, offer: Partial<Offer>): Offer {
 export function updateOffer(
   sellCycleId: string,
   offerId: string,
-  updates: Partial<Offer>
+  updates: Partial<Offer>,
 ): void {
   const cycle = getSellCycleById(sellCycleId);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
-  const updatedOffers = cycle.offers.map(o =>
+  const updatedOffers = cycle.offers.map((o) =>
     o.id === offerId
       ? { ...o, ...updates, updatedAt: new Date().toISOString() }
-      : o
+      : o,
   );
 
   // Update sell cycle
@@ -288,27 +318,35 @@ export function updateOffer(
   // CRITICAL FIX: Sync offer acceptance back to linked purchase cycle
   // If this offer is linked to a purchase cycle and is being accepted, update it
   // ============================================================================
-  if (updates.status === 'accepted') {
+  if (updates.status === "accepted") {
     try {
-      const acceptedOffer = updatedOffers.find(o => o.id === offerId);
+      const acceptedOffer = updatedOffers.find((o) => o.id === offerId);
 
       if (acceptedOffer?.linkedPurchaseCycleId) {
-        console.log('🔗 Syncing offer acceptance to purchase cycle');
+        console.log("🔗 Syncing offer acceptance to purchase cycle");
         console.log(`   - Offer ID: ${offerId}`);
-        console.log(`   - Purchase Cycle: ${acceptedOffer.linkedPurchaseCycleId}`);
+        console.log(
+          `   - Purchase Cycle: ${acceptedOffer.linkedPurchaseCycleId}`,
+        );
         console.log(`   - Accepted Amount: ${acceptedOffer.offerAmount}`);
 
         // Update purchase cycle status to accepted
         updatePurchaseCycle(acceptedOffer.linkedPurchaseCycleId, {
-          status: 'accepted',
-          negotiatedPrice: acceptedOffer.counterOfferAmount || acceptedOffer.offerAmount,
-          acceptanceDate: new Date().toISOString().split('T')[0],
+          status: "accepted",
+          negotiatedPrice:
+            acceptedOffer.counterOfferAmount || acceptedOffer.offerAmount,
+          acceptanceDate: new Date().toISOString().split("T")[0],
         });
 
-        console.log('✅ Purchase cycle successfully updated to "accepted" status');
+        console.log(
+          '✅ Purchase cycle successfully updated to "accepted" status',
+        );
       }
     } catch (error) {
-      console.error('❌ Error syncing offer acceptance to purchase cycle:', error);
+      console.error(
+        "❌ Error syncing offer acceptance to purchase cycle:",
+        error,
+      );
       // Don't throw - offer is still updated even if sync fails
     }
   }
@@ -321,48 +359,51 @@ export function updateOffer(
 export function acceptOffer(sellCycleId: string, offerId: string): void {
   const cycle = getSellCycleById(sellCycleId);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
-  const offer = cycle.offers.find(o => o.id === offerId);
+  const offer = cycle.offers.find((o) => o.id === offerId);
   if (!offer) {
-    throw new Error('Offer not found');
+    throw new Error("Offer not found");
   }
 
   // Update sell cycle status and offers
-  const updatedOffers = cycle.offers.map(o => ({
+  const updatedOffers = cycle.offers.map((o) => ({
     ...o,
-    status: o.id === offerId ? 'accepted' as const : 'rejected' as const,
+    status: o.id === offerId ? ("accepted" as const) : ("rejected" as const),
   }));
 
   updateSellCycle(sellCycleId, {
     offers: updatedOffers,
     acceptedOfferId: offerId,
-    status: 'under-contract',
+    status: "under-contract",
   });
 
   // AUTO-CREATE PURCHASE CYCLE + DEAL when offer is accepted
   try {
-    console.log('🚀 Starting deal creation process...');
+    console.log("🚀 Starting deal creation process...");
     console.log(`   - Sell Cycle ID: ${sellCycleId}`);
     console.log(`   - Offer ID: ${offerId}`);
 
     // Get updated cycle
     const updatedCycle = getSellCycleById(sellCycleId);
     if (!updatedCycle) {
-      throw new Error('Updated sell cycle not found after offer acceptance');
+      throw new Error("Updated sell cycle not found after offer acceptance");
     }
 
-    console.log('✅ Updated cycle retrieved');
+    console.log("✅ Updated cycle retrieved");
 
     // Get property
     const properties = getProperties();
-    const property = properties.find(p => p.id === updatedCycle.propertyId);
+    const property = properties.find((p) => p.id === updatedCycle.propertyId);
     if (!property) {
       throw new Error(`Property not found: ${updatedCycle.propertyId}`);
     }
 
-    console.log('✅ Property retrieved:', property.title || formatPropertyAddress(property));
+    console.log(
+      "✅ Property retrieved:",
+      property.title || formatPropertyAddress(property.address),
+    );
 
     // CRITICAL FIX: Check THREE scenarios for purchase cycle
     let purchaseCycle = undefined;
@@ -370,12 +411,14 @@ export function acceptOffer(sellCycleId: string, offerId: string): void {
 
     // SCENARIO 1: Offer came from a direct purchase cycle (linkedPurchaseCycleId)
     if (offer.linkedPurchaseCycleId) {
-      console.log('🔗 Offer is linked to an existing purchase cycle');
+      console.log("🔗 Offer is linked to an existing purchase cycle");
       purchaseCycle = getPurchaseCycleById(offer.linkedPurchaseCycleId);
 
       if (purchaseCycle) {
         console.log(`✅ Found linked purchase cycle: ${purchaseCycle.id}`);
-        console.log(`   - Purchaser: ${purchaseCycle.purchaserName} (${purchaseCycle.purchaserType})`);
+        console.log(
+          `   - Purchaser: ${purchaseCycle.purchaserName} (${purchaseCycle.purchaserType})`,
+        );
 
         // Update purchase cycle status to "accepted"
         markPurchaseCycleOfferAccepted(purchaseCycle.id, offer.offerAmount);
@@ -383,25 +426,25 @@ export function acceptOffer(sellCycleId: string, offerId: string): void {
     }
     // SCENARIO 2: Offer came from a buyer requirement
     else if (offer.buyerRequirementId && offer.buyerAgentId) {
-      console.log('🔗 Offer came from buyer requirement');
+      console.log("🔗 Offer came from buyer requirement");
       // Find the buyer requirement
       buyerRequirement = getBuyerRequirementById(offer.buyerRequirementId);
 
       // Check if Purchase Cycle already exists (shouldn't, but check anyway)
       purchaseCycle = getPurchaseCycleByBuyerRequirement(
         offer.buyerRequirementId,
-        updatedCycle.propertyId
+        updatedCycle.propertyId,
       );
 
       // If Purchase Cycle doesn't exist, create it NOW
       if (!purchaseCycle && buyerRequirement) {
-        console.log('✨ Creating Purchase Cycle on offer acceptance...');
+        console.log("✨ Creating Purchase Cycle on offer acceptance...");
         purchaseCycle = createPurchaseCycleFromBuyerRequirement(
           buyerRequirement,
           property,
           updatedCycle.id,
           offer.buyerAgentId,
-          offer.buyerAgentName || 'Unknown Agent'
+          offer.buyerAgentName || "Unknown Agent",
         );
         console.log(`✅ Purchase Cycle created: ${purchaseCycle.id}`);
       }
@@ -413,10 +456,10 @@ export function acceptOffer(sellCycleId: string, offerId: string): void {
     }
     // SCENARIO 3: Direct offer (no purchase cycle, no buyer requirement)
     else {
-      console.log('📋 Direct offer - no purchase cycle or buyer requirement');
+      console.log("📋 Direct offer - no purchase cycle or buyer requirement");
     }
 
-    console.log('🎯 Creating deal from offer...');
+    console.log("🎯 Creating deal from offer...");
 
     // Create deal - supports both dual-cycle and single-cycle scenarios
     // Dual-cycle: When offer comes from a buyer requirement (has purchaseCycle)
@@ -429,17 +472,21 @@ export function acceptOffer(sellCycleId: string, offerId: string): void {
       offer,
       updatedCycle.agentId,
       purchaseCycle, // undefined for single-cycle deals
-      buyerRequirement // undefined for single-cycle deals
     );
 
     if (!deal) {
-      throw new Error('createDealFromOffer returned null or undefined');
+      throw new Error("createDealFromOffer returned null or undefined");
     }
 
     // CRITICAL: Final update to Sell Cycle to link the deal and set winning purchase cycle
-    const finalOffers = updatedCycle.offers.map(o => ({
+    const finalOffers = updatedCycle.offers.map((o) => ({
       ...o,
-      status: o.id === offerId ? 'accepted' as const : (o.status === 'pending' ? 'rejected' as const : o.status),
+      status:
+        o.id === offerId
+          ? ("accepted" as const)
+          : o.status === "pending"
+            ? ("rejected" as const)
+            : o.status,
     }));
 
     updateSellCycle(sellCycleId, {
@@ -448,7 +495,7 @@ export function acceptOffer(sellCycleId: string, offerId: string): void {
       winningPurchaseCycleId: purchaseCycle?.id,
       acceptedOfferId: offerId,
       offers: finalOffers,
-      status: 'under-contract'
+      status: "under-contract",
     });
 
     // Update Purchase Cycle with deal link if it exists
@@ -456,12 +503,12 @@ export function acceptOffer(sellCycleId: string, offerId: string): void {
       updatePurchaseCycle(purchaseCycle.id, {
         linkedDealId: deal.id,
         createdDealId: deal.id,
-        linkedSellCycleId: sellCycleId
+        linkedSellCycleId: sellCycleId,
       });
     }
 
     if (!purchaseCycle) {
-      console.log('✅ Single-cycle deal created (no purchase cycle)');
+      console.log("✅ Single-cycle deal created (no purchase cycle)");
       console.log(`   - Deal ID: ${deal.id}`);
       console.log(`   - Deal Number: ${deal.dealNumber}`);
       console.log(`   - Sell Cycle: ${updatedCycle.id}`);
@@ -476,45 +523,50 @@ export function acceptOffer(sellCycleId: string, offerId: string): void {
     // Verify the deal was saved
     const savedDeal = getDealById(deal.id);
     if (!savedDeal) {
-      throw new Error('Deal was created but not found in storage after save');
+      throw new Error("Deal was created but not found in storage after save");
     }
-    console.log('✅ Deal verified in storage');
+    console.log("✅ Deal verified in storage");
 
     // createDealFromOffer already creates notifications, but let's add specific ones for this workflow
     // Send notifications to both agents
     createNotification({
       userId: updatedCycle.agentId,
-      type: 'DEAL_CREATED',
-      priority: 'HIGH',
-      title: 'Deal Auto-Created',
+      type: "DEAL_CREATED",
+      priority: "HIGH",
+      title: "Deal Auto-Created",
       message: `Deal ${deal.dealNumber} has been automatically created from the accepted offer.`,
-      entityType: 'deal',
+      entityType: "deal",
       entityId: deal.id,
-      actionLabel: 'View Deal',
-      actionType: 'navigate',
+      actionLabel: "View Deal",
+      actionType: "navigate",
     });
 
     // Notify secondary agent if exists
     if (deal.agents.secondary) {
       createNotification({
         userId: deal.agents.secondary.id,
-        type: 'DEAL_CREATED',
-        priority: 'HIGH',
-        title: 'New Deal - Buyer Agent',
+        type: "DEAL_CREATED",
+        priority: "HIGH",
+        title: "New Deal - Buyer Agent",
         message: `You've been added as buyer agent for deal ${deal.dealNumber}.`,
-        entityType: 'deal',
+        entityType: "deal",
         entityId: deal.id,
-        actionLabel: 'View Deal',
-        actionType: 'navigate',
+        actionLabel: "View Deal",
+        actionType: "navigate",
       });
     }
 
-    console.log('🎉 Deal creation process completed successfully!');
+    console.log("🎉 Deal creation process completed successfully!");
   } catch (error) {
-    console.error('❌ ERROR: Failed to auto-create purchase cycle and deal:', error);
-    console.error('Stack trace:', error);
+    console.error(
+      "❌ ERROR: Failed to auto-create purchase cycle and deal:",
+      error,
+    );
+    console.error("Stack trace:", error);
     // CRITICAL: Throw error so UI can handle it properly
-    throw new Error(`Deal creation failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Deal creation failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -524,12 +576,12 @@ export function acceptOffer(sellCycleId: string, offerId: string): void {
 export function rejectOffer(sellCycleId: string, offerId: string): void {
   const cycle = getSellCycleById(sellCycleId);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
-  const updatedOffers = cycle.offers.map(o => ({
+  const updatedOffers = cycle.offers.map((o) => ({
     ...o,
-    status: o.id === offerId ? 'rejected' as const : o.status,
+    status: o.id === offerId ? ("rejected" as const) : o.status,
   }));
 
   updateSellCycle(sellCycleId, { offers: updatedOffers });
@@ -538,23 +590,29 @@ export function rejectOffer(sellCycleId: string, offerId: string): void {
 /**
  * Counter an offer
  */
-export function counterOffer(sellCycleId: string, offerId: string, counterAmount: number): void {
+export function counterOffer(
+  sellCycleId: string,
+  offerId: string,
+  counterAmount: number,
+): void {
   const cycle = getSellCycleById(sellCycleId);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
-  const updatedOffers = cycle.offers.map(o => ({
+  const updatedOffers = cycle.offers.map((o) => ({
     ...o,
-    ...(o.id === offerId ? {
-      status: 'countered' as const,
-      counterOfferAmount: counterAmount,
-    } : {}),
+    ...(o.id === offerId
+      ? {
+          status: "countered" as const,
+          counterOfferAmount: counterAmount,
+        }
+      : {}),
   }));
 
   updateSellCycle(sellCycleId, {
     offers: updatedOffers,
-    status: 'negotiation',
+    status: "negotiation",
   });
 }
 
@@ -566,17 +624,17 @@ export function completeSale(
   id: string,
   soldPrice: number,
   buyerId: string,
-  buyerName: string
+  buyerName: string,
 ): { success: boolean; transactionId?: string; error?: string } {
   try {
     const cycle = getSellCycleById(id);
     if (!cycle) {
-      return { success: false, error: 'Sell cycle not found' };
+      return { success: false, error: "Sell cycle not found" };
     }
 
     // Calculate commission
     let commissionAmount = 0;
-    if (cycle.commissionType === 'percentage') {
+    if (cycle.commissionType === "percentage") {
       commissionAmount = (soldPrice * cycle.commissionRate) / 100;
     } else {
       commissionAmount = cycle.commissionRate;
@@ -587,7 +645,9 @@ export function completeSale(
     const transaction = {
       id: transactionId,
       propertyId: cycle.propertyId,
-      type: 'sale' as const,
+      type: "sell" as const,
+      agreedPrice: soldPrice,
+      startDate: new Date().toISOString(),
       agentId: cycle.agentId,
       buyerName,
       buyerContactId: buyerId,
@@ -595,8 +655,8 @@ export function completeSale(
       sellerContactId: cycle.sellerId,
       acceptedOfferAmount: soldPrice,
       commissionAmount,
-      acceptedDate: new Date().toISOString().split('T')[0],
-      status: 'completed' as const,
+      acceptedDate: new Date().toISOString().split("T")[0],
+      status: "completed" as const,
       sellCycleId: id,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -609,21 +669,26 @@ export function completeSale(
       cycle.propertyId,
       buyerId,
       buyerName,
+      "client",
       transactionId,
-      `Sold via sell cycle. Agent: ${cycle.agentName}. Price: ${soldPrice}`
+      undefined,
+      soldPrice,
+      `Sold via sell cycle. Agent: ${cycle.agentName}. Price: ${soldPrice}`,
     );
 
     // Update sell cycle
     updateSellCycle(id, {
-      status: 'sold',
-      soldDate: new Date().toISOString().split('T')[0],
+      status: "sold",
+      soldDate: new Date().toISOString().split("T")[0],
     });
 
     // Remove from property's active cycles and add to history
     const properties = getProperties();
-    const property = properties.find(p => p.id === cycle.propertyId);
+    const property = properties.find((p) => p.id === cycle.propertyId);
     if (property) {
-      const updatedActiveSellCycles = (property.activeSellCycleIds || []).filter(cId => cId !== id);
+      const updatedActiveSellCycles = (
+        property.activeSellCycleIds || []
+      ).filter((cId) => cId !== id);
       const updatedProperty: Partial<Property> = {
         activeSellCycleIds: updatedActiveSellCycles,
         cycleHistory: {
@@ -649,7 +714,7 @@ export function closeSellCycle(
   id: string,
   soldPrice: number,
   buyerId: string,
-  buyerName: string
+  buyerName: string,
 ): void {
   // Call the new comprehensive function
   completeSale(id, soldPrice, buyerId, buyerName);
@@ -660,7 +725,7 @@ export function closeSellCycle(
  */
 export function cancelSellCycle(id: string, reason?: string): void {
   updateSellCycle(id, {
-    status: 'cancelled',
+    status: "cancelled",
     notes: reason ? `Cancelled: ${reason}` : undefined,
   });
 
@@ -668,9 +733,11 @@ export function cancelSellCycle(id: string, reason?: string): void {
   if (cycle) {
     // Remove from property's active cycles
     const properties = getProperties();
-    const property = properties.find(p => p.id === cycle.propertyId);
+    const property = properties.find((p) => p.id === cycle.propertyId);
     if (property) {
-      const updatedActiveSellCycles = (property.activeSellCycleIds || []).filter(cId => cId !== id);
+      const updatedActiveSellCycles = (
+        property.activeSellCycleIds || []
+      ).filter((cId) => cId !== id);
       const updatedProperty: Partial<Property> = {
         activeSellCycleIds: updatedActiveSellCycles,
         cycleHistory: {
@@ -689,7 +756,7 @@ export function cancelSellCycle(id: string, reason?: string): void {
 export function shareSellCycle(id: string, agentIds: string[]): void {
   const cycle = getSellCycleById(id);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
   const uniqueAgents = Array.from(new Set([...cycle.sharedWith, ...agentIds]));
@@ -702,10 +769,12 @@ export function shareSellCycle(id: string, agentIds: string[]): void {
 export function unshareSellCycle(id: string, agentIds: string[]): void {
   const cycle = getSellCycleById(id);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
-  const updatedSharedWith = cycle.sharedWith.filter(aId => !agentIds.includes(aId));
+  const updatedSharedWith = cycle.sharedWith.filter(
+    (aId) => !agentIds.includes(aId),
+  );
   updateSellCycle(id, { sharedWith: updatedSharedWith });
 }
 
@@ -717,16 +786,17 @@ export function getSellCycleStats(userId?: string, userRole?: string) {
 
   return {
     total: cycles.length,
-    listed: cycles.filter(c => c.status === 'listed').length,
-    offerReceived: cycles.filter(c => c.status === 'offer-received').length,
-    negotiation: cycles.filter(c => c.status === 'negotiation').length,
-    underContract: cycles.filter(c => c.status === 'under-contract').length,
-    sold: cycles.filter(c => c.status === 'sold').length,
-    cancelled: cycles.filter(c => c.status === 'cancelled').length,
+    listed: cycles.filter((c) => c.status === "listed").length,
+    offerReceived: cycles.filter((c) => c.status === "offer-received").length,
+    negotiation: cycles.filter((c) => c.status === "negotiation").length,
+    underContract: cycles.filter((c) => c.status === "under-contract").length,
+    sold: cycles.filter((c) => c.status === "sold").length,
+    cancelled: cycles.filter((c) => c.status === "cancelled").length,
     totalOffers: cycles.reduce((sum, c) => sum + c.offers.length, 0),
-    averageOffers: cycles.length > 0
-      ? cycles.reduce((sum, c) => sum + c.offers.length, 0) / cycles.length
-      : 0,
+    averageOffers:
+      cycles.length > 0
+        ? cycles.reduce((sum, c) => sum + c.offers.length, 0) / cycles.length
+        : 0,
   };
 }
 
@@ -746,12 +816,12 @@ export function getOffersByBuyerRequirement(requirementId: string): Array<{
     propertyId: string;
   }> = [];
 
-  cycles.forEach(cycle => {
+  cycles.forEach((cycle) => {
     const matchingOffers = cycle.offers.filter(
-      offer => offer.buyerRequirementId === requirementId
+      (offer) => offer.buyerRequirementId === requirementId,
     );
 
-    matchingOffers.forEach(offer => {
+    matchingOffers.forEach((offer) => {
       results.push({
         offer,
         sellCycle: cycle,
@@ -768,19 +838,20 @@ export function getOffersByBuyerRequirement(requirementId: string): Array<{
  */
 export function getLatestOfferForProperty(
   requirementId: string,
-  propertyId: string
+  propertyId: string,
 ): { offer: Offer; sellCycleId: string } | null {
   const cycles = getSellCyclesByProperty(propertyId);
 
   for (const cycle of cycles) {
     const offers = cycle.offers.filter(
-      offer => offer.buyerRequirementId === requirementId
+      (offer) => offer.buyerRequirementId === requirementId,
     );
 
     if (offers.length > 0) {
       // Return the most recent offer
-      const latestOffer = offers.sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      const latestOffer = offers.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )[0];
 
       return {
@@ -798,7 +869,7 @@ export function getLatestOfferForProperty(
  */
 export function withdrawOffer(sellCycleId: string, offerId: string): void {
   updateOffer(sellCycleId, offerId, {
-    status: 'rejected', // Use rejected status to indicate withdrawal
+    status: "rejected", // Use rejected status to indicate withdrawal
     agentNotes: `Offer withdrawn by agent on ${new Date().toLocaleDateString()}`,
   });
 }
@@ -814,11 +885,11 @@ export function toggleSellCycleSharing(
   id: string,
   isShared: boolean,
   userId: string,
-  userName: string
+  userName: string,
 ): void {
   const cycle = getSellCycleById(id);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
   const now = new Date().toISOString();
@@ -826,11 +897,11 @@ export function toggleSellCycleSharing(
   const sharing: SharingSettings = {
     isShared,
     sharedAt: isShared ? now : undefined,
-    shareLevel: isShared ? 'organization' : 'none',
+    shareLevel: isShared ? "organization" : "none",
     shareHistory: [
       ...(cycle.sharing?.shareHistory || []),
       {
-        action: isShared ? 'shared' : 'unshared',
+        action: isShared ? "shared" : "unshared",
         timestamp: now,
         userId,
         userName,
@@ -904,16 +975,16 @@ export function submitCrossAgentOffer(
     buyerNotes?: string;
     agentNotes?: string;
     coordinationRequired?: boolean;
-  }
+  },
 ): string {
   const cycle = getSellCycleById(sellCycleId);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
   // Verify cycle is shared
   if (!cycle.sharing?.isShared) {
-    throw new Error('Cannot submit offer - cycle is not shared');
+    throw new Error("Cannot submit offer - cycle is not shared");
   }
 
   const offerId = `offer_${Date.now()}`;
@@ -926,8 +997,10 @@ export function submitCrossAgentOffer(
     buyerContact: offerData.buyerContact,
     buyerEmail: offerData.buyerEmail,
     amount: offerData.amount,
-    status: 'pending',
-    submittedDate: now.split('T')[0],
+    offerAmount: offerData.amount,
+    status: "pending",
+    submittedDate: now.split("T")[0],
+    offeredDate: now.split("T")[0],
     notes: offerData.buyerNotes,
 
     // Cross-agent tracking
@@ -937,41 +1010,44 @@ export function submitCrossAgentOffer(
     fromRequirementId: offerData.fromRequirementId,
     matchId: offerData.matchId,
     matchScore: offerData.matchScore,
-    submittedVia: 'match',
+    submittedVia: "match",
     agentNotes: offerData.agentNotes,
     coordinationRequired: offerData.coordinationRequired,
+
+    createdAt: now,
+    updatedAt: now,
   };
 
   // Add offer to cycle
   const updatedOffers = [...cycle.offers, newOffer];
   updateSellCycle(sellCycleId, {
     offers: updatedOffers,
-    status: 'negotiation', // Move to negotiation status
+    status: "negotiation", // Move to negotiation status
   });
 
   // Update match status if this was from a match
   if (offerData.matchId) {
     try {
       updateMatch(offerData.matchId, {
-        status: 'offer-submitted',
+        status: "offer-submitted",
         offerId: offerId,
       });
     } catch (error) {
-      console.error('Error updating match status:', error);
+      console.error("Error updating match status:", error);
       // Don't fail the offer submission if match update fails
     }
   }
 
   // Send notification to listing agent
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     try {
       createNotification({
         userId: cycle.agentId,
-        type: 'offer-received',
-        title: 'New Cross-Agent Offer Received',
-        message: `${offerData.submittedByAgentName} submitted an offer of ${formatPKR(offerData.amount)} for ${cycle.title || 'your listing'}`,
-        priority: 'high',
-        entityType: 'sellCycle',
+        type: "OFFER_RECEIVED",
+        title: "New Cross-Agent Offer Received",
+        message: `${offerData.submittedByAgentName} submitted an offer of ${formatPKR(offerData.amount)} for ${cycle.title || "your listing"}`,
+        priority: "HIGH",
+        entityType: "sellCycle",
         entityId: sellCycleId,
         actionUrl: `/sell-cycles/${sellCycleId}`,
         metadata: {
@@ -982,7 +1058,7 @@ export function submitCrossAgentOffer(
         },
       });
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error("Error creating notification:", error);
       // Don't fail the offer submission if notification fails
     }
   }
@@ -996,45 +1072,45 @@ export function submitCrossAgentOffer(
 export function acceptCrossAgentOffer(
   sellCycleId: string,
   offerId: string,
-  acceptedBy: string
+  acceptedBy: string,
 ): void {
   const cycle = getSellCycleById(sellCycleId);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
-  const offer = cycle.offers.find(o => o.id === offerId);
+  const offer = cycle.offers.find((o) => o.id === offerId);
   if (!offer) {
-    throw new Error('Offer not found');
+    throw new Error("Offer not found");
   }
 
   // Update offer status
   updateOffer(sellCycleId, offerId, {
-    status: 'accepted',
-    responseDate: new Date().toISOString().split('T')[0],
+    status: "accepted",
+    responseDate: new Date().toISOString().split("T")[0],
   });
 
   // Update match if this was from a match
   if (offer.matchId) {
     try {
       updateMatch(offer.matchId, {
-        status: 'accepted',
+        status: "accepted",
       });
     } catch (error) {
-      console.error('Error updating match status:', error);
+      console.error("Error updating match status:", error);
     }
   }
 
   // Send notification to submitting agent
-  if (offer.submittedByAgentId && typeof window !== 'undefined') {
+  if (offer.submittedByAgentId && typeof window !== "undefined") {
     try {
       createNotification({
         userId: offer.submittedByAgentId,
-        type: 'offer-accepted',
-        title: '🎉 Offer Accepted!',
-        message: `Your offer of ${formatPKR(offer.amount)} for ${cycle.title || 'the property'} was accepted`,
-        priority: 'high',
-        entityType: 'sellCycle',
+        type: "OFFER_ACCEPTED",
+        title: "🎉 Offer Accepted!",
+        message: `Your offer of ${formatPKR(offer.amount)} for ${cycle.title || "the property"} was accepted`,
+        priority: "HIGH",
+        entityType: "sellCycle",
         entityId: sellCycleId,
         actionUrl: `/sell-cycles/${sellCycleId}`,
         metadata: {
@@ -1044,7 +1120,7 @@ export function acceptCrossAgentOffer(
         },
       });
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error("Error creating notification:", error);
     }
   }
 }
@@ -1055,45 +1131,45 @@ export function acceptCrossAgentOffer(
 export function rejectCrossAgentOffer(
   sellCycleId: string,
   offerId: string,
-  reason?: string
+  reason?: string,
 ): void {
   const cycle = getSellCycleById(sellCycleId);
   if (!cycle) {
-    throw new Error('Sell cycle not found');
+    throw new Error("Sell cycle not found");
   }
 
-  const offer = cycle.offers.find(o => o.id === offerId);
+  const offer = cycle.offers.find((o) => o.id === offerId);
   if (!offer) {
-    throw new Error('Offer not found');
+    throw new Error("Offer not found");
   }
 
   // Update offer status
   updateOffer(sellCycleId, offerId, {
-    status: 'rejected',
-    responseDate: new Date().toISOString().split('T')[0],
+    status: "rejected",
+    responseDate: new Date().toISOString().split("T")[0],
     listingAgentNotes: reason,
   });
 
   // Send notification to submitting agent
-  if (offer.submittedByAgentId && typeof window !== 'undefined') {
+  if (offer.submittedByAgentId && typeof window !== "undefined") {
     try {
       createNotification({
         userId: offer.submittedByAgentId,
-        type: 'offer-rejected',
-        title: 'Offer Not Accepted',
-        message: `Your offer of ${formatPKR(offer.amount)} for ${cycle.title || 'the property'} was not accepted`,
-        priority: 'medium',
-        entityType: 'sellCycle',
+        type: "OFFER_REJECTED",
+        title: "Offer Not Accepted",
+        message: `Your offer of ${formatPKR(offer.amount)} for ${cycle.title || "the property"} was not accepted`,
+        priority: "MEDIUM",
+        entityType: "sellCycle",
         entityId: sellCycleId,
         actionUrl: `/sell-cycles/${sellCycleId}`,
         metadata: {
           offerId,
           offerAmount: offer.amount,
-          reason: reason || 'No reason provided',
+          reason: reason || "No reason provided",
         },
       });
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error("Error creating notification:", error);
     }
   }
 }
@@ -1105,12 +1181,12 @@ export function getOffersSubmittedByAgent(agentId: string): any[] {
   const cycles = getSellCycles();
   const offersWithCycles: any[] = [];
 
-  cycles.forEach(cycle => {
+  cycles.forEach((cycle) => {
     const agentOffers = cycle.offers.filter(
-      offer => offer.submittedByAgentId === agentId
+      (offer) => offer.submittedByAgentId === agentId,
     );
 
-    agentOffers.forEach(offer => {
+    agentOffers.forEach((offer) => {
       offersWithCycles.push({
         ...offer,
         cycleId: cycle.id,
@@ -1122,7 +1198,8 @@ export function getOffersSubmittedByAgent(agentId: string): any[] {
     });
   });
 
-  return offersWithCycles.sort((a, b) =>
-    new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime()
+  return offersWithCycles.sort(
+    (a, b) =>
+      new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime(),
   );
 }

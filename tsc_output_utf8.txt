@@ -1,0 +1,70 @@
+﻿src/lib/buyerRequirements.ts(78,9): error TS2739: Type '{ status: "active"; createdAt: string; updatedAt: string; buyerId: string; buyerName: string; buyerContact: string; agentId: string; agentName: string; minBudget: number; maxBudget: number; propertyTypes: string[]; ... 11 more ...; id: string; }' is missing the following properties from type 'BuyerRequirement': contactId, propertyType, budgetMax
+src/lib/buyerRequirements.ts(132,5): error TS2322: Type '"active" | "matched"' is not assignable to type '"active" | "cancelled" | "fulfilled"'.
+  Type '"matched"' is not assignable to type '"active" | "cancelled" | "fulfilled"'.
+src/lib/buyerRequirements.ts(183,5): error TS2322: Type '"closed"' is not assignable to type '"active" | "cancelled" | "fulfilled"'.
+src/lib/buyerRequirements.ts(218,47): error TS2339: Property 'maxBudget' does not exist on type 'BuyerRequirement'.
+src/lib/buyerRequirements.ts(223,26): error TS2339: Property 'matchedProperties' does not exist on type 'BuyerRequirement'.
+src/lib/buyerRequirements.ts(247,49): error TS2339: Property 'minBudget' does not exist on type 'BuyerRequirement'.
+src/lib/buyerRequirements.ts(247,83): error TS2339: Property 'maxBudget' does not exist on type 'BuyerRequirement'.
+src/lib/buyerRequirements.ts(252,39): error TS2551: Property 'propertyTypes' does not exist on type 'BuyerRequirement'. Did you mean 'propertyType'?
+src/lib/buyerRequirements.ts(265,13): error TS2339: Property 'preferredLocations' does not exist on type 'BuyerRequirement'.
+src/lib/buyerRequirements.ts(266,33): error TS2339: Property 'preferredLocations' does not exist on type 'BuyerRequirement'.
+src/lib/buyerRequirements.ts(278,34): error TS2339: Property 'matchedProperties' does not exist on type 'BuyerRequirement'.
+src/lib/dataFlowConnections.ts(42,35): error TS2339: Property 'notes' does not exist on type 'Contact'.
+src/lib/dataFlowConnections.ts(56,17): error TS2339: Property 'deals' does not exist on type 'Partial<Contact>'.
+src/lib/dataFlowConnections.ts(61,15): error TS2339: Property 'notes' does not exist on type 'Partial<Contact>'.
+src/lib/dataFlowConnections.ts(111,18): error TS2339: Property 'leadId' does not exist on type 'Contact'.
+src/lib/dataFlowConnections.ts(111,36): error TS2339: Property 'leadId' does not exist on type 'Contact'.
+src/lib/dataFlowConnections.ts(113,9): error TS2353: Object literal may only specify known properties, and 'leadId' does not exist in type 'Partial<Contact>'.
+src/lib/dataFlowConnections.ts(144,47): error TS2339: Property 'transactions' does not exist on type '{ createdAt: string; updatedAt: string; createdBy: string; }'.
+src/lib/dataFlowConnections.ts(158,9): error TS2353: Object literal may only specify known properties, and 'transactions' does not exist in type '{ createdAt: string; updatedAt: string; createdBy: string; }'.
+src/lib/dealPermissions.ts(15,10): error TS2305: Module '"../types"' has no exported member 'AgentRole'.
+src/lib/dealPermissions.ts(24,5): error TS2740: Type '{ canEdit: true; canUpdatePayments: true; canUploadDocuments: true; canProgressStages: true; canCloseDeal: true; canViewAll: true; canDownloadDocs: true; canAddNotes: true; canSendMessages: true; }' is missing the following properties from type 'DealPermissions': canViewFinancials, canEditNotes, canProgressStage, canRecordPayments, and 6 more.
+src/lib/dealPermissions.ts(39,5): error TS2740: Type '{ canEdit: false; canUpdatePayments: false; canUploadDocuments: false; canProgressStages: false; canCloseDeal: false; canViewAll: true; canDownloadDocs: true; canAddNotes: true; canSendMessages: true; }' is missing the following properties from type 'DealPermissions': canViewFinancials, canEditNotes, canProgressStage, canRecordPayments, and 6 more.
+src/lib/dealPermissions.ts(53,3): error TS2740: Type '{ canEdit: false; canUpdatePayments: false; canUploadDocuments: false; canProgressStages: false; canCloseDeal: false; canViewAll: false; canDownloadDocs: false; canAddNotes: false; canSendMessages: false; }' is missing the following properties from type 'DealPermissions': canViewFinancials, canEditNotes, canProgressStage, canRecordPayments, and 6 more.
+src/lib/dealPermissions.ts(147,9): error TS2740: Type '{ canEdit: string; canUpdatePayments: string; canUploadDocuments: string; canProgressStages: string; canCloseDeal: string; canViewAll: string; canDownloadDocs: string; canAddNotes: string; canSendMessages: string; }' is missing the following properties from type 'Record<keyof DealPermissions, string>': canViewFinancials, canEditNotes, canProgressStage, canRecordPayments, and 6 more.
+src/lib/logger.ts(7,10): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', or 'nodenext'.
+src/lib/logger.ts(7,41): error TS1343: The 'import.meta' meta-property is only allowed when the '--module' option is 'es2020', 'es2022', 'esnext', 'system', 'node16', 'node18', 'node20', or 'nodenext'.
+src/lib/logger.ts(7,53): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/lib/notifications.ts(663,9): error TS2740: Type '{ OFFER_RECEIVED: string; OFFER_ACCEPTED: string; OFFER_REJECTED: string; COUNTER_OFFER_RECEIVED: string; OFFER_WITHDRAWN: string; NEW_PROPERTY_MATCH: string; PROPERTY_STATUS_CHANGE: string; ... 22 more ...; WORKSPACE_INVITATION: string; }' is missing the following properties from type 'Record<NotificationType, string>': DEAL_CREATED, DEAL_PAYMENT_UPDATED, DEAL_DOCUMENT_UPLOADED, DEAL_STAGE_UPDATED, and 2 more.
+src/lib/ownership.ts(3,3): error TS2305: Module '"../types"' has no exported member 'OwnershipRecord'.
+src/lib/ownership.ts(149,10): error TS1345: An expression of type 'void' cannot be tested for truthiness.
+src/lib/ownership.ts(159,23): error TS2339: Property 'currentOwnerId' does not exist on type 'never'.
+src/lib/ownership.ts(161,61): error TS2339: Property 'currentOwnerType' does not exist on type 'never'.
+src/lib/ownership.ts(164,23): error TS2339: Property 'ownershipHistory' does not exist on type 'never'.
+src/lib/ownership.ts(351,7): error TS2322: Type '"agency-purchase"' is not assignable to type '"direct" | "investor-purchase" | "joint-venture"'.
+src/lib/ownership.ts(366,17): error TS1345: An expression of type 'void' cannot be tested for truthiness.
+src/lib/ownership.ts(418,17): error TS1345: An expression of type 'void' cannot be tested for truthiness.
+src/lib/propertyStatusSync.ts(47,30): error TS2367: This comparison appears to be unintentional because the types '"available" | "sold" | "under-offer" | "under-contract" | "negotiation" | "pending" | "active" | "cancelled" | "on-hold" | "completed" | "financing" | "rejected" | "accepted" | ... 12 more ... | "acquired"' and '"active-lease"' have no overlap.
+src/lib/propertyStatusSync.ts(67,5): error TS2367: This comparison appears to be unintentional because the types '"available" | "sold" | "under-offer" | "under-contract" | "negotiation" | "pending" | "active" | "cancelled" | "on-hold" | "completed" | "financing" | "rejected" | "accepted" | ... 12 more ... | "acquired"' and '"active-marketing"' have no overlap.
+src/lib/propertyStatusSync.ts(141,9): error TS2345: Argument of type '{ id: string; name: string; role: "agent"; }' is not assignable to parameter of type 'User'.
+  Property 'email' is missing in type '{ id: string; name: string; role: "agent"; }' but required in type 'User'.
+src/lib/propertyStatusSync.ts(208,9): error TS2345: Argument of type '{ id: string; name: string; role: "agent"; }' is not assignable to parameter of type 'User'.
+  Property 'email' is missing in type '{ id: string; name: string; role: "agent"; }' but required in type 'User'.
+src/lib/propertyStatusSync.ts(259,5): error TS2554: Expected 3 arguments, but got 2.
+src/lib/propertyStatusSync.ts(292,5): error TS2554: Expected 3 arguments, but got 2.
+src/lib/propertyStatusSync.ts(355,69): error TS2367: This comparison appears to be unintentional because the types '"available" | "sold" | "under-offer" | "under-contract" | "negotiation" | "pending" | "active" | "cancelled" | "on-hold" | "completed" | "financing" | "rejected" | "accepted" | ... 12 more ... | "acquired"' and '"active-lease"' have no overlap.
+src/lib/rentCycle.ts(73,5): error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/lib/rentCycle.ts(78,5): error TS2322: Type 'true | undefined[]' is not assignable to type 'boolean'.
+  Type 'undefined[]' is not assignable to type 'boolean'.
+src/lib/rentCycle.ts(100,23): error TS2339: Property 'description' does not exist on type 'Partial<RentCycle>'.
+src/lib/rentCycle.ts(101,18): error TS2339: Property 'images' does not exist on type 'Partial<RentCycle>'.
+src/lib/rentCycle.ts(103,5): error TS2322: Type 'string | undefined[]' is not assignable to type 'string'.
+  Type 'undefined[]' is not assignable to type 'string'.
+src/lib/rentCycle.ts(298,29): error TS2365: Operator '+' cannot be applied to types 'number' and 'string | number'.
+src/lib/rentCycle.ts(309,29): error TS2365: Operator '+' cannot be applied to types 'number' and 'string | number'.
+src/lib/rentCycle.ts(317,7): error TS2561: Object literal may only specify known properties, but 'currentTenantContact' does not exist in type 'Partial<RentCycle>'. Did you mean to write 'currentTenantName'?
+src/lib/rentCycle.ts(414,5): error TS2561: Object literal may only specify known properties, but 'currentTenantContact' does not exist in type 'Partial<RentCycle>'. Did you mean to write 'currentTenantName'?
+src/lib/rentCycle.ts(452,25): error TS2365: Operator '+' cannot be applied to types 'number' and 'string | number'.
+src/lib/rentCycle.ts(458,5): error TS2322: Type 'string | number' is not assignable to type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/lib/rentCycle.ts(469,19): error TS2365: Operator '<' cannot be applied to types 'number' and 'string | number'.
+src/lib/rentCycle.ts(720,9): error TS2322: Type '"application-received"' is not assignable to type 'NotificationType'.
+src/lib/rentCycle.ts(723,9): error TS2820: Type '"high"' is not assignable to type 'NotificationPriority'. Did you mean '"HIGH"'?
+src/lib/rentCycle.ts(816,9): error TS2322: Type '"application-accepted"' is not assignable to type 'NotificationType'.
+src/lib/rentCycle.ts(819,9): error TS2820: Type '"high"' is not assignable to type 'NotificationPriority'. Did you mean '"HIGH"'?
+src/lib/rentCycle.ts(865,9): error TS2322: Type '"application-rejected"' is not assignable to type 'NotificationType'.
+src/lib/rentCycle.ts(868,9): error TS2820: Type '"medium"' is not assignable to type 'NotificationPriority'. Did you mean '"MEDIUM"'?
+src/lib/rentRequirements.ts(23,47): error TS2339: Property 'sharedWith' does not exist on type 'RentRequirement'.
+src/lib/rentRequirements.ts(154,5): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'Partial<Omit<RentRequirement, "id" | "createdAt">>'.

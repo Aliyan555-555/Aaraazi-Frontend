@@ -392,6 +392,8 @@ export interface DealPayment {
   updatedAt?: string;
   paidDate?: string;
   installmentId?: string; // Link to installment if from plan
+  syncedToPurchaseCycle?: boolean;
+  syncedToSellCycle?: boolean;
 }
 
 /**
@@ -460,6 +462,7 @@ export interface DealDocument {
   stage?: DealStage;
   required: boolean;
   status: "pending" | "uploaded" | "verified" | "rejected";
+  syncedToCycles?: boolean;
 }
 
 // ============================================

@@ -54,6 +54,9 @@ export const createDealFromOffer = (
   // Handle amount fallbacks
   const agreedPrice = offer.offerAmount || offer.amount || 0;
 
+  // Get property for details
+  const propertyObj = getPropertyById(sellCycle.propertyId);
+
   // Calculate commission split
   const hasTwoAgents = !!purchaseCycle;
   const primaryPercentage = hasTwoAgents ? 60 : 100;
@@ -69,6 +72,15 @@ export const createDealFromOffer = (
   const deal: Deal = {
     id: `deal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     dealNumber,
+
+    property: {
+      id: sellCycle.propertyId,
+      title: sellCycle.title || propertyObj?.title || "Property",
+      address:
+        typeof propertyObj?.address === "string"
+          ? propertyObj.address
+          : propertyObj?.address?.fullAddress || "Address Pending",
+    },
 
     // DUAL-CYCLE INTEGRATION
     cycles: {
@@ -445,6 +457,12 @@ export const createDealFromPurchaseCycle = (
   const deal: Deal = {
     id: `deal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     dealNumber,
+
+    property: {
+      id: purchaseCycle.propertyId,
+      title: purchaseCycle.title || "Property",
+      address: "Address Pending", // Will be updated during sync/load
+    },
 
     // SINGLE-CYCLE INTEGRATION (Purchase side only)
     cycles: {

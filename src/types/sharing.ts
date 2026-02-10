@@ -1,4 +1,7 @@
-import { CrossAgentOffer as BaseCrossAgentOffer, DealAgentTracking as BaseDealAgentTracking } from './deals';
+import {
+  CrossAgentOffer as BaseCrossAgentOffer,
+  DealAgentTracking as BaseDealAgentTracking,
+} from "./deals";
 
 /**
  * Sharing Functionality Types
@@ -12,27 +15,32 @@ import { CrossAgentOffer as BaseCrossAgentOffer, DealAgentTracking as BaseDealAg
 /**
  * Access level for a user viewing a cycle/resource
  */
-export type AccessLevel = 'owner' | 'shared-peer' | 'manager' | 'admin' | 'none';
+export type AccessLevel =
+  | "owner"
+  | "shared-peer"
+  | "manager"
+  | "admin"
+  | "none";
 
 /**
  * User role (extended to include manager)
  */
-export type UserRole = 'admin' | 'manager' | 'agent';
+export type UserRole = "admin" | "manager" | "agent";
 
 /**
  * Cycle types
  */
-export type CycleType = 'sell' | 'rent';
+export type CycleType = "sell" | "rent";
 
 /**
  * Requirement types
  */
-export type RequirementType = 'buyer' | 'rent';
+export type RequirementType = "buyer" | "rent";
 
 /**
  * Share level (for future expansion)
  */
-export type ShareLevel = 'none' | 'team' | 'organization';
+export type ShareLevel = "none" | "team" | "organization";
 
 // ============================================
 // SMART MATCHING TYPES
@@ -46,28 +54,34 @@ export interface PropertyMatch {
   matchId: string;
 
   // Cycle side (Sell OR Rent Cycle)
-  cycleId: string;                    // SellCycle ID OR RentCycle ID
-  cycleType: CycleType;               // 'sell' or 'rent'
+  cycleId: string; // SellCycle ID OR RentCycle ID
+  cycleType: CycleType; // 'sell' or 'rent'
   listingAgentId: string;
   listingAgentName: string;
 
   // Requirement side (Buyer OR Rent Requirement)
-  requirementId: string;              // BuyerRequirement OR RentRequirement ID
-  requirementType: RequirementType;   // 'buyer' or 'rent'
+  requirementId: string; // BuyerRequirement OR RentRequirement ID
+  requirementType: RequirementType; // 'buyer' or 'rent'
 
   // Agent details (depends on requirement type)
-  buyerAgentId?: string;              // If buyer requirement
+  buyerAgentId?: string; // If buyer requirement
   buyerAgentName?: string;
-  renterAgentId?: string;             // If rent requirement
+  renterAgentId?: string; // If rent requirement
   renterAgentName?: string;
 
   // Matching
-  matchScore: number;                 // 0-100
+  matchScore: number; // 0-100
   matchDetails: MatchDetails;
   matchedAt: string;
 
   // Status
-  status: 'pending' | 'viewed' | 'offer-submitted' | 'accepted' | 'deal-created' | 'dismissed';
+  status:
+    | "pending"
+    | "viewed"
+    | "offer-submitted"
+    | "accepted"
+    | "deal-created"
+    | "dismissed";
 
   // Tracking
   viewedAt?: string;
@@ -76,11 +90,11 @@ export interface PropertyMatch {
   dismissReason?: string;
 
   // Links
-  offerId?: string;                   // If offer was submitted
-  dealId?: string;                    // If deal was created
+  offerId?: string; // If offer was submitted
+  dealId?: string; // If deal was created
 
   // UI Enrichment (Optional)
-  property?: import('./properties').Property;
+  property?: import("./properties").Property;
 
   updatedAt: string;
 }
@@ -96,7 +110,7 @@ export interface MatchDetails {
   areaMatch: boolean;
   bedroomsMatch: boolean;
   bathroomsMatch: boolean;
-  featuresMatch: string[];            // Array of matching features
+  featuresMatch: string[]; // Array of matching features
   overallScore: number;
 }
 
@@ -110,7 +124,7 @@ export interface MatchDetails {
 export interface SharingSettings {
   isShared: boolean;
   sharedAt?: string;
-  sharedWith?: string[];              // Future: specific agents (empty = all)
+  sharedWith?: string[]; // Future: specific agents (empty = all)
   shareLevel: ShareLevel;
   shareHistory?: ShareEvent[];
 }
@@ -140,7 +154,7 @@ export interface CollaborationData {
  * Share event (audit trail)
  */
 export interface ShareEvent {
-  action: 'shared' | 'unshared';
+  action: "shared" | "unshared";
   timestamp: string;
   userId: string;
   userName: string;
@@ -156,7 +170,7 @@ export interface Inquiry {
   fromAgentContact?: string;
   message: string;
   timestamp: string;
-  status: 'pending' | 'responded' | 'ignored';
+  status: "pending" | "responded" | "ignored";
   response?: string;
   respondedAt?: string;
 }
@@ -230,31 +244,32 @@ export interface RentCycleSharing {
  * Fields to add to BuyerRequirement
  */
 export interface BuyerRequirementMatching {
-  matchedProperties?: string[];       // PropertyMatch IDs
+  matchedProperties?: string[]; // PropertyMatch IDs
   matchCount?: number;
   lastMatchAt?: string;
-  offersSubmitted?: string[];         // Offer IDs
+  offersSubmitted?: string[]; // Offer IDs
 }
 
 /**
  * Fields to add to RentRequirement
  */
 export interface RentRequirementMatching {
-  matchedProperties?: string[];       // PropertyMatch IDs
+  matchedProperties?: string[]; // PropertyMatch IDs
   matchCount?: number;
   lastMatchAt?: string;
-  offersSubmitted?: string[];         // Offer IDs
+  offersSubmitted?: string[]; // Offer IDs
 }
 
 /**
  * Fields to add to Offer for cross-agent tracking
  */
 export interface OfferCrossAgentTracking {
-  submittedByAgentId?: string;        // If from another agent
+  submittedByAgentId?: string; // If from another agent
   submittedByAgentName?: string;
-  fromRequirementId?: string;         // Link to requirement
-  matchId?: string;                   // Link to match
-  submittedVia?: 'direct' | 'match' | 'shared-listing';
+  submittedByAgentContact?: string;
+  fromRequirementId?: string; // Link to requirement
+  matchId?: string; // Link to match
+  submittedVia?: "direct" | "match" | "shared-listing";
 }
 
 // ============================================

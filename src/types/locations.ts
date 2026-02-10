@@ -8,37 +8,49 @@ export interface City {
   name: string;
   isActive: boolean;
   createdAt: string;
-  createdBy: string; // saasAdminId
+  createdBy?: string; // saasAdminId
+  updatedAt?: string;
 }
 
 export interface Area {
   id: string;
   cityId: string;
+  cityName?: string; // Denormalized
   name: string;
   isActive: boolean;
   createdAt: string;
-  createdBy: string;
+  createdBy?: string;
+  updatedAt?: string;
 }
 
 export interface Block {
   id: string;
   areaId: string;
+  areaName?: string; // Denormalized
+  cityId?: string; // Denormalized
+  cityName?: string; // Denormalized
   name: string;
   isActive: boolean;
   createdAt: string;
-  createdBy: string;
+  createdBy?: string;
+  updatedAt?: string;
 }
 
 export interface Building {
   id: string;
   areaId: string;
+  areaName?: string; // Denormalized
+  cityId?: string; // Denormalized
+  cityName?: string; // Denormalized
   blockId?: string; // Optional - some buildings aren't in blocks
+  blockName?: string; // Denormalized
   name: string;
-  type: 'residential' | 'commercial' | 'mixed';
-  totalFloors: number;
+  type?: "residential" | "commercial" | "mixed";
+  totalFloors?: number;
   isActive: boolean;
   createdAt: string;
-  createdBy: string;
+  createdBy?: string;
+  updatedAt?: string;
 }
 
 export interface PropertyAddress {
@@ -49,10 +61,10 @@ export interface PropertyAddress {
   areaName: string;
   blockId?: string; // Optional - not all areas have blocks
   blockName?: string;
-  
+
   // For Plot/Land properties
   plotNumber?: string; // User input
-  
+
   // For Apartments/Commercial in buildings
   buildingId?: string;
   buildingName?: string;

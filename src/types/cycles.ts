@@ -9,7 +9,7 @@ import {
  * Cycle (Transaction Workflow) Types
  */
 
-export type CycleStatus =
+export type CycleStatusType =
   | "active"
   | "pending"
   | "completed"
@@ -29,25 +29,34 @@ export type CycleStatus =
   | "sold"
   | "rejected"
   | "offer-received"
+  | "offer-made"
+  | "under-offer"
+  | "prospecting"
+  | "due-diligence"
+  | "financing"
+  | "closing"
+  | "accepted"
   | "acquired";
+
+export type PurchaserType = "agency" | "investor" | "client";
 
 export interface BaseCycle {
   id: string;
   propertyId: string;
   agentId: string;
   agentName?: string;
-  status: CycleStatus;
+  status: CycleStatusType;
   title?: string;
   notes?: string;
 
   // Collaboration & Sharing
-  sharing?: SharingSettings & {
-    privacy?: PrivacySettings;
-  };
+  sharing?: SharingSettings;
+  privacy?: PrivacySettings;
   collaboration?: CollaborationData;
 
   createdAt: string;
   updatedAt: string;
+  createdBy: string;
 }
 
 export interface SellCycle extends BaseCycle {
@@ -68,6 +77,7 @@ export interface SellCycle extends BaseCycle {
 
   // Dates
   listedDate: string;
+  publishedDate?: string;
   expectedCloseDate?: string;
   soldDate?: string;
 
@@ -76,13 +86,18 @@ export interface SellCycle extends BaseCycle {
   acceptedOfferId?: string;
 
   // Modality-specific
-  sharedWith?: string[];
+  sharedWith: string[];
   videoTourUrl?: string;
   virtualTourUrl?: string;
   isPublished?: boolean;
   publishedOn?: string | string[];
   tags?: string[];
   internalNotes?: string;
+
+  // Sharing & Collaboration
+  sharing?: any;
+  privacy?: any;
+  collaboration?: any;
 
   // Links & Sync
   linkedDealId?: string;
@@ -142,6 +157,64 @@ export interface PurchaseCycle extends BaseCycle {
   expectedResaleValue?: number;
   targetROI?: number;
 
+  // Seller Details
+  sellerId?: string;
+  sellerName?: string;
+  sellerContact?: string;
+  sellerType?: string;
+
+  // Financials & Deal Structure
+  askingPrice?: number;
+  negotiatedPrice?: number;
+  tokenAmount?: number;
+  purchaserId?: string;
+
+  // Commission & Fees
+  facilitationFee?: number;
+  commissionRate?: number;
+  commissionAmount?: number;
+  commissionType?: string;
+  commissionSource?: string;
+
+  // Investment Specifics
+  purpose?: string;
+  investmentNotes?: string;
+
+  // Buyer/Client Specifics
+  buyerBudgetMin?: number;
+  buyerBudgetMax?: number;
+  buyerPrequalified?: boolean;
+  buyerFinancingType?: string;
+  matchedFromRequirementId?: string;
+  conditions?: string;
+
+  // Financing
+  financingType?: string;
+  loanAmount?: number;
+  loanApproved?: boolean;
+  bankName?: string;
+
+  // Dates
+  targetCloseDate?: string;
+  acceptanceDate?: string;
+
+  // Due Diligence
+  titleClear?: boolean;
+  inspectionDone?: boolean;
+  documentsVerified?: boolean;
+  surveyCompleted?: boolean;
+
+  // Costs
+  estimatedClosingCosts?: number;
+  additionalCosts?: number;
+
+  // Notes & Logs
+  internalNotes?: string;
+  communicationLog?: any[];
+
+  // Links
+  linkedSellCycleOfferId?: string;
+
   // Links & Sync
   linkedDealId?: string;
   createdDealId?: string;
@@ -155,22 +228,22 @@ export interface PurchaseCycle extends BaseCycle {
  */
 export interface Offer extends Partial<OfferCrossAgentTracking> {
   id: string;
-  amount: number;
-  offerAmount?: number; // V4 UI Alias for amount
+  amount?: number;
+  offerAmount: number; // Required by V3.0
   status: "pending" | "accepted" | "rejected" | "withdrawn" | "countered";
-  propertyId: string;
-  cycleId: string;
-  cycleType: "sell" | "rent";
+  propertyId?: string;
+  cycleId?: string;
+  cycleType?: "sell" | "rent";
   buyerId: string;
   buyerName: string;
   buyerContact?: string;
   buyerEmail?: string;
-  agentId: string; // The agent who submitted the offer
+  agentId?: string;
   notes?: string;
-  submittedDate: string;
-  offeredDate?: string; // V4 UI Alias for submittedDate
+  submittedDate?: string;
+  offeredDate: string; // Required by V3.0
   expiryDate?: string;
-  tokenAmount?: number; // V4 UI field
+  tokenAmount?: number;
 
   // Cross-agent / Integration fields
   buyerRequirementId?: string;
@@ -180,6 +253,9 @@ export interface Offer extends Partial<OfferCrossAgentTracking> {
   sourceType?: string;
   conditions?: string;
   agentNotes?: string;
+  listingAgentNotes?: string;
+  matchScore?: number;
+  coordinationRequired?: boolean;
   counterOfferAmount?: number;
   responseDate?: string;
 
