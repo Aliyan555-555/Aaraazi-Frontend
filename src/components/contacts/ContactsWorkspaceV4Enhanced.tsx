@@ -60,6 +60,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
+import { ContactFormModal } from '../ContactFormModal';
 
 /** Contact with legacy UI/tracking fields not on schema Contact */
 type ContactWithLegacy = Contact & {
@@ -88,6 +89,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
   const [isLoading, setIsLoading] = useState(true);
   const [allContacts, setAllContacts] = useState<Contact[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showAddContactModal, setShowAddContactModal] = useState(false);
 
   // Filter state
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
@@ -120,7 +122,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   useEffect(() => {
     loadContacts();
-  }, [user]);
+  }, [user, refreshTrigger]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -681,6 +683,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
   // ============================================================================
 
   return (
+    <>
     <WorkspacePageTemplate
       // Header
       title="Contacts"
@@ -691,7 +694,10 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
       primaryAction={{
         label: 'Add Contact',
         icon: <Plus className="h-4 w-4" />,
-        onClick: onAddContact || (() => toast.info('Add Contact clicked')),
+        onClick: () => {
+          setShowAddContactModal(true);
+          onAddContact?.();
+        },
       }}
 
       // Secondary Actions
@@ -788,13 +794,29 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
         icon: <Users className="h-12 w-12 text-gray-400" />,
         primaryAction: {
           label: 'Add Contact',
-          onClick: onAddContact || (() => toast.info('Add your first contact')),
+          onClick: () => {
+            setShowAddContactModal(true);
+            onAddContact?.();
+          },
         },
       }}
 
       // Callbacks
       onItemClick={(contact) => onNavigate('contact-details', contact.id)}
     />
+
+    {/* Add Contact Modal */}
+    <ContactFormModal
+      isOpen={showAddContactModal}
+      onClose={() => setShowAddContactModal(false)}
+      onSuccess={() => {
+        setRefreshTrigger((t) => t + 1);
+        setShowAddContactModal(false);
+        loadContacts();
+      }}
+      agentId={user.id}
+    />
+  </>
   );
 };
 
