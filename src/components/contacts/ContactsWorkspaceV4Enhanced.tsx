@@ -90,6 +90,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
   const [allContacts, setAllContacts] = useState<Contact[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showAddContactModal, setShowAddContactModal] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
 
   // Filter state
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
@@ -98,12 +99,12 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
   const [followUpFilter, setFollowUpFilter] = useState<string[]>([]);
 
   // Helper functions to handle tags (can be string or array)
-  const getTagArray = (tags: any): string[] => {
+  const getTagArray = (tags: string | string[] | undefined | null): string[] => {
     if (Array.isArray(tags)) return tags;
     if (typeof tags === 'string' && tags.trim() !== '') {
       try {
-        const parsed = JSON.parse(tags);
-        if (Array.isArray(parsed)) return parsed;
+        const parsed = JSON.parse(tags) as unknown;
+        if (Array.isArray(parsed)) return parsed as string[];
         return tags.split(',').map(t => t.trim()).filter(t => t);
       } catch {
         return tags.split(',').map(t => t.trim()).filter(t => t);
@@ -112,7 +113,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
     return [];
   };
 
-  const serializeTags = (tags: string[]): any => {
+  const serializeTags = (tags: string[]): string[] => {
     return tags;
   };
 
@@ -200,9 +201,8 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
   };
 
   const handleEdit = (contact: Contact) => {
-    if (onEditContact) {
-      onEditContact(contact);
-    }
+    setEditingContact(contact);
+    onEditContact?.(contact);
   };
 
   const handleDelete = (contact: Contact) => {
@@ -214,7 +214,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
   };
 
   const handleChangeStatus = (contact: Contact, newStatus: ContactStatus) => {
-    updateContact(contact.id, { status: newStatus } as any);
+    updateContact(contact.id, { status: newStatus });
     toast.success(`Contact status changed to ${newStatus}`);
     setRefreshTrigger(prev => prev + 1);
   };
@@ -698,6 +698,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
           label: 'Add Contact',
           icon: <Plus className="h-4 w-4" />,
           onClick: () => {
+            setEditingContact(null);
             setShowAddContactModal(true);
             onAddContact?.();
           },
@@ -798,6 +799,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
           primaryAction: {
             label: 'Add Contact',
             onClick: () => {
+              setEditingContact(null);
               setShowAddContactModal(true);
               onAddContact?.();
             },
@@ -808,16 +810,22 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
         onItemClick={(contact) => onNavigate('contact-details', contact.id)}
       />
 
-      {/* Add Contact Modal */}
+      {/* Add/Edit Contact Modal */}
       <ContactFormModal
-        isOpen={showAddContactModal}
-        onClose={() => setShowAddContactModal(false)}
+        isOpen={showAddContactModal || editingContact !== null}
+        onClose={() => {
+          setShowAddContactModal(false);
+          setEditingContact(null);
+        }}
         onSuccess={() => {
           setRefreshTrigger((t) => t + 1);
           setShowAddContactModal(false);
+          setEditingContact(null);
           loadContacts();
         }}
         agentId={user.id}
+        editingContact={editingContact}
+        defaultType={editingContact?.category as 'buyer' | 'seller' | 'tenant' | 'landlord' | 'investor' | 'vendor' | 'external-broker' | undefined}
       />
     </>
   );

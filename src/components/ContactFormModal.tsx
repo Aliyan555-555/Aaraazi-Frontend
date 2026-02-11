@@ -9,7 +9,7 @@
  * - Context-aware contact types
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -95,6 +95,24 @@ export function ContactFormModal({
   const [errors, setErrors] = useState<FormErrors<ContactFormData>>({});
   const [touched, setTouched] = useState<Set<keyof ContactFormData>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sync form when modal opens or editingContact changes
+  useEffect(() => {
+    if (isOpen) {
+      const categoryAsType = editingContact?.category as ContactFormData['type'];
+      setFormData({
+        name: editingContact?.name || '',
+        phone: editingContact?.phone || '',
+        email: editingContact?.email || '',
+        type: categoryAsType || defaultType || '',
+        company: editingContact?.company || '',
+        address: editingContact?.address || '',
+        notes: editingContact?.notes || '',
+      });
+      setErrors({});
+      setTouched(new Set());
+    }
+  }, [isOpen, editingContact?.id, defaultType]);
 
   // Handle field change
   const handleChange = (field: keyof ContactFormData, value: string) => {
@@ -213,6 +231,7 @@ export function ContactFormModal({
           ...restFormData,
           id: `contact_${Date.now()}`,
           agentId,
+          createdBy: agentId,
           source: 'Direct Entry',
           createdAt: now,
           updatedAt: now,
@@ -222,11 +241,11 @@ export function ContactFormModal({
           payload.category = categoryMap[formType as keyof typeof categoryMap] ?? ContactCategory.BOTH;
           payload.type = typeMap[formType as keyof typeof typeMap] ?? ContactType.CLIENT;
         }
-        addContact(payload as unknown as Parameters<typeof addContact>[0]);
+        const newContact = addContact(payload as unknown as Parameters<typeof addContact>[0]);
         toast.success('Contact added successfully!');
 
         if (onSuccess) {
-          onSuccess(payload as unknown as Contact);
+          onSuccess(newContact);
         }
       }
 

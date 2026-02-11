@@ -10,7 +10,7 @@ export default function ContactsPage() {
     const { user: saasUser } = useAuthStore();
     const router = useRouter();
 
-    const handleNavigate = (page: string, data?: any) => {
+    const handleNavigate = (page: string, data?: string) => {
         console.log(`Navigating to ${page}`, data);
 
         if (page === 'contact-details' && data) {

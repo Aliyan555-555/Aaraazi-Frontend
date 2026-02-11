@@ -44,9 +44,11 @@ type ContactWithLegacy = Contact & {
 };
 
 /** Deal with legacy UI fields not on schema Deal */
-type DealWithLegacy = any & {
+type DealWithLegacy = Deal & {
   propertyAddress?: string;
   finalPrice?: number;
+  createdAt?: string;
+  status?: string;
 };
 import { TaskQuickAddWidget } from '../tasks/TaskQuickAddWidget';
 import { TaskListView } from '../tasks/TaskListView';
@@ -100,7 +102,7 @@ export interface ContactDetailsV4EnhancedProps {
   onBack: () => void;
   onEdit?: (contact: Contact) => void;
   onDelete?: (contactId: string) => void;
-  onNavigate?: (page: string, data?: any) => void;
+  onNavigate?: (page: string, data?: unknown) => void;
 }
 
 export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> = ({
@@ -141,12 +143,12 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
   }, []);
 
   // Helper functions to handle tags (can be string or array)
-  const getTagArray = (tags: any): string[] => {
+  const getTagArray = (tags: string | string[] | undefined | null): string[] => {
     if (Array.isArray(tags)) return tags;
     if (typeof tags === 'string' && tags.trim() !== '') {
       try {
-        const parsed = JSON.parse(tags);
-        if (Array.isArray(parsed)) return parsed;
+        const parsed = JSON.parse(tags) as unknown;
+        if (Array.isArray(parsed)) return parsed as string[];
         return tags.split(',').map(t => t.trim()).filter(t => t);
       } catch {
         return tags.split(',').map(t => t.trim()).filter(t => t);
@@ -155,7 +157,7 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
     return [];
   };
 
-  const serializeTags = (tags: string[]): any => {
+  const serializeTags = (tags: string[]): string[] => {
     return tags; // Use array directly as it's the expected type now
   };
 
@@ -780,9 +782,9 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{deal.cycles?.sellCycle?.propertyId || (deal as any).propertyAddress || 'Property'}</p>
+                      <p className="font-medium">{deal.cycles?.sellCycle?.propertyId || (deal as DealWithLegacy).propertyAddress || 'Property'}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(deal.metadata?.createdAt || (deal as any).createdAt).toLocaleDateString('en-US', {
+                        {new Date(deal.metadata?.createdAt || (deal as DealWithLegacy).createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
@@ -889,12 +891,12 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                   </div>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Transaction: {(deal as any).propertyAddress || deal.cycles?.sellCycle?.propertyId || 'Property'}</p>
+                  <p className="text-sm font-medium">Transaction: {(deal as DealWithLegacy).propertyAddress || deal.cycles?.sellCycle?.propertyId || 'Property'}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatPKR((deal as any).finalPrice || deal.financial?.agreedPrice || 0)} • {deal.lifecycle?.status || (deal as any).status || 'active'}
+                    {formatPKR((deal as DealWithLegacy).finalPrice || deal.financial?.agreedPrice || 0)} • {deal.lifecycle?.status || (deal as DealWithLegacy).status || 'active'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(deal.metadata?.createdAt || (deal as any).createdAt).toLocaleDateString('en-US', {
+                    {new Date(deal.metadata?.createdAt || (deal as DealWithLegacy).createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',

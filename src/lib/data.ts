@@ -111,10 +111,24 @@ export const getContactById = (id: string): Contact | undefined => {
   return contacts.find((c) => c.id === id);
 };
 
-export const addContact = (contact: Contact): void => {
+/** Input for adding a contact - id, createdBy, createdAt, updatedAt are auto-generated if omitted */
+export const addContact = (
+  contact: Omit<Contact, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'> &
+    Partial<Pick<Contact, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>>
+): Contact => {
   const contacts = getContacts();
-  contacts.push(contact);
+  const now = new Date().toISOString();
+  const newContact: Contact = {
+    ...contact,
+    id: contact.id ?? `contact_${Date.now()}`,
+    createdBy: contact.createdBy ?? contact.agentId ?? 'system',
+    createdAt: contact.createdAt ?? now,
+    updatedAt: contact.updatedAt ?? now,
+  } as Contact;
+  contacts.push(newContact);
   saveToStorage(CONTACTS_KEY, contacts);
+  window.dispatchEvent?.(new CustomEvent('contactAdded', { detail: newContact }));
+  return newContact;
 };
 
 export const updateContact = (id: string, updates: Partial<Contact>): void => {
