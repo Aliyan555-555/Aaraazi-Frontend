@@ -1,8 +1,4 @@
-/**
- * Document Generator Modal - Context-Specific Forms
- * Each document type has its own form fields and logic
- */
-
+"use client";
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
@@ -25,6 +21,8 @@ import {
   generateDocumentName
 } from '../lib/documents';
 import { GeneratedDocument } from '../types/documents';
+import { createDocument } from '@/lib/api/documents';
+import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
 import { logger } from '../lib/logger';
 import {
@@ -52,6 +50,8 @@ interface Props {
   property?: Property;
   transaction?: Transaction;
   contacts?: Contact[];
+  /** When true, render only inner content (no Dialog wrapper). Parent must wrap in Dialog. */
+  asContent?: boolean;
 }
 
 type Step = 1 | 2 | 3;
@@ -174,7 +174,8 @@ export function DocumentGeneratorModal({
   onComplete,
   property,
   transaction,
-  contacts = []
+  contacts = [],
+  asContent = false
 }: Props) {
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [details, setDetails] = useState<DocumentDetails>({} as DocumentDetails);
@@ -344,27 +345,67 @@ export function DocumentGeneratorModal({
     }
   };
 
-  const handleComplete = () => {
-    try {
-      const document: GeneratedDocument = {
-        id: `doc-${Date.now()}`,
-        documentType,
-        documentName: generateDocumentName(
-          documentType,
-          details.propertyAddress || '',
-          details.buyerName || details.tenantName || details.payerName || ''
-        ),
-        propertyId: property?.id,
-        propertyTitle: property?.title,
-        transactionId: transaction?.id,
-        details,
-        clauses,
-        createdAt: new Date().toISOString(),
-        createdBy: 'current-user'
-      };
+  const { tenantId, agencyId } = useAuthStore();
 
-      saveGeneratedDocument(document);
-      toast.success('Document generated successfully!');
+  const handleComplete = async () => {
+    try {
+      const documentName = generateDocumentName(
+        documentType,
+        details.propertyAddress || '',
+        details.buyerName || details.tenantName || details.payerName || ''
+      );
+
+      if (tenantId && agencyId) {
+        try {
+          const created = await createDocument({
+            documentType,
+            documentName,
+            details,
+            clauses,
+            agencyId,
+            tenantId,
+            propertyId: property?.id,
+            transactionId: transaction?.id,
+            contactId: undefined,
+          });
+          saveGeneratedDocument({
+            ...created,
+            propertyTitle: property?.title,
+          } as GeneratedDocument);
+          toast.success('Document saved and ready for PDF download');
+        } catch (apiError) {
+          logger.error('API save failed, saving locally', apiError);
+          const localDoc: GeneratedDocument = {
+            id: `doc-${Date.now()}`,
+            documentType,
+            documentName,
+            propertyId: property?.id,
+            propertyTitle: property?.title,
+            transactionId: transaction?.id,
+            details,
+            clauses,
+            createdAt: new Date().toISOString(),
+            createdBy: 'current-user',
+          };
+          saveGeneratedDocument(localDoc);
+          toast.success('Document generated (save to server failed; use Print for PDF)');
+        }
+      } else {
+        const localDoc: GeneratedDocument = {
+          id: `doc-${Date.now()}`,
+          documentType,
+          documentName,
+          propertyId: property?.id,
+          propertyTitle: property?.title,
+          transactionId: transaction?.id,
+          details,
+          clauses,
+          createdAt: new Date().toISOString(),
+          createdBy: 'current-user',
+        };
+        saveGeneratedDocument(localDoc);
+        toast.success('Document generated successfully!');
+      }
       onComplete();
     } catch (error) {
       logger.error('Error generating document:', error);
@@ -372,91 +413,101 @@ export function DocumentGeneratorModal({
     }
   };
 
+  const innerContent = (
+    <>
+      <DialogHeader className="px-8 py-6 border-b border-gray-200">
+        <DialogTitle className="text-xl text-gray-900">
+          {template?.name || 'Document Generator'}
+        </DialogTitle>
+        <DialogDescription>
+          Fill in the details, customize clauses, and preview the document before generating
+        </DialogDescription>
+
+        {/* Progress Indicator */}
+        <div className="flex items-center gap-4 mt-6">
+          <div className="flex-1 space-y-2">
+            <Progress value={progress} className="h-2" />
+            <div className="flex justify-between text-sm">
+              <span className={currentStep === 1 ? 'text-blue-600' : 'text-gray-600'}>
+                1. Fill Details
+              </span>
+              <span className={currentStep === 2 ? 'text-blue-600' : 'text-gray-600'}>
+                2. Edit Clauses
+              </span>
+              <span className={currentStep === 3 ? 'text-blue-600' : 'text-gray-600'}>
+                3. Preview
+              </span>
+            </div>
+          </div>
+        </div>
+      </DialogHeader>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-8">
+        {currentStep === 1 && (
+          <Step1FillDetails
+            documentType={documentType}
+            details={details}
+            isReadOnly={isReadOnly}
+            onChange={handleFieldChange}
+          />
+        )}
+
+        {currentStep === 2 && (
+          <Step2EditClauses
+            clauses={clauses}
+            onClauseChange={handleClauseChange}
+            onClauseDelete={handleClauseDelete}
+            onAddClause={handleAddClause}
+            onDragEnd={handleDragEnd}
+            sensors={sensors}
+          />
+        )}
+
+        {currentStep === 3 && (
+          <Step3Preview
+            documentType={documentType}
+            details={details}
+            clauses={clauses}
+          />
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-8 py-6 border-t border-gray-200 flex items-center justify-between">
+        <div>
+          {currentStep > 1 && (
+            <Button variant="outline" onClick={handleBack}>
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          )}
+        </div>
+        <div>
+          {currentStep < 3 ? (
+            <Button onClick={handleNext}>
+              Next
+              <ChevronRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button onClick={handleComplete}>
+              <Check className="w-4 h-4 mr-2" />
+              Generate Document
+            </Button>
+          )}
+        </div>
+      </div>
+    </>
+  );
+
+  if (asContent) {
+    return <>{innerContent}</>;
+  }
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="!max-w-[85vw] w-[85vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-        <DialogHeader className="px-8 py-6 border-b border-gray-200">
-          <DialogTitle className="text-xl text-gray-900">
-            {template?.name || 'Document Generator'}
-          </DialogTitle>
-          <DialogDescription>
-            Fill in the details, customize clauses, and preview the document before generating
-          </DialogDescription>
-
-          {/* Progress Indicator */}
-          <div className="flex items-center gap-4 mt-6">
-            <div className="flex-1 space-y-2">
-              <Progress value={progress} className="h-2" />
-              <div className="flex justify-between text-sm">
-                <span className={currentStep === 1 ? 'text-blue-600' : 'text-gray-600'}>
-                  1. Fill Details
-                </span>
-                <span className={currentStep === 2 ? 'text-blue-600' : 'text-gray-600'}>
-                  2. Edit Clauses
-                </span>
-                <span className={currentStep === 3 ? 'text-blue-600' : 'text-gray-600'}>
-                  3. Preview
-                </span>
-              </div>
-            </div>
-          </div>
-        </DialogHeader>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          {currentStep === 1 && (
-            <Step1FillDetails
-              documentType={documentType}
-              details={details}
-              isReadOnly={isReadOnly}
-              onChange={handleFieldChange}
-            />
-          )}
-
-          {currentStep === 2 && (
-            <Step2EditClauses
-              clauses={clauses}
-              onClauseChange={handleClauseChange}
-              onClauseDelete={handleClauseDelete}
-              onAddClause={handleAddClause}
-              onDragEnd={handleDragEnd}
-              sensors={sensors}
-            />
-          )}
-
-          {currentStep === 3 && (
-            <Step3Preview
-              documentType={documentType}
-              details={details}
-              clauses={clauses}
-            />
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="px-8 py-6 border-t border-gray-200 flex items-center justify-between">
-          <div>
-            {currentStep > 1 && (
-              <Button variant="outline" onClick={handleBack}>
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-            )}
-          </div>
-          <div>
-            {currentStep < 3 ? (
-              <Button onClick={handleNext}>
-                Next
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            ) : (
-              <Button onClick={handleComplete}>
-                <Check className="w-4 h-4 mr-2" />
-                Generate Document
-              </Button>
-            )}
-          </div>
-        </div>
+        {innerContent}
       </DialogContent>
     </Dialog>
   );

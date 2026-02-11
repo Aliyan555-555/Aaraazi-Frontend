@@ -51,11 +51,11 @@ export default function RootLayout({
 `;
 
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <head>
                 <script dangerouslySetInnerHTML={{ __html: defaultThemeScript }} />
             </head>
-            <body className={`${inter.className} antialiased min-h-screen bg-background text-foreground`}>
+            <body className={`${inter.className} antialiased min-h-screen bg-background text-foreground`} suppressHydrationWarning>
                 <AuthProvider>
                     <WhiteLabelProvider>
                         <ClientInit />

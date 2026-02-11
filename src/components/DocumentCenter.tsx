@@ -1,18 +1,16 @@
-/**
- * Document Center Dashboard
- * Main entry point for document generation (Option 1)
- */
+"use client"
 
-import { useState, useEffect } from 'react';
-import { FileText, FileCheck, Home, AlertCircle, Receipt, Download, Trash2, Plus, Eye, Printer } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { FileText, FileCheck, Home, AlertCircle, Receipt, Download, Trash2, Plus, Eye } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { DocumentGeneratorModal } from './DocumentGeneratorModal';
 import { getGeneratedDocuments, deleteGeneratedDocument } from '../lib/documents';
 import { DOCUMENT_TEMPLATES, DocumentType, GeneratedDocument } from '../types/documents';
+import { useDocumentsApi } from '@/modules/documents';
+import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
-import { formatPKR } from '../lib/currency';
 
 const iconMap = {
   FileText,
@@ -23,15 +21,46 @@ const iconMap = {
 };
 
 export function DocumentCenter() {
-  const [documents, setDocuments] = useState<GeneratedDocument[]>([]);
+  const { tenantId, agencyId } = useAuthStore();
+  const [localDocuments, setLocalDocuments] = useState<GeneratedDocument[]>([]);
   const [showGenerator, setShowGenerator] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentType | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<GeneratedDocument | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  // Load documents on mount (client-only) to avoid SSR localStorage access
+  const queryParams = useMemo(
+    () => ({
+      agencyId: agencyId ?? undefined,
+      tenantId: tenantId ?? undefined,
+      limit: 100,
+    }),
+    [agencyId, tenantId]
+  );
+
+  const { documents: apiDocuments, downloadPdf, remove: removeApi, refetch } = useDocumentsApi(queryParams);
+
+  const apiIds = useMemo(() => new Set(apiDocuments.map((d) => d.id)), [apiDocuments]);
+
+  // Merge API docs (first) with local-only docs; avoid duplicates by id
+  const documents = useMemo(() => {
+    const seen = new Set<string>();
+    const out: GeneratedDocument[] = [];
+    apiDocuments.forEach((d) => {
+      seen.add(d.id);
+      out.push(d);
+    });
+    localDocuments.forEach((d) => {
+      if (!seen.has(d.id)) {
+        seen.add(d.id);
+        out.push(d);
+      }
+    });
+    return out;
+  }, [apiDocuments, localDocuments]);
+
   useEffect(() => {
-    setDocuments(getGeneratedDocuments());
+    setLocalDocuments(getGeneratedDocuments());
   }, []);
 
   const handleTemplateClick = (templateId: DocumentType) => {
@@ -39,27 +68,48 @@ export function DocumentCenter() {
     setShowGenerator(true);
   };
 
-  const handleDocumentGenerated = () => {
-    setDocuments(getGeneratedDocuments());
+  const handleDocumentGenerated = useCallback(() => {
+    setLocalDocuments(getGeneratedDocuments());
+    refetch();
     setShowGenerator(false);
     setSelectedTemplate(null);
-  };
+  }, [refetch]);
 
-  const handleDelete = (documentId: string) => {
-    if (confirm('Are you sure you want to delete this document?')) {
-      try {
-        deleteGeneratedDocument(documentId);
-        setDocuments(getGeneratedDocuments());
-        toast.success('Document deleted successfully');
-      } catch (error) {
-        toast.error('Failed to delete document');
-      }
+  const handleCloseGenerator = useCallback(() => {
+    setShowGenerator(false);
+    setSelectedTemplate(null);
+  }, []);
+
+  const handleDelete = async (documentId: string) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+    if (apiIds.has(documentId)) {
+      const ok = await removeApi(documentId);
+        if (ok) toast.success('Document deleted');
+        else toast.error('Failed to delete document');
+      return;
+    }
+    try {
+      deleteGeneratedDocument(documentId);
+      setLocalDocuments(getGeneratedDocuments());
+      toast.success('Document deleted successfully');
+    } catch {
+      toast.error('Failed to delete document');
     }
   };
 
-  const handleDownload = (document: GeneratedDocument) => {
-    // In a real implementation, this would generate and download the PDF
-    toast.info('Download functionality will be implemented with PDF generation');
+  const handleDownload = async (document: GeneratedDocument) => {
+    if (apiIds.has(document.id)) {
+      setDownloadingId(document.id);
+      try {
+        const ok = await downloadPdf(document.id, `${document.documentName.replace(/\s+/g, '-')}.pdf`);
+        if (ok) toast.success('PDF downloaded');
+        else toast.error('Download failed');
+      } finally {
+        setDownloadingId(null);
+      }
+      return;
+    }
+    toast.info('Save this document to the server first to download a white-label PDF, or use Print from the preview.');
   };
 
   const handlePreview = (document: GeneratedDocument) => {
@@ -197,9 +247,10 @@ export function DocumentCenter() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDownload(doc)}
+                              disabled={downloadingId === doc.id}
                             >
                               <Download className="w-4 h-4 mr-1" />
-                              Download
+                              {downloadingId === doc.id ? 'Generating…' : 'Download PDF'}
                             </Button>
                             <Button
                               variant="ghost"
@@ -222,28 +273,31 @@ export function DocumentCenter() {
         </div>
       </div>
 
-      {/* Document Generator Modal */}
-      {selectedTemplate && (
-        <DocumentGeneratorModal
-          documentType={selectedTemplate}
-          onClose={() => {
-            setShowGenerator(false);
-            setSelectedTemplate(null);
-          }}
-          onComplete={handleDocumentGenerated}
-        />
-      )}
+      {/* Single Dialog in tree: open state and content change, no mount/unmount of Dialog */}
+      <Dialog open={!!selectedTemplate} onOpenChange={(open) => !open && handleCloseGenerator()}>
+        <DialogContent className="!max-w-[85vw] w-[85vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+          {selectedTemplate && (
+            <DocumentGeneratorModal
+              key={selectedTemplate}
+              documentType={selectedTemplate}
+              onClose={handleCloseGenerator}
+              onComplete={handleDocumentGenerated}
+              asContent
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Preview Dialog */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{previewDocument?.documentName}</DialogTitle>
-            <DialogDescription>
-              Document preview - {previewDocument?.documentType.replace(/-/g, ' ')}
-            </DialogDescription>
-          </DialogHeader>
-          {previewDocument && (
+      {/* Preview Dialog - only mount when open to avoid Radix ref/presence update loops */}
+      {showPreview && previewDocument && (
+        <Dialog open={true} onOpenChange={(open) => !open && setShowPreview(false)}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{previewDocument.documentName}</DialogTitle>
+              <DialogDescription>
+                Document preview - {previewDocument.documentType.replace(/-/g, ' ')}
+              </DialogDescription>
+            </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="bg-white border rounded-lg p-6 space-y-4">
                 {previewDocument.clauses.map((clause) => (
@@ -263,9 +317,9 @@ export function DocumentCenter() {
                 </Button>
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

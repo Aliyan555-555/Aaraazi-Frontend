@@ -172,8 +172,9 @@ export function replacePlaceholders(content: string, details: DocumentDetails): 
       day: 'numeric' 
     }),
     '[NOTICE_PERIOD]': '30',
+    '[SALE_PRICE_WORDS]': details.salePrice != null ? numberToWords(details.salePrice) : '[SALE_PRICE_WORDS]',
   };
-  
+
   Object.entries(replacements).forEach(([placeholder, value]) => {
     result = result.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value);
   });
