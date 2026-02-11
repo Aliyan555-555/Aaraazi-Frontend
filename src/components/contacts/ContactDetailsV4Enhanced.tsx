@@ -140,23 +140,23 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
     console.log('✅ Features: Tag Management, Follow-up Tracking, Status Controls');
   }, []);
 
-  // Helper functions to handle tags (stored as string in schema, used as array in UI)
-  const parseTags = (tagsString: string): string[] => {
-    if (!tagsString || tagsString.trim() === '') return [];
-    try {
-      // Try parsing as JSON array first
-      const parsed = JSON.parse(tagsString);
-      if (Array.isArray(parsed)) return parsed;
-      // If not array, treat as comma-separated
-      return tagsString.split(',').map((t: string) => t.trim()).filter((t: string) => t);
-    } catch {
-      // If JSON parse fails, treat as comma-separated
-      return tagsString.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+  // Helper functions to handle tags (can be string or array)
+  const getTagArray = (tags: any): string[] => {
+    if (Array.isArray(tags)) return tags;
+    if (typeof tags === 'string' && tags.trim() !== '') {
+      try {
+        const parsed = JSON.parse(tags);
+        if (Array.isArray(parsed)) return parsed;
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+      } catch {
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+      }
     }
+    return [];
   };
 
-  const serializeTags = (tags: string[]): string => {
-    return JSON.stringify(tags);
+  const serializeTags = (tags: string[]): any => {
+    return tags; // Use array directly as it's the expected type now
   };
 
   // ============================================================================
@@ -335,15 +335,15 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
     }
   };
 
-  const handleChangeStatus = (newStatus: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED') => {
-    updateContact(contact.id, { status: newStatus } as Parameters<typeof updateContact>[1]);
-    toast.success(`Contact status changed to ${newStatus.toLowerCase()}`);
+  const handleChangeStatus = (newStatus: 'active' | 'inactive' | 'archived') => {
+    updateContact(contact.id, { status: newStatus });
+    toast.success(`Contact status changed to ${newStatus}`);
     setRefreshTrigger(prev => prev + 1);
   };
 
   const handleAddTag = () => {
     if (newTag.trim()) {
-      const currentTags = parseTags(contact.tags);
+      const currentTags = getTagArray(contact.tags);
       if (!currentTags.includes(newTag.trim())) {
         updateContact(contact.id, {
           tags: serializeTags([...currentTags, newTag.trim()]),
@@ -359,7 +359,7 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    const currentTags = parseTags(contact.tags);
+    const currentTags = getTagArray(contact.tags);
     updateContact(contact.id, {
       tags: serializeTags(currentTags.filter((t: string) => t !== tagToRemove)),
     });
@@ -444,14 +444,14 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
       onClick: handleEditClick,
     },
     {
-      label: contact.status === 'ACTIVE' ? 'Mark Inactive' : 'Mark Active',
-      icon: contact.status === 'ACTIVE' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />,
-      onClick: () => handleChangeStatus(contact.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'),
+      label: contact.status === 'active' ? 'Mark Inactive' : 'Mark Active',
+      icon: contact.status === 'active' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />,
+      onClick: () => handleChangeStatus(contact.status === 'active' ? 'inactive' : 'active'),
     },
     {
-      label: contact.status === 'ARCHIVED' ? 'Unarchive' : 'Archive',
+      label: contact.status === 'archived' ? 'Unarchive' : 'Archive',
       icon: <Archive className="h-4 w-4" />,
-      onClick: () => handleChangeStatus(contact.status === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED'),
+      onClick: () => handleChangeStatus(contact.status === 'archived' ? 'active' : 'archived'),
     },
     {
       label: 'Delete Contact',
@@ -570,8 +570,8 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <Badge variant={
-                  contact.status === 'ACTIVE' ? 'default' :
-                    contact.status === 'INACTIVE' ? 'secondary' :
+                  contact.status === 'active' ? 'default' :
+                    contact.status === 'inactive' ? 'secondary' :
                       'outline'
                 }>
                   {contact.status.charAt(0).toUpperCase() + contact.status.slice(1)}
@@ -636,9 +636,9 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                 Add Tag
               </Button>
             </div>
-            {parseTags(contact.tags).length > 0 ? (
+            {getTagArray(contact.tags).length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {parseTags(contact.tags).map((tag: string, index: number) => (
+                {getTagArray(contact.tags).map((tag: string, index: number) => (
                   <Badge key={index} variant="outline" className="gap-1">
                     {tag}
                     <button

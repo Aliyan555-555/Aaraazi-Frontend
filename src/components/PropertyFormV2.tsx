@@ -17,7 +17,8 @@
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { User, Contact, Property } from '../types';
+import { User, Property } from '../types';
+import type { Contact } from '../types/contacts';
 import { PropertyAddress } from '../types/locations';
 import { FormContainer } from './ui/form-container';
 import { FormSection } from './ui/form-section';
@@ -635,7 +636,7 @@ export function PropertyFormV2({ user, onBack, onSuccess, editingProperty, acqui
     unitNumber: (typeof editingProperty?.address === 'object' ? editingProperty.address.unitNumber : '') || '',
 
     area: editingProperty?.area?.toString() || '',
-    areaUnit: editingProperty?.areaUnit || 'sqft',
+    areaUnit: (editingProperty?.areaUnit?.toLowerCase() as any) || 'sqft',
     bedrooms: editingProperty?.bedrooms?.toString() || '',
     bathrooms: editingProperty?.bathrooms?.toString() || '',
     floor: editingProperty?.floor?.toString() || '',
@@ -908,8 +909,11 @@ export function PropertyFormV2({ user, onBack, onSuccess, editingProperty, acqui
           activePurchaseCycleIds: [],
           activeRentCycleIds: [],
 
-          // Status (computed)
-          currentStatus: 'No Active Cycle',
+          // Status
+          status: 'available',
+          price: 0,
+          title: typeof propertyAddress === 'string' ? propertyAddress : `${propertyAddress.plotNumber || ''} ${propertyAddress.areaName || ''}`,
+          agentId: user.id,
 
           // History
           cycleHistory: {
@@ -924,7 +928,7 @@ export function PropertyFormV2({ user, onBack, onSuccess, editingProperty, acqui
           createdBy: user.id,
           sharedWith: [],
           isInternalListing: false,
-        };
+        } as any;
 
         savedProperty = addProperty(propertyData);
         toast.success('Property added successfully!');

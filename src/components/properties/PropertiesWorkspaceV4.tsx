@@ -141,8 +141,15 @@ export const PropertiesWorkspaceV4: React.FC<PropertiesWorkspaceV4Props> = ({
       id: 'area',
       label: 'Area',
       accessor: (p) => {
-        const unitLabels = { sqft: 'sq ft', sqyards: 'sq yd', marla: 'marla', kanal: 'kanal' };
-        return `${p.area} ${unitLabels[p.areaUnit] || p.areaUnit}`;
+        const unitLabels: Record<string, string> = {
+          sqft: 'sq ft', 'sq-feet': 'sq ft', SQFT: 'sq ft',
+          sqyards: 'sq yd', 'sq-yards': 'sq yd', SQYARDS: 'sq yd',
+          marla: 'marla', MARLA: 'marla',
+          kanal: 'kanal', KANAL: 'kanal',
+          acres: 'acres', ACRE: 'acres'
+        };
+        const unit = unitLabels[p.areaUnit] || p.areaUnit;
+        return `${p.area} ${unit}`;
       },
       width: '120px',
       sortable: true,

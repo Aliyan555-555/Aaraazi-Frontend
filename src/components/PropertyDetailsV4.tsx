@@ -126,15 +126,15 @@ export function PropertyDetailsV4({
   const getDisplayPrice = () => {
     // Find the first active (listed) sell cycle
     const activeSellCycle = safeSellCycles.find(
-      cycle => cycle.status === 'listed' || 
-               property.activeSellCycleIds?.includes(cycle.id)
+      cycle => cycle.status === 'listed' ||
+        property.activeSellCycleIds?.includes(cycle.id)
     );
-    
+
     // Use sell cycle asking price if available, otherwise fall back to property price
     if (activeSellCycle?.askingPrice) {
       return activeSellCycle.askingPrice;
     }
-    
+
     return property.price || 0;
   };
 
@@ -155,9 +155,9 @@ export function PropertyDetailsV4({
   }, [property.id]);
 
   // Check if property is investor-owned
-  const isInvestorOwned = property.currentOwnerType === 'investor' && 
-                          property.investorShares && 
-                          property.investorShares.length > 0;
+  const isInvestorOwned = property.currentOwnerType === 'investor' &&
+    property.investorShares &&
+    property.investorShares.length > 0;
 
   const totalActiveCycles =
     safeSellCycles.length + safePurchaseCycles.length + safeRentCycles.length;
@@ -177,9 +177,9 @@ export function PropertyDetailsV4({
 
   // Determine property lifecycle stage based on status
   const getLifecycleStage = () => {
-    if (currentStatus === 'sold' || currentStatus === 'rented') {
+    if ((currentStatus as string) === 'sold' || (currentStatus as string) === 'rented') {
       return 'transaction-complete';
-    } else if (currentStatus === 'under-offer' || currentStatus === 'under-contract' || currentStatus === 'under_contract') {
+    } else if (currentStatus === 'under-offer' || currentStatus === 'under-contract' || (currentStatus as string) === 'under_contract') {
       // Support both 'under-offer' (correct PropertyStatus) and legacy values
       return 'under-contract';
     } else if (totalActiveCycles > 0) {
@@ -218,7 +218,16 @@ export function PropertyDetailsV4({
 
   // ==================== PAGE HEADER ====================
   const formattedAddress = useFormattedAddress(property, 'full');
-  
+
+  // Helper for status variants
+  const getStatusVariant = (status: string): 'success' | 'warning' | 'destructive' | 'default' | 'info' => {
+    const s = status.toLowerCase();
+    if (s.includes('sold') || s.includes('rented')) return 'info';
+    if (s.includes('available')) return 'success';
+    if (s.includes('under') || s.includes('offer')) return 'warning';
+    return 'default';
+  };
+
   const pageHeader = {
     title: property.title || formattedAddress,
     breadcrumbs: [
@@ -226,7 +235,7 @@ export function PropertyDetailsV4({
       { label: 'Properties', onClick: onBack },
       { label: property.title || formattedAddress },
     ],
-    description: formattedAddress,
+    subtitle: formattedAddress,
     metrics: [
       {
         label: 'Price',
@@ -235,7 +244,7 @@ export function PropertyDetailsV4({
       },
       {
         label: 'Area',
-        value: formatAreaDisplay(property.area, property.areaUnit),
+        value: formatAreaDisplay(Number(property.area), property.areaUnit),
         icon: <Square className="w-4 h-4" />,
       },
       {
@@ -276,27 +285,30 @@ export function PropertyDetailsV4({
         onClick: onStartRentCycle,
       },
     ],
-    status: currentStatus ? { label: currentStatus } : undefined,
+    status: currentStatus ? {
+      label: currentStatus as string,
+      variant: getStatusVariant(currentStatus as string)
+    } : undefined,
     onBack,
   };
 
   // ==================== CONNECTED ENTITIES ====================
-  const connectedEntities = [
+  const connectedEntities: any[] = [
     {
       type: 'owner' as const,
-      name: property.currentOwnerName || property.sellerName || 'Unknown Owner',
+      name: property.currentOwnerName || (property as any).sellerName || 'Unknown Owner',
       icon: <Users className="h-3 w-3" />,
-      onClick: () => {},
+      onClick: () => { },
     },
     ...(property.agentName
       ? [
-          {
-            type: 'agent' as const,
-            name: property.agentName,
-            icon: <Users className="h-3 w-3" />,
-            onClick: () => {},
-          },
-        ]
+        {
+          type: 'agent' as const,
+          name: property.agentName,
+          icon: <Users className="h-3 w-3" />,
+          onClick: () => { },
+        },
+      ]
       : []),
   ];
 
@@ -324,8 +336,8 @@ export function PropertyDetailsV4({
               lifecycleStage === 'under-contract'
                 ? 'current'
                 : lifecycleStage === 'transaction-complete'
-                ? 'complete'
-                : 'pending',
+                  ? 'complete'
+                  : 'pending',
             date: undefined,
           },
           {
@@ -357,55 +369,55 @@ export function PropertyDetailsV4({
           },
           {
             label: 'Area',
-            value: formatAreaDisplay(property.area, property.areaUnit),
+            value: formatAreaDisplay(Number(property.area), property.areaUnit),
             icon: <Square className="h-4 w-4" />,
           },
           ...(property.bedrooms
             ? [
-                {
-                  label: 'Bedrooms',
-                  value: property.bedrooms.toString(),
-                  icon: <Bed className="h-4 w-4" />,
-                },
-              ]
+              {
+                label: 'Bedrooms',
+                value: property.bedrooms.toString(),
+                icon: <Bed className="h-4 w-4" />,
+              },
+            ]
             : []),
           ...(property.bathrooms
             ? [
-                {
-                  label: 'Bathrooms',
-                  value: property.bathrooms.toString(),
-                  icon: <Bath className="h-4 w-4" />,
-                },
-              ]
+              {
+                label: 'Bathrooms',
+                value: property.bathrooms.toString(),
+                icon: <Bath className="h-4 w-4" />,
+              },
+            ]
             : []),
           ...(property.constructionYear
             ? [
-                {
-                  label: 'Construction Year',
-                  value: property.constructionYear.toString(),
-                  icon: <Calendar className="h-4 w-4" />,
-                },
-              ]
+              {
+                label: 'Construction Year',
+                value: property.constructionYear.toString(),
+                icon: <Calendar className="h-4 w-4" />,
+              },
+            ]
             : []),
           ...(property.features && Array.isArray(property.features) && property.features.length > 0
             ? [
-                {
-                  label: 'Features',
-                  value: (
-                    <div className="flex flex-wrap gap-2">
-                      {property.features.map((feature, index) => {
-                        if (!feature || typeof feature !== 'string') return null;
-                        return (
-                          <Badge key={index} variant="outline" className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200/50"
+              {
+                label: 'Features',
+                value: (
+                  <div className="flex flex-wrap gap-2">
+                    {property.features.map((feature, index) => {
+                      if (!feature || typeof feature !== 'string') return null;
+                      return (
+                        <Badge key={index} variant="outline" className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200/50"
                           style={{ fontSize: 'var(--text-xs)' }}>
-                            {feature}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  ),
-                },
-              ]
+                          {feature}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                ),
+              },
+            ]
             : []),
           {
             label: 'Status',
@@ -438,17 +450,17 @@ export function PropertyDetailsV4({
         data={[
           {
             label: 'Current Owner',
-            value: property.currentOwnerName || property.sellerName || 'Unknown',
+            value: property.currentOwnerName || (property as any).sellerName || 'Unknown',
             icon: <Users className="h-4 w-4" />,
           },
           ...(property.agentId
             ? [
-                {
-                  label: 'Assigned Agent',
-                  value: property.agentName || property.agentId,
-                  icon: <Users className="h-4 w-4" />,
-                },
-              ]
+              {
+                label: 'Assigned Agent',
+                value: property.agentName || property.agentId,
+                icon: <Users className="h-4 w-4" />,
+              },
+            ]
             : []),
         ]}
         columns={2}
@@ -459,7 +471,7 @@ export function PropertyDetailsV4({
       {isInvestorOwned && (
         <InvestorSharesCard
           property={property}
-          onNavigateToInvestor={(investorId) => {
+          onNavigateToInvestor={(investorId: string) => {
             const investor = getInvestorById(investorId);
             if (investor) {
               toast.success(`Navigate to investor: ${investor.name}`);
@@ -474,12 +486,11 @@ export function PropertyDetailsV4({
   // ==================== OVERVIEW TAB - RIGHT COLUMN ====================
   const overviewSidebar = (
     <>
-      {/* Owner Contact Card */}
       <ContactCard
-        name={property.currentOwnerName || property.sellerName || 'Unknown Owner'}
+        name={property.currentOwnerName || (property as any).sellerName || 'Unknown Owner'}
         role="owner"
         notes={`Owns ${property.title || formattedAddress}`}
-        tags={['Owner', currentStatus]}
+        tags={['Owner', currentStatus as string]}
       />
 
       {/* Quick Actions */}
@@ -516,20 +527,20 @@ export function PropertyDetailsV4({
             label: 'Days on Market',
             value: daysOnMarket.toString(),
             icon: <Clock className="h-5 w-5" />,
-            variant: 'info',
-            description: 'since listing',
+            variant: 'info' as const,
+            comparison: 'since listing',
           },
           {
             label: 'Total Views',
             value: (property.viewCount || 0).toString(),
             icon: <Eye className="h-5 w-5" />,
-            variant: 'info',
+            variant: 'info' as const,
           },
           {
             label: 'Total Cycles',
             value: totalActiveCycles.toString(),
             icon: <FileText className="h-5 w-5" />,
-            variant: 'info',
+            variant: 'info' as const,
           },
         ]}
         columns={2}
@@ -676,7 +687,7 @@ export function PropertyDetailsV4({
                     <StatusBadge status={cycle.status} />
                   </div>
                   <p className="text-sm text-gray-600">
-                    Available from {new Date(cycle.availableFrom).toLocaleDateString()}
+                    Available from {new Date(cycle.availableFrom || cycle.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => onViewCycle(cycle.id, 'rent')}>
@@ -799,7 +810,7 @@ export function PropertyDetailsV4({
     // Cycles created
     allCycles.forEach((cycle, idx) => {
       let description = '';
-      
+
       if (cycle.type === 'sell') {
         const sellCycle = cycle as any;
         const price = sellCycle.askingPrice || displayPrice || 0;
@@ -869,7 +880,7 @@ export function PropertyDetailsV4({
 
       {/* Transaction History */}
       <PropertyTransactionHistory
-        propertyId={property.id}
+        property={property}
         user={user}
       />
 
@@ -902,7 +913,7 @@ export function PropertyDetailsV4({
               Execute profit distribution when this property is sold
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setShowDistributionModal(true)}
             className="bg-green-600 hover:bg-green-700"
           >
@@ -994,51 +1005,53 @@ export function PropertyDetailsV4({
       label: 'Overview',
       content: overviewContent,
       sidebar: overviewSidebar,
-      layout: '2-1',
+      layout: '2-1' as const,
     },
     {
       id: 'cycles',
       label: `Cycles (${totalActiveCycles})`,
       content: cyclesContent,
-      layout: '3-0',
+      layout: '3-0' as const,
     },
     {
       id: 'history',
       label: 'History',
       content: historyContent,
-      layout: '3-0',
+      layout: '3-0' as const,
     },
     {
       id: 'documents',
       label: 'Documents',
       content: documentsContent,
-      layout: '3-0',
+      layout: '3-0' as const,
     },
     {
       id: 'activity',
       label: 'Activity',
       content: activityContent,
-      layout: '3-0',
+      layout: '3-0' as const,
     },
-    ...(isInvestorOwned ? [
-      {
-        id: 'financials',
-        label: 'Financials',
-        content: financialsContent,
-        layout: '3-0',
-      },
-      {
-        id: 'distributions',
-        label: 'Distributions',
-        content: distributionsContent,
-        layout: '3-0',
-      },
-    ] : []),
+    ...(isInvestorOwned
+      ? [
+        {
+          id: 'financials',
+          label: 'Financials',
+          content: financialsContent,
+          layout: '3-0' as const,
+        },
+        {
+          id: 'distributions',
+          label: 'Distributions',
+          content: distributionsContent,
+          layout: '3-0' as const,
+        },
+      ]
+      : []),
     {
       id: 'tasks',
       label: `Tasks (${propertyTasks.length})`,
       content: tasksContent,
-      layout: '3-0',
+      layout: '3-0' as const,
     },
   ];
 

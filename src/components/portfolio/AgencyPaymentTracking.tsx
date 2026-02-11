@@ -397,7 +397,7 @@ export default function AgencyPaymentTracking({ onNavigate }: AgencyPaymentTrack
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            #{instalmentNumber} of {schedule.totalInstalments}
+                            #{instalmentNumber} of {schedule.numberOfInstalments}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right font-medium">

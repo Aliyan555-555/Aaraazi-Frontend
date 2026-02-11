@@ -9,12 +9,12 @@ import { Transaction, Property, User, Contact } from '../types';
 import { getTransactions } from '../lib/transactions';
 import { getContacts } from '../lib/data';
 import { formatPKR } from '../lib/currency';
-import { 
-  Plus, 
-  Calendar, 
-  User as UserIcon, 
-  DollarSign, 
-  FileText, 
+import {
+  Plus,
+  Calendar,
+  User as UserIcon,
+  DollarSign,
+  FileText,
   CheckCircle2,
   XCircle,
   Clock,
@@ -47,7 +47,7 @@ export const PropertyTransactionHistory: React.FC<PropertyTransactionHistoryProp
   const loadTransactions = () => {
     const allTransactions = getTransactions(property.id);
     // Sort by date, newest first
-    const sorted = allTransactions.sort((a, b) => 
+    const sorted = allTransactions.sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
     setTransactions(sorted);
@@ -87,24 +87,25 @@ export const PropertyTransactionHistory: React.FC<PropertyTransactionHistoryProp
     );
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '—';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
   const getTotalPaid = (transaction: Transaction) => {
     if (!transaction.paymentPlan) return 0;
-    return transaction.paymentPlan.installments.reduce((sum, inst) => 
+    return transaction.paymentPlan.installments.reduce((sum, inst) =>
       sum + (inst.paidAmount || 0), 0
     );
   };
 
   const getTotalAmount = (transaction: Transaction) => {
-    return transaction.acceptedOfferAmount;
+    return transaction.acceptedOfferAmount || 0;
   };
 
   const viewTransactionDetail = (transaction: Transaction) => {
@@ -128,7 +129,7 @@ export const PropertyTransactionHistory: React.FC<PropertyTransactionHistoryProp
             Complete lifecycle of all deals for this property
           </p>
         </div>
-        
+
         {property.status !== 'sold' && (
           <Button onClick={onCreateNewDeal} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -263,7 +264,7 @@ export const PropertyTransactionHistory: React.FC<PropertyTransactionHistoryProp
 
                 return (
                   <div key={transaction.id}>
-                    <div 
+                    <div
                       className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                       onClick={() => viewTransactionDetail(transaction)}
                     >
@@ -309,7 +310,7 @@ export const PropertyTransactionHistory: React.FC<PropertyTransactionHistoryProp
                               <span>{Math.round(paymentProgress)}%</span>
                             </div>
                             <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div 
+                              <div
                                 className="h-full bg-primary transition-all"
                                 style={{ width: `${paymentProgress}%` }}
                               />

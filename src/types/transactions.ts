@@ -19,7 +19,18 @@ export interface Transaction {
   buyerEmail?: string;
   buyerContactId?: string;
   acceptedOfferAmount?: number;
+  acceptedDate?: string;
+  expectedClosingDate?: string;
   actualClosingDate?: string;
+  paymentPlan?: {
+    installments: Array<{
+      description: string;
+      dueDate: string;
+      amount: number;
+      paidAmount?: number;
+      status: "pending" | "paid" | "overdue" | "partially-paid";
+    }>;
+  };
 }
 
 export interface TransactionTask {

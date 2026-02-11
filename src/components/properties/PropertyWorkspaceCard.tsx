@@ -51,13 +51,13 @@ export const PropertyWorkspaceCard: React.FC<PropertyWorkspaceCardProps> = ({
 }) => {
   // Get active cycle status for display
   const getPropertyStatus = (): { label: string; variant: 'default' | 'success' | 'warning' | 'info' | 'secondary' } => {
-    if (property.activeSellCycleIds?.length > 0) {
+    if ((property.activeSellCycleIds?.length || 0) > 0) {
       return { label: 'For Sale', variant: 'success' };
     }
-    if (property.activeRentCycleIds?.length > 0) {
+    if ((property.activeRentCycleIds?.length || 0) > 0) {
       return { label: 'For Rent', variant: 'info' };
     }
-    if (property.activePurchaseCycleIds?.length > 0) {
+    if ((property.activePurchaseCycleIds?.length || 0) > 0) {
       return { label: 'In Acquisition', variant: 'warning' };
     }
     return { label: 'Available', variant: 'secondary' };
@@ -65,11 +65,12 @@ export const PropertyWorkspaceCard: React.FC<PropertyWorkspaceCardProps> = ({
 
   // Format area with unit
   const formatArea = () => {
-    const unitLabels = {
-      sqft: 'sq ft',
-      sqyards: 'sq yd',
-      marla: 'marla',
-      kanal: 'kanal',
+    const unitLabels: Record<string, string> = {
+      sqft: 'sq ft', 'sq-feet': 'sq ft', SQFT: 'sq ft',
+      sqyards: 'sq yd', 'sq-yards': 'sq yd', SQYARDS: 'sq yd',
+      marla: 'marla', MARLA: 'marla',
+      kanal: 'kanal', KANAL: 'kanal',
+      acres: 'acres', ACRE: 'acres'
     };
     return `${property.area} ${unitLabels[property.areaUnit] || property.areaUnit}`;
   };
@@ -146,7 +147,7 @@ export const PropertyWorkspaceCard: React.FC<PropertyWorkspaceCardProps> = ({
   // Add owner
   metadata.push({
     label: 'Owner',
-    value: property.currentOwnerName,
+    value: property.currentOwnerName || 'Unknown',
     icon: <User className="h-4 w-4" />,
   });
 

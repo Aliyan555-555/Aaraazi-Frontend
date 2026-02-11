@@ -1,6 +1,6 @@
+import { Property } from "../types/properties";
+import { Contact } from "../types/contacts";
 import {
-  Property,
-  Contact,
   JournalEntry,
   Expense,
   Lead,
@@ -53,17 +53,29 @@ export const getPropertyById = (id: string): Property | undefined => {
   return properties.find((p) => p.id === id);
 };
 
-export const addProperty = (property: Property): void => {
+export const addProperty = (
+  property: Omit<Property, "id" | "createdAt" | "updatedAt">,
+): Property => {
   const properties = getProperties();
-  properties.push(property);
+  const newProperty: Property = {
+    ...property,
+    id: `prop_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } as Property;
+
+  properties.push(newProperty);
   saveToStorage(PROPERTIES_KEY, properties);
-  window.dispatchEvent(new CustomEvent("propertyAdded", { detail: property }));
+  window.dispatchEvent(
+    new CustomEvent("propertyAdded", { detail: newProperty }),
+  );
+  return newProperty;
 };
 
 export const updateProperty = (
   id: string,
   updates: Partial<Property>,
-): void => {
+): Property | null => {
   const properties = getProperties();
   const index = properties.findIndex((p) => p.id === id);
   if (index !== -1) {
@@ -76,7 +88,9 @@ export const updateProperty = (
     window.dispatchEvent(
       new CustomEvent("propertyUpdated", { detail: properties[index] }),
     );
+    return properties[index] || null;
   }
+  return null;
 };
 
 export const deleteProperty = (id: string): void => {

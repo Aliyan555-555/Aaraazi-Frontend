@@ -97,20 +97,23 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [followUpFilter, setFollowUpFilter] = useState<string[]>([]);
 
-  // Helper functions to handle tags (stored as string in schema, used as array in UI)
-  const parseTags = (tagsString: string): string[] => {
-    if (!tagsString || tagsString.trim() === '') return [];
-    try {
-      const parsed = JSON.parse(tagsString);
-      if (Array.isArray(parsed)) return parsed;
-      return tagsString.split(',').map((t: string) => t.trim()).filter((t: string) => t);
-    } catch {
-      return tagsString.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+  // Helper functions to handle tags (can be string or array)
+  const getTagArray = (tags: any): string[] => {
+    if (Array.isArray(tags)) return tags;
+    if (typeof tags === 'string' && tags.trim() !== '') {
+      try {
+        const parsed = JSON.parse(tags);
+        if (Array.isArray(parsed)) return parsed;
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+      } catch {
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+      }
     }
+    return [];
   };
 
-  const serializeTags = (tags: string[]): string => {
-    return JSON.stringify(tags);
+  const serializeTags = (tags: string[]): any => {
+    return tags;
   };
 
   // Load contacts based on user role
@@ -126,9 +129,9 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   // Calculate stats
   const stats = useMemo(() => {
-    const active = allContacts.filter(c => c.status === 'ACTIVE').length;
-    const clients = allContacts.filter(c => c.type === 'CLIENT').length;
-    const prospects = allContacts.filter(c => c.type === 'PROSPECT').length;
+    const active = allContacts.filter(c => c.status === 'active').length;
+    const clients = allContacts.filter(c => c.type === 'client').length;
+    const prospects = allContacts.filter(c => c.type === 'prospect').length;
 
     const totalCommission = allContacts
       .filter(c => (c as ContactWithLegacy).totalCommissionEarned)
@@ -211,8 +214,8 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
   };
 
   const handleChangeStatus = (contact: Contact, newStatus: ContactStatus) => {
-    updateContact(contact.id, { status: newStatus } as Parameters<typeof updateContact>[1]);
-    toast.success(`Contact status changed to ${newStatus.toLowerCase()}`);
+    updateContact(contact.id, { status: newStatus } as any);
+    toast.success(`Contact status changed to ${newStatus}`);
     setRefreshTrigger(prev => prev + 1);
   };
 
@@ -228,7 +231,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   const handleBulkArchive = (ids: string[]) => {
     ids.forEach(id => {
-      updateContact(id, { status: ContactStatus.ARCHIVED } as Parameters<typeof updateContact>[1]);
+      updateContact(id, { status: 'archived' });
     });
     toast.success(`Archived ${ids.length} contacts`);
     setRefreshTrigger(prev => prev + 1);
@@ -246,7 +249,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   const handleBulkActivate = (ids: string[]) => {
     ids.forEach(id => {
-      updateContact(id, { status: ContactStatus.ACTIVE } as Parameters<typeof updateContact>[1]);
+      updateContact(id, { status: 'active' });
     });
     toast.success(`Activated ${ids.length} contacts`);
     setRefreshTrigger(prev => prev + 1);
@@ -254,7 +257,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   const handleBulkDeactivate = (ids: string[]) => {
     ids.forEach(id => {
-      updateContact(id, { status: ContactStatus.INACTIVE } as Parameters<typeof updateContact>[1]);
+      updateContact(id, { status: 'inactive' });
     });
     toast.success(`Deactivated ${ids.length} contacts`);
     setRefreshTrigger(prev => prev + 1);
@@ -266,11 +269,11 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
       ids.forEach(id => {
         const contact = allContacts.find(c => c.id === id);
         if (contact) {
-          const currentTags = parseTags(contact.tags);
+          const currentTags = getTagArray(contact.tags);
           if (!currentTags.includes(tag.trim())) {
             updateContact(id, {
               tags: serializeTags([...currentTags, tag.trim()])
-            } as Parameters<typeof updateContact>[1]);
+            });
           }
         }
       });
@@ -316,12 +319,12 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
       label: 'Type',
       accessor: (c) => {
         const typeColors: Record<ContactType, string> = {
-          [ContactType.CLIENT]: 'bg-green-100 text-green-800',
-          [ContactType.PROSPECT]: 'bg-blue-100 text-blue-800',
-          [ContactType.INVESTOR]: 'bg-purple-100 text-purple-800',
-          [ContactType.VENDOR]: 'bg-gray-100 text-gray-800',
-          [ContactType.PARTNER]: 'bg-gray-100 text-gray-800',
-          [ContactType.AGENT]: 'bg-indigo-100 text-indigo-800',
+          client: 'bg-green-100 text-green-800',
+          prospect: 'bg-blue-100 text-blue-800',
+          investor: 'bg-purple-100 text-purple-800',
+          vendor: 'bg-gray-100 text-gray-800',
+          partner: 'bg-gray-100 text-gray-800',
+          agent: 'bg-indigo-100 text-indigo-800',
         };
         return (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[c.type]}`}>
@@ -341,21 +344,21 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
         }
 
         const categoryColors: Record<ContactCategory, string> = {
-          [ContactCategory.BUYER]: 'bg-green-100 text-green-800',
-          [ContactCategory.SELLER]: 'bg-blue-100 text-blue-800',
-          [ContactCategory.TENANT]: 'bg-purple-100 text-purple-800',
-          [ContactCategory.LANDLORD]: 'bg-gray-100 text-gray-800',
-          [ContactCategory.EXTERNAL_BROKER]: 'bg-orange-100 text-orange-800',
-          [ContactCategory.BOTH]: 'bg-yellow-100 text-yellow-800',
+          buyer: 'bg-green-100 text-green-800',
+          seller: 'bg-blue-100 text-blue-800',
+          tenant: 'bg-purple-100 text-purple-800',
+          landlord: 'bg-gray-100 text-gray-800',
+          'external-broker': 'bg-orange-100 text-orange-800',
+          both: 'bg-yellow-100 text-yellow-800',
         };
 
         const categoryLabels: Record<ContactCategory, string> = {
-          [ContactCategory.BUYER]: 'Buyer',
-          [ContactCategory.SELLER]: 'Seller',
-          [ContactCategory.TENANT]: 'Tenant',
-          [ContactCategory.LANDLORD]: 'Landlord',
-          [ContactCategory.EXTERNAL_BROKER]: 'External Broker',
-          [ContactCategory.BOTH]: 'Both',
+          buyer: 'Buyer',
+          seller: 'Seller',
+          tenant: 'Tenant',
+          landlord: 'Landlord',
+          'external-broker': 'External Broker',
+          both: 'Both',
         };
 
         return (
@@ -372,10 +375,10 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
       label: 'Status',
       accessor: (c) => {
         const statusLabels: Record<ContactStatus, string> = {
-          [ContactStatus.ACTIVE]: 'Active',
-          [ContactStatus.INACTIVE]: 'Inactive',
-          [ContactStatus.ARCHIVED]: 'Archived',
-          [ContactStatus.BLOCKED]: 'Blocked',
+          active: 'Active',
+          inactive: 'Inactive',
+          archived: 'Archived',
+          blocked: 'Blocked',
         };
 
         const statusLabel = statusLabels[c.status] || c.status;
@@ -493,15 +496,15 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
                 Edit Contact
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.ACTIVE)} disabled={c.status === ContactStatus.ACTIVE}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'active')} disabled={c.status === 'active'}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Mark Active
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.INACTIVE)} disabled={c.status === ContactStatus.INACTIVE}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'inactive')} disabled={c.status === 'inactive'}>
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Mark Inactive
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.ARCHIVED)} disabled={c.status === ContactStatus.ARCHIVED}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'archived')} disabled={c.status === 'archived'}>
                 <Archive className="h-4 w-4 mr-2" />
                 Archive
               </DropdownMenuItem>
@@ -684,139 +687,139 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   return (
     <>
-    <WorkspacePageTemplate
-      // Header
-      title="Contacts"
-      description="Manage your contacts and client relationships"
-      stats={stats}
+      <WorkspacePageTemplate
+        // Header
+        title="Contacts"
+        description="Manage your contacts and client relationships"
+        stats={stats}
 
-      // Primary Action
-      primaryAction={{
-        label: 'Add Contact',
-        icon: <Plus className="h-4 w-4" />,
-        onClick: () => {
-          setShowAddContactModal(true);
-          onAddContact?.();
-        },
-      }}
-
-      // Secondary Actions
-      secondaryActions={secondaryActions}
-
-      // Data
-      items={allContacts}
-      getItemId={(c) => c.id}
-      isLoading={isLoading}
-
-      // View Configuration
-      defaultView="table"
-      availableViews={['table']}
-
-      // Table View
-      columns={columns}
-
-      // Search & Filter
-      searchPlaceholder="Search contacts by name, phone, email, notes, or tags..."
-      quickFilters={quickFilters}
-      sortOptions={sortOptions}
-      onSearch={(contact, query) => {
-        const q = query.toLowerCase();
-        return (
-          contact.name.toLowerCase().includes(q) ||
-          contact.phone.includes(q) ||
-          (contact.email?.toLowerCase().includes(q) ?? false) ||
-          ((contact as ContactWithLegacy).notes?.toLowerCase().includes(q) ?? false) ||
-          parseTags(contact.tags).some((t: string) => t.toLowerCase().includes(q))
-        );
-      }}
-      onFilter={(contact, filters) => {
-        // Type filter
-        const types = filters.get('type');
-        if (types && types.length > 0 && !types.includes(contact.type)) return false;
-
-        // Status filter
-        const statuses = filters.get('status');
-        if (statuses && statuses.length > 0 && !statuses.includes(contact.status)) return false;
-
-        // Category filter
-        const categories = filters.get('category');
-        if (categories && categories.length > 0 && contact.category && !categories.includes(contact.category)) return false;
-
-        // Follow up filter
-        const followUps = filters.get('followUp');
-        if (followUps && followUps.length > 0) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-
-          let match = false;
-          if (followUps.includes('due')) {
-            if (contact.nextFollowUp) {
-              const followUpDate = new Date(contact.nextFollowUp);
-              followUpDate.setHours(0, 0, 0, 0);
-              if (followUpDate.getTime() === today.getTime()) match = true;
-            }
-          }
-          if (followUps.includes('overdue')) {
-            if (contact.nextFollowUp) {
-              const followUpDate = new Date(contact.nextFollowUp);
-              if (followUpDate < today) match = true;
-            }
-          }
-          if (followUps.includes('upcoming')) {
-            if (contact.nextFollowUp) {
-              const followUpDate = new Date(contact.nextFollowUp);
-              if (followUpDate > today) match = true;
-            }
-          }
-          if (followUps.includes('none')) {
-            if (!contact.nextFollowUp) match = true;
-          }
-          if (!match) return false;
-        }
-
-        return true;
-      }}
-
-      // Bulk Actions
-      bulkActions={bulkActions}
-
-      // Pagination
-      pagination={{
-        enabled: true,
-        pageSize: 50,
-        pageSizeOptions: [25, 50, 100, 200],
-      }}
-
-      // Empty State
-      emptyStatePreset={{
-        title: 'No contacts yet',
-        description: 'Add your first contact to start building relationships',
-        icon: <Users className="h-12 w-12 text-gray-400" />,
-        primaryAction: {
+        // Primary Action
+        primaryAction={{
           label: 'Add Contact',
+          icon: <Plus className="h-4 w-4" />,
           onClick: () => {
             setShowAddContactModal(true);
             onAddContact?.();
           },
-        },
-      }}
+        }}
 
-      // Callbacks
-      onItemClick={(contact) => onNavigate('contact-details', contact.id)}
-    />
+        // Secondary Actions
+        secondaryActions={secondaryActions}
 
-    {/* Add Contact Modal */}
-    <ContactFormModal
-      isOpen={showAddContactModal}
-      onClose={() => setShowAddContactModal(false)}
-      onSuccess={() => {
-        setRefreshTrigger((t) => t + 1);
-        setShowAddContactModal(false);
-        loadContacts();
-      }}
-      agentId={user.id}
-    />
-  </>
+        // Data
+        items={allContacts}
+        getItemId={(c) => c.id}
+        isLoading={isLoading}
+
+        // View Configuration
+        defaultView="table"
+        availableViews={['table']}
+
+        // Table View
+        columns={columns}
+
+        // Search & Filter
+        searchPlaceholder="Search contacts by name, phone, email, notes, or tags..."
+        quickFilters={quickFilters}
+        sortOptions={sortOptions}
+        onSearch={(contact, query) => {
+          const q = query.toLowerCase();
+          return (
+            contact.name.toLowerCase().includes(q) ||
+            contact.phone.includes(q) ||
+            (contact.email?.toLowerCase().includes(q) ?? false) ||
+            ((contact as ContactWithLegacy).notes?.toLowerCase().includes(q) ?? false) ||
+            getTagArray(contact.tags).some((t: string) => t.toLowerCase().includes(q))
+          );
+        }}
+        onFilter={(contact, filters) => {
+          // Type filter
+          const types = filters.get('type');
+          if (types && types.length > 0 && !types.includes(contact.type)) return false;
+
+          // Status filter
+          const statuses = filters.get('status');
+          if (statuses && statuses.length > 0 && !statuses.includes(contact.status)) return false;
+
+          // Category filter
+          const categories = filters.get('category');
+          if (categories && categories.length > 0 && contact.category && !categories.includes(contact.category)) return false;
+
+          // Follow up filter
+          const followUps = filters.get('followUp');
+          if (followUps && followUps.length > 0) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let match = false;
+            if (followUps.includes('due')) {
+              if (contact.nextFollowUp) {
+                const followUpDate = new Date(contact.nextFollowUp);
+                followUpDate.setHours(0, 0, 0, 0);
+                if (followUpDate.getTime() === today.getTime()) match = true;
+              }
+            }
+            if (followUps.includes('overdue')) {
+              if (contact.nextFollowUp) {
+                const followUpDate = new Date(contact.nextFollowUp);
+                if (followUpDate < today) match = true;
+              }
+            }
+            if (followUps.includes('upcoming')) {
+              if (contact.nextFollowUp) {
+                const followUpDate = new Date(contact.nextFollowUp);
+                if (followUpDate > today) match = true;
+              }
+            }
+            if (followUps.includes('none')) {
+              if (!contact.nextFollowUp) match = true;
+            }
+            if (!match) return false;
+          }
+
+          return true;
+        }}
+
+        // Bulk Actions
+        bulkActions={bulkActions}
+
+        // Pagination
+        pagination={{
+          enabled: true,
+          pageSize: 50,
+          pageSizeOptions: [25, 50, 100, 200],
+        }}
+
+        // Empty State
+        emptyStatePreset={{
+          title: 'No contacts yet',
+          description: 'Add your first contact to start building relationships',
+          icon: <Users className="h-12 w-12 text-gray-400" />,
+          primaryAction: {
+            label: 'Add Contact',
+            onClick: () => {
+              setShowAddContactModal(true);
+              onAddContact?.();
+            },
+          },
+        }}
+
+        // Callbacks
+        onItemClick={(contact) => onNavigate('contact-details', contact.id)}
+      />
+
+      {/* Add Contact Modal */}
+      <ContactFormModal
+        isOpen={showAddContactModal}
+        onClose={() => setShowAddContactModal(false)}
+        onSuccess={() => {
+          setRefreshTrigger((t) => t + 1);
+          setShowAddContactModal(false);
+          loadContacts();
+        }}
+        agentId={user.id}
+      />
+    </>
   );
 };
 

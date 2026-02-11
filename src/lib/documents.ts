@@ -10,9 +10,10 @@ import { logger } from './logger';
 const DOCUMENTS_KEY = 'estate_generated_documents';
 
 /**
- * Get all generated documents
+ * Get all generated documents (client-only; returns [] during SSR)
  */
 export function getGeneratedDocuments(): GeneratedDocument[] {
+  if (typeof window === 'undefined') return [];
   try {
     const data = localStorage.getItem(DOCUMENTS_KEY);
     return data ? JSON.parse(data) : [];
