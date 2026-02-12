@@ -1,301 +1,302 @@
-import React, { useState, useEffect } from 'react';
-import type { User } from '../../types';
-import { Card } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Select } from '../ui/select';
-import { getUserSettings, updateUserSettings, UserSettings } from '../../lib/userSettings';
-import { Globe, Clock, Calendar as CalendarIcon, DollarSign, Save } from 'lucide-react';
+'use client';
+
+import React, { useState } from 'react';
+import type { User } from '@/types';
+import type { UserSettings } from '@/types/settings.types';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Globe, Calendar as CalendarIcon, DollarSign, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AccountSettingsProps {
   user: User;
+  settings: UserSettings;
+  onSettingsChange: React.Dispatch<React.SetStateAction<UserSettings>>;
 }
 
-export const AccountSettings: React.FC<AccountSettingsProps> = ({ user }) => {
-  const [settings, setSettings] = useState<UserSettings | null>(null);
+export function AccountSettings({ user, settings, onSettingsChange }: AccountSettingsProps) {
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    loadSettings();
-  }, [user.id]);
-
-  const loadSettings = () => {
-    const userSettings = getUserSettings(user.id);
-    setSettings(userSettings);
-  };
-
-  const handleSave = () => {
-    if (!settings) return;
-    
-    try {
-      updateUserSettings(user.id, settings);
-      setHasChanges(false);
-      toast.success('Settings saved successfully');
-    } catch (error) {
-      toast.error('Failed to save settings');
-    }
-  };
-
-  const updateSetting = (section: keyof UserSettings, key: string, value: any) => {
-    if (!settings) return;
-    
-    setSettings({
-      ...settings,
-      [section]: {
-        ...(settings[section] as any),
-        [key]: value,
-      },
-    });
+  const update = <K extends keyof UserSettings>(
+    section: K,
+    key: keyof UserSettings[K],
+    value: UserSettings[K][keyof UserSettings[K]]
+  ) => {
+    onSettingsChange((prev) => ({
+      ...prev,
+      [section]: { ...(prev[section] as object), [key]: value },
+    }));
     setHasChanges(true);
   };
 
-  if (!settings) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const handleSave = () => {
+    setHasChanges(false);
+    toast.success('Settings saved successfully');
+  };
+
+  const handleCancel = () => {
+    setHasChanges(false);
+    toast.info('Changes discarded');
+  };
 
   return (
     <div className="space-y-6">
-      {/* Regional Settings */}
       <Card className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Globe className="h-5 w-5 text-gray-700" />
-          <h2 className="text-xl text-gray-900">Regional Settings</h2>
+        <div className="mb-4 flex items-center gap-2">
+          <Globe className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Regional Settings</h2>
         </div>
-        <p className="text-gray-600 mb-6">Configure your language, timezone, and regional preferences</p>
-
+        <p className="mb-6 text-muted-foreground">
+          Configure your language, timezone, and regional preferences.
+        </p>
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="language">Language</Label>
-              <select
-                id="language"
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Language</Label>
+              <Select
                 value={settings.regional.language}
-                onChange={(e) => updateSetting('regional', 'language', e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onValueChange={(v) => update('regional', 'language', v as 'en' | 'ur')}
               >
-                <option value="en">English</option>
-                <option value="ur">اردو (Urdu)</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ur">اردو (Urdu)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            <div>
-              <Label htmlFor="timezone">Timezone</Label>
-              <select
-                id="timezone"
+            <div className="space-y-2">
+              <Label>Timezone</Label>
+              <Select
                 value={settings.regional.timezone}
-                onChange={(e) => updateSetting('regional', 'timezone', e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onValueChange={(v) => update('regional', 'timezone', v)}
               >
-                <option value="Asia/Karachi">Asia/Karachi (PKT)</option>
-                <option value="Asia/Dubai">Asia/Dubai (GST)</option>
-                <option value="Europe/London">Europe/London (GMT)</option>
-                <option value="America/New_York">America/New York (EST)</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Asia/Karachi">Asia/Karachi (PKT)</SelectItem>
+                  <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
+                  <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
+                  <SelectItem value="America/New_York">America/New York (EST)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            <div>
-              <Label htmlFor="dateFormat">Date Format</Label>
-              <select
-                id="dateFormat"
+            <div className="space-y-2">
+              <Label>Date Format</Label>
+              <Select
                 value={settings.regional.dateFormat}
-                onChange={(e) => updateSetting('regional', 'dateFormat', e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onValueChange={(v) =>
+                  update('regional', 'dateFormat', v as UserSettings['regional']['dateFormat'])
+                }
               >
-                <option value="DD/MM/YYYY">DD/MM/YYYY (20/12/2024)</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY (12/20/2024)</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD (2024-12-20)</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DD/MM/YYYY">DD/MM/YYYY (20/12/2024)</SelectItem>
+                  <SelectItem value="MM/DD/YYYY">MM/DD/YYYY (12/20/2024)</SelectItem>
+                  <SelectItem value="YYYY-MM-DD">YYYY-MM-DD (2024-12-20)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            <div>
-              <Label htmlFor="timeFormat">Time Format</Label>
-              <select
-                id="timeFormat"
+            <div className="space-y-2">
+              <Label>Time Format</Label>
+              <Select
                 value={settings.regional.timeFormat}
-                onChange={(e) => updateSetting('regional', 'timeFormat', e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onValueChange={(v) => update('regional', 'timeFormat', v as '12h' | '24h')}
               >
-                <option value="12h">12-hour (2:30 PM)</option>
-                <option value="24h">24-hour (14:30)</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="12h">12-hour (2:30 PM)</SelectItem>
+                  <SelectItem value="24h">24-hour (14:30)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            <div>
-              <Label htmlFor="firstDayOfWeek">First Day of Week</Label>
-              <select
-                id="firstDayOfWeek"
+            <div className="space-y-2">
+              <Label>First Day of Week</Label>
+              <Select
                 value={settings.regional.firstDayOfWeek}
-                onChange={(e) => updateSetting('regional', 'firstDayOfWeek', e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onValueChange={(v) =>
+                  update('regional', 'firstDayOfWeek', v as 'sunday' | 'monday')
+                }
               >
-                <option value="monday">Monday</option>
-                <option value="sunday">Sunday</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="monday">Monday</SelectItem>
+                  <SelectItem value="sunday">Sunday</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            <div>
-              <Label htmlFor="currency">Currency</Label>
-              <div className="flex items-center gap-2 mt-1 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50">
-                <DollarSign className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-900">PKR (Pakistani Rupee)</span>
+            <div className="space-y-2">
+              <Label>Currency</Label>
+              <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span>PKR (Pakistani Rupee)</span>
               </div>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Dashboard Preferences */}
       <Card className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <CalendarIcon className="h-5 w-5 text-gray-700" />
-          <h2 className="text-xl text-gray-900">Dashboard Preferences</h2>
+        <div className="mb-4 flex items-center gap-2">
+          <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Dashboard Preferences</h2>
         </div>
-        <p className="text-gray-600 mb-6">Customize your dashboard experience</p>
-
+        <p className="mb-6 text-muted-foreground">Customize your dashboard experience.</p>
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="defaultView">Default View</Label>
-              <select
-                id="defaultView"
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Default View</Label>
+              <Select
                 value={settings.dashboard.defaultView}
-                onChange={(e) => updateSetting('dashboard', 'defaultView', e.target.value)}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onValueChange={(v) =>
+                  update('dashboard', 'defaultView', v as 'grid' | 'list' | 'kanban')
+                }
               >
-                <option value="grid">Grid View</option>
-                <option value="list">List View</option>
-                <option value="kanban">Kanban View</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="grid">Grid View</SelectItem>
+                  <SelectItem value="list">List View</SelectItem>
+                  <SelectItem value="kanban">Kanban View</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-
-            <div>
-              <Label htmlFor="refreshInterval">Auto Refresh Interval</Label>
-              <select
-                id="refreshInterval"
-                value={settings.dashboard.refreshInterval}
-                onChange={(e) => updateSetting('dashboard', 'refreshInterval', parseInt(e.target.value))}
-                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <div className="space-y-2">
+              <Label>Auto Refresh Interval</Label>
+              <Select
+                value={String(settings.dashboard.refreshInterval)}
+                onValueChange={(v) => update('dashboard', 'refreshInterval', parseInt(v, 10))}
               >
-                <option value="60">1 minute</option>
-                <option value="300">5 minutes</option>
-                <option value="600">10 minutes</option>
-                <option value="1800">30 minutes</option>
-                <option value="0">Disabled</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="60">1 minute</SelectItem>
+                  <SelectItem value="300">5 minutes</SelectItem>
+                  <SelectItem value="600">10 minutes</SelectItem>
+                  <SelectItem value="1800">30 minutes</SelectItem>
+                  <SelectItem value="0">Disabled</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="showWelcome"
               checked={settings.dashboard.showWelcomeMessage}
-              onChange={(e) => updateSetting('dashboard', 'showWelcomeMessage', e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              onCheckedChange={(checked) =>
+                update('dashboard', 'showWelcomeMessage', checked === true)
+              }
             />
-            <Label htmlFor="showWelcome" className="mb-0">
+            <Label htmlFor="showWelcome" className="cursor-pointer font-normal">
               Show welcome message on dashboard
             </Label>
           </div>
         </div>
       </Card>
 
-      {/* Privacy Settings */}
       <Card className="p-6">
-        <h2 className="text-xl text-gray-900 mb-4">Privacy Settings</h2>
-        <p className="text-gray-600 mb-6">Control who can see your information</p>
-
+        <h2 className="mb-4 text-xl font-semibold">Privacy Settings</h2>
+        <p className="mb-6 text-muted-foreground">Control who can see your information.</p>
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="profileVisibility">Profile Visibility</Label>
-            <select
-              id="profileVisibility"
+          <div className="space-y-2">
+            <Label>Profile Visibility</Label>
+            <Select
               value={settings.privacy.profileVisibility}
-              onChange={(e) => updateSetting('privacy', 'profileVisibility', e.target.value)}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onValueChange={(v) =>
+                update('privacy', 'profileVisibility', v as 'public' | 'team' | 'private')
+              }
             >
-              <option value="public">Public - Everyone can see</option>
-              <option value="team">Team - Only team members</option>
-              <option value="private">Private - Only you</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="public">Public — Everyone can see</SelectItem>
+                <SelectItem value="team">Team — Only team members</SelectItem>
+                <SelectItem value="private">Private — Only you</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-
-          <div className="space-y-3 pt-4 border-t">
+          <div className="space-y-3 border-t pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="mb-0">Show Email Address</Label>
-                <p className="text-xs text-gray-500">Allow others to see your email</p>
+                <Label className="font-normal">Show Email Address</Label>
+                <p className="text-xs text-muted-foreground">Allow others to see your email</p>
               </div>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.privacy.showEmail}
-                onChange={(e) => updateSetting('privacy', 'showEmail', e.target.checked)}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                onCheckedChange={(checked) => update('privacy', 'showEmail', checked === true)}
               />
             </div>
-
             <div className="flex items-center justify-between">
               <div>
-                <Label className="mb-0">Show Phone Number</Label>
-                <p className="text-xs text-gray-500">Allow others to see your phone</p>
+                <Label className="font-normal">Show Phone Number</Label>
+                <p className="text-xs text-muted-foreground">Allow others to see your phone</p>
               </div>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.privacy.showPhone}
-                onChange={(e) => updateSetting('privacy', 'showPhone', e.target.checked)}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                onCheckedChange={(checked) => update('privacy', 'showPhone', checked === true)}
               />
             </div>
-
             <div className="flex items-center justify-between">
               <div>
-                <Label className="mb-0">Activity Status</Label>
-                <p className="text-xs text-gray-500">Show when you're online</p>
+                <Label className="font-normal">Activity Status</Label>
+                <p className="text-xs text-muted-foreground">Show when you&apos;re online</p>
               </div>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.privacy.activityStatus}
-                onChange={(e) => updateSetting('privacy', 'activityStatus', e.target.checked)}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                onCheckedChange={(checked) =>
+                  update('privacy', 'activityStatus', checked === true)
+                }
               />
             </div>
-
             <div className="flex items-center justify-between">
               <div>
-                <Label className="mb-0">Allow Data Sharing</Label>
-                <p className="text-xs text-gray-500">Share usage data to improve the app</p>
+                <Label className="font-normal">Allow Data Sharing</Label>
+                <p className="text-xs text-muted-foreground">Share usage data to improve the app</p>
               </div>
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={settings.privacy.allowDataSharing}
-                onChange={(e) => updateSetting('privacy', 'allowDataSharing', e.target.checked)}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                onCheckedChange={(checked) =>
+                  update('privacy', 'allowDataSharing', checked === true)
+                }
               />
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Save Button */}
       {hasChanges && (
-        <div className="sticky bottom-6 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+        <div className="sticky bottom-6 rounded-lg border bg-card p-4 shadow-lg">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-gray-900">Unsaved Changes</p>
-              <p className="text-sm text-gray-600">You have unsaved changes in your settings</p>
+              <p className="font-medium">Unsaved Changes</p>
+              <p className="text-sm text-muted-foreground">You have unsaved changes in your settings</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={loadSettings}>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={handleCancel}>
                 Cancel
               </Button>
               <Button onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="mr-2 h-4 w-4" />
                 Save Changes
               </Button>
             </div>
@@ -304,4 +305,4 @@ export const AccountSettings: React.FC<AccountSettingsProps> = ({ user }) => {
       )}
     </div>
   );
-};
+}
