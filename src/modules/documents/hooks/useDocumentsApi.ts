@@ -53,6 +53,9 @@ export function useDocumentsApi(params?: QueryDocumentsParams) {
     async (documentId: string, fileName?: string): Promise<boolean> => {
       try {
         const blob = await generateDocumentPdf(documentId);
+        if (!blob || blob.size === 0) {
+          throw new Error('PDF generation returned empty file');
+        }
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -62,7 +65,7 @@ export function useDocumentsApi(params?: QueryDocumentsParams) {
         return true;
       } catch (e) {
         console.error('PDF download failed', e);
-        return false;
+        throw e; // rethrow so caller can show message
       }
     },
     []

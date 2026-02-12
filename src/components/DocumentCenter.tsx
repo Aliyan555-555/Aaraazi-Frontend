@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { FileText, FileCheck, Home, AlertCircle, Receipt, Download, Trash2, Plus, Eye } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { FileText, FileCheck, Home, AlertCircle, Receipt, Download, Trash2, Plus, Eye, Upload, Filter, Loader2 } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
@@ -10,6 +10,7 @@ import { getGeneratedDocuments, deleteGeneratedDocument } from '../lib/documents
 import { DOCUMENT_TEMPLATES, DocumentType, GeneratedDocument } from '../types/documents';
 import { useDocumentsApi } from '@/modules/documents';
 import { useAuthStore } from '@/store/useAuthStore';
+import { uploadDocument } from '@/lib/api/documents';
 import { toast } from 'sonner';
 
 const iconMap = {
@@ -20,6 +21,14 @@ const iconMap = {
   Receipt
 };
 
+const STATUS_COLORS = {
+  DRAFT: 'bg-gray-100 text-gray-800',
+  GENERATED: 'bg-blue-100 text-blue-800',
+  SENT: 'bg-purple-100 text-purple-800',
+  SIGNED: 'bg-green-100 text-green-800',
+  ARCHIVED: 'bg-yellow-100 text-yellow-800',
+};
+
 export function DocumentCenter() {
   const { tenantId, agencyId } = useAuthStore();
   const [localDocuments, setLocalDocuments] = useState<GeneratedDocument[]>([]);
@@ -28,6 +37,12 @@ export function DocumentCenter() {
   const [showPreview, setShowPreview] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<GeneratedDocument | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const queryParams = useMemo(
     () => ({
@@ -104,6 +119,9 @@ export function DocumentCenter() {
         const ok = await downloadPdf(document.id, `${document.documentName.replace(/\s+/g, '-')}.pdf`);
         if (ok) toast.success('PDF downloaded');
         else toast.error('Download failed');
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'PDF download failed';
+        toast.error(message);
       } finally {
         setDownloadingId(null);
       }
@@ -117,14 +135,125 @@ export function DocumentCenter() {
     setShowPreview(true);
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !tenantId || !agencyId) return;
+
+    setUploadingFile(true);
+    try {
+      await uploadDocument(file, {
+        documentName: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+        documentType: 'CUSTOM',
+        agencyId,
+        tenantId,
+      });
+      toast.success('Document uploaded successfully');
+      refetch();
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error('Failed to upload document');
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const filteredDocuments = useMemo(() => {
+    if (statusFilter === 'all') return documents;
+    return documents.filter(doc => doc.status === statusFilter);
+  }, [documents, statusFilter]);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedDocuments(new Set(filteredDocuments.map(doc => doc.id)));
+    } else {
+      setSelectedDocuments(new Set());
+    }
+  };
+
+  const handleSelectDocument = (docId: string, checked: boolean) => {
+    const newSelected = new Set(selectedDocuments);
+    if (checked) {
+      newSelected.add(docId);
+    } else {
+      newSelected.delete(docId);
+    }
+    setSelectedDocuments(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedDocuments.size === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete ${selectedDocuments.size} document(s)?`)) return;
+
+    setBulkDeleting(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const docId of selectedDocuments) {
+      try {
+        if (apiIds.has(docId)) {
+          await removeApi(docId);
+        } else {
+          deleteGeneratedDocument(docId);
+          setLocalDocuments(getGeneratedDocuments());
+        }
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setBulkDeleting(false);
+    setSelectedDocuments(new Set());
+
+    if (successCount > 0) {
+      toast.success(`${successCount} document(s) deleted successfully`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to delete ${failCount} document(s)`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-6">
-        <h1 className="text-2xl text-gray-900">Document Center</h1>
-        <p className="text-gray-600 mt-1">
-          Generate legal documents from templates or view recently created documents
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl text-gray-900">Document Center</h1>
+            <p className="text-gray-600 mt-1">
+              Generate legal documents from templates or upload existing files
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingFile || !tenantId || !agencyId}
+            >
+              {uploadingFile ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Document
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="p-6 space-y-8">
@@ -178,34 +307,92 @@ export function DocumentCenter() {
 
         {/* Recent Documents Section */}
         <div>
-          <div className="mb-4">
-            <h2 className="text-xl text-gray-900">Recently Generated Documents</h2>
-            <p className="text-gray-600 mt-1">
-              View and manage your previously created documents
-            </p>
+          <div className="mb-4 flex justify-between items-center">
+            <div>
+              <h2 className="text-xl text-gray-900">Recently Generated Documents</h2>
+              <p className="text-gray-600 mt-1">
+                View and manage your previously created documents
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value="DRAFT">Draft</option>
+                <option value="GENERATED">Generated</option>
+                <option value="SENT">Sent</option>
+                <option value="SIGNED">Signed</option>
+                <option value="ARCHIVED">Archived</option>
+              </select>
+            </div>
           </div>
 
           <Card>
-            {documents.length === 0 ? (
+            {filteredDocuments.length === 0 ? (
               <div className="p-12 text-center">
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">
-                  Your generated documents will appear here.
+                  {statusFilter === 'all' 
+                    ? 'Your generated documents will appear here.'
+                    : `No documents with status "${statusFilter}"`}
                 </p>
                 <p className="text-gray-500 text-sm mt-2">
-                  Get started by selecting a template above.
+                  {statusFilter === 'all' 
+                    ? 'Get started by selecting a template above or uploading a document.'
+                    : 'Try selecting a different status filter.'}
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-gray-900">
-                        Document Name
-                      </th>
+              <>
+                {selectedDocuments.size > 0 && (
+                  <div className="px-6 py-3 bg-blue-50 border-b border-blue-200 flex items-center justify-between">
+                    <span className="text-sm text-blue-900 font-medium">
+                      {selectedDocuments.size} document(s) selected
+                    </span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={bulkDeleting}
+                    >
+                      {bulkDeleting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete Selected
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left">
+                          <input
+                            type="checkbox"
+                            checked={selectedDocuments.size === filteredDocuments.length && filteredDocuments.length > 0}
+                            onChange={(e) => handleSelectAll(e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                        </th>
+                        <th className="px-6 py-3 text-left text-gray-900">
+                          Document Name
+                        </th>
                       <th className="px-6 py-3 text-left text-gray-900">
                         Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-gray-900">
+                        Status
                       </th>
                       <th className="px-6 py-3 text-left text-gray-900">
                         Property
@@ -218,14 +405,27 @@ export function DocumentCenter() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {documents.map((doc) => (
-                      <tr key={doc.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-gray-900 font-medium">
-                          {doc.documentName}
-                        </td>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredDocuments.map((doc) => (
+                        <tr key={doc.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedDocuments.has(doc.id)}
+                              onChange={(e) => handleSelectDocument(doc.id, e.target.checked)}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4 text-gray-900 font-medium">
+                            {doc.documentName}
+                          </td>
                         <td className="px-6 py-4 text-gray-600">
-                          {doc.documentType.replace(/-/g, ' ')}
+                          {doc.documentType.replace(/_/g, ' ')}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[doc.status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'}`}>
+                            {doc.status}
+                          </span>
                         </td>
                         <td className="px-6 py-4 text-gray-600">
                           {doc.propertyTitle || 'N/A'}
@@ -265,9 +465,10 @@ export function DocumentCenter() {
                         </td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </Card>
         </div>
@@ -291,31 +492,61 @@ export function DocumentCenter() {
       {/* Preview Dialog - only mount when open to avoid Radix ref/presence update loops */}
       {showPreview && previewDocument && (
         <Dialog open={true} onOpenChange={(open) => !open && setShowPreview(false)}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>{previewDocument.documentName}</DialogTitle>
               <DialogDescription>
-                Document preview - {previewDocument.documentType.replace(/-/g, ' ')}
+                Document preview - {previewDocument.documentType.replace(/_/g, ' ')}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="bg-white border rounded-lg p-6 space-y-4">
-                {previewDocument.clauses.map((clause) => (
-                  <div key={clause.id}>
-                    <h4 className="font-medium text-gray-900 mb-2">{clause.title}</h4>
-                    <p className="text-gray-600 text-sm whitespace-pre-wrap">{clause.content}</p>
+            <div className="flex-1 overflow-hidden mt-4">
+              {previewDocument.pdfUrl ? (
+                <div className="h-full">
+                  <iframe
+                    src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${previewDocument.pdfUrl}`}
+                    className="w-full h-[600px] border rounded-lg"
+                    title="Document Preview"
+                  />
+                </div>
+              ) : (
+                <div className="overflow-y-auto max-h-[600px]">
+                  <div className="bg-white border rounded-lg p-6 space-y-4">
+                    {previewDocument.clauses && previewDocument.clauses.length > 0 ? (
+                      previewDocument.clauses.map((clause) => (
+                        <div key={clause.id}>
+                          <h4 className="font-medium text-gray-900 mb-2">{clause.title}</h4>
+                          <p className="text-gray-600 text-sm whitespace-pre-wrap">{clause.content}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">
+                        No preview available. Generate or download the PDF to view the document.
+                      </p>
+                    )}
                   </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={() => handleDownload(previewDocument)}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-                <Button variant="outline" onClick={() => setShowPreview(false)}>
-                  Close
-                </Button>
-              </div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button 
+                onClick={() => handleDownload(previewDocument)}
+                disabled={downloadingId === previewDocument.id}
+              >
+                {downloadingId === previewDocument.id ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setShowPreview(false)}>
+                Close
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

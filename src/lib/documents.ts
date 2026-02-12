@@ -116,6 +116,25 @@ export function autoFillFromDeal(
   };
 }
 
+/** Convert financial field (number | string) to number for formatting/API */
+function toNum(v: number | string | undefined): number | undefined {
+  if (v === undefined || v === null || v === '') return undefined;
+  if (typeof v === 'number') return Number.isNaN(v) ? undefined : v;
+  const n = parseFloat(String(v).replace(/[^0-9.]/g, ''));
+  return Number.isNaN(n) ? undefined : n;
+}
+
+/** Normalize details for API: ensure financial fields are numbers (handles partial strings like "0.") */
+export function normalizeDetailsForApi(details: DocumentDetails): DocumentDetails {
+  const out = { ...details };
+  if (out.salePrice !== undefined) out.salePrice = toNum(out.salePrice) ?? 0;
+  if (out.tokenMoney !== undefined) out.tokenMoney = toNum(out.tokenMoney) ?? 0;
+  if (out.monthlyRent !== undefined) out.monthlyRent = toNum(out.monthlyRent) ?? 0;
+  if (out.securityDeposit !== undefined) out.securityDeposit = toNum(out.securityDeposit) ?? 0;
+  if (out.paymentAmount !== undefined) out.paymentAmount = toNum(out.paymentAmount) ?? 0;
+  return out;
+}
+
 /**
  * Replace placeholders in clause content with actual data
  */
@@ -140,18 +159,18 @@ export function replacePlaceholders(content: string, details: DocumentDetails): 
     '[PROPERTY_SIZE]': details.propertySize || '[PROPERTY_SIZE]',
     '[PROPERTY_UNIT]': details.propertySizeUnit || 'Sq. Yards',
     
-    // Sales Financial
-    '[SALE_PRICE]': details.salePrice ? formatPKR(details.salePrice) : '[SALE_PRICE]',
-    '[TOKEN_MONEY]': details.tokenMoney ? formatPKR(details.tokenMoney) : '[TOKEN_MONEY]',
-    '[REMAINING_AMOUNT]': details.remainingAmount ? formatPKR(details.remainingAmount) : '[REMAINING_AMOUNT]',
+    // Sales Financial (details may have string during typing, e.g. "0.")
+    '[SALE_PRICE]': toNum(details.salePrice) != null ? formatPKR(toNum(details.salePrice)!) : '[SALE_PRICE]',
+    '[TOKEN_MONEY]': toNum(details.tokenMoney) != null ? formatPKR(toNum(details.tokenMoney)!) : '[TOKEN_MONEY]',
+    '[REMAINING_AMOUNT]': details.remainingAmount != null ? formatPKR(details.remainingAmount) : '[REMAINING_AMOUNT]',
     
     // Rental
-    '[MONTHLY_RENT]': details.monthlyRent ? formatPKR(details.monthlyRent) : '[MONTHLY_RENT]',
-    '[SECURITY_DEPOSIT]': details.securityDeposit ? formatPKR(details.securityDeposit) : '[SECURITY_DEPOSIT]',
+    '[MONTHLY_RENT]': toNum(details.monthlyRent) != null ? formatPKR(toNum(details.monthlyRent)!) : '[MONTHLY_RENT]',
+    '[SECURITY_DEPOSIT]': toNum(details.securityDeposit) != null ? formatPKR(toNum(details.securityDeposit)!) : '[SECURITY_DEPOSIT]',
     '[LEASE_PERIOD]': details.leasePeriod || '[LEASE_PERIOD]',
     
     // Payment Receipt
-    '[PAYMENT_AMOUNT]': details.paymentAmount ? formatPKR(details.paymentAmount) : '[PAYMENT_AMOUNT]',
+    '[PAYMENT_AMOUNT]': toNum(details.paymentAmount) != null ? formatPKR(toNum(details.paymentAmount)!) : '[PAYMENT_AMOUNT]',
     '[PAYMENT_DATE]': details.paymentDate || '[PAYMENT_DATE]',
     '[RECEIPT_NUMBER]': details.receiptNumber || '[RECEIPT_NUMBER]',
     '[PAYMENT_METHOD]': details.paymentMethod || '[PAYMENT_METHOD]',
@@ -172,7 +191,7 @@ export function replacePlaceholders(content: string, details: DocumentDetails): 
       day: 'numeric' 
     }),
     '[NOTICE_PERIOD]': '30',
-    '[SALE_PRICE_WORDS]': details.salePrice != null ? numberToWords(details.salePrice) : '[SALE_PRICE_WORDS]',
+    '[SALE_PRICE_WORDS]': toNum(details.salePrice) != null ? numberToWords(toNum(details.salePrice)!) : '[SALE_PRICE_WORDS]',
   };
 
   Object.entries(replacements).forEach(([placeholder, value]) => {

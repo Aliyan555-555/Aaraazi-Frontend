@@ -155,18 +155,37 @@ export async function updateDocument(
 }
 
 /**
- * Generate PDF for a document (white-label); returns blob for download
+ * Generate PDF for a document (white-label); returns blob for download.
+ * Handles error responses: when backend returns 4xx/5xx with JSON body, the response
+ * is still a blob, so we check status and throw with server message if not OK.
  */
 export async function generateDocumentPdf(
   id: string,
   branding?: GeneratePdfBranding
 ): Promise<Blob> {
-  const { data } = await apiClient.post(
+  const response = await apiClient.post(
     `${BASE}/${id}/generate-pdf`,
     { branding },
-    { responseType: 'blob' }
+    { responseType: 'blob', validateStatus: () => true }
   );
-  return data as Blob;
+
+  if (response.status < 200 || response.status >= 300) {
+    let message = `PDF generation failed (${response.status})`;
+    try {
+      const text = await (response.data as Blob).text();
+      const json = JSON.parse(text);
+      if (Array.isArray(json.message)) {
+        message = json.message.join(', ');
+      } else if (typeof json.message === 'string') {
+        message = json.message;
+      }
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return response.data as Blob;
 }
 
 /**
@@ -199,4 +218,42 @@ export async function getDocumentsByContact(
     `${BASE}/contact/${contactId}`
   );
   return data;
+}
+
+/**
+ * Upload an external document file (PDF, image, etc.)
+ */
+export async function uploadDocument(
+  file: File,
+  metadata: {
+    documentName: string;
+    documentType: string;
+    propertyId?: string;
+    transactionId?: string;
+    contactId?: string;
+    agencyId: string;
+    tenantId: string;
+  }
+): Promise<GeneratedDocument> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('documentName', metadata.documentName);
+  formData.append('documentType', toBackendDocumentType(metadata.documentType));
+  formData.append('agencyId', metadata.agencyId);
+  formData.append('tenantId', metadata.tenantId);
+  
+  if (metadata.propertyId) formData.append('propertyId', metadata.propertyId);
+  if (metadata.transactionId) formData.append('transactionId', metadata.transactionId);
+  if (metadata.contactId) formData.append('contactId', metadata.contactId);
+
+  const { data } = await apiClient.post<Record<string, unknown>>(
+    `${BASE}/upload`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  return fromBackendDocument(data);
 }

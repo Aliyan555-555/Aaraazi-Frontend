@@ -18,8 +18,18 @@ import {
   getDefaultClauses,
   saveGeneratedDocument,
   replacePlaceholders,
-  generateDocumentName
+  generateDocumentName,
+  normalizeDetailsForApi,
 } from '../lib/documents';
+import {
+  formatCNICInput,
+  sanitizeNameInput,
+  sanitizeFinancialInput,
+  getFinancialFieldValue,
+  validateDocumentDetails,
+  getFirstValidationError,
+  type DocumentDetailsErrors,
+} from '@/lib/documentFormValidation';
 import { GeneratedDocument } from '../types/documents';
 import { createDocument } from '@/lib/api/documents';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -42,6 +52,101 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+/** Payment method options aligned with backend Prisma enum PaymentMethod */
+const DOCUMENT_PAYMENT_METHODS: { value: string; label: string }[] = [
+  { value: 'CASH', label: 'Cash' },
+  { value: 'CHEQUE', label: 'Cheque' },
+  { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
+  { value: 'ONLINE', label: 'Online' },
+  { value: 'CREDIT_CARD', label: 'Credit Card' },
+];
+
+/** Property type options aligned with backend Prisma enum PropertyType */
+const DOCUMENT_PROPERTY_TYPES: { value: string; label: string }[] = [
+  { value: 'HOUSE', label: 'House' },
+  { value: 'APARTMENT', label: 'Apartment' },
+  { value: 'PLOT', label: 'Plot' },
+  { value: 'COMMERCIAL', label: 'Commercial' },
+  { value: 'LAND', label: 'Land' },
+  { value: 'INDUSTRIAL', label: 'Industrial' },
+  { value: 'VILLA', label: 'Villa' },
+  { value: 'FARMHOUSE', label: 'Farmhouse' },
+  { value: 'PENTHOUSE', label: 'Penthouse' },
+  { value: 'STUDIO', label: 'Studio' },
+  { value: 'WAREHOUSE', label: 'Warehouse' },
+  { value: 'OFFICE', label: 'Office' },
+  { value: 'SHOP', label: 'Shop' },
+  { value: 'OTHER', label: 'Other' },
+];
+
+/** Area/size unit options aligned with backend Prisma enum AreaUnit */
+const DOCUMENT_AREA_UNITS: { value: string; label: string }[] = [
+  { value: 'SQFT', label: 'Sq. Ft' },
+  { value: 'SQMETER', label: 'Sq. Meter' },
+  { value: 'SQYARDS', label: 'Sq. Yards' },
+  { value: 'MARLA', label: 'Marla' },
+  { value: 'KANAL', label: 'Kanal' },
+  { value: 'ACRE', label: 'Acre' },
+  { value: 'HECTARE', label: 'Hectare' },
+];
+
+/** Document types that use each placeholder – used to show only relevant variables in the guide */
+const SALES = ['sales-agreement', 'final-sale-deed'] as const;
+const RENTAL = ['rental-agreement'] as const;
+const PROPERTY = ['property-disclosure'] as const;
+const PAYMENT = ['payment-receipt'] as const;
+const ALL = [...SALES, ...RENTAL, ...PROPERTY, ...PAYMENT] as const;
+type DocTypeForGuide = (typeof ALL)[number];
+
+/** Placeholder variables with which document types they apply to */
+const CLAUSE_PLACEHOLDER_GUIDE: {
+  variable: string;
+  description: string;
+  forDocumentTypes: readonly DocTypeForGuide[];
+}[] = [
+  { variable: '[DATE]', description: 'Current date', forDocumentTypes: ALL },
+  { variable: '[SELLER_NAME]', description: 'Seller full name', forDocumentTypes: SALES },
+  { variable: '[SELLER_FATHER_NAME]', description: "Seller's father name", forDocumentTypes: SALES },
+  { variable: '[SELLER_CNIC]', description: 'Seller CNIC', forDocumentTypes: SALES },
+  { variable: '[SELLER_ADDRESS]', description: 'Seller address', forDocumentTypes: SALES },
+  { variable: '[BUYER_NAME]', description: 'Buyer full name', forDocumentTypes: SALES },
+  { variable: '[BUYER_FATHER_NAME]', description: "Buyer's father name", forDocumentTypes: SALES },
+  { variable: '[BUYER_CNIC]', description: 'Buyer CNIC', forDocumentTypes: SALES },
+  { variable: '[BUYER_ADDRESS]', description: 'Buyer address', forDocumentTypes: SALES },
+  { variable: '[PROPERTY_ADDRESS]', description: 'Property address', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
+  { variable: '[PROPERTY_TYPE]', description: 'Property type', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
+  { variable: '[PROPERTY_SIZE]', description: 'Property size', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
+  { variable: '[PROPERTY_UNIT]', description: 'Size unit (e.g. Sq. Yards)', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
+  { variable: '[SALE_PRICE]', description: 'Sale price (PKR)', forDocumentTypes: SALES },
+  { variable: '[SALE_PRICE_WORDS]', description: 'Sale price in words', forDocumentTypes: SALES },
+  { variable: '[TOKEN_MONEY]', description: 'Token money (PKR)', forDocumentTypes: SALES },
+  { variable: '[REMAINING_AMOUNT]', description: 'Remaining amount (PKR)', forDocumentTypes: SALES },
+  { variable: '[LANDLORD_NAME]', description: 'Landlord name', forDocumentTypes: RENTAL },
+  { variable: '[TENANT_NAME]', description: 'Tenant name', forDocumentTypes: RENTAL },
+  { variable: '[MONTHLY_RENT]', description: 'Monthly rent (PKR)', forDocumentTypes: RENTAL },
+  { variable: '[SECURITY_DEPOSIT]', description: 'Security deposit (PKR)', forDocumentTypes: RENTAL },
+  { variable: '[LEASE_PERIOD]', description: 'Lease period', forDocumentTypes: RENTAL },
+  { variable: '[START_DATE]', description: 'Start date', forDocumentTypes: RENTAL },
+  { variable: '[NOTICE_PERIOD]', description: 'Notice period (days)', forDocumentTypes: RENTAL },
+  { variable: '[OWNER_NAME]', description: 'Owner name', forDocumentTypes: PROPERTY },
+  { variable: '[OWNERSHIP_STATUS]', description: 'Ownership status', forDocumentTypes: PROPERTY },
+  { variable: '[LEGAL_STATUS]', description: 'Legal status', forDocumentTypes: PROPERTY },
+  { variable: '[STRUCTURAL_CONDITION]', description: 'Structural condition', forDocumentTypes: PROPERTY },
+  { variable: '[PAYER_NAME]', description: 'Payer name', forDocumentTypes: PAYMENT },
+  { variable: '[PAYEE_NAME]', description: 'Payee name', forDocumentTypes: PAYMENT },
+  { variable: '[PAYMENT_AMOUNT]', description: 'Payment amount (PKR)', forDocumentTypes: PAYMENT },
+  { variable: '[PAYMENT_DATE]', description: 'Payment date', forDocumentTypes: PAYMENT },
+  { variable: '[RECEIPT_NUMBER]', description: 'Receipt number', forDocumentTypes: PAYMENT },
+  { variable: '[PAYMENT_METHOD]', description: 'Payment method', forDocumentTypes: PAYMENT },
+  { variable: '[PAYMENT_PURPOSE]', description: 'Payment purpose', forDocumentTypes: PAYMENT },
+];
+
+function getPlaceholderGuideForDocumentType(documentType: DocumentType) {
+  return CLAUSE_PLACEHOLDER_GUIDE.filter((item) =>
+    item.forDocumentTypes.includes(documentType as DocTypeForGuide)
+  );
+}
 
 interface Props {
   documentType: DocumentType;
@@ -81,7 +186,7 @@ function autoFillSalesDocument(
     propertyAddress: property.address || '',
     propertyType: property.propertyType || '',
     propertySize: property.area?.toString() || '',
-    propertySizeUnit: property.areaUnit || 'Sq. Yards',
+    propertySizeUnit: property.areaUnit || 'SQYARDS',
     salePrice: (transaction as any)?.agreedPrice || property.price || 0,
     tokenMoney: (transaction as any)?.tokenMoney || 0,
     remainingAmount: ((transaction as any)?.agreedPrice || property.price || 0) - ((transaction as any)?.tokenMoney || 0),
@@ -113,7 +218,7 @@ function autoFillRentalAgreement(
     propertyAddress: property.address || '',
     propertyType: property.propertyType || '',
     propertySize: property.area?.toString() || '',
-    propertySizeUnit: property.areaUnit || 'Sq. Yards',
+    propertySizeUnit: property.areaUnit || 'SQYARDS',
     monthlyRent: property.rentAmount || 0,
     securityDeposit: property.securityDeposit || (property.rentAmount || 0) * 2 || 0,
     leasePeriod: '1 Year',
@@ -138,7 +243,7 @@ function autoFillPropertyDisclosure(
     propertyAddress: property.address || '',
     propertyType: property.propertyType || '',
     propertySize: property.area?.toString() || '',
-    propertySizeUnit: property.areaUnit || 'Sq. Yards',
+    propertySizeUnit: property.areaUnit || 'SQYARDS',
     ownershipStatus: 'Freehold', // Could be derived from property data
     legalStatus: 'Clear', // Could be derived from property data
   };
@@ -163,7 +268,7 @@ function autoFillPaymentReceipt(
     payeeName: payee?.name || property?.agentName || '',
     paymentAmount: (transaction as any)?.tokenMoney || 0,
     paymentDate: new Date().toISOString().split('T')[0],
-    paymentMethod: 'Bank Transfer',
+    paymentMethod: 'BANK_TRANSFER',
     paymentPurpose: `Token money for ${property?.address || 'property'}`,
   };
 }
@@ -180,12 +285,18 @@ export function DocumentGeneratorModal({
   const [currentStep, setCurrentStep] = useState<Step>(1);
   const [details, setDetails] = useState<DocumentDetails>({} as DocumentDetails);
   const [clauses, setClauses] = useState<DocumentClause[]>([]);
+  const [formErrors, setFormErrors] = useState<DocumentDetailsErrors>({});
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const template = DOCUMENT_TEMPLATES.find(t => t.id === documentType);
 
-  // Initialize details and clauses based on document type
+  // Stable dependency values to avoid infinite loop (property/transaction/contacts are new refs every render)
+  const propertyId = property?.id ?? null;
+  const transactionId = transaction?.id ?? null;
+  const contactsKey = (contacts ?? []).map((c) => (c as { id?: string }).id).filter(Boolean).join(',');
+
+  // Initialize details and clauses based on document type (run only when document type or linked data identity changes)
   useEffect(() => {
     try {
       // Load default clauses
@@ -224,16 +335,17 @@ export function DocumentGeneratorModal({
       logger.error('Error initializing modal:', error);
       toast.error('Error initializing document generator');
     }
-  }, [documentType, property, transaction, contacts]);
+  }, [documentType, propertyId, transactionId, contactsKey]);
 
   const progress = (currentStep / 3) * 100;
 
   const handleNext = () => {
     if (currentStep === 1) {
-      // Validate based on document type
-      const isValid = validateStep1(documentType, details);
-      if (!isValid) {
-        toast.error('Please fill in all required fields');
+      const errors = validateDocumentDetails(documentType, details);
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        const first = getFirstValidationError(errors);
+        toast.error(first || 'Please fix the errors in the form');
         return;
       }
       setCurrentStep(2);
@@ -249,13 +361,20 @@ export function DocumentGeneratorModal({
   };
 
   const handleFieldChange = (field: keyof DocumentDetails, value: any) => {
+    setFormErrors(prev => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
     setDetails(prev => {
       const updated = { ...prev, [field]: value };
 
       // Auto-calculate for sales documents
       if (documentType === 'sales-agreement' || documentType === 'final-sale-deed') {
         if (field === 'salePrice' || field === 'tokenMoney') {
-          updated.remainingAmount = (updated.salePrice || 0) - (updated.tokenMoney || 0);
+          const sale = Number(updated.salePrice) || 0;
+          const token = Number(updated.tokenMoney) || 0;
+          updated.remainingAmount = sale - token;
         }
       }
 
@@ -360,7 +479,7 @@ export function DocumentGeneratorModal({
           const created = await createDocument({
             documentType,
             documentName,
-            details,
+            details: normalizeDetailsForApi(details),
             clauses,
             agencyId,
             tenantId,
@@ -382,7 +501,7 @@ export function DocumentGeneratorModal({
             propertyId: property?.id,
             propertyTitle: property?.title,
             transactionId: transaction?.id,
-            details,
+            details: normalizeDetailsForApi(details),
             clauses,
             createdAt: new Date().toISOString(),
             createdBy: 'current-user',
@@ -398,7 +517,7 @@ export function DocumentGeneratorModal({
           propertyId: property?.id,
           propertyTitle: property?.title,
           transactionId: transaction?.id,
-          details,
+          details: normalizeDetailsForApi(details),
           clauses,
           createdAt: new Date().toISOString(),
           createdBy: 'current-user',
@@ -450,11 +569,13 @@ export function DocumentGeneratorModal({
             details={details}
             isReadOnly={isReadOnly}
             onChange={handleFieldChange}
+            errors={formErrors}
           />
         )}
 
         {currentStep === 2 && (
           <Step2EditClauses
+            documentType={documentType}
             clauses={clauses}
             onClauseChange={handleClauseChange}
             onClauseDelete={handleClauseDelete}
@@ -513,21 +634,27 @@ export function DocumentGeneratorModal({
   );
 }
 
-// Validation helper
-function validateStep1(documentType: DocumentType, details: DocumentDetails): boolean {
-  switch (documentType) {
-    case 'sales-agreement':
-    case 'final-sale-deed':
-      return !!(details.sellerName && details.buyerName && details.propertyAddress && details.salePrice);
-    case 'rental-agreement':
-      return !!(details.landlordName && details.tenantName && details.propertyAddress && details.monthlyRent);
-    case 'property-disclosure':
-      return !!(details.ownerName && details.propertyAddress);
-    case 'payment-receipt':
-      return !!(details.payerName && details.payeeName && details.paymentAmount && details.receiptNumber);
-    default:
-      return true;
-  }
+// Inline field with error display (used in document forms)
+function FormFieldWithError({
+  label,
+  required,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <Label className="text-sm mb-2 block">
+        {label} {required && '*'}
+      </Label>
+      {children}
+      {error && <p className="text-red-600 text-xs mt-1" role="alert">{error}</p>}
+    </div>
+  );
 }
 
 // Step 1: Context-specific forms
@@ -535,24 +662,25 @@ function Step1FillDetails({
   documentType,
   details,
   isReadOnly,
-  onChange
+  onChange,
+  errors,
 }: {
   documentType: DocumentType;
   details: DocumentDetails;
   isReadOnly: boolean;
   onChange: (field: keyof DocumentDetails, value: any) => void;
+  errors: DocumentDetailsErrors;
 }) {
-  // Render form based on document type
   switch (documentType) {
     case 'sales-agreement':
     case 'final-sale-deed':
-      return <SalesDocumentForm details={details} isReadOnly={isReadOnly} onChange={onChange} />;
+      return <SalesDocumentForm details={details} isReadOnly={isReadOnly} onChange={onChange} errors={errors} FormField={FormFieldWithError} />;
     case 'rental-agreement':
-      return <RentalAgreementForm details={details} isReadOnly={isReadOnly} onChange={onChange} />;
+      return <RentalAgreementForm details={details} isReadOnly={isReadOnly} onChange={onChange} errors={errors} FormField={FormFieldWithError} />;
     case 'property-disclosure':
-      return <PropertyDisclosureForm details={details} isReadOnly={isReadOnly} onChange={onChange} />;
+      return <PropertyDisclosureForm details={details} isReadOnly={isReadOnly} onChange={onChange} errors={errors} FormField={FormFieldWithError} />;
     case 'payment-receipt':
-      return <PaymentReceiptForm details={details} isReadOnly={isReadOnly} onChange={onChange} />;
+      return <PaymentReceiptForm details={details} isReadOnly={isReadOnly} onChange={onChange} errors={errors} FormField={FormFieldWithError} />;
     default:
       return <div>Unknown document type</div>;
   }
@@ -562,11 +690,15 @@ function Step1FillDetails({
 function SalesDocumentForm({
   details,
   isReadOnly,
-  onChange
+  onChange,
+  errors,
+  FormField,
 }: {
   details: DocumentDetails;
   isReadOnly: boolean;
   onChange: (field: keyof DocumentDetails, value: any) => void;
+  errors: DocumentDetailsErrors;
+  FormField: typeof FormFieldWithError;
 }) {
   return (
     <div className="space-y-6">
@@ -578,42 +710,38 @@ function SalesDocumentForm({
         </div>
       )}
 
-      {/* Seller Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Seller Information</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Full Name *</Label>
+          <FormField label="Full Name" required error={errors.sellerName}>
             <Input
               value={details.sellerName || ''}
-              onChange={(e) => onChange('sellerName', e.target.value)}
+              onChange={(e) => onChange('sellerName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter seller's full name"
+              className={isReadOnly ? 'bg-gray-100' : errors.sellerName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Father's Name</Label>
+          </FormField>
+          <FormField label="Father's Name" error={errors.sellerFatherName}>
             <Input
               value={details.sellerFatherName || ''}
-              onChange={(e) => onChange('sellerFatherName', e.target.value)}
+              onChange={(e) => onChange('sellerFatherName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter father's name"
+              className={isReadOnly ? 'bg-gray-100' : errors.sellerFatherName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">CNIC Number</Label>
+          </FormField>
+          <FormField label="CNIC Number" error={errors.sellerCNIC}>
             <Input
               value={details.sellerCNIC || ''}
-              onChange={(e) => onChange('sellerCNIC', e.target.value)}
+              onChange={(e) => onChange('sellerCNIC', formatCNICInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
+              className={isReadOnly ? 'bg-gray-100' : errors.sellerCNIC ? 'border-red-500' : ''}
               placeholder="12345-1234567-1"
+              maxLength={15}
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Address</Label>
+          </FormField>
+          <FormField label="Address">
             <Input
               value={details.sellerAddress || ''}
               onChange={(e) => onChange('sellerAddress', e.target.value)}
@@ -621,46 +749,42 @@ function SalesDocumentForm({
               className={isReadOnly ? 'bg-gray-100' : ''}
               placeholder="Enter seller's address"
             />
-          </div>
+          </FormField>
         </div>
       </fieldset>
 
-      {/* Buyer Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Buyer Information</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Full Name *</Label>
+          <FormField label="Full Name" required error={errors.buyerName}>
             <Input
               value={details.buyerName || ''}
-              onChange={(e) => onChange('buyerName', e.target.value)}
+              onChange={(e) => onChange('buyerName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter buyer's full name"
+              className={isReadOnly ? 'bg-gray-100' : errors.buyerName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Father's Name</Label>
+          </FormField>
+          <FormField label="Father's Name" error={errors.buyerFatherName}>
             <Input
               value={details.buyerFatherName || ''}
-              onChange={(e) => onChange('buyerFatherName', e.target.value)}
+              onChange={(e) => onChange('buyerFatherName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter father's name"
+              className={isReadOnly ? 'bg-gray-100' : errors.buyerFatherName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">CNIC Number</Label>
+          </FormField>
+          <FormField label="CNIC Number" error={errors.buyerCNIC}>
             <Input
               value={details.buyerCNIC || ''}
-              onChange={(e) => onChange('buyerCNIC', e.target.value)}
+              onChange={(e) => onChange('buyerCNIC', formatCNICInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
+              className={isReadOnly ? 'bg-gray-100' : errors.buyerCNIC ? 'border-red-500' : ''}
               placeholder="12345-1234567-1"
+              maxLength={15}
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Address</Label>
+          </FormField>
+          <FormField label="Address">
             <Input
               value={details.buyerAddress || ''}
               onChange={(e) => onChange('buyerAddress', e.target.value)}
@@ -668,89 +792,89 @@ function SalesDocumentForm({
               className={isReadOnly ? 'bg-gray-100' : ''}
               placeholder="Enter buyer's address"
             />
-          </div>
+          </FormField>
         </div>
       </fieldset>
 
-      {/* Property Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Property Information</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="col-span-2">
-            <Label className="text-sm mb-2 block">Property Address *</Label>
-            <Input
-              value={details.propertyAddress || ''}
-              onChange={(e) => onChange('propertyAddress', e.target.value)}
-              readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter full property address"
-            />
+            <FormField label="Property Address" required error={errors.propertyAddress}>
+              <Input
+                value={details.propertyAddress || ''}
+                onChange={(e) => onChange('propertyAddress', e.target.value)}
+                readOnly={isReadOnly}
+                className={isReadOnly ? 'bg-gray-100' : errors.propertyAddress ? 'border-red-500' : ''}
+                placeholder="Enter full property address"
+              />
+            </FormField>
           </div>
-          <div>
-            <Label className="text-sm mb-2 block">Property Type</Label>
-            <Input
+          <FormField label="Property Type">
+            <PropertyTypeSelect
               value={details.propertyType || ''}
-              onChange={(e) => onChange('propertyType', e.target.value)}
-              readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="e.g., House, Apartment"
+              onChange={(v) => onChange('propertyType', v)}
+              isReadOnly={isReadOnly}
             />
-          </div>
+          </FormField>
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-sm mb-2 block">Size</Label>
+            <FormField label="Size">
               <Input
                 value={details.propertySize || ''}
-                onChange={(e) => onChange('propertySize', e.target.value)}
+                onChange={(e) => onChange('propertySize', e.target.value.replace(/[^0-9.]/g, ''))}
                 readOnly={isReadOnly}
                 className={isReadOnly ? 'bg-gray-100' : ''}
                 placeholder="240"
               />
-            </div>
-            <div>
-              <Label className="text-sm mb-2 block">Unit</Label>
-              <Input
-                value={details.propertySizeUnit || 'Sq. Yards'}
-                onChange={(e) => onChange('propertySizeUnit', e.target.value)}
-                readOnly={isReadOnly}
-                className={isReadOnly ? 'bg-gray-100' : ''}
+            </FormField>
+            <FormField label="Unit">
+              <AreaUnitSelect
+                value={details.propertySizeUnit || ''}
+                onChange={(v) => onChange('propertySizeUnit', v)}
+                isReadOnly={isReadOnly}
               />
-            </div>
+            </FormField>
           </div>
         </div>
       </fieldset>
 
-      {/* Financial Details */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Financial Details</legend>
         <div className="grid grid-cols-3 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Sale Price (PKR) *</Label>
+          <FormField label="Sale Price (PKR)" required error={errors.salePrice}>
             <Input
-              type="number"
-              value={details.salePrice || ''}
-              onChange={(e) => onChange('salePrice', parseFloat(e.target.value) || 0)}
+              type="text"
+              inputMode="decimal"
+              value={details.salePrice != null && details.salePrice !== '' ? String(details.salePrice) : ''}
+              onChange={(e) => {
+                const sanitized = sanitizeFinancialInput(e.target.value);
+                onChange('salePrice', getFinancialFieldValue(sanitized, details.salePrice));
+              }}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="0"
+              className={isReadOnly ? 'bg-gray-100' : errors.salePrice ? 'border-red-500' : ''}
+              placeholder="Positive numbers only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Token Money (PKR)</Label>
+          </FormField>
+          <FormField label="Token Money (PKR)" error={errors.tokenMoney}>
             <Input
-              type="number"
-              value={details.tokenMoney || ''}
-              onChange={(e) => onChange('tokenMoney', parseFloat(e.target.value) || 0)}
+              type="text"
+              inputMode="decimal"
+              value={details.tokenMoney != null && details.tokenMoney !== '' ? String(details.tokenMoney) : ''}
+              onChange={(e) => {
+                const sanitized = sanitizeFinancialInput(e.target.value);
+                onChange('tokenMoney', getFinancialFieldValue(sanitized, details.tokenMoney));
+              }}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="0"
+              className={isReadOnly ? 'bg-gray-100' : errors.tokenMoney ? 'border-red-500' : ''}
+              placeholder="Positive numbers only"
             />
-          </div>
+          </FormField>
           <div>
             <Label className="text-sm mb-2 block">Remaining (PKR)</Label>
             <Input
-              type="number"
-              value={details.remainingAmount || ''}
+              type="text"
+              inputMode="decimal"
+              value={details.remainingAmount != null ? String(details.remainingAmount) : ''}
               readOnly
               className="bg-gray-100"
             />
@@ -765,11 +889,15 @@ function SalesDocumentForm({
 function RentalAgreementForm({
   details,
   isReadOnly,
-  onChange
+  onChange,
+  errors,
+  FormField,
 }: {
   details: DocumentDetails;
   isReadOnly: boolean;
   onChange: (field: keyof DocumentDetails, value: any) => void;
+  errors: DocumentDetailsErrors;
+  FormField: typeof FormFieldWithError;
 }) {
   return (
     <div className="space-y-6">
@@ -781,42 +909,38 @@ function RentalAgreementForm({
         </div>
       )}
 
-      {/* Landlord Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Landlord Information</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Full Name *</Label>
+          <FormField label="Full Name" required error={errors.landlordName}>
             <Input
               value={details.landlordName || ''}
-              onChange={(e) => onChange('landlordName', e.target.value)}
+              onChange={(e) => onChange('landlordName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter landlord's name"
+              className={isReadOnly ? 'bg-gray-100' : errors.landlordName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Father's Name</Label>
+          </FormField>
+          <FormField label="Father's Name" error={errors.landlordFatherName}>
             <Input
               value={details.landlordFatherName || ''}
-              onChange={(e) => onChange('landlordFatherName', e.target.value)}
+              onChange={(e) => onChange('landlordFatherName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter father's name"
+              className={isReadOnly ? 'bg-gray-100' : errors.landlordFatherName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">CNIC Number</Label>
+          </FormField>
+          <FormField label="CNIC Number" error={errors.landlordCNIC}>
             <Input
               value={details.landlordCNIC || ''}
-              onChange={(e) => onChange('landlordCNIC', e.target.value)}
+              onChange={(e) => onChange('landlordCNIC', formatCNICInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
+              className={isReadOnly ? 'bg-gray-100' : errors.landlordCNIC ? 'border-red-500' : ''}
               placeholder="12345-1234567-1"
+              maxLength={15}
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Address</Label>
+          </FormField>
+          <FormField label="Address">
             <Input
               value={details.landlordAddress || ''}
               onChange={(e) => onChange('landlordAddress', e.target.value)}
@@ -824,46 +948,42 @@ function RentalAgreementForm({
               className={isReadOnly ? 'bg-gray-100' : ''}
               placeholder="Enter landlord's address"
             />
-          </div>
+          </FormField>
         </div>
       </fieldset>
 
-      {/* Tenant Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Tenant Information</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Full Name *</Label>
+          <FormField label="Full Name" required error={errors.tenantName}>
             <Input
               value={details.tenantName || ''}
-              onChange={(e) => onChange('tenantName', e.target.value)}
+              onChange={(e) => onChange('tenantName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter tenant's name"
+              className={isReadOnly ? 'bg-gray-100' : errors.tenantName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Father's Name</Label>
+          </FormField>
+          <FormField label="Father's Name" error={errors.tenantFatherName}>
             <Input
               value={details.tenantFatherName || ''}
-              onChange={(e) => onChange('tenantFatherName', e.target.value)}
+              onChange={(e) => onChange('tenantFatherName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter father's name"
+              className={isReadOnly ? 'bg-gray-100' : errors.tenantFatherName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">CNIC Number</Label>
+          </FormField>
+          <FormField label="CNIC Number" error={errors.tenantCNIC}>
             <Input
               value={details.tenantCNIC || ''}
-              onChange={(e) => onChange('tenantCNIC', e.target.value)}
+              onChange={(e) => onChange('tenantCNIC', formatCNICInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
+              className={isReadOnly ? 'bg-gray-100' : errors.tenantCNIC ? 'border-red-500' : ''}
               placeholder="12345-1234567-1"
+              maxLength={15}
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Address</Label>
+          </FormField>
+          <FormField label="Address">
             <Input
               value={details.tenantAddress || ''}
               onChange={(e) => onChange('tenantAddress', e.target.value)}
@@ -871,86 +991,84 @@ function RentalAgreementForm({
               className={isReadOnly ? 'bg-gray-100' : ''}
               placeholder="Enter tenant's address"
             />
-          </div>
+          </FormField>
         </div>
       </fieldset>
 
-      {/* Property Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Property Information</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="col-span-2">
-            <Label className="text-sm mb-2 block">Property Address *</Label>
-            <Input
-              value={details.propertyAddress || ''}
-              onChange={(e) => onChange('propertyAddress', e.target.value)}
-              readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter property address"
-            />
+            <FormField label="Property Address" required error={errors.propertyAddress}>
+              <Input
+                value={details.propertyAddress || ''}
+                onChange={(e) => onChange('propertyAddress', e.target.value)}
+                readOnly={isReadOnly}
+                className={isReadOnly ? 'bg-gray-100' : errors.propertyAddress ? 'border-red-500' : ''}
+                placeholder="Enter property address"
+              />
+            </FormField>
           </div>
-          <div>
-            <Label className="text-sm mb-2 block">Property Type</Label>
-            <Input
+          <FormField label="Property Type">
+            <PropertyTypeSelect
               value={details.propertyType || ''}
-              onChange={(e) => onChange('propertyType', e.target.value)}
-              readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="e.g., Apartment, House"
+              onChange={(v) => onChange('propertyType', v)}
+              isReadOnly={isReadOnly}
             />
-          </div>
+          </FormField>
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-sm mb-2 block">Size</Label>
+            <FormField label="Size">
               <Input
                 value={details.propertySize || ''}
-                onChange={(e) => onChange('propertySize', e.target.value)}
+                onChange={(e) => onChange('propertySize', e.target.value.replace(/[^0-9.]/g, ''))}
                 readOnly={isReadOnly}
                 className={isReadOnly ? 'bg-gray-100' : ''}
                 placeholder="1200"
               />
-            </div>
-            <div>
-              <Label className="text-sm mb-2 block">Unit</Label>
-              <Input
-                value={details.propertySizeUnit || 'Sq. Ft'}
-                onChange={(e) => onChange('propertySizeUnit', e.target.value)}
-                readOnly={isReadOnly}
-                className={isReadOnly ? 'bg-gray-100' : ''}
+            </FormField>
+            <FormField label="Unit">
+              <AreaUnitSelect
+                value={details.propertySizeUnit || ''}
+                onChange={(v) => onChange('propertySizeUnit', v)}
+                isReadOnly={isReadOnly}
               />
-            </div>
+            </FormField>
           </div>
         </div>
       </fieldset>
 
-      {/* Rental Terms */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Rental Terms</legend>
         <div className="grid grid-cols-3 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Monthly Rent (PKR) *</Label>
+          <FormField label="Monthly Rent (PKR)" required error={errors.monthlyRent}>
             <Input
-              type="number"
-              value={details.monthlyRent || ''}
-              onChange={(e) => onChange('monthlyRent', parseFloat(e.target.value) || 0)}
+              type="text"
+              inputMode="decimal"
+              value={details.monthlyRent != null && details.monthlyRent !== '' ? String(details.monthlyRent) : ''}
+              onChange={(e) => {
+                const sanitized = sanitizeFinancialInput(e.target.value);
+                onChange('monthlyRent', getFinancialFieldValue(sanitized, details.monthlyRent));
+              }}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="0"
+              className={isReadOnly ? 'bg-gray-100' : errors.monthlyRent ? 'border-red-500' : ''}
+              placeholder="Positive numbers only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Security Deposit (PKR)</Label>
+          </FormField>
+          <FormField label="Security Deposit (PKR)" error={errors.securityDeposit}>
             <Input
-              type="number"
-              value={details.securityDeposit || ''}
-              onChange={(e) => onChange('securityDeposit', parseFloat(e.target.value) || 0)}
+              type="text"
+              inputMode="decimal"
+              value={details.securityDeposit != null && details.securityDeposit !== '' ? String(details.securityDeposit) : ''}
+              onChange={(e) => {
+                const sanitized = sanitizeFinancialInput(e.target.value);
+                onChange('securityDeposit', getFinancialFieldValue(sanitized, details.securityDeposit));
+              }}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="0"
+              className={isReadOnly ? 'bg-gray-100' : errors.securityDeposit ? 'border-red-500' : ''}
+              placeholder="Positive numbers only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Lease Period</Label>
+          </FormField>
+          <FormField label="Lease Period">
             <Input
               value={details.leasePeriod || ''}
               onChange={(e) => onChange('leasePeriod', e.target.value)}
@@ -958,7 +1076,7 @@ function RentalAgreementForm({
               className={isReadOnly ? 'bg-gray-100' : ''}
               placeholder="1 Year"
             />
-          </div>
+          </FormField>
         </div>
       </fieldset>
     </div>
@@ -969,11 +1087,15 @@ function RentalAgreementForm({
 function PropertyDisclosureForm({
   details,
   isReadOnly,
-  onChange
+  onChange,
+  errors,
+  FormField,
 }: {
   details: DocumentDetails;
   isReadOnly: boolean;
   onChange: (field: keyof DocumentDetails, value: any) => void;
+  errors: DocumentDetailsErrors;
+  FormField: typeof FormFieldWithError;
 }) {
   return (
     <div className="space-y-6">
@@ -985,119 +1107,110 @@ function PropertyDisclosureForm({
         </div>
       )}
 
-      {/* Owner Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Property Owner Information</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Owner Name *</Label>
+          <FormField label="Owner Name" required error={errors.ownerName}>
             <Input
               value={details.ownerName || ''}
-              onChange={(e) => onChange('ownerName', e.target.value)}
+              onChange={(e) => onChange('ownerName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter owner's name"
+              className={isReadOnly ? 'bg-gray-100' : errors.ownerName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">CNIC Number</Label>
+          </FormField>
+          <FormField label="CNIC Number" error={errors.ownerCNIC}>
             <Input
               value={details.ownerCNIC || ''}
-              onChange={(e) => onChange('ownerCNIC', e.target.value)}
+              onChange={(e) => onChange('ownerCNIC', formatCNICInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
+              className={isReadOnly ? 'bg-gray-100' : errors.ownerCNIC ? 'border-red-500' : ''}
               placeholder="12345-1234567-1"
+              maxLength={15}
             />
-          </div>
+          </FormField>
           <div className="col-span-2">
-            <Label className="text-sm mb-2 block">Owner Address</Label>
-            <Input
-              value={details.ownerAddress || ''}
-              onChange={(e) => onChange('ownerAddress', e.target.value)}
-              readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter owner's address"
-            />
+            <FormField label="Owner Address">
+              <Input
+                value={details.ownerAddress || ''}
+                onChange={(e) => onChange('ownerAddress', e.target.value)}
+                readOnly={isReadOnly}
+                className={isReadOnly ? 'bg-gray-100' : ''}
+                placeholder="Enter owner's address"
+              />
+            </FormField>
           </div>
         </div>
       </fieldset>
 
-      {/* Property Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Property Information</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="col-span-2">
-            <Label className="text-sm mb-2 block">Property Address *</Label>
-            <Input
-              value={details.propertyAddress || ''}
-              onChange={(e) => onChange('propertyAddress', e.target.value)}
-              readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Enter property address"
-            />
+            <FormField label="Property Address" required error={errors.propertyAddress}>
+              <Input
+                value={details.propertyAddress || ''}
+                onChange={(e) => onChange('propertyAddress', e.target.value)}
+                readOnly={isReadOnly}
+                className={isReadOnly ? 'bg-gray-100' : errors.propertyAddress ? 'border-red-500' : ''}
+                placeholder="Enter property address"
+              />
+            </FormField>
           </div>
-          <div>
-            <Label className="text-sm mb-2 block">Property Type</Label>
-            <Input
+          <FormField label="Property Type">
+            <PropertyTypeSelect
               value={details.propertyType || ''}
-              onChange={(e) => onChange('propertyType', e.target.value)}
-              readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="e.g., Residential, Commercial"
+              onChange={(v) => onChange('propertyType', v)}
+              isReadOnly={isReadOnly}
             />
-          </div>
+          </FormField>
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-sm mb-2 block">Size</Label>
+            <FormField label="Size">
               <Input
                 value={details.propertySize || ''}
-                onChange={(e) => onChange('propertySize', e.target.value)}
+                onChange={(e) => onChange('propertySize', e.target.value.replace(/[^0-9.]/g, ''))}
                 readOnly={isReadOnly}
                 className={isReadOnly ? 'bg-gray-100' : ''}
                 placeholder="240"
               />
-            </div>
-            <div>
-              <Label className="text-sm mb-2 block">Unit</Label>
-              <Input
-                value={details.propertySizeUnit || 'Sq. Yards'}
-                onChange={(e) => onChange('propertySizeUnit', e.target.value)}
-                readOnly={isReadOnly}
-                className={isReadOnly ? 'bg-gray-100' : ''}
+            </FormField>
+            <FormField label="Unit">
+              <AreaUnitSelect
+                value={details.propertySizeUnit || ''}
+                onChange={(v) => onChange('propertySizeUnit', v)}
+                isReadOnly={isReadOnly}
               />
-            </div>
+            </FormField>
           </div>
         </div>
       </fieldset>
 
-      {/* Legal & Structural Status */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Legal & Structural Status</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Ownership Status</Label>
+          <FormField label="Ownership Status">
             <Input
               value={details.ownershipStatus || ''}
               onChange={(e) => onChange('ownershipStatus', e.target.value)}
               placeholder="e.g., Freehold, Leasehold"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Legal Status</Label>
+          </FormField>
+          <FormField label="Legal Status">
             <Input
               value={details.legalStatus || ''}
               onChange={(e) => onChange('legalStatus', e.target.value)}
               placeholder="e.g., Clear, Disputed"
             />
-          </div>
+          </FormField>
           <div className="col-span-2">
-            <Label className="text-sm mb-2 block">Structural Condition</Label>
-            <Textarea
-              value={details.structuralCondition || ''}
-              onChange={(e) => onChange('structuralCondition', e.target.value)}
-              placeholder="Describe the structural condition of the property"
-              rows={3}
-            />
+            <FormField label="Structural Condition">
+              <Textarea
+                value={details.structuralCondition || ''}
+                onChange={(e) => onChange('structuralCondition', e.target.value)}
+                placeholder="Describe the structural condition of the property"
+                rows={3}
+              />
+            </FormField>
           </div>
         </div>
       </fieldset>
@@ -1105,15 +1218,141 @@ function PropertyDisclosureForm({
   );
 }
 
+// Stable property type dropdown – normalizes value to avoid Radix Select update loops
+function PropertyTypeSelect({
+  value,
+  onChange,
+  isReadOnly,
+}: {
+  value: string | undefined;
+  onChange: (value: string) => void;
+  isReadOnly: boolean;
+}) {
+  const validValues = DOCUMENT_PROPERTY_TYPES.map((p) => p.value);
+  const byLabel = value && DOCUMENT_PROPERTY_TYPES.find((p) => p.label.toLowerCase() === String(value).toLowerCase());
+  const normalizedValue =
+    value && validValues.includes(value) ? value : byLabel ? byLabel.value : '_none';
+
+  const handleChange = (v: string) => {
+    const next = v === '_none' ? '' : v;
+    if (next !== value) onChange(next);
+  };
+
+  return (
+    <Select
+      value={normalizedValue}
+      onValueChange={handleChange}
+      disabled={isReadOnly}
+    >
+      <SelectTrigger className={isReadOnly ? 'bg-gray-100' : ''}>
+        <SelectValue placeholder="Select property type" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="_none">Select property type</SelectItem>
+        {DOCUMENT_PROPERTY_TYPES.map(({ value: optValue, label }) => (
+          <SelectItem key={optValue} value={optValue}>
+            {label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// Stable area unit dropdown – normalizes value to avoid Radix Select update loops
+function AreaUnitSelect({
+  value,
+  onChange,
+  isReadOnly,
+}: {
+  value: string | undefined;
+  onChange: (value: string) => void;
+  isReadOnly: boolean;
+}) {
+  const validValues = DOCUMENT_AREA_UNITS.map((u) => u.value);
+  const byLabel = value && DOCUMENT_AREA_UNITS.find((u) => u.label.toLowerCase() === String(value).toLowerCase());
+  const normalizedValue =
+    value && validValues.includes(value) ? value : byLabel ? byLabel.value : '_none';
+
+  const handleChange = (v: string) => {
+    const next = v === '_none' ? '' : v;
+    if (next !== value) onChange(next);
+  };
+
+  return (
+    <Select
+      value={normalizedValue}
+      onValueChange={handleChange}
+      disabled={isReadOnly}
+    >
+      <SelectTrigger className={isReadOnly ? 'bg-gray-100' : ''}>
+        <SelectValue placeholder="Select unit" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="_none">Select unit</SelectItem>
+        {DOCUMENT_AREA_UNITS.map(({ value: optValue, label }) => (
+          <SelectItem key={optValue} value={optValue}>
+            {label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+// Stable payment method dropdown – normalizes value to avoid Radix Select update loops
+function PaymentMethodSelect({
+  value,
+  onChange,
+  isReadOnly,
+}: {
+  value: string | undefined;
+  onChange: (value: string) => void;
+  isReadOnly: boolean;
+}) {
+  const validValues = DOCUMENT_PAYMENT_METHODS.map((m) => m.value);
+  const normalizedValue =
+    value && validValues.includes(value) ? value : '_none';
+
+  const handleChange = (v: string) => {
+    const next = v === '_none' ? '' : v;
+    if (next !== value) onChange(next);
+  };
+
+  return (
+    <Select
+      value={normalizedValue}
+      onValueChange={handleChange}
+      disabled={isReadOnly}
+    >
+      <SelectTrigger className={isReadOnly ? 'bg-gray-100' : ''}>
+        <SelectValue placeholder="Select payment method" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="_none">Select payment method</SelectItem>
+        {DOCUMENT_PAYMENT_METHODS.map(({ value: optValue, label }) => (
+          <SelectItem key={optValue} value={optValue}>
+            {label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 // Payment Receipt Form
 function PaymentReceiptForm({
   details,
   isReadOnly,
-  onChange
+  onChange,
+  errors,
+  FormField,
 }: {
   details: DocumentDetails;
   isReadOnly: boolean;
   onChange: (field: keyof DocumentDetails, value: any) => void;
+  errors: DocumentDetailsErrors;
+  FormField: typeof FormFieldWithError;
 }) {
   return (
     <div className="space-y-6">
@@ -1125,91 +1364,85 @@ function PaymentReceiptForm({
         </div>
       )}
 
-      {/* Receipt Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Receipt Information</legend>
         <div className="grid grid-cols-3 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Receipt Number *</Label>
+          <FormField label="Receipt Number" required error={errors.receiptNumber}>
             <Input
               value={details.receiptNumber || ''}
               onChange={(e) => onChange('receiptNumber', e.target.value)}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="RCP-12345"
+              className={isReadOnly ? 'bg-gray-100' : errors.receiptNumber ? 'border-red-500' : ''}
+              placeholder="e.g. RCP-12345"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Payment Date *</Label>
+          </FormField>
+          <FormField label="Payment Date" required error={errors.paymentDate}>
             <Input
               type="date"
               value={details.paymentDate || ''}
               onChange={(e) => onChange('paymentDate', e.target.value)}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
+              className={isReadOnly ? 'bg-gray-100' : errors.paymentDate ? 'border-red-500' : ''}
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Payment Amount (PKR) *</Label>
+          </FormField>
+          <FormField label="Payment Amount (PKR)" required error={errors.paymentAmount}>
             <Input
-              type="number"
-              value={details.paymentAmount || ''}
-              onChange={(e) => onChange('paymentAmount', parseFloat(e.target.value) || 0)}
+              type="text"
+              inputMode="decimal"
+              value={details.paymentAmount != null && details.paymentAmount !== '' ? String(details.paymentAmount) : ''}
+              onChange={(e) => {
+                const sanitized = sanitizeFinancialInput(e.target.value);
+                onChange('paymentAmount', getFinancialFieldValue(sanitized, details.paymentAmount));
+              }}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="0"
+              className={isReadOnly ? 'bg-gray-100' : errors.paymentAmount ? 'border-red-500' : ''}
+              placeholder="Positive numbers only"
             />
-          </div>
+          </FormField>
         </div>
       </fieldset>
 
-      {/* Payer & Payee Information */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Payer & Payee Details</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Payer Name *</Label>
+          <FormField label="Payer Name" required error={errors.payerName}>
             <Input
               value={details.payerName || ''}
-              onChange={(e) => onChange('payerName', e.target.value)}
+              onChange={(e) => onChange('payerName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Person making payment"
+              className={isReadOnly ? 'bg-gray-100' : errors.payerName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Payee Name *</Label>
+          </FormField>
+          <FormField label="Payee Name" required error={errors.payeeName}>
             <Input
               value={details.payeeName || ''}
-              onChange={(e) => onChange('payeeName', e.target.value)}
+              onChange={(e) => onChange('payeeName', sanitizeNameInput(e.target.value))}
               readOnly={isReadOnly}
-              className={isReadOnly ? 'bg-gray-100' : ''}
-              placeholder="Person receiving payment"
+              className={isReadOnly ? 'bg-gray-100' : errors.payeeName ? 'border-red-500' : ''}
+              placeholder="Letters and spaces only"
             />
-          </div>
+          </FormField>
         </div>
       </fieldset>
 
-      {/* Payment Details */}
       <fieldset className="border border-gray-200 rounded-lg p-4">
         <legend className="px-2 text-gray-900">Payment Details</legend>
         <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label className="text-sm mb-2 block">Payment Method</Label>
-            <Input
-              value={details.paymentMethod || ''}
-              onChange={(e) => onChange('paymentMethod', e.target.value)}
-              placeholder="e.g., Bank Transfer, Cash, Cheque"
+          <FormField label="Payment Method">
+            <PaymentMethodSelect
+              value={details.paymentMethod}
+              onChange={(value) => onChange('paymentMethod', value)}
+              isReadOnly={isReadOnly}
             />
-          </div>
-          <div>
-            <Label className="text-sm mb-2 block">Payment Purpose</Label>
+          </FormField>
+          <FormField label="Payment Purpose">
             <Input
               value={details.paymentPurpose || ''}
               onChange={(e) => onChange('paymentPurpose', e.target.value)}
               placeholder="e.g., Token money for property"
             />
-          </div>
+          </FormField>
         </div>
       </fieldset>
     </div>
@@ -1218,6 +1451,7 @@ function PaymentReceiptForm({
 
 // Step 2: Edit Clauses (same for all document types)
 function Step2EditClauses({
+  documentType,
   clauses,
   onClauseChange,
   onClauseDelete,
@@ -1225,6 +1459,7 @@ function Step2EditClauses({
   onDragEnd,
   sensors
 }: {
+  documentType: DocumentType;
   clauses: DocumentClause[];
   onClauseChange: (id: string, content: string) => void;
   onClauseDelete: (id: string) => void;
@@ -1232,6 +1467,7 @@ function Step2EditClauses({
   onDragEnd: (event: DragEndEvent) => void;
   sensors: any;
 }) {
+  const placeholderGuide = getPlaceholderGuideForDocumentType(documentType);
   if (clauses.length === 0) {
     return (
       <div className="space-y-4">
@@ -1250,6 +1486,34 @@ function Step2EditClauses({
 
   return (
     <div className="space-y-4">
+      {/* Expandable variables guide – document-specific placeholders only */}
+      <details className="group rounded-lg border border-amber-200 bg-amber-50/80">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-medium text-amber-900 transition-colors hover:bg-amber-100/80 [&::-webkit-details-marker]:hidden">
+          <span>
+            Variables for this document
+            {placeholderGuide.length > 0 && (
+              <> (e.g. {placeholderGuide.slice(0, 2).map(({ variable }) => variable).join(', ')})</>
+            )}
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
+        </summary>
+        <div className="border-t border-amber-200 px-4 pb-4 pt-3">
+          <p className="mb-3 text-sm text-amber-900">
+            Type these in your clause text; they will be replaced with details from Step 1 when the PDF is generated.
+          </p>
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs sm:grid-cols-[auto_1fr_auto_1fr]">
+            {placeholderGuide.map(({ variable, description }) => (
+              <React.Fragment key={variable}>
+                <code className="rounded bg-amber-100 px-1.5 py-0.5 font-mono font-medium text-amber-800">
+                  {variable}
+                </code>
+                <span className="text-amber-800">{description}</span>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </details>
+
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-900">
           <strong>Clause Editor:</strong> Drag the grip icon to reorder, click to edit text, or delete clauses you don't need.

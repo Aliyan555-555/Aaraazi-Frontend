@@ -66,14 +66,14 @@ export interface DocumentDetails {
   propertySize?: string;
   propertySizeUnit?: string;
   
-  // Sales Financial Details
-  salePrice?: number;
-  tokenMoney?: number;
+  // Sales Financial Details (string allowed during typing, e.g. "0." for 0.5)
+  salePrice?: number | string;
+  tokenMoney?: number | string;
   remainingAmount?: number;
-  
+
   // Rental Details
-  monthlyRent?: number;
-  securityDeposit?: number;
+  monthlyRent?: number | string;
+  securityDeposit?: number | string;
   leasePeriod?: string;
   
   // Property Disclosure
@@ -82,7 +82,7 @@ export interface DocumentDetails {
   structuralCondition?: string;
   
   // Payment Receipt
-  paymentAmount?: number;
+  paymentAmount?: number | string;
   paymentDate?: string;
   receiptNumber?: string;
   paymentMethod?: string;
@@ -100,6 +100,9 @@ export interface GeneratedDocument {
   clauses: DocumentClause[];
   createdAt: string;
   createdBy: string;
+  status?: string;
+  pdfUrl?: string;
+  fileSize?: number;
 }
 
 export const DOCUMENT_TEMPLATES: DocumentTemplate[] = [
@@ -321,21 +324,21 @@ export const DEFAULT_CLAUSES: Record<DocumentType, DocumentClause[]> = {
     {
       id: '1',
       title: 'Receipt Details',
-      content: 'Receipt No: [RECEIPT_NUMBER]\nDate: [PAYMENT_DATE]\n\nReceived from: [BUYER_NAME]\nCNIC: [BUYER_CNIC]\nAddress: [BUYER_ADDRESS]',
+      content: 'Receipt No: [RECEIPT_NUMBER]\nDate: [PAYMENT_DATE]\n\nReceived from: [PAYER_NAME]\n\nAmount: PKR [PAYMENT_AMOUNT]',
       isCustom: false,
       order: 1
     },
     {
       id: '2',
       title: 'Payment Information',
-      content: 'Amount Received: PKR [PAYMENT_AMOUNT]\n\nPayment for: Property located at [PROPERTY_ADDRESS]\n\nPayment Method: [PAYMENT_METHOD]',
+      content: 'Payment for: [PAYMENT_PURPOSE]\n\nPayment Method: [PAYMENT_METHOD]\n\nReceived by: [PAYEE_NAME]',
       isCustom: false,
       order: 2
     },
     {
       id: '3',
       title: 'Acknowledgment',
-      content: 'Received by: [SELLER_NAME]\nCNIC: [SELLER_CNIC]\n\nSignature: ___________________\n\nThis receipt serves as proof of payment received.',
+      content: 'This receipt serves as proof of payment received. The payee has received the above amount from the payer as stated.',
       isCustom: false,
       order: 3
     }
