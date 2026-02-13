@@ -6,7 +6,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { DocumentGeneratorModal } from './DocumentGeneratorModal';
-import { getGeneratedDocuments, deleteGeneratedDocument } from '../lib/documents';
+import { getGeneratedDocuments, deleteGeneratedDocument, replacePlaceholders } from '../lib/documents';
 import { DOCUMENT_TEMPLATES, DocumentType, GeneratedDocument } from '../types/documents';
 import { useDocumentsApi } from '@/modules/documents';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -503,26 +503,73 @@ export function DocumentCenter() {
               {previewDocument.pdfUrl ? (
                 <div className="h-full">
                   <iframe
-                    src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${previewDocument.pdfUrl}`}
+                    src={previewDocument.pdfUrl.startsWith('http') ? previewDocument.pdfUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${previewDocument.pdfUrl}`}
                     className="w-full h-[600px] border rounded-lg"
                     title="Document Preview"
                   />
                 </div>
               ) : (
-                <div className="overflow-y-auto max-h-[600px]">
-                  <div className="bg-white border rounded-lg p-6 space-y-4">
-                    {previewDocument.clauses && previewDocument.clauses.length > 0 ? (
-                      previewDocument.clauses.map((clause) => (
-                        <div key={clause.id}>
-                          <h4 className="font-medium text-gray-900 mb-2">{clause.title}</h4>
-                          <p className="text-gray-600 text-sm whitespace-pre-wrap">{clause.content}</p>
+                <div className="overflow-y-auto max-h-[600px] flex justify-center">
+                  <div className="bg-white border rounded-lg shadow-sm p-8 max-w-4xl w-full" style={{ fontFamily: 'serif' }}>
+                    <div className="space-y-6">
+                      <div className="text-center border-b-2 border-gray-900 pb-4">
+                        <h1 className="text-2xl uppercase tracking-wide text-gray-900 font-bold">
+                          {(DOCUMENT_TEMPLATES.find(t => t.id === previewDocument.documentType))?.name?.toUpperCase() ?? previewDocument.documentType.replace(/_/g, ' ').toUpperCase()}
+                        </h1>
+                      </div>
+                      {previewDocument.clauses && previewDocument.clauses.length > 0 ? (
+                        previewDocument.clauses
+                          .slice()
+                          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                          .map((clause) => (
+                            <div key={clause.id} className="space-y-2">
+                              <h3 className="text-gray-900 font-semibold">{clause.title}</h3>
+                              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
+                                {replacePlaceholders(clause.content, previewDocument.details)}
+                              </p>
+                            </div>
+                          ))
+                      ) : (
+                        <p className="text-gray-500 text-center py-8">
+                          No preview available. Generate or download the PDF to view the document.
+                        </p>
+                      )}
+                      <div className="mt-12 pt-8 border-t border-gray-300">
+                        <div className="grid grid-cols-2 gap-8">
+                          <div>
+                            <div className="border-b border-gray-900 w-48 mb-2" />
+                            <p className="text-sm text-gray-700">
+                              {previewDocument.details?.sellerName || previewDocument.details?.landlordName || previewDocument.details?.ownerName || previewDocument.details?.payeeName || '[Party 1]'}
+                            </p>
+                            <p className="text-sm text-gray-600">Signature</p>
+                          </div>
+                          <div>
+                            <div className="border-b border-gray-900 w-48 mb-2" />
+                            <p className="text-sm text-gray-700">
+                              {previewDocument.details?.buyerName || previewDocument.details?.tenantName || previewDocument.details?.payerName || '[Party 2]'}
+                            </p>
+                            <p className="text-sm text-gray-600">Signature</p>
+                          </div>
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-gray-500 text-center py-8">
-                        No preview available. Generate or download the PDF to view the document.
-                      </p>
-                    )}
+                        {previewDocument.documentType !== 'payment-receipt' && (
+                          <div className="mt-8 grid grid-cols-2 gap-8">
+                            <div>
+                              <div className="border-b border-gray-900 w-48 mb-2" />
+                              <p className="text-sm text-gray-600">Witness 1</p>
+                            </div>
+                            <div>
+                              <div className="border-b border-gray-900 w-48 mb-2" />
+                              <p className="text-sm text-gray-600">Witness 2</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-8 text-right">
+                        <p className="text-sm text-gray-600">
+                          Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

@@ -174,7 +174,8 @@ export function replacePlaceholders(content: string, details: DocumentDetails): 
     '[PAYMENT_DATE]': details.paymentDate || '[PAYMENT_DATE]',
     '[RECEIPT_NUMBER]': details.receiptNumber || '[RECEIPT_NUMBER]',
     '[PAYMENT_METHOD]': details.paymentMethod || '[PAYMENT_METHOD]',
-    
+    '[PAYMENT_PURPOSE]': details.paymentPurpose || '[PAYMENT_PURPOSE]',
+
     // Property Disclosure
     '[OWNERSHIP_STATUS]': details.ownershipStatus || '[OWNERSHIP_STATUS]',
     '[LEGAL_STATUS]': details.legalStatus || '[LEGAL_STATUS]',

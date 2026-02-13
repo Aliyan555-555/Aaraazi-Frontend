@@ -44,6 +44,12 @@ import {
   useSensors,
   DragEndEvent,
 } from '@dnd-kit/core';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
+
+
+
 import {
   arrayMove,
   SortableContext,
@@ -105,42 +111,42 @@ const CLAUSE_PLACEHOLDER_GUIDE: {
   description: string;
   forDocumentTypes: readonly DocTypeForGuide[];
 }[] = [
-  { variable: '[DATE]', description: 'Current date', forDocumentTypes: ALL },
-  { variable: '[SELLER_NAME]', description: 'Seller full name', forDocumentTypes: SALES },
-  { variable: '[SELLER_FATHER_NAME]', description: "Seller's father name", forDocumentTypes: SALES },
-  { variable: '[SELLER_CNIC]', description: 'Seller CNIC', forDocumentTypes: SALES },
-  { variable: '[SELLER_ADDRESS]', description: 'Seller address', forDocumentTypes: SALES },
-  { variable: '[BUYER_NAME]', description: 'Buyer full name', forDocumentTypes: SALES },
-  { variable: '[BUYER_FATHER_NAME]', description: "Buyer's father name", forDocumentTypes: SALES },
-  { variable: '[BUYER_CNIC]', description: 'Buyer CNIC', forDocumentTypes: SALES },
-  { variable: '[BUYER_ADDRESS]', description: 'Buyer address', forDocumentTypes: SALES },
-  { variable: '[PROPERTY_ADDRESS]', description: 'Property address', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
-  { variable: '[PROPERTY_TYPE]', description: 'Property type', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
-  { variable: '[PROPERTY_SIZE]', description: 'Property size', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
-  { variable: '[PROPERTY_UNIT]', description: 'Size unit (e.g. Sq. Yards)', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
-  { variable: '[SALE_PRICE]', description: 'Sale price (PKR)', forDocumentTypes: SALES },
-  { variable: '[SALE_PRICE_WORDS]', description: 'Sale price in words', forDocumentTypes: SALES },
-  { variable: '[TOKEN_MONEY]', description: 'Token money (PKR)', forDocumentTypes: SALES },
-  { variable: '[REMAINING_AMOUNT]', description: 'Remaining amount (PKR)', forDocumentTypes: SALES },
-  { variable: '[LANDLORD_NAME]', description: 'Landlord name', forDocumentTypes: RENTAL },
-  { variable: '[TENANT_NAME]', description: 'Tenant name', forDocumentTypes: RENTAL },
-  { variable: '[MONTHLY_RENT]', description: 'Monthly rent (PKR)', forDocumentTypes: RENTAL },
-  { variable: '[SECURITY_DEPOSIT]', description: 'Security deposit (PKR)', forDocumentTypes: RENTAL },
-  { variable: '[LEASE_PERIOD]', description: 'Lease period', forDocumentTypes: RENTAL },
-  { variable: '[START_DATE]', description: 'Start date', forDocumentTypes: RENTAL },
-  { variable: '[NOTICE_PERIOD]', description: 'Notice period (days)', forDocumentTypes: RENTAL },
-  { variable: '[OWNER_NAME]', description: 'Owner name', forDocumentTypes: PROPERTY },
-  { variable: '[OWNERSHIP_STATUS]', description: 'Ownership status', forDocumentTypes: PROPERTY },
-  { variable: '[LEGAL_STATUS]', description: 'Legal status', forDocumentTypes: PROPERTY },
-  { variable: '[STRUCTURAL_CONDITION]', description: 'Structural condition', forDocumentTypes: PROPERTY },
-  { variable: '[PAYER_NAME]', description: 'Payer name', forDocumentTypes: PAYMENT },
-  { variable: '[PAYEE_NAME]', description: 'Payee name', forDocumentTypes: PAYMENT },
-  { variable: '[PAYMENT_AMOUNT]', description: 'Payment amount (PKR)', forDocumentTypes: PAYMENT },
-  { variable: '[PAYMENT_DATE]', description: 'Payment date', forDocumentTypes: PAYMENT },
-  { variable: '[RECEIPT_NUMBER]', description: 'Receipt number', forDocumentTypes: PAYMENT },
-  { variable: '[PAYMENT_METHOD]', description: 'Payment method', forDocumentTypes: PAYMENT },
-  { variable: '[PAYMENT_PURPOSE]', description: 'Payment purpose', forDocumentTypes: PAYMENT },
-];
+    { variable: '[DATE]', description: 'Current date', forDocumentTypes: ALL },
+    { variable: '[SELLER_NAME]', description: 'Seller full name', forDocumentTypes: SALES },
+    { variable: '[SELLER_FATHER_NAME]', description: "Seller's father name", forDocumentTypes: SALES },
+    { variable: '[SELLER_CNIC]', description: 'Seller CNIC', forDocumentTypes: SALES },
+    { variable: '[SELLER_ADDRESS]', description: 'Seller address', forDocumentTypes: SALES },
+    { variable: '[BUYER_NAME]', description: 'Buyer full name', forDocumentTypes: SALES },
+    { variable: '[BUYER_FATHER_NAME]', description: "Buyer's father name", forDocumentTypes: SALES },
+    { variable: '[BUYER_CNIC]', description: 'Buyer CNIC', forDocumentTypes: SALES },
+    { variable: '[BUYER_ADDRESS]', description: 'Buyer address', forDocumentTypes: SALES },
+    { variable: '[PROPERTY_ADDRESS]', description: 'Property address', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
+    { variable: '[PROPERTY_TYPE]', description: 'Property type', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
+    { variable: '[PROPERTY_SIZE]', description: 'Property size', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
+    { variable: '[PROPERTY_UNIT]', description: 'Size unit (e.g. Sq. Yards)', forDocumentTypes: [...SALES, ...RENTAL, ...PROPERTY] },
+    { variable: '[SALE_PRICE]', description: 'Sale price (PKR)', forDocumentTypes: SALES },
+    { variable: '[SALE_PRICE_WORDS]', description: 'Sale price in words', forDocumentTypes: SALES },
+    { variable: '[TOKEN_MONEY]', description: 'Token money (PKR)', forDocumentTypes: SALES },
+    { variable: '[REMAINING_AMOUNT]', description: 'Remaining amount (PKR)', forDocumentTypes: SALES },
+    { variable: '[LANDLORD_NAME]', description: 'Landlord name', forDocumentTypes: RENTAL },
+    { variable: '[TENANT_NAME]', description: 'Tenant name', forDocumentTypes: RENTAL },
+    { variable: '[MONTHLY_RENT]', description: 'Monthly rent (PKR)', forDocumentTypes: RENTAL },
+    { variable: '[SECURITY_DEPOSIT]', description: 'Security deposit (PKR)', forDocumentTypes: RENTAL },
+    { variable: '[LEASE_PERIOD]', description: 'Lease period', forDocumentTypes: RENTAL },
+    { variable: '[START_DATE]', description: 'Start date', forDocumentTypes: RENTAL },
+    { variable: '[NOTICE_PERIOD]', description: 'Notice period (days)', forDocumentTypes: RENTAL },
+    { variable: '[OWNER_NAME]', description: 'Owner name', forDocumentTypes: PROPERTY },
+    { variable: '[OWNERSHIP_STATUS]', description: 'Ownership status', forDocumentTypes: PROPERTY },
+    { variable: '[LEGAL_STATUS]', description: 'Legal status', forDocumentTypes: PROPERTY },
+    { variable: '[STRUCTURAL_CONDITION]', description: 'Structural condition', forDocumentTypes: PROPERTY },
+    { variable: '[PAYER_NAME]', description: 'Payer name', forDocumentTypes: PAYMENT },
+    { variable: '[PAYEE_NAME]', description: 'Payee name', forDocumentTypes: PAYMENT },
+    { variable: '[PAYMENT_AMOUNT]', description: 'Payment amount (PKR)', forDocumentTypes: PAYMENT },
+    { variable: '[PAYMENT_DATE]', description: 'Payment date', forDocumentTypes: PAYMENT },
+    { variable: '[RECEIPT_NUMBER]', description: 'Receipt number', forDocumentTypes: PAYMENT },
+    { variable: '[PAYMENT_METHOD]', description: 'Payment method', forDocumentTypes: PAYMENT },
+    { variable: '[PAYMENT_PURPOSE]', description: 'Payment purpose', forDocumentTypes: PAYMENT },
+  ];
 
 function getPlaceholderGuideForDocumentType(documentType: DocumentType) {
   return CLAUSE_PLACEHOLDER_GUIDE.filter((item) =>
@@ -395,6 +401,19 @@ export function DocumentGeneratorModal({
     }
   };
 
+  const handleClauseTitleChange = (id: string, title: string) => {
+    try {
+      setClauses(prev =>
+        prev.map(clause =>
+          clause.id === id ? { ...clause, title } : clause
+        )
+      );
+    } catch (error) {
+      logger.error('Error changing clause title:', error);
+      toast.error('Error updating clause title');
+    }
+  };
+
   const handleClauseDelete = (id: string) => {
     try {
       setClauses(prev => prev.filter(clause => clause.id !== id));
@@ -578,6 +597,7 @@ export function DocumentGeneratorModal({
             documentType={documentType}
             clauses={clauses}
             onClauseChange={handleClauseChange}
+            onClauseTitleChange={handleClauseTitleChange}
             onClauseDelete={handleClauseDelete}
             onAddClause={handleAddClause}
             onDragEnd={handleDragEnd}
@@ -1454,6 +1474,7 @@ function Step2EditClauses({
   documentType,
   clauses,
   onClauseChange,
+  onClauseTitleChange,
   onClauseDelete,
   onAddClause,
   onDragEnd,
@@ -1462,6 +1483,7 @@ function Step2EditClauses({
   documentType: DocumentType;
   clauses: DocumentClause[];
   onClauseChange: (id: string, content: string) => void;
+  onClauseTitleChange: (id: string, title: string) => void;
   onClauseDelete: (id: string) => void;
   onAddClause: () => void;
   onDragEnd: (event: DragEndEvent) => void;
@@ -1535,6 +1557,7 @@ function Step2EditClauses({
                 key={clause.id}
                 clause={clause}
                 onClauseChange={onClauseChange}
+                onClauseTitleChange={onClauseTitleChange}
                 onClauseDelete={onClauseDelete}
               />
             ))}
@@ -1554,10 +1577,12 @@ function Step2EditClauses({
 function SortableClauseItem({
   clause,
   onClauseChange,
+  onClauseTitleChange,
   onClauseDelete
 }: {
   clause: DocumentClause;
   onClauseChange: (id: string, content: string) => void;
+  onClauseTitleChange: (id: string, title: string) => void;
   onClauseDelete: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: clause.id });
@@ -1580,8 +1605,16 @@ function SortableClauseItem({
         </div>
 
         <div className="flex-1 space-y-2">
-          <div className="flex items-center justify-between">
-            <h4 className="text-gray-900">{clause.title}</h4>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <Label className="sr-only">Clause Title</Label>
+              <Input
+                value={clause.title}
+                onChange={(e) => onClauseTitleChange(clause.id, e.target.value)}
+                className="font-semibold text-gray-900 border-gray-200 bg-white hover:border-blue-400 focus:border-blue-500 transition-colors h-9"
+                placeholder="Clause Title"
+              />
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -1617,30 +1650,32 @@ function Step3Preview({
   const template = DOCUMENT_TEMPLATES.find(t => t.id === documentType);
 
   const handlePrint = () => window.print();
-  const handleDownload = () => toast.info('PDF download will be implemented');
+
+  const handleDownload = async () => {
+    const element = document.getElementById('document-preview-content');
+    if (!element) return;
+
+    try {
+      const canvas = await html2canvas(element, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${documentType}-${Date.now()}.pdf`);
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    }
+  };
 
   return (
     <div className="space-y-4">
-      {/* Action Bar */}
-      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-        <div>
-          <h3 className="text-gray-900">Document Preview</h3>
-          <p className="text-sm text-gray-600">Review before finalizing</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="w-4 h-4 mr-2" />
-            Print
-          </Button>
-          <Button onClick={handleDownload}>
-            <Download className="w-4 h-4 mr-2" />
-            Download PDF
-          </Button>
-        </div>
-      </div>
 
       {/* Document Preview */}
-      <Card className="p-8 bg-white max-w-4xl mx-auto" style={{ fontFamily: 'serif' }}>
+      <Card id="document-preview-content" className="p-8 bg-white max-w-4xl mx-auto" style={{ fontFamily: 'serif' }}>
         <div className="space-y-6">
           {/* Title */}
           <div className="text-center border-b-2 border-gray-900 pb-4">

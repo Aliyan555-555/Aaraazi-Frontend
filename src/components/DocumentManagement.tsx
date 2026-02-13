@@ -172,7 +172,7 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [previewDocument, setPreviewDocument] = useState<string | null>(null);
+  const [previewPayload, setPreviewPayload] = useState<{ template: DocumentTemplate; data: Record<string, any> } | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   useEffect(() => {
@@ -215,9 +215,8 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
     setDocuments(updatedDocuments);
     saveDocuments(updatedDocuments);
 
-    // Generate and preview document
-    const content = generateDocumentContent(selectedTemplate, newDocument.data);
-    setPreviewDocument(content);
+    // Show dynamic document preview (actual content, not demo)
+    setPreviewPayload({ template: selectedTemplate, data: newDocument.data });
     setIsPreviewOpen(true);
 
     // Reset form
@@ -256,8 +255,7 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
       return;
     }
 
-    const content = generateDocumentContent(template, managedDoc.data);
-    setPreviewDocument(content);
+    setPreviewPayload({ template, data: managedDoc.data });
     setIsPreviewOpen(true);
   };
 
@@ -490,22 +488,58 @@ export const DocumentManagement: React.FC<DocumentManagementProps> = ({ user }) 
         </DialogContent>
       </Dialog>
 
-      {/* Document Preview Dialog */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+      {/* Document Preview Dialog – actual dynamic PDF-style preview */}
+      <Dialog open={isPreviewOpen} onOpenChange={(open) => { if (!open) setPreviewPayload(null); setIsPreviewOpen(open); }}>
+        <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Document Preview</DialogTitle>
             <DialogDescription>
-              Preview of the generated document
+              Preview of the generated document (actual content)
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[60vh] w-full">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <pre className="whitespace-pre-wrap text-sm">{previewDocument}</pre>
+          <ScrollArea className="flex-1 min-h-0 border rounded-lg">
+            <div className="p-6 bg-white" style={{ fontFamily: 'serif' }}>
+              {previewPayload ? (
+                <div className="max-w-3xl mx-auto space-y-6">
+                  <div className="text-center border-b-2 border-gray-900 pb-4">
+                    <h1 className="text-2xl uppercase tracking-wide text-gray-900 font-bold">
+                      {previewPayload.template.title.toUpperCase()}
+                    </h1>
+                  </div>
+                  <div className="space-y-4">
+                    {previewPayload.template.fields.map((field) => (
+                      <div key={field.name} className="space-y-1">
+                        <h3 className="text-gray-900 font-semibold text-sm">{field.label}</h3>
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          {previewPayload.data[field.name] ?? '[Not provided]'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-12 pt-8 border-t border-gray-300">
+                    <div className="grid grid-cols-2 gap-8">
+                      <div>
+                        <div className="border-b border-gray-900 w-48 mb-2" />
+                        <p className="text-sm text-gray-600">Party 1 / Authorized Signatory</p>
+                      </div>
+                      <div>
+                        <div className="border-b border-gray-900 w-48 mb-2" />
+                        <p className="text-sm text-gray-600">Party 2 / Witness</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-8 text-right text-sm text-gray-600">
+                    <p>Generated on: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p>Created by: {previewPayload.data.createdBy || '—'}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-8">No preview data.</p>
+              )}
             </div>
           </ScrollArea>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => { setPreviewPayload(null); setIsPreviewOpen(false); }}>
               Close
             </Button>
           </div>
