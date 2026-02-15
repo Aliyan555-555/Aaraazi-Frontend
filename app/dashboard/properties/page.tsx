@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { PropertiesWorkspaceV4 } from '@/components/properties/PropertiesWorkspaceV4';
+import { PropertiesWorkspace } from '@/components/properties/PropertiesWorkspace';
 import { User, mapAuthUserToUIUser, Property } from '@/types';
 
 export default function PropertiesPage() {
@@ -38,7 +38,7 @@ export default function PropertiesPage() {
     }
 
     return (
-        <PropertiesWorkspaceV4
+        <PropertiesWorkspace
             user={user}
             onNavigate={handleNavigate}
             onAddProperty={handleStartNew}

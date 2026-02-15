@@ -6,6 +6,7 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import type { ApiError } from '@/types/auth.types';
 
+import { logger } from "../logger";
 // ============================================================================
 // Configuration
 // ============================================================================
@@ -32,6 +33,11 @@ export const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // For FormData (e.g. file upload), let axios set Content-Type with boundary
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
+    }
+
     // Get token from localStorage (Zustand persist storage)
     if (typeof window !== 'undefined') {
       try {
@@ -45,7 +51,7 @@ apiClient.interceptors.request.use(
           }
         }
       } catch (error) {
-        console.error('Error reading auth token:', error);
+        logger.error('Error reading auth token:', error);
       }
     }
 
@@ -57,7 +63,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    logger.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -70,7 +76,7 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log successful responses in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`✓ ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+      logger.log(`✓ ${response.config.method?.toUpperCase()} ${response.config.url}`, {
         status: response.status,
         data: response.data,
       });
@@ -84,7 +90,7 @@ apiClient.interceptors.response.use(
 
       // Log errors in development
       if (process.env.NODE_ENV === 'development') {
-        console.error(`✗ ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+        logger.error(`✗ ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
           status,
           error: data,
         });
@@ -108,22 +114,22 @@ apiClient.interceptors.response.use(
 
         case 403:
           // Forbidden - user doesn't have permission
-          console.error('Access forbidden:', data?.message);
+          logger.error('Access forbidden:', data?.message);
           break;
 
         case 404:
           // Not found
-          console.error('Resource not found:', data?.message);
+          logger.error('Resource not found:', data?.message);
           break;
 
         case 422:
           // Validation error
-          console.error('Validation error:', data?.message);
+          logger.error('Validation error:', data?.message);
           break;
 
         case 429:
           // Rate limit exceeded
-          console.error('Rate limit exceeded:', data?.message);
+          logger.error('Rate limit exceeded:', data?.message);
           break;
 
         case 500:
@@ -131,7 +137,7 @@ apiClient.interceptors.response.use(
         case 503:
         case 504:
           // Server errors
-          console.error('Server error:', data?.message);
+          logger.error('Server error:', data?.message);
           break;
       }
 
@@ -145,7 +151,7 @@ apiClient.interceptors.response.use(
       } as ApiError);
     } else if (error.request) {
       // Network error - no response received
-      console.error('Network error:', error.message);
+      logger.error('Network error:', error.message);
       return Promise.reject({
         message: 'Network error. Please check your connection.',
         statusCode: 0,
@@ -153,7 +159,7 @@ apiClient.interceptors.response.use(
       } as ApiError);
     } else {
       // Request setup error
-      console.error('Request error:', error.message);
+      logger.error('Request error:', error.message);
       return Promise.reject({
         message: error.message || 'Request failed',
         statusCode: 0,
