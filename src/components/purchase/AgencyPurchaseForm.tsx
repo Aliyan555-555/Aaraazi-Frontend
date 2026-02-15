@@ -12,12 +12,17 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { createPurchaseCycle } from '../../lib/purchaseCycle';
+// [STUBBED] import { createPurchaseCycle } from '../../lib/purchaseCycle';
 import { DollarSign, TrendingUp, Calculator, AlertCircle, Receipt } from 'lucide-react';
 import { formatPKR } from '../../lib/currency';
 import { formatPropertyAddress } from '../../lib/utils';
 import { toast } from 'sonner';
 import { AcquisitionCostModal } from '../agency-financials/AcquisitionCostModal';
+
+// ===== STUBS for removed prototype functions =====
+const createPurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AgencyPurchaseFormProps {
   property: Property;

@@ -92,26 +92,39 @@ import {
 } from './agency-financials';
 
 // Business Logic
-import {
-  updatePurchaseCycle,
-  completePurchase,
-  cancelPurchaseCycle,
-  getPurchaseCycleById,
-  addCommunicationLog,
-  getAgencyInvestmentROI,
-} from '../lib/purchaseCycle';
+// [STUBBED] import {
+// [STUBBED]   updatePurchaseCycle,
+// [STUBBED]   completePurchase,
+// [STUBBED]   cancelPurchaseCycle,
+// [STUBBED]   getPurchaseCycleById,
+// [STUBBED]   addCommunicationLog,
+// [STUBBED]   getAgencyInvestmentROI,
+// [STUBBED] } from '../lib/purchaseCycle';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
 import { toast } from 'sonner';
-import { markPurchaseCycleOfferAccepted } from '../lib/purchaseCycle';
+// [STUBBED] import { markPurchaseCycleOfferAccepted } from '../lib/purchaseCycle';
 
 // Payment Integration
 import { PaymentSummaryReadOnly } from './deals/PaymentSummaryReadOnly';
-import { getDealById } from '../lib/deals';
+// [STUBBED] import { getDealById } from '../lib/deals';
 
 // Offer Sending
 import { SendOfferFromPurchaseCycleModal } from './SendOfferFromPurchaseCycleModal';
-import { getSellCyclesByProperty } from '../lib/sellCycle';
+// [STUBBED] import { getSellCyclesByProperty } from '../lib/sellCycle';
+
+// ===== STUBS for removed prototype functions =====
+const updatePurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const completePurchase = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const cancelPurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPurchaseCycleById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addCommunicationLog = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgencyInvestmentROI = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const markPurchaseCycleOfferAccepted = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getDealById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSellCyclesByProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PurchaseCycleDetailsV4Props {
   cycle: PurchaseCycle;

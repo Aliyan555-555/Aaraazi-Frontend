@@ -10,7 +10,7 @@ import { Textarea } from './ui/textarea';
 import { Progress } from './ui/progress';
 import { Separator } from './ui/separator';
 import { Property, PropertyPayment, User } from '../types';
-import { getPropertyPayments, addPropertyPayment, updatePropertyPaymentSummary } from '../lib/data';
+// [STUBBED] import { getPropertyPayments, addPropertyPayment, updatePropertyPaymentSummary } from '../lib/data';
 import { 
   DollarSign, 
   Plus, 
@@ -26,6 +26,13 @@ import {
   Download
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getPropertyPayments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addPropertyPayment = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updatePropertyPaymentSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PaymentTrackingProps {
   property: Property;

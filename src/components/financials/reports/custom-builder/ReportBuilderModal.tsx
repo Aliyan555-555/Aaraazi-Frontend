@@ -19,7 +19,7 @@
  * <ReportBuilderModal
  *   open={isOpen}
  *   onClose={() => setIsOpen(false)}
- *   onSave={(template) => console.log('Saved:', template)}
+ *   onSave={(template) => logger.log('Saved:', template)}
  *   user={currentUser}
  * />
  */
@@ -30,8 +30,8 @@ import { Button } from '../../../ui/button';
 import { Input } from '../../../ui/input';
 import { Label } from '../../../ui/label';
 import { Textarea } from '../../../ui/textarea';
-import { 
-  CustomReportTemplate, 
+import {
+  CustomReportTemplate,
   ReportConfiguration,
   DataSource,
   SelectedField,
@@ -39,15 +39,14 @@ import {
   GroupingConfig
 } from '../../../../types/custom-reports';
 import { User } from '../../../../types';
-import { 
-  saveCustomReport, 
-  validateReportConfig,
-  generateReport 
-} from '../../../../lib/custom-report-builder';
-import { 
-  Check, 
-  ChevronLeft, 
-  ChevronRight, 
+// Stubbed functions (prototype lib removed)
+const saveCustomReport = (_template: any) => { /* static/demo */ };
+const validateReportConfig = (_config: any) => ({ isValid: true, errors: [] as string[] });
+const generateReport = (_config: any) => ({ data: [], columns: [] });
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
   Save,
   AlertCircle
 } from 'lucide-react';
@@ -62,6 +61,7 @@ import { ChartConfiguratorStep } from './ChartConfiguratorStep';
 import { ScheduleConfiguratorStep } from './ScheduleConfiguratorStep';
 import { PreviewStep } from './PreviewStep';
 
+import { logger } from "../../../../lib/logger";
 interface ReportBuilderModalProps {
   open: boolean;
   onClose: () => void;
@@ -84,7 +84,7 @@ export const ReportBuilderModal: React.FC<ReportBuilderModalProps> = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [reportName, setReportName] = useState(editTemplate?.name || '');
   const [reportDescription, setReportDescription] = useState(editTemplate?.description || '');
-  
+
   const [config, setConfig] = useState<Partial<ReportConfiguration>>({
     dataSources: editTemplate?.config.dataSources || [],
     fields: editTemplate?.config.fields || [],
@@ -187,7 +187,7 @@ export const ReportBuilderModal: React.FC<ReportBuilderModalProps> = ({
       onSave(template);
       handleClose();
     } catch (error) {
-      console.error('Error saving report:', error);
+      logger.error('Error saving report:', error);
       toast.error('Failed to save report template');
     }
   };
@@ -228,13 +228,12 @@ export const ReportBuilderModal: React.FC<ReportBuilderModalProps> = ({
           {steps.map((step, index) => (
             <React.Fragment key={step.number}>
               <div
-                className={`flex-1 h-2 rounded transition-colors ${
-                  step.number < currentStep
-                    ? 'bg-green-600'
-                    : step.number === currentStep
+                className={`flex-1 h-2 rounded transition-colors ${step.number < currentStep
+                  ? 'bg-green-600'
+                  : step.number === currentStep
                     ? 'bg-blue-600'
                     : 'bg-gray-200'
-                }`}
+                  }`}
               />
               {index < steps.length - 1 && (
                 <div className="flex items-center justify-center w-6 h-6">

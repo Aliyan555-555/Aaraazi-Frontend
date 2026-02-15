@@ -4,8 +4,8 @@
  * Centralized exports for all purchase cycles workspace components
  */
 
-export { PurchaseCyclesWorkspaceV4 } from './PurchaseCyclesWorkspaceV4';
+export { PurchaseCyclesWorkspace } from './PurchaseCyclesWorkspace';
 export { PurchaseCycleWorkspaceCard } from './PurchaseCycleWorkspaceCard';
 
-export type { PurchaseCyclesWorkspaceV4Props } from './PurchaseCyclesWorkspaceV4';
+export type { PurchaseCyclesWorkspaceProps } from './PurchaseCyclesWorkspace';
 export type { PurchaseCycleWorkspaceCardProps } from './PurchaseCycleWorkspaceCard';

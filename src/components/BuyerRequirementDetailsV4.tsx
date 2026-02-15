@@ -74,26 +74,37 @@ import {
 } from 'lucide-react';
 
 // Business Logic
-import {
-  closeBuyerRequirement,
-  deleteBuyerRequirement,
-} from '../lib/buyerRequirements';
+// [STUBBED] import {
+// [STUBBED]   closeBuyerRequirement,
+// [STUBBED]   deleteBuyerRequirement,
+// [STUBBED] } from '../lib/buyerRequirements';
 import { formatPKR } from '../lib/currency';
 import { toast } from 'sonner';
-import {
-  findMatchingPropertiesForBuyer,
-  PropertyMatch as InternalPropertyMatch,
-} from '../lib/propertyMatching';
+// [STUBBED] import {
+// [STUBBED]   findMatchingPropertiesForBuyer,
+// [STUBBED]   PropertyMatch as InternalPropertyMatch,
+// [STUBBED] } from '../lib/propertyMatching';
 import { PropertyMatch } from '../types/sharing';
-import {
-  getLatestOfferForProperty,
-} from '../lib/sellCycle';
+// [STUBBED] import {
+// [STUBBED]   getLatestOfferForProperty,
+// [STUBBED] } from '../lib/sellCycle';
 
 // Phase 4D: Cross-agent matching functions
 import {
   findSharedMatchesForBuyerRequirement,
 } from '../lib/smartMatching';
-import { submitCrossAgentOffer } from '../lib/sellCycle';
+// [STUBBED] import { submitCrossAgentOffer } from '../lib/sellCycle';
+
+import { logger } from "../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const closeBuyerRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteBuyerRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const findMatchingPropertiesForBuyer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type InternalPropertyMatch = any;
+const getLatestOfferForProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const submitCrossAgentOffer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface BuyerRequirementDetailsV4Props {
   requirement: BuyerRequirement;
@@ -178,28 +189,28 @@ export function BuyerRequirementDetailsV4({
   };
 
   const handleSendOffer = (match: InternalPropertyMatch) => {
-    console.log('🔵 handleSendOffer called with match:', match);
+    logger.log('🔵 handleSendOffer called with match:', match);
 
     // Validation
     if (!match) {
-      console.error('❌ No match provided');
+      logger.error('❌ No match provided');
       toast.error('Invalid match data');
       return;
     }
 
     if (!match.sellCycleId) {
-      console.error('❌ No sellCycleId in match:', match);
+      logger.error('❌ No sellCycleId in match:', match);
       toast.error('This property does not have an active sell cycle');
       return;
     }
 
     if (!match.property) {
-      console.error('❌ No property in match:', match);
+      logger.error('❌ No property in match:', match);
       toast.error('Property data is missing');
       return;
     }
 
-    console.log('✅ Validation passed. Opening modal...');
+    logger.log('✅ Validation passed. Opening modal...');
     setSelectedMatch(match);
     setShowSendOfferModal(true);
   };
@@ -231,7 +242,7 @@ export function BuyerRequirementDetailsV4({
 
       onUpdate();
     } catch (error) {
-      console.error('Error submitting cross-agent offer:', error);
+      logger.error('Error submitting cross-agent offer:', error);
       throw error; // Let modal handle error display
     }
   };

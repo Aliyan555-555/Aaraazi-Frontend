@@ -11,8 +11,13 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { User } from '../types';
 import { toast } from 'sonner';
-import { addOffer } from '../lib/sellCycle';
+// [STUBBED] import { addOffer } from '../lib/sellCycle';
 import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const addOffer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AddOfferModalProps {
   isOpen: boolean;

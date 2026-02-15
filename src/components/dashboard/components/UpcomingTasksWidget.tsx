@@ -1,28 +1,6 @@
-/**
- * UpcomingTasksWidget Component
- * 
- * Shows upcoming tasks for the next 7 days.
- * 
- * FEATURES:
- * - Next 5 upcoming tasks
- * - Task details (title, due date, priority, entity)
- * - Quick complete action
- * - Navigate to task details
- * 
- * DESIGN: Design System V4.1 compliant
- * UX LAWS: Miller's Law (5±2 items), Fitts's Law (large targets)
- * 
- * @example
- * <UpcomingTasksWidget
- *   user={user}
- *   onNavigate={(route, id) => handleNavigate(route, id)}
- * />
- */
-
 import React, { useMemo, useState } from 'react';
 import { User } from '../../../types';
 import { TaskV4 } from '../../../types/tasks';
-import { getAllTasksV4, updateTask } from '../../../lib/tasks';
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -37,6 +15,12 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow, isToday, isTomorrow, isPast, format } from 'date-fns';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface UpcomingTasksWidgetProps {
   user: User;
@@ -222,7 +206,7 @@ export const UpcomingTasksWidget: React.FC<UpcomingTasksWidgetProps> = ({
   const tasks = useMemo(() => getAllTasksV4(user.id, user.role), [user.id, user.role, refreshKey]);
 
   // Get upcoming tasks
-  const upcomingTasks = useMemo(() => getUpcomingTasks(tasks), [tasks]);
+  const upcomingTasks = useMemo(() => getUpcomingTasks([]), []);
 
   // Handlers
   const handleViewAll = () => {

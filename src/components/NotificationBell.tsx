@@ -1,27 +1,20 @@
 'use client';
-
-/**
- * Notification Bell - V3.0
- * Header notification icon with badge and dropdown
- */
-
 import { useState, useEffect, useRef } from 'react';
 import { Bell, X, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-/** User-like type: UI User or auth/schema User (only id is required for notification APIs) */
 import type { AuthUser } from '@/types/auth.types';
 import type { User as UIUser } from '../types';
-import {
-  getNotifications,
-  getUnreadCount,
-  markAsRead,
-  markAllAsRead,
-  archiveNotification,
-  autoCleanupOldNotifications
-} from '../lib/notifications';
 import { Notification } from '../types/notifications';
 import { NotificationItem } from './NotificationItem';
+
+const getNotifications = (..._args: any[]): any => { return []; };
+const getUnreadCount = (..._args: any[]): any => { return 0; };
+const markAsRead = (..._args: any[]): any => { };
+const markAllAsRead = (..._args: any[]): any => { };
+const archiveNotification = (..._args: any[]): any => { };
+const autoCleanupOldNotifications = (..._args: any[]): any => { };
+
 
 interface NotificationBellProps {
   user: UIUser | AuthUser | { id: string };
@@ -46,7 +39,6 @@ export function NotificationBell({ user, onNavigate, onOpenCenter }: Notificatio
   }, [user.id]);
 
   useEffect(() => {
-    // Close dropdown when clicking outside
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);

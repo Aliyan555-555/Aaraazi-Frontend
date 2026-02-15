@@ -4,8 +4,8 @@
  * Centralized exports for all sell cycles workspace components
  */
 
-export { SellCyclesWorkspaceV4 } from './SellCyclesWorkspaceV4';
+export { SellCyclesWorkspace } from './SellCyclesWorkspace';
 export { SellCycleWorkspaceCard } from './SellCycleWorkspaceCard';
 
-export type { SellCyclesWorkspaceV4Props } from './SellCyclesWorkspaceV4';
+export type { SellCyclesWorkspaceProps } from './SellCyclesWorkspace';
 export type { SellCycleWorkspaceCardProps } from './SellCycleWorkspaceCard';

@@ -12,14 +12,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '../../../ui/button';
 import { CustomReportTemplate, CustomGeneratedReport } from '../../../../types/custom-reports';
 import { User } from '../../../../types';
-import { generateReport, incrementReportGeneration } from '../../../../lib/custom-report-builder';
-import { addReportHistoryEntry } from '../../../../lib/report-history';
-import { exportToCSV } from '../../../../lib/exportUtils';
+// [STUBBED] import { generateReport, incrementReportGeneration } from '../../../../lib/custom-report-builder';
+// [STUBBED] import { addReportHistoryEntry } from '../../../../lib/report-history';
+// [STUBBED] import { exportToCSV } from '../../../../lib/exportUtils';
 import { Download, FileText, Table, Loader2, BarChart3, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { ReportChart } from './ReportChart';
 import { ReportDistributionModal } from './ReportDistributionModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../../ui/tabs';
+
+// ===== STUBS for removed prototype functions =====
+const generateReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const incrementReportGeneration = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addReportHistoryEntry = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const exportToCSV = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RunCustomReportModalProps {
   open: boolean;

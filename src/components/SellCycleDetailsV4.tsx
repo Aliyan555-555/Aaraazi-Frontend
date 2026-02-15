@@ -76,12 +76,12 @@ import {
 } from 'lucide-react';
 
 // Business Logic
-import {
-  acceptOffer,
-  rejectOffer,
-  getSellCycleById,
-  toggleSellCycleSharing,
-} from '../lib/sellCycle';
+// [STUBBED] import {
+// [STUBBED]   acceptOffer,
+// [STUBBED]   rejectOffer,
+// [STUBBED]   getSellCycleById,
+// [STUBBED]   toggleSellCycleSharing,
+// [STUBBED] } from '../lib/sellCycle';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
 import { toast } from 'sonner';
@@ -91,16 +91,17 @@ import { AddOfferModal } from './AddOfferModal';
 
 // Payment Integration
 import { PaymentSummaryReadOnly } from './deals/PaymentSummaryReadOnly';
-import { getDealById } from '../lib/deals';
+// [STUBBED] import { getDealById } from '../lib/deals';
 
 // Phase 5: Financial Tracking Integration
 import { SellCycleFinancialSummary, SaleProfitModal } from './agency-financials';
 
+import { logger } from "../lib/logger";
 // Phase 4B: Cross-agent deal operations
 // Phase 4B: Cross-agent deal operations
-import {
-  createDealFromCrossAgentOffer
-} from '../lib/deals';
+// [STUBBED] import {
+// [STUBBED]   createDealFromCrossAgentOffer
+// [STUBBED] } from '../lib/deals';
 
 import {
   AlertDialog,
@@ -112,6 +113,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
+
+// ===== STUBS for removed prototype functions =====
+const acceptOffer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const rejectOffer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSellCycleById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const toggleSellCycleSharing = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getDealById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const createDealFromCrossAgentOffer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface SellCycleDetailsV4Props {
   cycle: SellCycle;
@@ -199,7 +210,7 @@ export function SellCycleDetailsV4({
       loadData();
       onUpdate();
     } catch (error) {
-      console.error(`Error ${confirmAction.type}ing offer:`, error);
+      logger.error(`Error ${confirmAction.type}ing offer:`, error);
       toast.error(error instanceof Error ? error.message : `Failed to ${confirmAction.type} offer`);
     } finally {
       setConfirmDialogOpen(false);
@@ -259,7 +270,7 @@ export function SellCycleDetailsV4({
     const handleDealCreated = (event: CustomEvent) => {
       // Reload when a deal is created for this cycle
       if (event.detail?.sellCycleId === cycle.id) {
-        console.log('🎉 Deal created event received, reloading cycle data...');
+        logger.log('🎉 Deal created event received, reloading cycle data...');
         loadData();
       }
     };

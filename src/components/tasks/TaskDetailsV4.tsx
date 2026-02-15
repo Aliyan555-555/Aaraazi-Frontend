@@ -18,7 +18,7 @@
 import React, { useState, useMemo } from 'react';
 import { User } from '../../types';
 import { TaskV4, TaskStatus, TaskPriority } from '../../types/tasks';
-import { getTaskById, getSubtasks, updateTask, addTaskComment, addTimeEntry, updateChecklistItem } from '../../lib/tasks';
+// [STUBBED] import { getTaskById, getSubtasks, updateTask, addTaskComment, addTimeEntry, updateChecklistItem } from '../../lib/tasks';
 import { PageHeader } from '../layout/PageHeader';
 import { ConnectedEntitiesBar } from '../layout/ConnectedEntitiesBar';
 import { Card } from '../ui/card';
@@ -51,6 +51,17 @@ import {
   Eye,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+
+import { logger } from "../../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const getTaskById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSubtasks = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addTaskComment = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addTimeEntry = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateChecklistItem = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface TaskDetailsV4Props {
   taskId: string;
@@ -206,7 +217,7 @@ export const TaskDetailsV4: React.FC<TaskDetailsV4Props> = ({
     {
       label: 'Delete',
       icon: <Trash2 className="h-4 w-4" />,
-      onClick: () => console.log('Delete task'),
+      onClick: () => logger.log('Delete task'),
     },
   ];
   

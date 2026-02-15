@@ -13,7 +13,7 @@ import { Card, CardContent } from '../ui/card';
 import { Progress } from '../ui/progress';
 import { Separator } from '../ui/separator';
 import { InvestorShare, Investor, User } from '../../types';
-import { getInvestors } from '../../lib/investors';
+// [STUBBED] import { getInvestors } from '../../lib/investors';
 import { formatPKR } from '../../lib/currency';
 import { 
   Search, 
@@ -29,6 +29,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import CreateInvestorModal from '../CreateInvestorModal';
+
+// ===== STUBS for removed prototype functions =====
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorSelectionModalProps {
   isOpen: boolean;

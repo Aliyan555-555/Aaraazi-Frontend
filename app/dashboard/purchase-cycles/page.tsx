@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { PurchaseCyclesWorkspaceV4 } from '@/components/purchase-cycles/PurchaseCyclesWorkspaceV4';
+import { PurchaseCyclesWorkspace } from '@/components/purchase-cycles/PurchaseCyclesWorkspace';
 import { User, mapAuthUserToUIUser, PurchaseCycle } from '@/types';
 
 export default function PurchaseCyclesPage() {
@@ -37,7 +37,7 @@ export default function PurchaseCyclesPage() {
     }
 
     return (
-        <PurchaseCyclesWorkspaceV4
+        <PurchaseCyclesWorkspace
             user={user}
             onNavigate={handleNavigate}
             onStartNew={handleStartNew}

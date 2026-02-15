@@ -25,20 +25,35 @@ import {
 } from './ui/dialog';
 import { Checkbox } from './ui/checkbox';
 import { Progress } from './ui/progress';
-import {
-  createInvestor,
-  updateInvestor,
-  validateCNIC,
-  validatePakistaniPhone,
-  validateEmail,
-  isDuplicateEmail,
-  isDuplicatePhone,
-  isDuplicateCNIC,
-  formatCNIC,
-  formatPakistaniPhone
-} from '../lib/investors';
+import { getCurrentUser } from '@/lib/auth';
+// [STUBBED] import {
+// [STUBBED]   createInvestor,
+// [STUBBED]   updateInvestor,
+// [STUBBED]   validateCNIC,
+// [STUBBED]   validatePakistaniPhone,
+// [STUBBED]   validateEmail,
+// [STUBBED]   isDuplicateEmail,
+// [STUBBED]   isDuplicatePhone,
+// [STUBBED]   isDuplicateCNIC,
+// [STUBBED]   formatCNIC,
+// [STUBBED]   formatPakistaniPhone
+// [STUBBED] } from '../lib/investors';
 import { Investor } from '../types';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const createInvestor = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateInvestor = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const validateCNIC = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const validatePakistaniPhone = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const validateEmail = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const isDuplicateEmail = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const isDuplicatePhone = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const isDuplicateCNIC = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const formatCNIC = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const formatPakistaniPhone = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface CreateInvestorModalProps {
   isOpen: boolean;
@@ -364,8 +379,8 @@ export default function CreateInvestorModal({
           description: `${investorData.name} has been updated successfully`
         });
       } else {
-        const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-        savedInvestor = createInvestor(investorData, currentUser.id || 'system', currentUser.name || 'System');
+        const currentUser = getCurrentUser();
+        savedInvestor = createInvestor(investorData, currentUser?.id ?? 'system', currentUser?.name ?? 'System');
         toast.success('Investor Created', {
           description: `${investorData.name} has been added to the registry`
         });

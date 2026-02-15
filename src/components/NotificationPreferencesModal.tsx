@@ -10,12 +10,18 @@ import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { User } from '../types';
 import { NotificationType } from '../types/notifications';
-import {
-  getNotificationPreferences,
-  updateNotificationPreferences,
-} from '../lib/notifications';
+// [STUBBED] import {
+// [STUBBED]   getNotificationPreferences,
+// [STUBBED]   updateNotificationPreferences,
+// [STUBBED] } from '../lib/notifications';
 import { toast } from 'sonner';
 import { Bell, Save } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getNotificationPreferences = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateNotificationPreferences = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface NotificationPreferencesModalProps {
   isOpen: boolean;

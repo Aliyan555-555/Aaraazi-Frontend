@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { useRouter } from 'next/navigation';
-import { User } from '../types';
+import { useAuthStore } from '@/store/useAuthStore';
+import { UserRole } from '@/types/schema';
 
 interface AdminLayoutShellProps {
     children: React.ReactNode;
@@ -12,41 +13,39 @@ interface AdminLayoutShellProps {
 
 export const AdminLayoutShell: React.FC<AdminLayoutShellProps> = ({ children }) => {
     const router = useRouter();
+    const { user: saasUser, logout, currentModule, setCurrentModule } = useAuthStore();
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-    // Mock user to satisfy Navbar props
-    const mockUser: User = {
-        id: 'admin_user',
-        name: 'Admin User',
-        email: 'admin@system.com',
-        role: 'admin',
-        avatar: '',
-    };
-
-    const handleLogout = () => {
-        router.push('/login');
+    const handleLogout = async () => {
+        await logout();
+        router.push('/auth/agency-code');
     };
 
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
-        // Navigation logic could go here
     };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Navbar
-                user={mockUser}
-                onLogout={handleLogout}
+                saasUser={saasUser ?? undefined}
+                currentModule={currentModule ?? undefined}
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                onLogout={handleLogout}
+                onModuleSwitch={() => setCurrentModule(currentModule === 'developers' ? 'agency' : 'developers')}
+                onNavigateToSettings={() => router.push('/dashboard/settings')}
+                onNavigateToProfile={() => router.push('/dashboard/profile')}
             />
             <div className="flex flex-1 overflow-hidden">
                 <div className={`hidden md:flex md:flex-col flex-shrink-0 transition-all duration-300 ${isSidebarCollapsed ? 'w-16' : 'w-60'}`}>
                     <Sidebar
                         activeTab={activeTab}
                         onTabChange={handleTabChange}
-                        userRole="admin"
+                        userRole={saasUser?.role === UserRole.SAAS_ADMIN || saasUser?.role === UserRole.AGENCY_OWNER || saasUser?.role === UserRole.AGENCY_MANAGER ? 'admin' : 'agent'}
+                        currentModule={currentModule ?? 'agency'}
+                        saasUser={saasUser ?? undefined}
                         isCollapsed={isSidebarCollapsed}
                     />
                 </div>

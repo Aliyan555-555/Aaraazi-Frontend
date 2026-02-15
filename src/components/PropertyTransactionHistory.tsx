@@ -7,7 +7,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { Transaction, Property, User, Contact } from '../types';
 import { getTransactions } from '../lib/transactions';
-import { getContacts } from '../lib/data';
+// [STUBBED] import { getContacts } from '../lib/data';
 import { formatPKR } from '../lib/currency';
 import {
   Plus,
@@ -22,6 +22,11 @@ import {
   History,
   ArrowRight
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PropertyTransactionHistoryProps {
   property: Property;

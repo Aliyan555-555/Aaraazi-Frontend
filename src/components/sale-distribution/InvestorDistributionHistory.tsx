@@ -4,19 +4,20 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { useConfirmStore } from '@/store/useConfirmStore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { Property, User, InvestorDistribution } from '../../types';
-import { 
-  getPropertyDistributions, 
-  getPropertyDistributionSummary,
-  markDistributionPaid,
-  cancelDistribution
-} from '../../lib/saleDistribution';
+// [STUBBED] import { 
+// [STUBBED]   getPropertyDistributions, 
+// [STUBBED]   getPropertyDistributionSummary,
+// [STUBBED]   markDistributionPaid,
+// [STUBBED]   cancelDistribution
+// [STUBBED] } from '../../lib/saleDistribution';
 import { formatPKR } from '../../lib/currency';
-import { 
+import {
   Award,
   DollarSign,
   Calendar,
@@ -36,6 +37,14 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
+
+// ===== STUBS for removed prototype functions =====
+const getPropertyDistributions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyDistributionSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const markDistributionPaid = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const cancelDistribution = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorDistributionHistoryProps {
   propertyId: string;
@@ -68,26 +77,27 @@ export function InvestorDistributionHistory({
   };
 
   const handleCancelDistribution = (distributionId: string) => {
-    const confirmed = window.confirm(
-      'Are you sure you want to cancel this distribution?\n\n' +
-      'This will revert the investment status back to "active".'
-    );
+    useConfirmStore.getState().ask({
+      title: 'Cancel Distribution',
+      description: 'Are you sure you want to cancel this distribution? This will revert the investment status back to "active".',
+      confirmText: 'Cancel Distribution',
+      variant: 'destructive',
+      onConfirm: () => {
+        const reason = window.prompt('Please enter a reason for cancellation:');
+        if (!reason) return;
 
-    if (!confirmed) return;
-
-    const reason = window.prompt('Please enter a reason for cancellation:');
-    if (!reason) return;
-
-    try {
-      const success = cancelDistribution(distributionId, reason);
-      if (success) {
-        toast.success('Distribution cancelled successfully');
-        onDistributionUpdated?.();
-      }
-    } catch (error) {
-      console.error('Error cancelling distribution:', error);
-      toast.error('Failed to cancel distribution');
-    }
+        try {
+          const success = cancelDistribution(distributionId, reason);
+          if (success) {
+            toast.success('Distribution cancelled successfully');
+            onDistributionUpdated?.();
+          }
+        } catch (error) {
+          console.error('Error cancelling distribution:', error);
+          toast.error('Failed to cancel distribution');
+        }
+      },
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -119,10 +129,10 @@ export function InvestorDistributionHistory({
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -250,8 +260,8 @@ export function InvestorDistributionHistory({
                             <p className="text-2xl font-bold text-green-600">
                               {formatPKR(distribution.totalReturn)}
                             </p>
-                            <Badge 
-                              variant={distribution.roi >= 0 ? 'default' : 'destructive'} 
+                            <Badge
+                              variant={distribution.roi >= 0 ? 'default' : 'destructive'}
                               className="mt-1"
                             >
                               ROI: {distribution.roi >= 0 ? '+' : ''}{distribution.roi.toFixed(2)}%

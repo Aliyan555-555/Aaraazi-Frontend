@@ -9,10 +9,16 @@ import {
 import { Button } from '../../ui/button';
 import { Separator } from '../../ui/separator';
 import { formatPKR } from '../../../lib/currency';
-import { getDealById } from '../../../lib/deals';
-import { getPropertyById } from '../../../lib/data';
+// [STUBBED] import { getDealById } from '../../../lib/deals';
+// [STUBBED] import { getPropertyById } from '../../../lib/data';
 import { Eye, Building2, DollarSign, Users, User, Briefcase, CheckCircle, Clock } from 'lucide-react';
 import type { Deal } from '../../../types/deals';
+
+// ===== STUBS for removed prototype functions =====
+const getDealById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface DealCommissionDetailModalProps {
   open: boolean;

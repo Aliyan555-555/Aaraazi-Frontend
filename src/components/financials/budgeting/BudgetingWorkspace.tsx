@@ -11,9 +11,14 @@ import { BudgetHistoryModal } from './BudgetHistoryModal';
 import { CloneBudgetModal } from './CloneBudgetModal';
 import { BulkEditBudgetsModal } from './BulkEditBudgetsModal';
 import { formatPKR } from '../../../lib/currency';
-import { getExpenses } from '../../../lib/data';
+// [STUBBED] import { getExpenses } from '../../../lib/data';
 import { toast } from 'sonner';
 import { Plus, Download, TrendingUp } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getExpenses = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface BudgetingWorkspaceProps {
   user: User;

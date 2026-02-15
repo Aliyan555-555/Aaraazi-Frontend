@@ -8,11 +8,19 @@ import { InvestorDistributionList, InvestorDistributionRecord } from './Investor
 import { DistributionFormModal } from './DistributionFormModal';
 import { BulkDistributionActions } from './BulkDistributionActions';
 import { Button } from '../../ui/button';
-import { getInvestors, getPropertyInvestments } from '../../../lib/investors';
-import { getProperties } from '../../../lib/data';
+// [STUBBED] import { getInvestors, getPropertyInvestments } from '../../../lib/investors';
+// [STUBBED] import { getProperties } from '../../../lib/data';
 import { formatPKR } from '../../../lib/currency';
 import { toast } from 'sonner';
 import { Plus, Download, CheckCircle, XCircle, Send } from 'lucide-react';
+
+import { logger } from "../../../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface InvestorDistributionWorkspaceProps {
   user: User;
@@ -90,7 +98,7 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
       try {
         setAllDistributions(JSON.parse(stored));
       } catch (error) {
-        console.error('Failed to load distributions:', error);
+        logger.error('Failed to load distributions:', error);
         setAllDistributions([]);
       }
     }
@@ -207,7 +215,7 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
 
   // Handle bulk actions
   const handleBulkAction = async (action: 'approve' | 'reject' | 'mark-paid', reason?: string) => {
-    console.log('🔧 Bulk action:', action, 'Count:', selectedDistributionObjects.length);
+    logger.log('🔧 Bulk action:', action, 'Count:', selectedDistributionObjects.length);
 
     try {
       const updatedDistributions = allDistributions.map(dist => {
@@ -239,7 +247,7 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
       setBulkAction(null);
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Bulk action failed:', error);
+      logger.error('Bulk action failed:', error);
       toast.error('Failed to perform bulk action. Please try again.');
     }
   };
@@ -298,7 +306,7 @@ export const InvestorDistributionWorkspace: React.FC<InvestorDistributionWorkspa
       setShowAddModal(false);
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Save distribution failed:', error);
+      logger.error('Save distribution failed:', error);
       throw error;
     }
   };

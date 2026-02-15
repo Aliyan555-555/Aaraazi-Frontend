@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { useConfirmStore } from '@/store/useConfirmStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -13,11 +14,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { Property, User } from '../../types';
-import { calculateSaleDistribution, executeSaleDistribution } from '../../lib/saleDistribution';
+// [STUBBED] import { calculateSaleDistribution, executeSaleDistribution } from '../../lib/saleDistribution';
 import { formatPKR } from '../../lib/currency';
-import { 
-  DollarSign, 
-  TrendingUp, 
+import {
+  DollarSign,
+  TrendingUp,
   TrendingDown,
   Users,
   Calendar,
@@ -28,6 +29,12 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const calculateSaleDistribution = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const executeSaleDistribution = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface SaleDistributionModalProps {
   isOpen: boolean;
@@ -57,7 +64,7 @@ export function SaleDistributionModal({
   // Calculate distribution preview
   const calculation = useMemo(() => {
     if (!salePrice || parseFloat(salePrice) <= 0) return null;
-    
+
     try {
       return calculateSaleDistribution(
         property.id,
@@ -86,44 +93,47 @@ export function SaleDistributionModal({
     }
 
     // Confirmation
-    const confirmed = window.confirm(
-      `Are you sure you want to execute this distribution?\n\n` +
-      `This will:\n` +
-      `- Distribute ${formatPKR(calculation.netProfit)} in profits\n` +
-      `- Mark ${calculation.investorDistributions.length} investments as "exited"\n` +
-      `- Create distribution records for payment processing\n\n` +
-      `This action cannot be easily undone.`
-    );
+    useConfirmStore.getState().ask({
+      title: 'Execute Sale Distribution',
+      description: `Are you sure you want to execute this distribution?\n\n` +
+        `This will:\n` +
+        `- Distribute ${formatPKR(calculation.netProfit)} in profits\n` +
+        `- Mark ${calculation.investorDistributions.length} investments as "exited"\n` +
+        `- Create distribution records for payment processing\n\n` +
+        `This action cannot be easily undone.`,
+      confirmText: 'Execute Distribution',
+      onConfirm: async () => {
+        setIsSubmitting(true);
 
-    if (!confirmed) return;
+        try {
+          // Execute distribution
+          const distributions = executeSaleDistribution(
+            property.id,
+            parseFloat(salePrice),
+            saleDate,
+            user.id,
+            user.name,
+            dealId,
+            notes || undefined
+          );
 
-    setIsSubmitting(true);
+          toast.success(
+            `Distribution executed successfully! Created ${distributions.length} distribution records.`
+          );
 
-    try {
-      // Execute distribution
-      const distributions = executeSaleDistribution(
-        property.id,
-        parseFloat(salePrice),
-        saleDate,
-        user.id,
-        user.name,
-        dealId,
-        notes || undefined
-      );
-
-      toast.success(
-        `Distribution executed successfully! Created ${distributions.length} distribution records.`
-      );
-      
-      onSuccess();
-      handleClose();
-    } catch (error: any) {
-      console.error('Error executing distribution:', error);
-      toast.error(error.message || 'Failed to execute distribution');
-    } finally {
-      setIsSubmitting(false);
-    }
+          onSuccess();
+          handleClose();
+        } catch (error: any) {
+          console.error('Error executing distribution:', error);
+          toast.error(error.message || 'Failed to execute distribution');
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+    });
   };
+
+
 
   const handleClose = () => {
     setSalePrice(defaultSalePrice?.toString() || '');
@@ -401,7 +411,7 @@ export function SaleDistributionModal({
                       <div>
                         <p className="font-medium text-orange-900">Net Loss Detected</p>
                         <p className="text-sm text-orange-800 mt-1">
-                          This property sale will result in a net loss of {formatPKR(Math.abs(calculation.netProfit))}. 
+                          This property sale will result in a net loss of {formatPKR(Math.abs(calculation.netProfit))}.
                           Investors will receive less than their initial investment.
                         </p>
                       </div>
@@ -417,8 +427,8 @@ export function SaleDistributionModal({
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting || !showCalculation || !calculation}
               className="bg-green-600 hover:bg-green-700"
             >

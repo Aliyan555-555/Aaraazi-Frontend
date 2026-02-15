@@ -28,14 +28,16 @@ import { TaskV4 } from "../../../types/tasks";
 import { Insight } from "../components/InsightCard";
 import { formatPKR } from "../../../lib/currency";
 
+import { logger } from "../../../lib/logger";
 /**
  * Detect leads needing follow-up (>3 days since last contact)
  */
 function detectStaledLeads(leads: LeadV4[]): Insight | null {
+  const safeLeads = Array.isArray(leads) ? leads : [];
   const now = new Date();
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
 
-  const staledLeads = leads.filter((lead) => {
+  const staledLeads = safeLeads.filter((lead) => {
     // Skip closed/lost leads
     if (["closed-won", "closed-lost", "disqualified"].includes(lead.stage)) {
       return false;
@@ -68,7 +70,7 @@ function detectStaledLeads(leads: LeadV4[]): Insight | null {
       label: "View Leads",
       onClick: () => {
         // Navigation will be passed from parent
-        console.log("Navigate to leads");
+        logger.log("Navigate to leads");
       },
     },
     dismissible: false,
@@ -316,7 +318,7 @@ function detectPipelineRisks(leads: LeadV4[]): Insight | null {
       action: {
         label: "Review Pipeline",
         onClick: () => {
-          console.log("Navigate to pipeline");
+          logger.log("Navigate to pipeline");
         },
       },
       dismissible: false,
@@ -443,12 +445,15 @@ function detectPriceRangeOpportunity(
  * Main function: Detect all insights
  */
 export function detectInsights(data: {
-  properties: Property[];
-  leads: LeadV4[];
-  tasks: TaskV4[];
-  users: User[];
+  properties?: Property[];
+  leads?: LeadV4[];
+  tasks?: TaskV4[];
+  users?: User[];
 }): Insight[] {
-  const { properties, leads, tasks, users } = data;
+  const properties = data.properties ?? [];
+  const leads = data.leads ?? [];
+  const tasks = data.tasks ?? [];
+  const users = data.users ?? [];
 
   const insights: (Insight | null)[] = [
     detectStaledLeads(leads),

@@ -12,10 +12,15 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { PurchaseCycle, SellCycle, Property } from '../types';
 import { toast } from 'sonner';
-import { sendOfferToSellCycle } from '../lib/purchaseCycle';
+// [STUBBED] import { sendOfferToSellCycle } from '../lib/purchaseCycle';
 import { DollarSign, AlertCircle, Info, Building2 } from 'lucide-react';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
+
+// ===== STUBS for removed prototype functions =====
+const sendOfferToSellCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface SendOfferFromPurchaseCycleModalProps {
   isOpen: boolean;

@@ -24,7 +24,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { User } from '../../types';
 import { TaskV4, TaskStatus, TaskPriority, TaskCategory } from '../../types/tasks';
-import { getTaskById, updateTask, getAllTasksV4 } from '../../lib/tasks';
+// [STUBBED] import { getTaskById, updateTask, getAllTasksV4 } from '../../lib/tasks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -48,6 +48,13 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getTaskById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 // ==================== INTERFACES ====================
 

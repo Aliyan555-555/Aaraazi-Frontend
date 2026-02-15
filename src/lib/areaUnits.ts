@@ -1,15 +1,6 @@
-/**
- * Pakistani Real Estate Area Units Library
- *
- * Handles conversion and formatting of area measurements commonly used
- * in Pakistani real estate market (Marla, Kanal, sq yards, sq feet, acres)
- */
 
 import { AreaUnit } from "../types/properties";
 
-/**
- * Conversion factors to square feet (base unit)
- */
 const CONVERSION_TO_SQ_FEET: Record<AreaUnit, number> = {
   "sq-feet": 1,
   sqft: 1, // Alias

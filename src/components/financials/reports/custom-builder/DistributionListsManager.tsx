@@ -15,14 +15,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { User } from '../../../../types';
-import {
-  getDistributionLists,
-  createDistributionList,
-  updateDistributionList,
-  deleteDistributionList,
-  isValidEmail,
-  DistributionList,
-} from '../../../../lib/report-distribution';
+// [STUBBED] import {
+// [STUBBED]   getDistributionLists,
+// [STUBBED]   createDistributionList,
+// [STUBBED]   updateDistributionList,
+// [STUBBED]   deleteDistributionList,
+// [STUBBED]   isValidEmail,
+// [STUBBED]   DistributionList,
+// [STUBBED] } from '../../../../lib/report-distribution';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,16 @@ import {
   Save,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getDistributionLists = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const createDistributionList = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateDistributionList = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteDistributionList = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const isValidEmail = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type DistributionList = any;
+// ===== END STUBS =====
+
 
 interface DistributionListsManagerProps {
   open: boolean;

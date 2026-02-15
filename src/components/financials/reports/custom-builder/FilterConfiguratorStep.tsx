@@ -1,18 +1,3 @@
-/**
- * FilterConfiguratorStep Component
- * 
- * Step 3 of custom report builder - Configure data filters.
- * Allows users to add multiple filter rules with various operators.
- * 
- * Features:
- * - Add/remove filter rules
- * - Dynamic operator selection based on field type
- * - AND/OR logical operators
- * - Quick filter presets
- * 
- * Design System V4.1 Compliant
- */
-
 import React, { useState, useMemo } from 'react';
 import { ReportConfiguration, FilterRule, SelectedField } from '../../../../types/custom-reports';
 import { User } from '../../../../types';

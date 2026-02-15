@@ -37,10 +37,17 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { formatPKR } from '../lib/currency';
-import { getInvestors, calculateInvestorPortfolioValue, getInvestorInvestments } from '../lib/investors';
+// [STUBBED] import { getInvestors, calculateInvestorPortfolioValue, getInvestorInvestments } from '../lib/investors';
 import { Investor, InvestorShare } from '../types';
 import { toast } from 'sonner';
 import CreateInvestorModal from './CreateInvestorModal';
+
+// ===== STUBS for removed prototype functions =====
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorPortfolioValue = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorSelectionModalProps {
   isOpen: boolean;

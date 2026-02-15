@@ -9,14 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { Investor, User } from '../types';
-import {
-  validateCNIC,
-  validatePakistaniPhone,
-  validateEmail,
-  isDuplicateEmail,
-  formatCNIC,
-  formatPakistaniPhone
-} from '../lib/investors';
+// [STUBBED] import {
+// [STUBBED]   validateCNIC,
+// [STUBBED]   validatePakistaniPhone,
+// [STUBBED]   validateEmail,
+// [STUBBED]   isDuplicateEmail,
+// [STUBBED]   formatCNIC,
+// [STUBBED]   formatPakistaniPhone
+// [STUBBED] } from '../lib/investors';
 import { toast } from 'sonner';
 import {
   User as UserIcon,
@@ -33,6 +33,16 @@ import {
   CheckCircle2,
   Users
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const validateCNIC = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const validatePakistaniPhone = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const validateEmail = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const isDuplicateEmail = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const formatCNIC = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const formatPakistaniPhone = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorFormModalProps {
   open: boolean;

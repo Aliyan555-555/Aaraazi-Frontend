@@ -5,9 +5,9 @@
 
 import React, { useState, useMemo } from 'react';
 import { Property, User } from '../types';
-import { getProperties } from '../lib/data';
-import { createSellCycle as addSellCycle, getSellCyclesByProperty } from '../lib/sellCycle';
-import { getAgencyOwnedProperties, getRelistableProperties } from '../lib/portfolio';
+// [STUBBED] import { getProperties } from '../lib/data';
+// [STUBBED] import { createSellCycle as addSellCycle, getSellCyclesByProperty } from '../lib/sellCycle';
+// [STUBBED] import { getAgencyOwnedProperties, getRelistableProperties } from '../lib/portfolio';
 import { formatPKR } from '../lib/currency';
 import { PropertyAddressDisplay } from './PropertyAddressDisplay';
 import RelistPropertyModal from './RelistPropertyModal';
@@ -32,7 +32,17 @@ import {
   Search,
   ArrowUpRight
 } from 'lucide-react';
-import { formatDate } from '../lib/validation';
+// [STUBBED] import { formatDate } from '../lib/validation';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addSellCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSellCyclesByProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgencyOwnedProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getRelistableProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const formatDate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AgencyOwnedPropertiesDashboardProps {
   onNavigate: (view: string, data?: any) => void;

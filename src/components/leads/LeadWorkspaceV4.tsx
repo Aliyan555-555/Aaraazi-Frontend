@@ -14,14 +14,28 @@ import { WorkspaceEmptyState } from '../workspace/WorkspaceEmptyState';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Lead, LeadStatus, LeadPriority, LeadIntent, LeadSource } from '../../types/leads';
-import {
-  getLeads,
-  getLeadStatistics,
-  getLeadsRequiringAction,
-  getOverdueLeads
-} from '../../lib/leads';
-import { filterLeads, sortLeads, LeadFilter, LeadSortBy, getSLAAlerts } from '../../lib/leadUtils';
+// [STUBBED] import {
+// [STUBBED]   getLeads,
+// [STUBBED]   getLeadStatistics,
+// [STUBBED]   getLeadsRequiringAction,
+// [STUBBED]   getOverdueLeads
+// [STUBBED] } from '../../lib/leads';
+// [STUBBED] import { filterLeads, sortLeads, LeadFilter, LeadSortBy, getSLAAlerts } from '../../lib/leadUtils';
 import { formatDistanceToNow } from 'date-fns';
+
+import { logger } from "../../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const getLeads = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadStatistics = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadsRequiringAction = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getOverdueLeads = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const filterLeads = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const sortLeads = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type LeadFilter = any;
+type LeadSortBy = any;
+const getSLAAlerts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 // Props
 interface LeadWorkspaceV4Props {
@@ -239,7 +253,7 @@ export function LeadWorkspaceV4({ user, onNavigate, onCreateLead }: LeadWorkspac
         secondaryActions={[
           {
             label: 'Import Leads',
-            onClick: () => console.log('Import leads'),
+            onClick: () => logger.log('Import leads'),
           },
           {
             label: 'Lead Settings',

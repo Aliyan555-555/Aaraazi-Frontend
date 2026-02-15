@@ -44,13 +44,22 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatPKR } from '../../../lib/currency';
-import {
-  saveBudgetVersion,
-  compareSnapshots,
-  createSnapshotFromBudget,
-  BudgetSnapshot,
-  BudgetChange,
-} from '../../../lib/budget-versioning';
+// [STUBBED] import {
+// [STUBBED]   saveBudgetVersion,
+// [STUBBED]   compareSnapshots,
+// [STUBBED]   createSnapshotFromBudget,
+// [STUBBED]   BudgetSnapshot,
+// [STUBBED]   BudgetChange,
+// [STUBBED] } from '../../../lib/budget-versioning';
+
+// ===== STUBS for removed prototype functions =====
+const saveBudgetVersion = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const compareSnapshots = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const createSnapshotFromBudget = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type BudgetSnapshot = any;
+type BudgetChange = any;
+// ===== END STUBS =====
+
 
 export interface Budget {
   id: string;

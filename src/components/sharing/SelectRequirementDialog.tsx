@@ -14,26 +14,34 @@ import {
     DialogTitle,
 } from '../ui/dialog';
 import { Button } from '../ui/button';
-import {
-    getBuyerRequirements
-} from '../../lib/buyerRequirements';
-import {
-    getRentRequirements
-} from '../../lib/rentRequirements';
+// [STUBBED] import {
+// [STUBBED]     getBuyerRequirements
+// [STUBBED] } from '../../lib/buyerRequirements';
+// [STUBBED] import {
+// [STUBBED]     getRentRequirements
+// [STUBBED] } from '../../lib/rentRequirements';
 import {
     User,
     Property,
     BuyerRequirement,
     RentRequirement
 } from '../../types';
-import {
-    findMatchingPropertiesForBuyer,
-    findMatchingPropertiesForRent
-} from '../../lib/propertyMatching';
+// [STUBBED] import {
+// [STUBBED]     findMatchingPropertiesForBuyer,
+// [STUBBED]     findMatchingPropertiesForRent
+// [STUBBED] } from '../../lib/propertyMatching';
 import { Badge } from '../ui/badge';
 import { formatPKR } from '../../lib/currency';
 import { Search, User as UserIcon, Plus } from 'lucide-react';
 import { Input } from '../ui/input';
+
+// ===== STUBS for removed prototype functions =====
+const getBuyerRequirements = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getRentRequirements = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const findMatchingPropertiesForBuyer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const findMatchingPropertiesForRent = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface SelectRequirementDialogProps {
     open: boolean;

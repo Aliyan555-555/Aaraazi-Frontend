@@ -14,9 +14,17 @@ import { useState, useEffect } from "react";
 import { User, Property, Contact } from "../../../types";
 import { LeadV4 } from "../../../types/leads";
 import { CRMTask } from "../../../types";
-import { getProperties, getContacts } from "../../../lib/data";
-import { getLeadsV4 } from "../../../lib/leadsV4";
-import { getAllTasks } from "../../../lib/data";
+// [STUBBED] import { getProperties, getContacts } from "../../../lib/data";
+// [STUBBED] import { getLeadsV4 } from "../../../lib/leadsV4";
+// [STUBBED] import { getAllTasks } from "../../../lib/data";
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadsV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllTasks = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 // Document type (not in main types)
 interface Document {

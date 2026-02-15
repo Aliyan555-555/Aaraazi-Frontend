@@ -18,11 +18,11 @@
 import React, { useState, useMemo } from 'react';
 import { User } from '../../../../types';
 import { ReportHistoryEntry } from '../../../../types/report-history';
-import {
-  getReportHistory,
-  getHistoryStatistics,
-  clearAllHistory
-} from '../../../../lib/report-history';
+// [STUBBED] import {
+// [STUBBED]   getReportHistory,
+// [STUBBED]   getHistoryStatistics,
+// [STUBBED]   clearAllHistory
+// [STUBBED] } from '../../../../lib/report-history';
 import { WorkspaceHeader } from '../../../workspace/WorkspaceHeader';
 import { Button } from '../../../ui/button';
 import { Input } from '../../../ui/input';
@@ -60,6 +60,13 @@ import {
 } from '../../../ui/dropdown-menu';
 import { Badge } from '../../../ui/badge';
 import { CustomReportTemplate } from '../../../../types/custom-reports';
+
+// ===== STUBS for removed prototype functions =====
+const getReportHistory = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getHistoryStatistics = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const clearAllHistory = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ReportHistoryViewerProps {
   user: User;

@@ -17,9 +17,10 @@ import {
   Home,
   CheckCircle,
 } from 'lucide-react';
-import { getRentRequirements } from '../lib/rentRequirements';
+// [STUBBED] import { getRentRequirements } from '../lib/rentRequirements';
 import { formatPKR } from '../lib/currency';
 
+import { logger } from "../lib/logger";
 // PHASE 4: Import new workspace components ✅
 import {
   WorkspaceHeader,
@@ -27,6 +28,11 @@ import {
   WorkspaceEmptyState,
   EmptyStatePresets,
 } from './workspace';
+
+// ===== STUBS for removed prototype functions =====
+const getRentRequirements = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RentRequirementsWorkspaceProps {
   user: User;
@@ -141,11 +147,11 @@ export function RentRequirementsWorkspace({
   };
 
   const handleExport = () => {
-    console.log('Export rent requirements');
+    logger.log('Export rent requirements');
   };
 
   const handleImport = () => {
-    console.log('Import rent requirements');
+    logger.log('Import rent requirements');
   };
 
   return (

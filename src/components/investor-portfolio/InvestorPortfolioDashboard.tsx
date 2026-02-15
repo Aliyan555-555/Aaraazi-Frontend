@@ -10,9 +10,9 @@ import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Separator } from '../ui/separator';
 import { Contact, User, InvestorInvestment, InvestorDistribution } from '../../types';
-import { getInvestorInvestments, getInvestorPortfolioSummary } from '../../lib/investors';
-import { getInvestorDistributions, getInvestorTotalReturns } from '../../lib/saleDistribution';
-import { getPropertyById } from '../../lib/data';
+// [STUBBED] import { getInvestorInvestments, getInvestorPortfolioSummary } from '../../lib/investors';
+// [STUBBED] import { getInvestorDistributions, getInvestorTotalReturns } from '../../lib/saleDistribution';
+// [STUBBED] import { getPropertyById } from '../../lib/data';
 import { formatPKR } from '../../lib/currency';
 import { formatPropertyAddress } from '../../lib/utils';
 import {
@@ -31,6 +31,15 @@ import {
   PieChart,
   BarChart3,
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorPortfolioSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorDistributions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorTotalReturns = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorPortfolioDashboardProps {
   investor: Contact;

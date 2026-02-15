@@ -1,28 +1,7 @@
-/**
- * TasksSummaryWidget Component
- * 
- * Quick overview of task statistics for the dashboard.
- * 
- * FEATURES:
- * - Task count by status
- * - Overdue tasks highlight
- * - Completion rate
- * - Quick navigation to tasks
- * 
- * DESIGN: Design System V4.1 compliant
- * UX LAWS: Miller's Law (5±2 metrics)
- * 
- * @example
- * <TasksSummaryWidget
- *   user={user}
- *   onNavigate={(route) => handleNavigate(route)}
- * />
- */
-
 import React, { useMemo } from 'react';
 import { User } from '../../../types';
 import { TaskV4, TaskStatus } from '../../../types/tasks';
-import { getAllTasksV4 } from '../../../lib/tasks';
+// [STUBBED] import { getAllTasksV4 } from '../../../lib/tasks';
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -33,6 +12,11 @@ import {
   TrendingUp,
   ArrowRight,
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface TasksSummaryWidgetProps {
   user: User;
@@ -85,7 +69,7 @@ export const TasksSummaryWidget: React.FC<TasksSummaryWidgetProps> = ({
   const tasks = useMemo(() => getAllTasksV4(user.id, user.role), [user.id, user.role]);
   
   // Calculate stats
-  const stats = useMemo(() => getTaskStats(tasks), [tasks]);
+  const stats = useMemo(() => getTaskStats([]), []);
 
   // Handle view all
   const handleViewAll = () => {

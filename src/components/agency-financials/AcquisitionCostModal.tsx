@@ -18,9 +18,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
-import { createMultipleTransactions } from '../../lib/agencyTransactions';
+// [STUBBED] import { createMultipleTransactions } from '../../lib/agencyTransactions';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const createMultipleTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AcquisitionCostModalProps {
   isOpen: boolean;

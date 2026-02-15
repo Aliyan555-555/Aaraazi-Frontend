@@ -1,22 +1,3 @@
-/**
- * Action Detection Utilities
- *
- * Detects items that need attention and prioritizes them.
- *
- * ACTION TYPES:
- * 1. Overdue Follow-ups - CRM tasks past due date
- * 2. Stale Leads - Leads not contacted in 7+ days
- * 3. Inactive Properties - Properties without active cycles
- * 4. Expiring Offers - Offers expiring in next 48 hours
- * 5. Upcoming Appointments - Meetings in next 24 hours
- *
- * PRIORITY LEVELS:
- * - critical (red) - Overdue, urgent action required
- * - high (orange) - Needs attention today
- * - medium (yellow) - Should handle soon
- * - low (blue) - Can wait, but good to handle
- */
-
 import { SellCycle, Property, Contact } from "../../../types";
 import { LeadV4 } from "../../../types/leads";
 import { TaskV4 } from "../../../types/tasks";
@@ -57,10 +38,11 @@ function daysBetween(date1: Date, date2: Date): number {
  * Detect overdue CRM tasks
  */
 export function detectOverdueTasks(tasks: TaskV4[]): DashboardAction[] {
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
   const now = new Date();
   const actions: DashboardAction[] = [];
 
-  tasks.forEach((task) => {
+  safeTasks.forEach((task) => {
     // Skip completed tasks
     if (task.status === "completed") return;
 
@@ -98,10 +80,11 @@ export function detectOverdueTasks(tasks: TaskV4[]): DashboardAction[] {
  * Detect stale leads (not contacted in 7+ days)
  */
 export function detectStaleLeads(leads: LeadV4[]): DashboardAction[] {
+  const safeLeads = Array.isArray(leads) ? leads : [];
   const now = new Date();
   const actions: DashboardAction[] = [];
 
-  leads.forEach((lead) => {
+  safeLeads.forEach((lead) => {
     // Only check active leads (not converted, lost, or archived)
     if (["closed-won", "closed-lost", "disqualified"].includes(lead.stage))
       return;
@@ -147,18 +130,20 @@ export function detectInactiveProperties(
   properties: Property[],
   sellCycles: SellCycle[],
 ): DashboardAction[] {
+  const safeProperties = Array.isArray(properties) ? properties : [];
+  const safeSellCycles = Array.isArray(sellCycles) ? sellCycles : [];
   const actions: DashboardAction[] = [];
   const now = new Date();
 
   // Build a map of properties with active cycles
   const propertiesWithActiveCycles = new Set<string>();
-  sellCycles.forEach((cycle) => {
+  safeSellCycles.forEach((cycle) => {
     if (["listed", "offer-received", "under-contract"].includes(cycle.status)) {
       propertiesWithActiveCycles.add(cycle.propertyId);
     }
   });
 
-  properties.forEach((property) => {
+  safeProperties.forEach((property) => {
     // Only check available properties
     if (property.status !== "available") return;
 
@@ -200,11 +185,12 @@ export function detectInactiveProperties(
 export function detectExpiringOffers(
   sellCycles: SellCycle[],
 ): DashboardAction[] {
+  const safeSellCycles = Array.isArray(sellCycles) ? sellCycles : [];
   const actions: DashboardAction[] = [];
   const now = new Date();
   const next48Hours = new Date(now.getTime() + 48 * 60 * 60 * 1000);
 
-  sellCycles.forEach((cycle) => {
+  safeSellCycles.forEach((cycle) => {
     // Only check active cycles with offers
     if (!["listed", "offer-received"].includes(cycle.status)) return;
     if (!cycle.offers || cycle.offers.length === 0) return;
@@ -249,11 +235,12 @@ export function detectExpiringOffers(
  * Detect upcoming appointments (next 24 hours)
  */
 export function detectUpcomingAppointments(tasks: TaskV4[]): DashboardAction[] {
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
   const actions: DashboardAction[] = [];
   const now = new Date();
   const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  tasks.forEach((task) => {
+  safeTasks.forEach((task) => {
     // Skip completed tasks
     if (task.status === "completed") return;
 
@@ -293,11 +280,12 @@ export function detectUpcomingAppointments(tasks: TaskV4[]): DashboardAction[] {
  * Detect new leads (created in last 24 hours, not yet contacted)
  */
 export function detectNewLeads(leads: LeadV4[]): DashboardAction[] {
+  const safeLeads = Array.isArray(leads) ? leads : [];
   const actions: DashboardAction[] = [];
   const now = new Date();
   const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  leads.forEach((lead) => {
+  safeLeads.forEach((lead) => {
     // Only check new leads
     if (lead.stage !== "new") return;
 
@@ -387,22 +375,23 @@ export function detectAllActions(
  * Get action summary counts
  */
 export function getActionSummary(actions: DashboardAction[]) {
+  const safeActions = Array.isArray(actions) ? actions : [];
   return {
-    total: actions.length,
-    critical: actions.filter((a) => a.priority === "critical").length,
-    high: actions.filter((a) => a.priority === "high").length,
-    medium: actions.filter((a) => a.priority === "medium").length,
-    low: actions.filter((a) => a.priority === "low").length,
+    total: safeActions.length,
+    critical: safeActions.filter((a) => a.priority === "critical").length,
+    high: safeActions.filter((a) => a.priority === "high").length,
+    medium: safeActions.filter((a) => a.priority === "medium").length,
+    low: safeActions.filter((a) => a.priority === "low").length,
     byType: {
-      overdueTasks: actions.filter((a) => a.type === "overdue-task").length,
-      staleLeads: actions.filter((a) => a.type === "stale-lead").length,
-      inactiveProperties: actions.filter((a) => a.type === "inactive-property")
+      overdueTasks: safeActions.filter((a) => a.type === "overdue-task").length,
+      staleLeads: safeActions.filter((a) => a.type === "stale-lead").length,
+      inactiveProperties: safeActions.filter((a) => a.type === "inactive-property")
         .length,
-      expiringOffers: actions.filter((a) => a.type === "expiring-offer").length,
-      upcomingAppointments: actions.filter(
+      expiringOffers: safeActions.filter((a) => a.type === "expiring-offer").length,
+      upcomingAppointments: safeActions.filter(
         (a) => a.type === "upcoming-appointment",
       ).length,
-      newLeads: actions.filter((a) => a.type === "new-lead").length,
+      newLeads: safeActions.filter((a) => a.type === "new-lead").length,
     },
   };
 }

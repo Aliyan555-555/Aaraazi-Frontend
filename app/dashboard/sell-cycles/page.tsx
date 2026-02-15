@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { SellCyclesWorkspaceV4 } from '@/components/sell-cycles/SellCyclesWorkspaceV4';
+import { SellCyclesWorkspace } from '@/components/sell-cycles/SellCyclesWorkspace';
 import { User, mapAuthUserToUIUser, SellCycle } from '@/types';
 
 export default function SellCyclesPage() {
@@ -38,7 +38,7 @@ export default function SellCyclesPage() {
     }
 
     return (
-        <SellCyclesWorkspaceV4
+        <SellCyclesWorkspace
             user={user}
             onNavigate={handleNavigate}
             onStartNew={handleStartNew}

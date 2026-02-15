@@ -19,8 +19,13 @@ import {
   Zap,
 } from 'lucide-react';
 import { detectInternalMatches } from '../lib/cycleManager';
-import { getProperties } from '../lib/data';
+// [STUBBED] import { getProperties } from '../lib/data';
 import { formatPKR } from '../lib/currency';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InternalMatchesWidgetProps {
   user: User;

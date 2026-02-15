@@ -43,6 +43,7 @@ import { formatPKR } from '../../lib/currency';
 import { CommissionAgent } from '../../types/deals';
 import { toast } from 'sonner';
 
+import { logger } from "../../lib/logger";
 interface AddAgentToCommissionModalProps {
   open: boolean;
   onClose: () => void;
@@ -128,19 +129,19 @@ export function AddAgentToCommissionModal({
         notes: notes || undefined,
       };
 
-      console.log('🔧 Adding agent to commission:', newAgent);
+      logger.log('🔧 Adding agent to commission:', newAgent);
 
       // Call the onAdd callback - this will handle the actual addition
       onAdd(newAgent);
 
       // Only reset and close if successful (no error thrown)
-      // Note: The parent component (CommissionTabV2) will show success toast
+      // Note: The parent component (CommissionTab) will show success toast
       setSelectedAgent(null);
       setPercentage('');
       setNotes('');
 
     } catch (error: any) {
-      console.error('❌ Error adding agent:', error);
+      logger.error('❌ Error adding agent:', error);
       toast.error(error.message || 'Failed to add agent');
     }
   };

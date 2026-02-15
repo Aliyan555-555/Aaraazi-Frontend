@@ -25,10 +25,19 @@ import {
 } from '../ui/select';
 import { Badge } from '../ui/badge';
 import { LeadIntent, LeadTimeline, LeadSource } from '../../types/leads';
-import { createLead, validateLeadData } from '../../lib/leads';
-import { LEAD_TEMPLATES, createLeadFromTemplate } from '../../lib/leadUtils';
-import { triggerAutomation } from '../../lib/tasks';
+// [STUBBED] import { createLead, validateLeadData } from '../../lib/leads';
+// [STUBBED] import { LEAD_TEMPLATES, createLeadFromTemplate } from '../../lib/leadUtils';
+// [STUBBED] import { triggerAutomation } from '../../lib/tasks';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const createLead = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const validateLeadData = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type LEAD_TEMPLATES = any;
+const createLeadFromTemplate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const triggerAutomation = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface CreateLeadModalProps {
   open: boolean;

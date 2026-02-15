@@ -25,7 +25,8 @@ import { DashboardMetrics } from "../types/dashboard.types";
  * Sum of all sell cycles in active negotiation stages
  */
 export function calculateActivePipeline(sellCycles: SellCycle[]): number {
-  const activeCycles = sellCycles.filter((cycle) =>
+  const cycles = Array.isArray(sellCycles) ? sellCycles : [];
+  const activeCycles = cycles.filter((cycle) =>
     ["listed", "offer-received", "under-contract"].includes(cycle.status),
   );
 
@@ -47,7 +48,8 @@ export function calculateActivePipeline(sellCycles: SellCycle[]): number {
  * Count of sell cycles in negotiation stages
  */
 export function calculateActiveDealCount(sellCycles: SellCycle[]): number {
-  return sellCycles.filter((cycle) =>
+  const cycles = Array.isArray(sellCycles) ? sellCycles : [];
+  return cycles.filter((cycle) =>
     ["listed", "offer-received", "under-contract"].includes(cycle.status),
   ).length;
 }
@@ -57,11 +59,12 @@ export function calculateActiveDealCount(sellCycles: SellCycle[]): number {
  * Sum of all deals completed this month
  */
 export function calculateMonthlyRevenue(sellCycles: SellCycle[]): number {
+  const cycles = Array.isArray(sellCycles) ? sellCycles : [];
   const now = new Date();
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
 
-  const completedThisMonth = sellCycles.filter((cycle) => {
+  const completedThisMonth = cycles.filter((cycle) => {
     if (cycle.status !== "sold" || !cycle.soldDate) return false;
 
     const saleDate = new Date(cycle.soldDate);
@@ -91,7 +94,8 @@ export function calculateRevenueTrend(sellCycles: SellCycle[]): {
   const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
   const lastYear = thisMonth === 0 ? thisYear - 1 : thisYear;
 
-  const thisMonthRevenue = sellCycles
+  const cycles = Array.isArray(sellCycles) ? sellCycles : [];
+  const thisMonthRevenue = cycles
     .filter((cycle) => {
       if (cycle.status !== "sold" || !cycle.soldDate) return false;
       const saleDate = new Date(cycle.soldDate);
@@ -101,7 +105,7 @@ export function calculateRevenueTrend(sellCycles: SellCycle[]): {
     })
     .reduce((sum, c) => sum + c.askingPrice, 0);
 
-  const lastMonthRevenue = sellCycles
+  const lastMonthRevenue = cycles
     .filter((cycle) => {
       if (cycle.status !== "sold" || !cycle.soldDate) return false;
       const saleDate = new Date(cycle.soldDate);
@@ -130,7 +134,8 @@ export function calculateRevenueTrend(sellCycles: SellCycle[]): {
  * Count of properties with status 'available'
  */
 export function calculateAvailableInventory(properties: Property[]): number {
-  return properties.filter((p) => p.status === "available").length;
+  const safeProperties = Array.isArray(properties) ? properties : [];
+  return safeProperties.filter((p) => p.status === "available").length;
 }
 
 /**
@@ -145,13 +150,15 @@ export function calculateConversionRate(
   convertedCount: number;
   totalLeads: number;
 } {
+  const safeLeads = Array.isArray(leads) ? leads : [];
+  const safeContacts = Array.isArray(contacts) ? contacts : [];
   // Filter leads with conversionStatus = 'converted'
-  const convertedLeads = leads.filter(
+  const convertedLeads = safeLeads.filter(
     (lead) =>
       lead.conversionStatus === "converted" && lead.convertedToContactId,
   );
 
-  const totalLeads = leads.length;
+  const totalLeads = safeLeads.length;
   const convertedCount = convertedLeads.length;
 
   const rate = totalLeads > 0 ? (convertedCount / totalLeads) * 100 : 0;
@@ -171,18 +178,19 @@ export function calculateConversionTrend(leads: LeadV4[]): {
   direction: "up" | "down" | "neutral";
   value: number;
 } {
+  const safeLeads = Array.isArray(leads) ? leads : [];
   const now = new Date();
   const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const last60Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
   // Leads created in last 30 days
-  const recent30 = leads.filter((l) => {
+  const recent30 = safeLeads.filter((l) => {
     const created = new Date(l.createdAt);
     return created >= last30Days;
   });
 
   // Leads created 30-60 days ago
-  const previous30 = leads.filter((l) => {
+  const previous30 = safeLeads.filter((l) => {
     const created = new Date(l.createdAt);
     return created >= last60Days && created < last30Days;
   });
@@ -221,11 +229,12 @@ export function calculatePipelineTrend(sellCycles: SellCycle[]): {
   direction: "up" | "down" | "neutral";
   value: number;
 } {
+  const cycles = Array.isArray(sellCycles) ? sellCycles : [];
   const now = new Date();
   const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   // Current active pipeline
-  const currentActive = sellCycles.filter((cycle) =>
+  const currentActive = cycles.filter((cycle) =>
     ["listed", "offer-received", "under-contract"].includes(cycle.status),
   );
 

@@ -11,11 +11,11 @@ import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
 import { Property, User, InvestorTransaction, InvestorTransactionType } from '../../types';
-import { 
-  getPropertyInvestorTransactions, 
-  getPropertyTransactionSummary,
-  deleteInvestorTransaction
-} from '../../lib/investorTransactions';
+// [STUBBED] import { 
+// [STUBBED]   getPropertyInvestorTransactions, 
+// [STUBBED]   getPropertyTransactionSummary,
+// [STUBBED]   deleteInvestorTransaction
+// [STUBBED] } from '../../lib/investorTransactions';
 import { formatPKR } from '../../lib/currency';
 import { 
   TrendingUp, 
@@ -33,6 +33,13 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getPropertyInvestorTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyTransactionSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteInvestorTransaction = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PropertyTransactionHistoryProps {
   property: Property;

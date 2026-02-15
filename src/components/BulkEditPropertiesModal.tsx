@@ -26,9 +26,14 @@ import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { Property } from '../types';
-import { updateProperty } from '../lib/data';
+// [STUBBED] import { updateProperty } from '../lib/data';
 import { toast } from 'sonner';
 import { logger } from '../lib/logger';
+
+// ===== STUBS for removed prototype functions =====
+const updateProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface BulkEditPropertiesModalProps {
   open: boolean;

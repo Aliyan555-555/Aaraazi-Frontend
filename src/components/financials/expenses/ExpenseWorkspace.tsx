@@ -9,11 +9,21 @@ import { ExpenseList, ExpenseItem } from './ExpenseList';
 import { ExpenseFormModal } from './ExpenseFormModal';
 import { BulkExpenseActions } from './BulkExpenseActions';
 import { Button } from '../../ui/button';
-import { getExpenses, addExpense, updateExpense, deleteExpense, getProperties } from '../../../lib/data';
+// [STUBBED] import { getExpenses, addExpense, updateExpense, deleteExpense, getProperties } from '../../../lib/data';
 import { formatPKR } from '../../../lib/currency';
 import { formatPropertyAddress } from '../../../lib/utils';
 import { toast } from 'sonner';
 import { Plus, Download, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+
+import { logger } from "../../../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const getExpenses = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addExpense = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateExpense = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteExpense = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface ExpenseWorkspaceProps {
   user: User;
@@ -223,7 +233,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
 
   // Handle bulk actions
   const handleBulkAction = async (action: 'approve' | 'reject' | 'delete', reason?: string) => {
-    console.log('🔧 Bulk action:', action, 'Count:', selectedExpenseObjects.length);
+    logger.log('🔧 Bulk action:', action, 'Count:', selectedExpenseObjects.length);
 
     try {
       let successCount = 0;
@@ -252,7 +262,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
       setBulkAction(null);
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Bulk action failed:', error);
+      logger.error('Bulk action failed:', error);
       toast.error('Failed to perform bulk action. Please try again.');
     }
   };
@@ -264,7 +274,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
       toast.success('Expense approved');
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Approve failed:', error);
+      logger.error('Approve failed:', error);
       toast.error('Failed to approve expense');
     }
   };
@@ -275,7 +285,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
       toast.success('Expense rejected');
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Reject failed:', error);
+      logger.error('Reject failed:', error);
       toast.error('Failed to reject expense');
     }
   };
@@ -288,7 +298,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
       toast.success('Expense deleted');
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Delete failed:', error);
+      logger.error('Delete failed:', error);
       toast.error('Failed to delete expense');
     }
   };
@@ -314,7 +324,7 @@ export const ExpenseWorkspace: React.FC<ExpenseWorkspaceProps> = ({
       }
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Save expense failed:', error);
+      logger.error('Save expense failed:', error);
       throw error;
     }
   };

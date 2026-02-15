@@ -26,9 +26,14 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { formatPKR } from '../lib/currency';
-import { getInvestors } from '../lib/investors';
+// [STUBBED] import { getInvestors } from '../lib/investors';
 import { Investor, InvestorShare } from '../types';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorShareAllocationModalProps {
   open: boolean;

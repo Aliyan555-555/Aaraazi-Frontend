@@ -16,26 +16,7 @@ import { ScheduledReportsDashboard } from './custom-builder/ScheduledReportsDash
 import { DistributionListsManager } from './custom-builder/DistributionListsManager';
 import { ReportSharingModal } from './custom-builder/ReportSharingModal';
 import { ReportAnalyticsDashboard } from './custom-builder/ReportAnalyticsDashboard';
-import { getCustomReports, deleteCustomReport, updateCustomReport } from '../../../lib/custom-report-builder';
 import { CustomReportTemplate } from '../../../types/custom-reports';
-import {
-  generateTrialBalance,
-  generateChangesInEquity,
-  generateProfitAndLoss,
-  generateBalanceSheet,
-  generateCashFlowStatement,
-  generateCommissionReport,
-  generateExpenseSummaryReport,
-  generatePropertyPerformanceReport,
-  generateInvestorDistributionReport,
-  generateTaxSummaryReport,
-  generateAgedReceivables,
-  generateAgedPayables,
-  getYoYDateRanges,
-  getMoMDateRanges,
-  compareProfitAndLoss,
-  compareBalanceSheets,
-} from '../../../lib/accounting';
 import { toast } from 'sonner';
 import {
   FileText,
@@ -51,9 +32,34 @@ import {
   History,
   Clock,
   TrendingUp as Analytics,
-  Wallet, // Added for Changes in Equity
+  Wallet,
 } from 'lucide-react';
 import { Button } from '../../ui/button';
+
+// ===== STUBS for removed prototype functions =====
+// [STUBBED] import { getCustomReports, deleteCustomReport, updateCustomReport } from '../../../lib/custom-report-builder';
+const getCustomReports = (..._args: any[]): any => { /* stub */ return []; };
+const deleteCustomReport = (..._args: any[]): any => { /* stub */ };
+const updateCustomReport = (..._args: any[]): any => { /* stub */ };
+// [STUBBED] import { ... } from '../../../lib/accounting';
+const generateTrialBalance = (..._args: any[]): any => ({ sections: [], totalDebits: 0, totalCredits: 0 });
+const generateChangesInEquity = (..._args: any[]): any => ({ changes: [], openingEquity: 0, closingEquity: 0 });
+const generateProfitAndLoss = (..._args: any[]): any => ({ revenue: [], expenses: [], netIncome: 0 });
+const generateBalanceSheet = (..._args: any[]): any => ({ assets: [], liabilities: [], equity: [] });
+const generateCashFlowStatement = (..._args: any[]): any => ({ operations: [], investing: [], financing: [] });
+const generateCommissionReport = (..._args: any[]): any => ({ commissions: [], total: 0 });
+const generateExpenseSummaryReport = (..._args: any[]): any => ({ categories: [], total: 0 });
+const generatePropertyPerformanceReport = (..._args: any[]): any => ({ properties: [] });
+const generateInvestorDistributionReport = (..._args: any[]): any => ({ distributions: [] });
+const generateTaxSummaryReport = (..._args: any[]): any => ({ taxes: [], total: 0 });
+const generateAgedReceivables = (..._args: any[]): any => ({ buckets: [], total: 0 });
+const generateAgedPayables = (..._args: any[]): any => ({ buckets: [], total: 0 });
+const getYoYDateRanges = (..._args: any[]): any => [];
+const getMoMDateRanges = (..._args: any[]): any => [];
+const compareProfitAndLoss = (..._args: any[]): any => ({ periods: [] });
+const compareBalanceSheets = (..._args: any[]): any => ({ periods: [] });
+// ===== END STUBS =====
+
 
 interface FinancialReportsWorkspaceProps {
   user: User;

@@ -10,7 +10,7 @@
 import React, { useMemo, useState } from 'react';
 import { ReportConfiguration, SelectedField, AvailableField } from '../../../../types/custom-reports';
 import { User } from '../../../../types';
-import { getAvailableFields } from '../../../../lib/custom-report-builder';
+// [STUBBED] import { getAvailableFields } from '../../../../lib/custom-report-builder';
 import { Button } from '../../../ui/button';
 import { Input } from '../../../ui/input';
 import { 
@@ -22,6 +22,11 @@ import {
   ArrowUp,
   ArrowDown
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getAvailableFields = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface FieldSelectorStepProps {
   config: Partial<ReportConfiguration>;

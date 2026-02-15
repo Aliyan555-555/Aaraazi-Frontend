@@ -1,26 +1,3 @@
-/**
- * Chart Colors - Brand-Aligned Color Palette
- * PHASE 6: Charts & Data Visualization
- * 
- * PURPOSE:
- * Centralized chart color palette using aaraazi brand colors
- * (Forest Green, Terracotta, Warm Cream, Slate, Charcoal)
- * 
- * USAGE:
- * Import and use in all chart components to maintain brand consistency
- * 
- * BRAND COLORS:
- * - Primary: Terracotta #C17052
- * - Success: Forest Green #2D6A54
- * - Neutral: Warm Cream #E8E2D5
- * - Text: Slate #363F47, Charcoal #1A1D1F
- */
-
-/**
- * PRIMARY CHART COLORS
- * Sequential palette for multi-series charts
- * Based on brand colors with proper contrast
- */
 export const CHART_COLORS = {
   // Primary brand colors (most important data)
   primary: '#C17052',      // Terracotta - Primary brand color

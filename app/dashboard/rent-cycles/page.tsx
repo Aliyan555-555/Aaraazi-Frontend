@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { RentCyclesWorkspaceV4 } from '@/components/rent-cycles/RentCyclesWorkspaceV4';
+import { RentCyclesWorkspace } from '@/components/rent-cycles';
 import { User, mapAuthUserToUIUser, RentCycle } from '@/types';
 
 export default function RentCyclesPage() {
@@ -37,7 +37,7 @@ export default function RentCyclesPage() {
     }
 
     return (
-        <RentCyclesWorkspaceV4
+        <RentCyclesWorkspace
             user={user}
             onNavigate={handleNavigate}
             onStartNew={handleStartNew}

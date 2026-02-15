@@ -14,10 +14,16 @@ import { Badge } from './ui/badge';
 import { AlertCircle, Building } from 'lucide-react';
 import { Property, Contact, User } from '../types';
 import { createBuyerOffer } from '../lib/buyCycle';
-import { getProperties, updateProperty } from '../lib/data';
+// [STUBBED] import { getProperties, updateProperty } from '../lib/data';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddressShort } from '../lib/utils';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface BuyerOfferModalProps {
   property: Property;

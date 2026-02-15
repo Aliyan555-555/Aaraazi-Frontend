@@ -16,10 +16,18 @@ import { useState, useEffect, useMemo } from 'react';
 import { User, SellCycle, Property } from '../../../types';
 import { LeadV4 } from '../../../types/leads';
 import { TaskV4 } from '../../../types/tasks';
-import { getAllTasksV4 } from '../../../lib/tasks';
-import { getLeadsV4 } from '../../../lib/leadsV4';
-import { getProperties } from '../../../lib/data';
-import { getSellCycles } from '../../../lib/sellCycle';
+// [STUBBED] import { getAllTasksV4 } from '../../../lib/tasks';
+// [STUBBED] import { getLeadsV4 } from '../../../lib/leadsV4';
+// [STUBBED] import { getProperties } from '../../../lib/data';
+// [STUBBED] import { getSellCycles } from '../../../lib/sellCycle';
+
+// ===== STUBS for removed prototype functions =====
+const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadsV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSellCycles = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 export interface ActionData {
   tasks: TaskV4[];

@@ -16,10 +16,18 @@ import { LeadV4 } from '../../../types/leads';
 import { CRMTask, CRMInteraction } from '../../../types';
 import { PerformanceMetric } from '../components/PerformanceCard';
 import { calculatePerformanceMetrics } from '../utils/calculatePerformanceMetrics';
-import { getProperties } from '../../../lib/data';
-import { getLeadsV4 } from '../../../lib/leadsV4';
-import { getAllTasks, getAllInteractions } from '../../../lib/data';
+// [STUBBED] import { getProperties } from '../../../lib/data';
+// [STUBBED] import { getLeadsV4 } from '../../../lib/leadsV4';
+// [STUBBED] import { getAllTasks, getAllInteractions } from '../../../lib/data';
 import { getAllAgents } from '../../../lib/auth';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadsV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllTasks = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllInteractions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 export interface PerformanceData {
   metrics: PerformanceMetric[];

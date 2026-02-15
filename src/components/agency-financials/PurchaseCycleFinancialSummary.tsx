@@ -19,8 +19,14 @@ import {
 } from 'lucide-react';
 import { formatPKR } from '../../lib/currency';
 import { formatPropertyAddress } from '../../lib/utils';
-import { getTransactionsByProperty } from '../../lib/agencyTransactions';
-import { calculatePropertyFinancials } from '../../lib/agencyFinancials';
+// [STUBBED] import { getTransactionsByProperty } from '../../lib/agencyTransactions';
+// [STUBBED] import { calculatePropertyFinancials } from '../../lib/agencyFinancials';
+
+// ===== STUBS for removed prototype functions =====
+const getTransactionsByProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculatePropertyFinancials = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PurchaseCycleFinancialSummaryProps {
   cycle: PurchaseCycle;

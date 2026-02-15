@@ -12,12 +12,18 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Switch } from '../ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { createPurchaseCycle } from '../../lib/purchaseCycle';
-import { getContacts } from '../../lib/data';
+// [STUBBED] import { createPurchaseCycle } from '../../lib/purchaseCycle';
+// [STUBBED] import { getContacts } from '../../lib/data';
 import { Search, UserCheck, AlertCircle, DollarSign, Plus, Percent } from 'lucide-react';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { QuickAddContactModal } from '../QuickAddContactModal';
+
+// ===== STUBS for removed prototype functions =====
+const createPurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ClientPurchaseFormProps {
   property: Property;

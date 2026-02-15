@@ -18,7 +18,7 @@ import React, { useState, useMemo } from 'react';
 import { User } from '../../../../types';
 import { CustomReportTemplate } from '../../../../types/custom-reports';
 import { ScheduledReportStatus } from '../../../../types/report-history';
-import { getScheduledReportStatuses, getTemplateHistory } from '../../../../lib/report-history';
+// [STUBBED] import { getScheduledReportStatuses, getTemplateHistory } from '../../../../lib/report-history';
 import { WorkspaceHeader } from '../../../workspace/WorkspaceHeader';
 import { Button } from '../../../ui/button';
 import {
@@ -43,6 +43,12 @@ import {
   TableRow,
 } from '../../../ui/table';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getScheduledReportStatuses = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTemplateHistory = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ScheduledReportsDashboardProps {
   user: User;

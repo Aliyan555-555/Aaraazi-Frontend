@@ -50,9 +50,14 @@ import {
 } from '../ui/table';
 import { GeneratedReport, VisualizationType } from '../../types/reports';
 import { formatPKR } from '../../lib/currency';
-import { formatDate } from '../../lib/validation';
+// [STUBBED] import { formatDate } from '../../lib/validation';
 import { toast } from 'sonner';
 import { exportReport } from '../../lib/reportExport';
+
+// ===== STUBS for removed prototype functions =====
+const formatDate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ReportViewerProps {
   report: GeneratedReport;

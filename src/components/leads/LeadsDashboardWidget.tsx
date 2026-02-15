@@ -29,14 +29,24 @@ import {
   Calendar,
   Zap
 } from 'lucide-react';
-import { getLeads, getLeadsByStatus } from '../../lib/leads';
-import {
-  getSLAPerformance,
-  getSLAAlerts,
-  getLeadsByPriority,
-  filterLeads
-} from '../../lib/leadUtils';
+// [STUBBED] import { getLeads, getLeadsByStatus } from '../../lib/leads';
+// [STUBBED] import {
+// [STUBBED]   getSLAPerformance,
+// [STUBBED]   getSLAAlerts,
+// [STUBBED]   getLeadsByPriority,
+// [STUBBED]   filterLeads
+// [STUBBED] } from '../../lib/leadUtils';
 import type { Lead, LeadStatus } from '../../types/leads';
+
+// ===== STUBS for removed prototype functions =====
+const getLeads = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadsByStatus = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSLAPerformance = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSLAAlerts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadsByPriority = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const filterLeads = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface LeadsDashboardWidgetProps {
   user: {

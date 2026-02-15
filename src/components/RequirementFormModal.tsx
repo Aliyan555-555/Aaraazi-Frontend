@@ -20,8 +20,13 @@ import {
 import { Badge } from './ui/badge';
 import { X, Plus } from 'lucide-react';
 import { User, Contact } from '../types';
-import { addProperty } from '../lib/data';
+// [STUBBED] import { addProperty } from '../lib/data';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const addProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RequirementFormModalProps {
   user: User;

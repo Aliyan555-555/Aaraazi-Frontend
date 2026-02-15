@@ -15,9 +15,16 @@ import { Textarea } from '../ui/textarea';
 import { Label } from '../ui/label';
 import { Badge } from '../ui/badge';
 import { Alert, AlertDescription } from '../ui/alert';
-import { getLeadById } from '../../lib/leads';
-import { convertLead, previewLeadConversion } from '../../lib/leadConversion';
+// [STUBBED] import { getLeadById } from '../../lib/leads';
+// [STUBBED] import { convertLead, previewLeadConversion } from '../../lib/leadConversion';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getLeadById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const convertLead = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const previewLeadConversion = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ConvertLeadModalProps {
   open: boolean;

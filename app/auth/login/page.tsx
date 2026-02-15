@@ -12,6 +12,7 @@ import { useLogin } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/client';
 import type { LoginDto } from '@/types/auth.types';
 import Image from 'next/image';
+import { AARAAZI_BRAND } from '@/lib/brand';
 
 /**
  * Professional Login Page
@@ -94,7 +95,7 @@ export default function LoginPage() {
                         {branding.logoUrl ? (
                             <Image src={branding.logoUrl} alt="Logo" className="object-contain" width={80} height={80} />
                         ) : (
-                            <Building2 className="w-6 h-6" style={{ color: branding.primaryColor }} />
+                            <Image src={AARAAZI_BRAND.fullLogo} alt={AARAAZI_BRAND.displayName} className="object-contain" width={80} height={80} />
                         )}
 
                         <h1 className="text-3xl font-semibold text-gray-900">

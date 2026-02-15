@@ -16,9 +16,9 @@
 import React, { useMemo } from 'react';
 import { User } from '../../../../types';
 import { CustomReportTemplate } from '../../../../types/custom-reports';
-import { getReportHistory } from '../../../../lib/report-history';
+// [STUBBED] import { getReportHistory } from '../../../../lib/report-history';
 import { getSharingStatistics } from '../../../../lib/report-sharing';
-import { getDistributionStatistics } from '../../../../lib/report-distribution';
+// [STUBBED] import { getDistributionStatistics } from '../../../../lib/report-distribution';
 import { Button } from '../../../ui/button';
 import { Badge } from '../../../ui/badge';
 import {
@@ -33,6 +33,12 @@ import {
   ArrowLeft,
   FileText,
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getReportHistory = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getDistributionStatistics = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ReportAnalyticsDashboardProps {
   user: User;

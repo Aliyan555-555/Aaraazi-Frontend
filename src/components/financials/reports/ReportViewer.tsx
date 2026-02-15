@@ -4,15 +4,27 @@ import { Button } from '../../ui/button';
 import { Download, Printer, Share2, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatPKR } from '../../../lib/currency';
 import { TrialBalance, ChangesInEquity } from '../../../types/accounting';
-import {
-  ProfitAndLoss,
-  BalanceSheet,
-  CashFlowStatement,
-  CommissionReport,
-  ExpenseSummaryReport,
-  PropertyPerformanceReport,
-  InvestorDistributionReport,
-} from '../../../lib/accounting';
+import { logger } from "../../../lib/logger";
+// [STUBBED] import {
+// [STUBBED]   ProfitAndLoss,
+// [STUBBED]   BalanceSheet,
+// [STUBBED]   CashFlowStatement,
+// [STUBBED]   CommissionReport,
+// [STUBBED]   ExpenseSummaryReport,
+// [STUBBED]   PropertyPerformanceReport,
+// [STUBBED]   InvestorDistributionReport,
+// [STUBBED] } from '../../../lib/accounting';
+
+// ===== STUBS for removed prototype functions =====
+type ProfitAndLoss = any;
+type BalanceSheet = any;
+type CashFlowStatement = any;
+type CommissionReport = any;
+type ExpenseSummaryReport = any;
+type PropertyPerformanceReport = any;
+type InvestorDistributionReport = any;
+// ===== END STUBS =====
+
 
 export interface ReportViewerData {
   id: string;
@@ -60,7 +72,7 @@ export const ReportViewer: React.FC<ReportViewerProps> = ({
   const handleDownload = () => {
     // Simulate download
     const filename = `${report.templateName.replace(/\s+/g, '_')}_${report.dateFrom}_to_${report.dateTo}.${report.format}`;
-    console.log(`Downloading ${filename}...`);
+    logger.log(`Downloading ${filename}...`);
     alert(`Report would be downloaded as: ${filename}`);
   };
 
