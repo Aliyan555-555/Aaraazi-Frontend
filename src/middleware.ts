@@ -1,19 +1,5 @@
-/**
- * Comprehensive Next.js Middleware
- * Professional-grade route protection with advanced security features
- *
- * Features:
- * - Session validation
- * - Role-based access control (RBAC)
- * - Security headers
- * - Request logging
- * - Rate limiting awareness
- * - Redirect management
- * - Token validation
- */
-
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+<<<<<<< Updated upstream
 
 // ============================================================================
 // Types & Interfaces
@@ -282,123 +268,14 @@ function createRedirectUrl(
 // ============================================================================
 // Middleware Function
 // ============================================================================
+=======
+import { runMiddleware } from './middleware/chain';
+>>>>>>> Stashed changes
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Skip static files and API routes
-  if (
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/api/') ||
-    isStaticFile(pathname)
-  ) {
-    return NextResponse.next();
-  }
-
-  // Get auth data
-  const authData = getAuthFromRequest(request);
-
-  // Log request
-  logRequest(
-    request,
-    authData.isAuthenticated ? 'Authenticated' : 'Anonymous'
-  );
-
-  // ============================================================================
-  // Public Routes - Allow access
-  // ============================================================================
-
-  if (isPublicRoute(pathname)) {
-    // If user is authenticated and trying to access auth pages, redirect to dashboard
-    if (authData.isAuthenticated && isAuthOnlyRoute(pathname)) {
-      logRequest(request, 'Redirect: Already authenticated');
-      const url = createRedirectUrl(request, '/dashboard');
-      const response = NextResponse.redirect(url);
-      return addSecurityHeaders(response);
-    }
-
-    // Allow access to public routes
-    const response = NextResponse.next();
-    return addSecurityHeaders(response);
-  }
-
-  // ============================================================================
-  // Root Path - Redirect to appropriate page
-  // ============================================================================
-
-  if (pathname === '/') {
-    if (authData.isAuthenticated) {
-      logRequest(request, 'Redirect: Root to dashboard');
-      const response = NextResponse.redirect(
-        new URL('/dashboard', request.url)
-      );
-      return addSecurityHeaders(response);
-    } else {
-      logRequest(request, 'Redirect: Root to agency-code');
-      const response = NextResponse.redirect(
-        new URL('/auth/agency-code', request.url)
-      );
-      return addSecurityHeaders(response);
-    }
-  }
-
-  // ============================================================================
-  // Protected Routes - Require Authentication
-  // ============================================================================
-
-  // Check if route requires authentication
-  const protectedRoute = getProtectedRoute(pathname);
-
-  if (!authData.isAuthenticated) {
-    logRequest(request, 'Redirect: Not authenticated');
-    const url = createRedirectUrl(request, '/auth/agency-code');
-    const response = NextResponse.redirect(url);
-    return addSecurityHeaders(response);
-  }
-
-  // ============================================================================
-  // Role-Based Access Control
-  // ============================================================================
-
-  if (protectedRoute?.allowedRoles) {
-    const hasAccess = hasRequiredRole(
-      authData.user?.role,
-      protectedRoute.allowedRoles
-    );
-
-    if (!hasAccess) {
-      logRequest(request, 'Redirect: Insufficient permissions');
-
-      const url = new URL('/dashboard', request.url);
-      url.searchParams.set('error', 'insufficient_permissions');
-      const response = NextResponse.redirect(url);
-      return addSecurityHeaders(response);
-    }
-  }
-
-  // ============================================================================
-  // Allow Access
-  // ============================================================================
-
-  logRequest(request, 'Allow: Access granted');
-  const response = NextResponse.next();
-
-  return addSecurityHeaders(response);
+  return runMiddleware(request);
 }
 
-// ============================================================================
-// Middleware Configuration
-// ============================================================================
-
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder files
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

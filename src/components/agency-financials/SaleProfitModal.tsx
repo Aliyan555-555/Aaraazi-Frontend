@@ -22,6 +22,21 @@ import { calculatePropertyFinancials, generatePropertyProfitLoss } from '../../l
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 
+<<<<<<< Updated upstream
+=======
+// ===== STUBS for removed prototype functions =====
+const createMultipleTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculatePropertyFinancials = (..._args: any[]): any => ({
+  totalAcquisitionCost: 0,
+  operatingProfit: 0,
+  totalIncome: 0,
+  totalExpenses: 0
+});
+const generatePropertyProfitLoss = (..._args: any[]): any => ({});
+// ===== END STUBS =====
+
+
+>>>>>>> Stashed changes
 interface SaleProfitModalProps {
   isOpen: boolean;
   onClose: () => void;

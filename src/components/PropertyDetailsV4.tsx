@@ -78,6 +78,7 @@ import {
   Plus,
   Key,
   Award,
+  X,
 } from 'lucide-react';
 
 // Business Logic
@@ -88,7 +89,19 @@ import { getTasksByEntity, updateTask, TaskV4 } from '../lib/tasks';
 import { TaskQuickAddWidget } from './tasks/TaskQuickAddWidget';
 import { TaskListView } from './tasks/TaskListView';
 
+<<<<<<< Updated upstream:src/components/PropertyDetailsV4.tsx
 interface PropertyDetailsV4Props {
+=======
+// ===== STUBS for removed prototype functions =====
+const getInvestorById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTasksByEntity = (..._args: any[]): any[] => { return []; };
+const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type TaskV4 = any;
+// ===== END STUBS =====
+
+
+interface PropertyDetailsProps {
+>>>>>>> Stashed changes:src/components/PropertyDetails.tsx
   property: Property;
   sellCycles?: SellCycle[];
   purchaseCycles?: PurchaseCycle[];
@@ -99,6 +112,7 @@ interface PropertyDetailsV4Props {
   onStartSellCycle: () => void;
   onStartPurchaseCycle: () => void;
   onStartRentCycle: () => void;
+  onDelete: () => void;
   onViewCycle: (cycleId: string, type: 'sell' | 'purchase' | 'rent') => void;
 }
 
@@ -113,6 +127,7 @@ export function PropertyDetailsV4({
   onStartSellCycle,
   onStartPurchaseCycle,
   onStartRentCycle,
+  onDelete,
   onViewCycle,
 }: PropertyDetailsV4Props) {
   // CRITICAL FIX: Use cycles from props, not from property object
@@ -516,6 +531,12 @@ export function PropertyDetailsV4({
             label: 'Edit Property',
             icon: <FileText className="h-4 w-4" />,
             onClick: onEdit,
+          },
+          {
+            label: 'Delete Property',
+            icon: <X className="h-4 w-4" />,
+            onClick: onDelete,
+            variant: 'destructive',
           },
         ]}
       />
@@ -970,9 +991,9 @@ export function PropertyDetailsV4({
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-base mb-4 flex items-center gap-2">
           <FileText className="h-5 w-5 text-gray-600" />
-          Property Tasks ({propertyTasks.length})
+          Property Tasks ({(propertyTasks || []).length})
         </h3>
-        {propertyTasks.length === 0 ? (
+        {(propertyTasks || []).length === 0 ? (
           <div className="text-center py-12">
             <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
             <p className="text-sm text-gray-500">No tasks for this property yet</p>
@@ -980,7 +1001,7 @@ export function PropertyDetailsV4({
           </div>
         ) : (
           <TaskListView
-            tasks={propertyTasks}
+            tasks={propertyTasks || []}
             showSelection={false}
             onViewTask={(taskId) => {
               toast.info(`View task ${taskId}`);
