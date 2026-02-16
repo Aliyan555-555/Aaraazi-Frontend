@@ -2,28 +2,22 @@
  * PropertyAddressFields Component
  * Structured address input with cascading dropdowns
  * Property-type-specific fields (plot/building/floor/unit)
+ * Now using real API calls
  */
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FormField } from './ui/form-field';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
-import { PropertyAddress } from '../types/locations';
-import {
-  getActiveCities,
-  getActiveAreasByCity,
-  getActiveBlocksByArea,
-  getActiveBuildingsByArea,
-  getCityById,
-  getAreaById,
-  getBlockById,
-  getBuildingById
-} from '../lib/data';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { useLocations } from '@/hooks/useLocations';
+import type { City, Area, Block } from '@/lib/api/locations';
+
 
 interface PropertyAddressFieldsProps {
   propertyType: string;
+  countryId?: string; // Default to Pakistan if not provided
   addressData: {
     cityId: string;
     areaId: string;
@@ -43,28 +37,88 @@ interface PropertyAddressFieldsProps {
     unitNumber?: string;
   };
   onChange: (field: any, value: string) => void;
-
 }
 
 export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
   propertyType,
+  countryId,
   addressData,
   errors,
   onChange
 }) => {
-  // Load location data
-  const cities = getActiveCities();
-  const areas = useMemo(() => {
-    return addressData.cityId ? getActiveAreasByCity(addressData.cityId) : [];
-  }, [addressData.cityId]);
+  const { getCountries, getCities, getAreas, getBlocks } = useLocations();
 
-  const blocks = useMemo(() => {
-    return addressData.areaId ? getActiveBlocksByArea(addressData.areaId) : [];
-  }, [addressData.areaId]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [loadingAreas, setLoadingAreas] = useState(false);
+  const [loadingBlocks, setLoadingBlocks] = useState(false);
 
-  const buildings = useMemo(() => {
-    return addressData.areaId ? getActiveBuildingsByArea(addressData.areaId, addressData.blockId || undefined) : [];
-  }, [addressData.areaId, addressData.blockId]);
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        setLoadingCities(true);
+        let effectiveCountryId = countryId;
+        if (!effectiveCountryId) {
+          const countries = await getCountries();
+          const pakistan = countries.find((c) => c.code === 'PK');
+          effectiveCountryId = pakistan?.id;
+        }
+        if (!effectiveCountryId) {
+          setCities([]);
+          return;
+        }
+        const citiesData = await getCities(effectiveCountryId);
+        setCities(citiesData);
+      } catch (error) {
+        console.error('Failed to load cities:', error);
+        setCities([]);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+
+    loadCities();
+  }, [countryId, getCountries, getCities]);
+
+  useEffect(() => {
+    const loadAreas = async () => {
+      if (!addressData.cityId) {
+        setAreas([]);
+        return;
+      }
+      try {
+        setLoadingAreas(true);
+        const areasData = await getAreas(addressData.cityId);
+        setAreas(areasData);
+      } catch (error) {
+        console.error('Failed to load areas:', error);
+      } finally {
+        setLoadingAreas(false);
+      }
+    };
+    loadAreas();
+  }, [addressData.cityId, getAreas]);
+
+  useEffect(() => {
+    const loadBlocks = async () => {
+      if (!addressData.areaId) {
+        setBlocks([]);
+        return;
+      }
+      try {
+        setLoadingBlocks(true);
+        const blocksData = await getBlocks(addressData.areaId);
+        setBlocks(blocksData);
+      } catch (error) {
+        console.error('Failed to load blocks:', error);
+      } finally {
+        setLoadingBlocks(false);
+      }
+    };
+    loadBlocks();
+  }, [addressData.areaId, getBlocks]);
 
   // Determine which fields to show based on property type
   const needsBuilding = ['apartment', 'commercial'].includes(propertyType);
@@ -121,16 +175,27 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
         error={errors.cityId}
         hint="Select the city where the property is located"
       >
-        <Select value={addressData.cityId || undefined} onValueChange={handleCityChange}>
+        <Select value={addressData.cityId || undefined} onValueChange={handleCityChange} disabled={loadingCities}>
           <SelectTrigger>
-            <SelectValue placeholder="Select city" />
+            <SelectValue placeholder={loadingCities ? "Loading cities..." : "Select city"} />
           </SelectTrigger>
           <SelectContent>
-            {cities.map((city) => (
-              <SelectItem key={city.id} value={city.id}>
-                {city.name}
-              </SelectItem>
-            ))}
+            {loadingCities ? (
+              <div className="px-2 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading cities...
+              </div>
+            ) : cities.length > 0 ? (
+              cities.map((city) => (
+                <SelectItem key={city.id} value={city.id}>
+                  {city.name}
+                </SelectItem>
+              ))
+            ) : (
+              <div className="px-2 py-3 text-sm text-gray-500 text-center">
+                No cities available
+              </div>
+            )}
           </SelectContent>
         </Select>
       </FormField>
@@ -145,13 +210,22 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
         <Select
           value={addressData.areaId || undefined}
           onValueChange={handleAreaChange}
-          disabled={!addressData.cityId}
+          disabled={!addressData.cityId || loadingAreas}
         >
           <SelectTrigger>
-            <SelectValue placeholder={addressData.cityId ? "Select area" : "Select city first"} />
+            <SelectValue placeholder={
+              loadingAreas ? "Loading areas..." : 
+              addressData.cityId ? "Select area" : 
+              "Select city first"
+            } />
           </SelectTrigger>
           <SelectContent>
-            {areas.length > 0 ? (
+            {loadingAreas ? (
+              <div className="px-2 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading areas...
+              </div>
+            ) : areas.length > 0 ? (
               areas.map((area) => (
                 <SelectItem key={area.id} value={area.id}>
                   {area.name}
@@ -166,8 +240,8 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
         </Select>
       </FormField>
 
-      {/* Block Selection (Optional) */}
-      {blocks.length > 0 && (
+      {/* Block Selection (Optional) - Only show if blocks exist or loading */}
+      {(blocks.length > 0 || loadingBlocks) && (
         <FormField
           label="Block (Optional)"
           error={errors.blockId}
@@ -176,17 +250,28 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
           <Select
             value={addressData.blockId || undefined}
             onValueChange={handleBlockChange}
-            disabled={!addressData.areaId}
+            disabled={!addressData.areaId || loadingBlocks}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select block (optional)" />
+              <SelectValue placeholder={loadingBlocks ? "Loading blocks..." : "Select block (optional)"} />
             </SelectTrigger>
             <SelectContent>
-              {blocks.map((block) => (
-                <SelectItem key={block.id} value={block.id}>
-                  {block.name}
-                </SelectItem>
-              ))}
+              {loadingBlocks ? (
+                <div className="px-2 py-3 text-sm text-gray-500 text-center flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading blocks...
+                </div>
+              ) : blocks.length > 0 ? (
+                blocks.map((block) => (
+                  <SelectItem key={block.id} value={block.id}>
+                    {block.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="px-2 py-3 text-sm text-gray-500 text-center">
+                  No blocks in this area
+                </div>
+              )}
             </SelectContent>
           </Select>
         </FormField>
@@ -195,33 +280,17 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
       {/* Building Selection (for apartments/commercial) */}
       {needsBuilding && (
         <FormField
-          label="Building"
+          label="Building Name"
           required
           error={errors.buildingId}
-          hint="Select the building name"
+          hint="Enter the building name (e.g., Pearl Tower, Ocean Heights)"
         >
-          <Select
-            value={addressData.buildingId || undefined}
-            onValueChange={(value) => onChange('buildingId', value)}
+          <Input
+            value={addressData.buildingId}
+            onChange={(e) => onChange('buildingId', e.target.value)}
+            placeholder="Enter building name"
             disabled={!addressData.areaId}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={addressData.areaId ? "Select building" : "Select area first"} />
-            </SelectTrigger>
-            <SelectContent>
-              {buildings.length > 0 ? (
-                buildings.map((building) => (
-                  <SelectItem key={building.id} value={building.id}>
-                    {building.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <div className="px-2 py-3 text-sm text-gray-500 text-center">
-                  No buildings available in this area
-                </div>
-              )}
-            </SelectContent>
-          </Select>
+          />
         </FormField>
       )}
 
@@ -279,7 +348,7 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
         <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
           <Label className="text-xs text-gray-600 mb-1 block">Address Preview</Label>
           <p className="text-sm text-gray-900">
-            {getAddressPreview(propertyType, addressData)}
+            {getAddressPreview(propertyType, addressData, cities, areas, blocks)}
           </p>
         </div>
       )}
@@ -298,20 +367,22 @@ function getAddressPreview(
     plotNumber: string;
     floorNumber: string;
     unitNumber: string;
-  }
+  },
+  cities: City[],
+  areas: Area[],
+  blocks: Block[]
 ): string {
   const parts: string[] = [];
 
-  const city = data.cityId ? getCityById(data.cityId) : null;
-  const area = data.areaId ? getAreaById(data.areaId) : null;
-  const block = data.blockId ? getBlockById(data.blockId) : null;
-  const building = data.buildingId ? getBuildingById(data.buildingId) : null;
+  const city = cities.find(c => c.id === data.cityId);
+  const area = areas.find(a => a.id === data.areaId);
+  const block = blocks.find(b => b.id === data.blockId);
 
   // For buildings (apartments/commercial)
-  if (building) {
+  if (data.buildingId) {
     if (data.unitNumber) parts.push(`Unit ${data.unitNumber}`);
     if (data.floorNumber) parts.push(`Floor ${data.floorNumber}`);
-    parts.push(building.name);
+    parts.push(data.buildingId); // Building name
   } else {
     // For plots
     if (data.plotNumber) parts.push(`Plot ${data.plotNumber}`);

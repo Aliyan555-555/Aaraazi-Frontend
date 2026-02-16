@@ -17,18 +17,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
-// [STUBBED] import { createMultipleTransactions } from '../../lib/agencyTransactions';
-// [STUBBED] import { calculatePropertyFinancials, generatePropertyProfitLoss } from '../../lib/agencyFinancials';
+import { createMultipleTransactions } from '../../lib/agencyTransactions';
+import { calculatePropertyFinancials, generatePropertyProfitLoss } from '../../lib/agencyFinancials';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 
+<<<<<<< Updated upstream
+=======
 // ===== STUBS for removed prototype functions =====
 const createMultipleTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const calculatePropertyFinancials = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const generatePropertyProfitLoss = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculatePropertyFinancials = (..._args: any[]): any => ({
+  totalAcquisitionCost: 0,
+  operatingProfit: 0,
+  totalIncome: 0,
+  totalExpenses: 0
+});
+const generatePropertyProfitLoss = (..._args: any[]): any => ({});
 // ===== END STUBS =====
 
 
+>>>>>>> Stashed changes
 interface SaleProfitModalProps {
   isOpen: boolean;
   onClose: () => void;
