@@ -3,12 +3,20 @@
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { PropertyDetailsV4 } from '@/components/PropertyDetailsV4';
-import { getPropertyById } from '@/lib/data';
-import { getSellCycles } from '@/lib/sellCycle';
-import { getPurchaseCycles } from '@/lib/purchaseCycle';
-import { getRentCycles } from '@/lib/rentCycle';
+import { PropertyDetails } from '@/components/PropertyDetails';
+// [STUBBED] import { getPropertyById } from '@/lib/data';
+// [STUBBED] import { getSellCycles } from '@/lib/sellCycle';
+// [STUBBED] import { getPurchaseCycles } from '@/lib/purchaseCycle';
+// [STUBBED] import { getRentCycles } from '@/lib/rentCycle';
 import { mapAuthUserToUIUser, Property, SellCycle, PurchaseCycle, RentCycle } from '@/types';
+
+// ===== STUBS for removed prototype functions =====
+const getPropertyById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSellCycles = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPurchaseCycles = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getRentCycles = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 export default function PropertyDetailPage() {
     const { id } = useParams();
@@ -57,7 +65,7 @@ export default function PropertyDetailPage() {
     };
 
     return (
-        <PropertyDetailsV4
+        <PropertyDetails
             property={data.property}
             sellCycles={data.sellCycles}
             purchaseCycles={data.purchaseCycles}

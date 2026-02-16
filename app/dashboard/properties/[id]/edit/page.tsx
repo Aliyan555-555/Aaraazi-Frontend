@@ -3,10 +3,15 @@
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { PropertyFormV2 } from '@/components/PropertyFormV2';
-import { getPropertyById } from '@/lib/data';
+import { PropertyForm } from '@/components/PropertyForm';
+// [STUBBED] import { getPropertyById } from '@/lib/data';
 import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getPropertyById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 export default function EditPropertyPage() {
     const { id } = useParams();
@@ -41,7 +46,7 @@ export default function EditPropertyPage() {
 
     return (
         <div className="p-6">
-            <PropertyFormV2
+            <PropertyForm
                 user={data.user}
                 editingProperty={data.property}
                 onBack={() => router.push(`/dashboard/properties/${id}`)}
