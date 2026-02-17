@@ -1,43 +1,86 @@
-/**
- * PurchaseCyclesWorkspaceV4 Component
- * WORKSPACE V4: Built with WorkspacePageTemplate ✅
- * 
- * PURPOSE:
- * Complete purchase cycles workspace using the template system.
- * Demonstrates property acquisition and buying management.
- * 
- * FEATURES:
- * - Grid view (primary) and Table view (secondary)
- * - Search and filtering by status, purchaser type, financing
- * - Sorting options
- * - Bulk actions (export, change status, delete)
- * - Quick actions (view, edit, delete)
- * - Pagination
- * - Empty states
- * - Loading states
- */
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { Plus, Eye, Edit, Trash2, Download, Upload, ShoppingCart, Home } from 'lucide-react';
-import { User, PurchaseCycle, Property } from '../../types';
+import React, { useMemo, useCallback } from 'react';
+import { Plus, Trash2, Download, Upload, Home } from 'lucide-react';
+import type { User, PurchaseCycle, Property } from '../../types';
 import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
 import { PurchaseCycleWorkspaceCard } from './PurchaseCycleWorkspaceCard';
-import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
+import { StatusBadge } from '../layout/StatusBadge';
 import { Column, EmptyStatePresets } from '../workspace';
+// <<<<<<< HEAD:src/components/purchase-cycles/PurchaseCyclesWorkspace.tsx
 // [STUBBED] import { getPurchaseCycles, updatePurchaseCycle, deletePurchaseCycle } from '../../lib/purchaseCycle';
 // [STUBBED] import { getProperties } from '../../lib/data';
+// =======
+// <<<<<<< Updated upstream:src/components/purchase-cycles/PurchaseCyclesWorkspaceV4.tsx
+// import { getPurchaseCycles, updatePurchaseCycle, deletePurchaseCycle } from '../../lib/purchaseCycle';
+// import { getProperties } from '../../lib/data';
+// =======
+// >>>>>>> Stashed changes:src/components/purchase-cycles/PurchaseCyclesWorkspace.tsx
+// >>>>>>> aaraazi/properties:src/components/purchase-cycles/PurchaseCyclesWorkspaceV4.tsx
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
+import { logger } from '../../lib/logger';
+import { usePurchaseCycles } from '@/hooks/usePurchaseCycles';
+import { useProperties } from '@/hooks/useProperties';
 
-import { logger } from "../../lib/logger";
+// <<<<<<< HEAD:src/components/purchase-cycles/PurchaseCyclesWorkspace.tsx
+// import { logger } from "../../lib/logger";
 
 // ===== STUBS for removed prototype functions =====
-const getPurchaseCycles = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const updatePurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const deletePurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// const getPurchaseCycles = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// const updatePurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// const deletePurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
 // ===== END STUBS =====
 
+// =======
+// <<<<<<< Updated upstream:src/components/purchase-cycles/PurchaseCyclesWorkspaceV4.tsx
+// =======
+function mapApiToPurchaseCycle(api: {
+  id: string;
+  cycleNumber: string;
+  requirementId: string;
+  agentId: string;
+  status: string;
+  startDate: string;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string | null;
+  requirement?: { id: string; contact?: { name: string } };
+  agent?: { id: string; name: string; email: string };
+}): PurchaseCycle {
+  const statusMap: Record<string, string> = {
+    ACTIVE: 'prospecting',
+    PENDING: 'pending',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled',
+    ON_HOLD: 'on-hold',
+    NEGOTIATION: 'negotiation',
+    UNDER_CONTRACT: 'under-contract',
+  };
+  return {
+    id: api.id,
+    propertyId: '',
+    agentId: api.agentId,
+    agentName: api.agent?.name,
+    status: (statusMap[api.status] || api.status.toLowerCase()) as PurchaseCycle['status'],
+    createdAt: api.createdAt,
+    updatedAt: api.updatedAt,
+    createdBy: api.createdBy ?? api.agentId,
+    title: `Purchase ${api.cycleNumber}`,
+    buyerRequirementId: api.requirementId,
+    purchaserName: api.requirement?.contact?.name ?? '',
+    purchaserType: 'client',
+    offerAmount: 0,
+    negotiatedPrice: undefined,
+    listedDate: api.startDate,
+    offers: [],
+    sharedWith: [],
+  };
+}
+
+// >>>>>>> Stashed changes:src/components/purchase-cycles/PurchaseCyclesWorkspace.tsx
+// >>>>>>> aaraazi/properties:src/components/purchase-cycles/PurchaseCyclesWorkspaceV4.tsx
 // Helper function to format property address
 const formatPropertyAddress = (address: any): string => {
   if (typeof address === 'string') return address;
@@ -64,23 +107,18 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
   onStartNew,
   onEditCycle,
 }) => {
-  // State
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: cyclesData, isLoading } = usePurchaseCycles();
+  const { properties: allProperties } = useProperties();
 
-  // Load purchase cycles based on user role
   const allCycles = useMemo(() => {
-    return getPurchaseCycles(user.role === 'admin' ? undefined : user.id, user.role);
-  }, [user.id, user.role]);
+    const list = cyclesData?.items ?? [];
+    return list.map(mapApiToPurchaseCycle);
+  }, [cyclesData?.items]);
 
-  // Load properties for reference
-  const allProperties = useMemo(() => {
-    return getProperties(user.role === 'admin' ? undefined : user.id, user.role);
-  }, [user.id, user.role]);
-
-  // Helper to get property for a cycle
-  const getProperty = (propertyId: string): Property | null => {
-    return allProperties.find(p => p.id === propertyId) || null;
-  };
+  const getProperty = useCallback((propertyId: string): Property | undefined => {
+    if (!propertyId) return undefined;
+    return allProperties.find((p) => p.id === propertyId);
+  }, [allProperties]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -110,12 +148,12 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
   const columns: Column<PurchaseCycle>[] = [
     {
       id: 'property',
-      label: 'Property',
+      label: 'Property / Requirement',
       accessor: (c) => {
         const property = getProperty(c.propertyId);
-        const propertyAddress = property?.address
+        const displayLabel = property?.address
           ? (typeof property.address === 'string' ? property.address : formatPropertyAddress(property.address))
-          : 'Property';
+          : (c.purchaserName ? `Requirement: ${c.purchaserName}` : 'Requirement');
 
         return (
           <div className="flex items-start gap-3">
@@ -123,7 +161,7 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
               {property?.images?.[0] ? (
                 <img
                   src={property.images[0]}
-                  alt={propertyAddress}
+                  alt={displayLabel}
                   className="w-full h-full object-cover rounded"
                 />
               ) : (
@@ -132,10 +170,10 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium text-gray-900 truncate">
-                {propertyAddress}
+                {displayLabel}
               </div>
               <div className="text-sm text-gray-500 capitalize">
-                {property?.propertyType || 'N/A'}
+                {property?.propertyType || 'Requirement'}
               </div>
             </div>
           </div>
@@ -326,39 +364,24 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
     },
   ];
 
-  // Custom filter function
-  const handleFilter = (cycle: PurchaseCycle, activeFilters: Map<string, any>): boolean => {
-    // Status filter
+  const handleFilter = useCallback((cycle: PurchaseCycle, activeFilters: Map<string, any>): boolean => {
     const statusFilter = activeFilters.get('status');
-    if (statusFilter?.length > 0 && !statusFilter.includes(cycle.status)) {
-      return false;
-    }
-
-    // Purchaser type filter
+    if (Array.isArray(statusFilter) && statusFilter.length > 0 && !statusFilter.includes(cycle.status)) return false;
     const purchaserTypeFilter = activeFilters.get('purchaserType');
-    if (purchaserTypeFilter?.length > 0 && !purchaserTypeFilter.includes(cycle.purchaserType)) {
-      return false;
-    }
-
-    // Financing type filter
+    if (Array.isArray(purchaserTypeFilter) && purchaserTypeFilter.length > 0 && !purchaserTypeFilter.includes(cycle.purchaserType)) return false;
     const financingTypeFilter = activeFilters.get('financingType');
-    if (financingTypeFilter?.length > 0 && !financingTypeFilter.includes(cycle.financingType)) {
-      return false;
-    }
-
-    // Due diligence filter
+    if (Array.isArray(financingTypeFilter) && financingTypeFilter.length > 0 && !(financingTypeFilter as string[]).includes((cycle as { financingType?: string }).financingType)) return false;
     const dueDiligenceFilter = activeFilters.get('dueDiligence');
     if (dueDiligenceFilter) {
-      const isComplete = cycle.titleClear && cycle.inspectionDone && cycle.documentsVerified;
+      const c = cycle as { titleClear?: boolean; inspectionDone?: boolean; documentsVerified?: boolean };
+      const isComplete = c.titleClear && c.inspectionDone && c.documentsVerified;
       if (dueDiligenceFilter === 'complete' && !isComplete) return false;
       if (dueDiligenceFilter === 'pending' && isComplete) return false;
     }
-
     return true;
-  };
+  }, []);
 
-  // Custom sort function
-  const handleSort = (cycles: PurchaseCycle[], sortBy: string): PurchaseCycle[] => {
+  const handleSort = useCallback((cycles: PurchaseCycle[], sortBy: string, _order?: 'asc' | 'desc'): PurchaseCycle[] => {
     const sorted = [...cycles];
 
     switch (sortBy) {
@@ -385,13 +408,11 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
       default:
         break;
     }
-
     return sorted;
-  };
+  }, []);
 
-  // Custom search function
-  const handleSearch = (cycle: PurchaseCycle, query: string): boolean => {
-    const property = getProperty(cycle.propertyId);
+  const handleSearch = useCallback((cycle: PurchaseCycle, query: string): boolean => {
+    const property = getProperty(cycle.propertyId ?? '');
     const searchLower = query.toLowerCase();
 
     // Format property address for search
@@ -408,7 +429,7 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
       (cycle.offerAmount || 0).toString().includes(searchLower) ||
       (cycle.negotiatedPrice ? cycle.negotiatedPrice.toString().includes(searchLower) : false)
     );
-  };
+  }, [getProperty]);
 
   return (
     <WorkspacePageTemplate
@@ -453,7 +474,7 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
       renderCard={(cycle) => (
         <PurchaseCycleWorkspaceCard
           cycle={cycle}
-          property={getProperty(cycle.propertyId)}
+          property={getProperty(cycle.propertyId ?? '') ?? null}
           onClick={() => onNavigate('purchase-cycle-details', cycle.id)}
           onEdit={() => onEditCycle?.(cycle)}
           onDelete={() => toast.info(`Delete cycle ${cycle.id}`)}
@@ -474,13 +495,13 @@ export const PurchaseCyclesWorkspace: React.FC<PurchaseCyclesWorkspaceProps> = (
       onItemClick={(cycle) => onNavigate('purchase-cycle-details', cycle.id)}
 
       // Empty states
-      emptyStatePreset={EmptyStatePresets.purchaseCycles(onStartNew || (() => { }))}
+      emptyStatePreset={EmptyStatePresets.purchaseCycles(onStartNew ?? (() => {}))}
 
       // Loading
       isLoading={isLoading}
 
       // Pagination
-      pagination={{ enabled: true, pageSize: 12 }}
+      pagination={{ enabled: true, pageSize: 12, pageSizeOptions: [12, 24, 48] }}
     />
   );
 };

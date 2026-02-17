@@ -1,31 +1,7 @@
-/**
- * Property Details - V4.0 with DetailPageTemplate ✅
- * 
- * COMPLETE REDESIGN using DetailPageTemplate system:
- * - DetailPageTemplate for consistent structure
- * - ContactCard for owner information
- * - QuickActionsPanel for sidebar actions
- * - MetricCardsGroup for statistics
- * - CyclesList for all property cycles
- * - OwnershipTimeline for ownership history
- * - All 5 UX Laws applied
- * - 8px grid system
- * - Responsive 2/3 + 1/3 layout
- * 
- * TABS:
- * 1. Overview - Summary + InfoPanels + Sidebar
- * 2. Cycles - Sell, Purchase, Rent cycles
- * 3. History - Ownership and transaction history
- * 4. Documents - Property documents
- * 5. Activity - Timeline of all activities
- */
-
 import { useMemo, useState } from 'react';
-import { Property, User, SellCycle, PurchaseCycle, RentCycle } from '../types';
+import { Property, User, SellCycle, PurchaseCycle, RentCycle, Task } from '../types';
 import { PropertyAddressDisplay, useFormattedAddress } from './PropertyAddressDisplay';
 import { Button } from './ui/button';
-
-// DetailPageTemplate System
 import {
   DetailPageTemplate,
   DetailPageTab,
@@ -36,21 +12,13 @@ import {
   Activity,
   ContactCard,
 } from './layout';
-
-// Foundation Components
 import { InfoPanel } from './ui/info-panel';
 import { StatusTimeline } from './ui/status-timeline';
 import { StatusBadge } from './layout/StatusBadge';
 import { Badge } from './ui/badge';
-
-// Investor Syndication Components
-// TODO: MultiInvestorPurchaseModal and InvestorSharesCard need to be implemented
-// import { MultiInvestorPurchaseModal, InvestorSharesCard } from './multi-investor-purchase';
 import { RecordTransactionModal, PropertyTransactionHistory } from './transactions';
 import { SaleDistributionModal, InvestorDistributionHistory } from './sale-distribution';
-import { getInvestorById } from '../lib/investors';
-
-// Temporary stub components until MultiInvestorPurchaseModal and InvestorSharesCard are implemented
+// import { getInvestorById } from '../lib/investors';
 const InvestorSharesCard = ({ property, onNavigateToInvestor }: any) => {
   return (
     <div className="p-4 border rounded-lg bg-gray-50">
@@ -85,23 +53,11 @@ import {
 import { formatPKR } from '../lib/currency';
 import { formatAreaDisplay } from '../lib/areaUnits';
 import { toast } from 'sonner';
-import { getTasksByEntity, updateTask, TaskV4 } from '../lib/tasks';
+// import { getTasksByEntity, updateTask, Task } from '../lib/tasks';
 import { TaskQuickAddWidget } from './tasks/TaskQuickAddWidget';
 import { TaskListView } from './tasks/TaskListView';
 
-<<<<<<< Updated upstream:src/components/PropertyDetailsV4.tsx
-interface PropertyDetailsV4Props {
-=======
-// ===== STUBS for removed prototype functions =====
-const getInvestorById = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getTasksByEntity = (..._args: any[]): any[] => { return []; };
-const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
-type TaskV4 = any;
-// ===== END STUBS =====
-
-
 interface PropertyDetailsProps {
->>>>>>> Stashed changes:src/components/PropertyDetails.tsx
   property: Property;
   sellCycles?: SellCycle[];
   purchaseCycles?: PurchaseCycle[];
@@ -116,7 +72,7 @@ interface PropertyDetailsProps {
   onViewCycle: (cycleId: string, type: 'sell' | 'purchase' | 'rent') => void;
 }
 
-export function PropertyDetailsV4({
+export function PropertyDetails({
   property,
   sellCycles,
   purchaseCycles,
@@ -129,45 +85,35 @@ export function PropertyDetailsV4({
   onStartRentCycle,
   onDelete,
   onViewCycle,
-}: PropertyDetailsV4Props) {
-  // CRITICAL FIX: Use cycles from props, not from property object
-  // The property object stores activeSellCycleIds (just IDs), not the actual cycle objects
-  // App.tsx fetches the actual cycles and passes them as props
+}: PropertyDetailsProps) {
   const safeSellCycles = sellCycles || [];
   const safePurchaseCycles = purchaseCycles || [];
   const safeRentCycles = rentCycles || [];
-
-  // CRITICAL FIX: Get display price - prioritize active sell cycle's askingPrice
   const getDisplayPrice = () => {
-    // Find the first active (listed) sell cycle
     const activeSellCycle = safeSellCycles.find(
       cycle => cycle.status === 'listed' ||
         property.activeSellCycleIds?.includes(cycle.id)
     );
-
-    // Use sell cycle asking price if available, otherwise fall back to property price
     if (activeSellCycle?.askingPrice) {
       return activeSellCycle.askingPrice;
     }
-
     return property.price || 0;
   };
 
   const displayPrice = getDisplayPrice();
 
-  // ==================== INVESTOR SYNDICATION STATE ====================
-  // const [showMultiInvestorModal, setShowMultiInvestorModal] = useState(false);
+
   const [showRecordTransactionModal, setShowRecordTransactionModal] = useState(false);
   const [showDistributionModal, setShowDistributionModal] = useState(false);
 
   // ==================== TASKS STATE ====================
-  const [propertyTasks, setPropertyTasks] = useState<TaskV4[]>([]);
+  const [propertyTasks, setPropertyTasks] = useState<Task[]>([]);
 
   // Load tasks for this property
-  useMemo(() => {
-    const tasks = getTasksByEntity('property', property.id);
-    setPropertyTasks(tasks);
-  }, [property.id]);
+  // useMemo(() => {
+  //   const tasks = getTasksByEntity('property', property.id);
+  //   setPropertyTasks(tasks);
+  // }, [property.id]);
 
   // Check if property is investor-owned
   const isInvestorOwned = property.currentOwnerType === 'investor' &&
@@ -483,7 +429,7 @@ export function PropertyDetailsV4({
       />
 
       {/* Investor Shares Card - Only show for investor-owned properties */}
-      {isInvestorOwned && (
+      {/* {isInvestorOwned && (
         <InvestorSharesCard
           property={property}
           onNavigateToInvestor={(investorId: string) => {
@@ -494,7 +440,7 @@ export function PropertyDetailsV4({
             }
           }}
         />
-      )}
+      )} */}
     </>
   );
 
@@ -975,7 +921,7 @@ export function PropertyDetailsV4({
   const tasksContent = (
     <div className="space-y-6">
       {/* Quick Add Widget */}
-      <TaskQuickAddWidget
+      {/* <TaskQuickAddWidget
         user={user}
         entityType="property"
         entityId={property.id}
@@ -985,10 +931,10 @@ export function PropertyDetailsV4({
           setPropertyTasks(updatedTasks);
           toast.success('Task created successfully');
         }}
-      />
+      /> */}
 
       {/* Tasks List */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      {/* <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-base mb-4 flex items-center gap-2">
           <FileText className="h-5 w-5 text-gray-600" />
           Property Tasks ({(propertyTasks || []).length})
@@ -1015,7 +961,7 @@ export function PropertyDetailsV4({
             }}
           />
         )}
-      </div>
+      </div> */}
     </div>
   );
 

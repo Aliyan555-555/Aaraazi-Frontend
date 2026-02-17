@@ -3,7 +3,7 @@
  * Buyer representation - helping a client buy a property
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Property, User, Contact } from '../../types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -12,12 +12,26 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Switch } from '../ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+// <<<<<<< HEAD
 // [STUBBED] import { createPurchaseCycle } from '../../lib/purchaseCycle';
 // [STUBBED] import { getContacts } from '../../lib/data';
+// =======
+// <<<<<<< Updated upstream
+// import { createPurchaseCycle } from '../../lib/purchaseCycle';
+// import { getContacts } from '../../lib/data';
+// =======
+// >>>>>>> Stashed changes
+// >>>>>>> aaraazi/properties
 import { Search, UserCheck, AlertCircle, DollarSign, Plus, Percent } from 'lucide-react';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { QuickAddContactModal } from '../QuickAddContactModal';
+// <<<<<<< Updated upstream
+// =======
+import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
+import { useContacts } from '@/hooks/useContacts';
+import type { ContactCategory } from '@/types/schema';
+// >>>>>>> Stashed changes
 
 // ===== STUBS for removed prototype functions =====
 const createPurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
@@ -30,6 +44,7 @@ interface ClientPurchaseFormProps {
   user: User;
   onSuccess: () => void;
   onCancel: () => void;
+  onSubmitFromProperty?: (data: CreatePurchaseCycleFromPropertyPayload) => Promise<{ id: string } | null>;
 }
 
 export function ClientPurchaseForm({
@@ -37,8 +52,17 @@ export function ClientPurchaseForm({
   user,
   onSuccess,
   onCancel,
+  onSubmitFromProperty,
 }: ClientPurchaseFormProps) {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const { contacts: allContacts, refetch: refetchContacts } = useContacts({
+    category: 'BUYER' as ContactCategory,
+  });
+  const contacts = useMemo(() => Array.isArray(allContacts) ? allContacts : [], [allContacts]);
+  const [extraContacts, setExtraContacts] = useState<Array<{ id: string; name: string; phone?: string | null }>>([]);
+  const allContactsMerged = useMemo(
+    () => [...contacts, ...extraContacts],
+    [contacts, extraContacts]
+  );
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -83,20 +107,14 @@ export function ClientPurchaseForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load buyer clients
-  useEffect(() => {
-    const allContacts = getContacts(user.id, user.role);
-    const buyers = allContacts.filter(c => c.category === 'buyer' || c.category === 'both');
-    setContacts(buyers);
-  }, [user.id, user.role]);
-
   // Filter clients based on search
-  const filteredClients = contacts.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.phone.includes(searchQuery)
+  const filteredClients = allContactsMerged.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (c.phone && c.phone.includes(searchQuery))
   );
 
-  const handleClientSelect = (contact: Contact) => {
+  const handleClientSelect = (contact: { id: string; name: string; phone?: string | null }) => {
     setFormData(prev => ({
       ...prev,
       buyerId: contact.id,
@@ -141,53 +159,30 @@ export function ClientPurchaseForm({
     setIsSubmitting(true);
 
     try {
-      // Create purchase cycle
-      createPurchaseCycle({
-        propertyId: property.id,
-        
-        // Purchaser (Client)
-        purchaserType: 'client',
-        purchaserId: formData.buyerId,
-        purchaserName: formData.buyerName,
-        
-        // Seller
-        sellerId: `seller_${Date.now()}`,
-        sellerName: formData.sellerName,
-        sellerContact: formData.sellerContact,
-        sellerType: formData.sellerType,
-        
-        // Pricing
-        askingPrice: parseFloat(formData.askingPrice),
-        offerAmount: parseFloat(formData.offerAmount),
-        
-        // Commission
-        commissionRate: parseFloat(formData.commissionRate),
-        commissionType: formData.commissionType,
-        commissionSource: formData.commissionSource,
-        
-        // Buyer details
-        buyerBudgetMin: formData.buyerBudgetMin ? parseFloat(formData.buyerBudgetMin) : undefined,
-        buyerBudgetMax: formData.buyerBudgetMax ? parseFloat(formData.buyerBudgetMax) : undefined,
-        buyerPrequalified: formData.buyerPrequalified,
-        buyerFinancingType: formData.buyerFinancingType,
-        conditions: formData.conditions || undefined,
-        
-        // Financing
-        financingType: formData.financingType,
-        
-        // Agent
-        agentId: user.id,
-        agentName: user.name,
-        
-        // Dates
-        targetCloseDate: formData.targetCloseDate || undefined,
-        
-        // Notes
-        notes: formData.notes || undefined,
-      });
-
-      toast.success('Client purchase cycle created successfully!');
-      onSuccess();
+      if (onSubmitFromProperty) {
+        const payload: CreatePurchaseCycleFromPropertyPayload = {
+          propertyListingId: property.id,
+          purchaserType: 'client',
+          contactId: formData.buyerId,
+          buyerName: formData.buyerName,
+          sellerName: formData.sellerName.trim(),
+          sellerContact: formData.sellerContact.trim() || undefined,
+          offerAmount: parseFloat(formData.offerAmount),
+          askingPrice: parseFloat(formData.askingPrice) || undefined,
+          commissionRate: formData.commissionRate ? parseFloat(formData.commissionRate) : undefined,
+          commissionType: formData.commissionType,
+          buyerBudgetMin: formData.buyerBudgetMin ? parseFloat(formData.buyerBudgetMin) : undefined,
+          buyerBudgetMax: formData.buyerBudgetMax ? parseFloat(formData.buyerBudgetMax) : undefined,
+          financingType: formData.financingType,
+          targetCloseDate: formData.targetCloseDate || undefined,
+          notes: formData.notes || undefined,
+        };
+        await onSubmitFromProperty(payload);
+        toast.success('Client purchase cycle created successfully!');
+        onSuccess();
+      } else {
+        toast.info('Purchase cycle creation is only available from the property-based flow.');
+      }
     } catch (error) {
       console.error('Error creating purchase cycle:', error);
       toast.error('Failed to create purchase cycle');
@@ -255,7 +250,7 @@ export function ClientPurchaseForm({
                           >
                             <div className="font-medium">{client.name}</div>
                             <div className="text-sm text-muted-foreground">
-                              {client.phone} • {client.category}
+                              {client.phone ?? '—'}
                             </div>
                           </button>
                         ))
@@ -609,8 +604,8 @@ export function ClientPurchaseForm({
           user={user}
           onClose={() => setShowQuickAdd(false)}
           onSuccess={(newContact) => {
-            setContacts(prev => [...prev, newContact]);
-            handleClientSelect(newContact);
+            setExtraContacts((prev) => [...prev, { id: newContact.id, name: newContact.name, phone: newContact.phone ?? null }]);
+            handleClientSelect({ id: newContact.id, name: newContact.name, phone: newContact.phone ?? null });
             setShowQuickAdd(false);
           }}
           defaultCategory="buyer"

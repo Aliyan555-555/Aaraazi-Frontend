@@ -1,16 +1,3 @@
-/**
- * Purchase Cycle Form V2 - Full Page with Type Selection
- * 
- * DESIGN SYSTEM V4.1 COMPLIANT:
- * - Type selection step (Agency/Investor/Client)
- * - Delegates to specific sub-forms based on type
- * - Full-page layout with back button (not a modal)
- * 
- * FLOW:
- * 1. Select purchaser type
- * 2. Complete type-specific form
- */
-
 import React, { useState } from 'react';
 import { Property, User, PurchaserType } from '../types';
 import { FormContainer } from './ui/form-container';
@@ -21,15 +8,30 @@ import {
   Users as UsersIcon, 
   UserCheck 
 } from 'lucide-react';
+// <<<<<<< HEAD:src/components/PurchaseCycleForm.tsx
+// import { AgencyPurchaseFormLayout } from './purchase/AgencyPurchaseFormLayout';
+// import { InvestorPurchaseFormLayout } from './purchase/InvestorPurchaseFormLayout';
+// import { ClientPurchaseFormLayout } from './purchase/ClientPurchaseFormLayout';
+// =======
+// <<<<<<< Updated upstream:src/components/PurchaseCycleFormV2.tsx
+// import { AgencyPurchaseFormV2 } from './purchase/AgencyPurchaseFormV2';
+// import { InvestorPurchaseFormV2 } from './purchase/InvestorPurchaseFormV2';
+// import { ClientPurchaseFormV2 } from './purchase/ClientPurchaseFormV2';
+// =======
 import { AgencyPurchaseFormLayout } from './purchase/AgencyPurchaseFormLayout';
 import { InvestorPurchaseFormLayout } from './purchase/InvestorPurchaseFormLayout';
 import { ClientPurchaseFormLayout } from './purchase/ClientPurchaseFormLayout';
+import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
+// >>>>>>> Stashed changes:src/components/PurchaseCycleForm.tsx
+// >>>>>>> aaraazi/properties:src/components/PurchaseCycleFormV2.tsx
 
 interface PurchaseCycleFormProps {
   property: Property;
   user: User;
   onBack: () => void;
   onSuccess: () => void;
+  /** When provided, forms submit to the from-property API instead of stub */
+  onSubmitFromProperty?: (data: CreatePurchaseCycleFromPropertyPayload) => Promise<{ id: string } | null>;
 }
 
 export function PurchaseCycleForm({
@@ -37,7 +39,16 @@ export function PurchaseCycleForm({
   user,
   onBack,
   onSuccess,
+// <<<<<<< HEAD:src/components/PurchaseCycleForm.tsx
 }: PurchaseCycleFormProps) {
+// =======
+// <<<<<<< Updated upstream:src/components/PurchaseCycleFormV2.tsx
+// }: PurchaseCycleFormV2Props) {
+// =======
+  // onSubmitFromProperty,
+// }: PurchaseCycleFormProps) {
+// >>>>>>> Stashed changes:src/components/PurchaseCycleForm.tsx
+// >>>>>>> aaraazi/properties:src/components/PurchaseCycleFormV2.tsx
   const [selectedType, setSelectedType] = useState<PurchaserType | null>(null);
 
   const handleTypeSelect = (type: PurchaserType) => {
@@ -151,6 +162,7 @@ export function PurchaseCycleForm({
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
       {selectedType === 'investor' && (
@@ -159,6 +171,7 @@ export function PurchaseCycleForm({
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
       {selectedType === 'client' && (
@@ -167,6 +180,7 @@ export function PurchaseCycleForm({
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
     </>

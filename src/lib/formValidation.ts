@@ -576,3 +576,54 @@ export function mergeErrors<T>(
 ): FormErrors<T> {
   return Object.assign({}, ...errorsArray);
 }
+
+// ==================== INVESTOR SHARE VALIDATORS ====================
+
+/** Minimal shape for investor share validation */
+export interface InvestorShareInput {
+  investorId?: string;
+  investorName?: string;
+  sharePercentage: number;
+  investmentAmount?: number;
+}
+
+/**
+ * Validate investor shares for multi-investor purchase
+ * Ensures percentages sum to 100% and all required fields are present
+ */
+export function validateInvestorShares(shares: InvestorShareInput[]): {
+  valid: boolean;
+  error?: string;
+} {
+  if (!shares || shares.length === 0) {
+    return { valid: false, error: 'At least one investor is required' };
+  }
+
+  for (const share of shares) {
+    if (!share.investorId || !share.investorName) {
+      return { valid: false, error: 'All investors must have ID and name' };
+    }
+    if (share.sharePercentage <= 0 || share.sharePercentage > 100) {
+      return {
+        valid: false,
+        error: 'Each investor percentage must be between 0 and 100',
+      };
+    }
+    if (!share.investmentAmount || share.investmentAmount <= 0) {
+      return {
+        valid: false,
+        error: 'All investors must have valid investment amounts',
+      };
+    }
+  }
+
+  const totalPercentage = shares.reduce((sum, s) => sum + s.sharePercentage, 0);
+  if (Math.abs(totalPercentage - 100) > 0.01) {
+    return {
+      valid: false,
+      error: `Total percentage must equal 100% (currently ${totalPercentage.toFixed(2)}%)`,
+    };
+  }
+
+  return { valid: true };
+}

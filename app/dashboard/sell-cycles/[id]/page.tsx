@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { SellCycleDetailsV4 } from '@/components/SellCycleDetailsV4';
+import { SellCycleDetails } from '@/components/SellCycleDetails';
 import { mapAuthUserToUIUser } from '@/types';
 import type { SellCycle } from '@/types';
 import { AlertCircle } from 'lucide-react';
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
 import { useSellCycle } from '@/hooks/useSellCycles';
 import { useProperty } from '@/hooks/useProperties';
+import { CYCLE_STATUS, SELL_CYCLE_STATUS } from '@/constants/enums';
 
 function mapApiCycleToSellCycle(api: {
   id: string;
@@ -26,14 +27,42 @@ function mapApiCycleToSellCycle(api: {
   createdAt: string;
   updatedAt: string;
   createdBy: string | null;
+  acceptedOfferId?: string | null;
+  linkedDealId?: string | null;
   agent?: { id: string; name: string; email: string };
+  offers?: Array<{
+    id: string;
+    buyerId: string;
+    amount: string;
+    tokenAmount?: string | null;
+    counterOfferAmount?: string | null;
+    conditions?: string | null;
+    status: string;
+    validUntil?: string | null;
+    createdAt: string;
+    buyer: {
+      id: string;
+      name: string;
+      phone: string;
+      email?: string | null;
+    };
+  }>;
+  deals?: Array<{
+    id: string;
+    dealNumber: string;
+  }>;
 }): SellCycle {
   const statusMap: Record<string, string> = {
-    ACTIVE: 'listed',
-    PENDING: 'pending',
-    COMPLETED: 'sold',
-    CANCELLED: 'cancelled',
-    ON_HOLD: 'on-hold',
+    [CYCLE_STATUS.ACTIVE]: SELL_CYCLE_STATUS.LISTED,
+    [CYCLE_STATUS.LISTED]: SELL_CYCLE_STATUS.LISTED,
+    [CYCLE_STATUS.PENDING]: SELL_CYCLE_STATUS.PENDING,
+    [CYCLE_STATUS.COMPLETED]: SELL_CYCLE_STATUS.SOLD,
+    [CYCLE_STATUS.SOLD]: SELL_CYCLE_STATUS.SOLD,
+    [CYCLE_STATUS.CANCELLED]: SELL_CYCLE_STATUS.CANCELLED,
+    [CYCLE_STATUS.ON_HOLD]: SELL_CYCLE_STATUS.ON_HOLD,
+    [CYCLE_STATUS.OFFER_RECEIVED]: SELL_CYCLE_STATUS.OFFER_RECEIVED,
+    [CYCLE_STATUS.NEGOTIATION]: SELL_CYCLE_STATUS.NEGOTIATION,
+    [CYCLE_STATUS.UNDER_CONTRACT]: SELL_CYCLE_STATUS.UNDER_CONTRACT,
   };
   return {
     id: api.id,
@@ -52,7 +81,28 @@ function mapApiCycleToSellCycle(api: {
     commissionType: 'percentage',
     title: `Sell cycle ${api.cycleNumber}`,
     listedDate: api.startDate,
-    offers: [],
+    acceptedOfferId: api.acceptedOfferId || undefined,
+    linkedDealId: api.linkedDealId || api.deals?.[0]?.id || undefined,
+    offers: (api.offers || []).map((offer) => ({
+      id: offer.id,
+      buyerId: offer.buyerId,
+      buyerName: offer.buyer.name,
+      buyerContact: offer.buyer.phone,
+      buyerEmail: offer.buyer.email || undefined,
+      amount: Number(offer.amount),
+      offerAmount: Number(offer.amount),
+      tokenAmount: offer.tokenAmount ? Number(offer.tokenAmount) : undefined,
+      counterOfferAmount: offer.counterOfferAmount
+        ? Number(offer.counterOfferAmount)
+        : undefined,
+      conditions: offer.conditions || undefined,
+      status: offer.status.toLowerCase() as any,
+      offeredDate: offer.createdAt.split('T')[0],
+      submittedDate: offer.createdAt,
+      expiryDate: offer.validUntil ? offer.validUntil.split('T')[0] : undefined,
+      createdAt: offer.createdAt,
+      updatedAt: offer.createdAt,
+    })),
     sharedWith: [],
   };
 }
@@ -157,7 +207,7 @@ export default function SellCycleDetailPage() {
   }
 
   return (
-    <SellCycleDetailsV4
+    <SellCycleDetails
       cycle={cycle}
       property={property}
       user={user}
