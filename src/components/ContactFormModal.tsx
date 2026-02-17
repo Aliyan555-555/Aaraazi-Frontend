@@ -36,8 +36,7 @@ import {
 import { addContact } from '../lib/data';
 import { toast } from 'sonner';
 import { Loader2, UserPlus } from 'lucide-react';
-import { ContactType, ContactCategory } from '@/types/schema';
-import type { Contact } from '@/types/contacts';
+import type { Contact, ContactCategory, ContactType } from '@/types/contacts';
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -72,6 +71,20 @@ const LEAD_SOURCES = [
   'Other',
 ];
 
+/** Derive form type from Contact: investor/vendor from type; buyer/seller/etc from category. */
+function contactToFormType(
+  c: Contact | null | undefined,
+  defaultType?: ContactFormModalProps['defaultType'],
+): ContactFormData['type'] {
+  if (!c) return (defaultType ?? '') as ContactFormData['type'];
+  if (c.type === 'investor') return 'investor';
+  if (c.type === 'vendor') return 'vendor';
+  if (c.category && c.category !== 'both') {
+    return c.category as ContactFormData['type'];
+  }
+  return (defaultType ?? '') as ContactFormData['type'];
+}
+
 // ==================== MAIN COMPONENT ====================
 
 export function ContactFormModal({
@@ -96,15 +109,15 @@ export function ContactFormModal({
   const [touched, setTouched] = useState<Set<keyof ContactFormData>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Sync form when modal opens or editingContact changes
+  // Sync form when modal opens or editingContact changes (form type derived from type + category)
   useEffect(() => {
     if (isOpen) {
-      const categoryAsType = editingContact?.category as ContactFormData['type'];
+      const formType = contactToFormType(editingContact, defaultType);
       setFormData({
         name: editingContact?.name || '',
         phone: editingContact?.phone || '',
         email: editingContact?.email || '',
-        type: categoryAsType || defaultType || '',
+        type: formType,
         company: editingContact?.company || '',
         address: editingContact?.address || '',
         notes: editingContact?.notes || '',
@@ -112,7 +125,7 @@ export function ContactFormModal({
       setErrors({});
       setTouched(new Set());
     }
-  }, [isOpen, editingContact?.id, defaultType]);
+  }, [isOpen, editingContact, defaultType]);
 
   // Handle field change
   const handleChange = (field: keyof ContactFormData, value: string) => {
@@ -171,33 +184,33 @@ export function ContactFormModal({
 
     try {
       if (editingContact) {
-        // Update existing contact: form "type" is category (buyer/seller/...); map to schema enums
+        // Update existing contact: form "type" is category (buyer/seller/...); map to Contact lowercase type/category
         const { type: formType, ...restFormData } = formData;
         const categoryMap: Record<string, ContactCategory> = {
-          buyer: ContactCategory.BUYER,
-          seller: ContactCategory.SELLER,
-          tenant: ContactCategory.TENANT,
-          landlord: ContactCategory.LANDLORD,
-          investor: ContactCategory.BOTH,
-          vendor: ContactCategory.BOTH,
-          'external-broker': ContactCategory.EXTERNAL_BROKER,
+          buyer: 'buyer',
+          seller: 'seller',
+          tenant: 'tenant',
+          landlord: 'landlord',
+          investor: 'both',
+          vendor: 'both',
+          'external-broker': 'external-broker',
         };
         const typeMap: Record<string, ContactType> = {
-          investor: ContactType.INVESTOR,
-          vendor: ContactType.VENDOR,
-          buyer: ContactType.CLIENT,
-          seller: ContactType.CLIENT,
-          tenant: ContactType.CLIENT,
-          landlord: ContactType.CLIENT,
-          'external-broker': ContactType.CLIENT,
+          investor: 'investor',
+          vendor: 'vendor',
+          buyer: 'client',
+          seller: 'client',
+          tenant: 'client',
+          landlord: 'client',
+          'external-broker': 'client',
         };
         const payload: Record<string, unknown> = {
           ...restFormData,
           updatedAt: new Date().toISOString(),
         };
         if (String(formType ?? '').trim() !== '') {
-          payload.category = categoryMap[formType as keyof typeof categoryMap] ?? ContactCategory.BOTH;
-          payload.type = typeMap[formType as keyof typeof typeMap] ?? ContactType.CLIENT;
+          payload.category = categoryMap[formType as keyof typeof categoryMap] ?? 'both';
+          payload.type = typeMap[formType as keyof typeof typeMap] ?? 'client';
         }
         updateContact(editingContact.id, payload as Parameters<typeof updateContact>[1]);
         toast.success('Contact updated successfully!');
@@ -206,25 +219,25 @@ export function ContactFormModal({
           onSuccess({ ...editingContact, ...payload });
         }
       } else {
-        // Add new contact: map form type to category + type enums
+        // Add new contact: map form type to lowercase category + type (Contact type from @/types/contacts)
         const { type: formType, ...restFormData } = formData;
         const categoryMap: Record<string, ContactCategory> = {
-          buyer: ContactCategory.BUYER,
-          seller: ContactCategory.SELLER,
-          tenant: ContactCategory.TENANT,
-          landlord: ContactCategory.LANDLORD,
-          investor: ContactCategory.BOTH,
-          vendor: ContactCategory.BOTH,
-          'external-broker': ContactCategory.EXTERNAL_BROKER,
+          buyer: 'buyer',
+          seller: 'seller',
+          tenant: 'tenant',
+          landlord: 'landlord',
+          investor: 'both',
+          vendor: 'both',
+          'external-broker': 'external-broker',
         };
         const typeMap: Record<string, ContactType> = {
-          investor: ContactType.INVESTOR,
-          vendor: ContactType.VENDOR,
-          buyer: ContactType.CLIENT,
-          seller: ContactType.CLIENT,
-          tenant: ContactType.CLIENT,
-          landlord: ContactType.CLIENT,
-          'external-broker': ContactType.CLIENT,
+          investor: 'investor',
+          vendor: 'vendor',
+          buyer: 'client',
+          seller: 'client',
+          tenant: 'client',
+          landlord: 'client',
+          'external-broker': 'client',
         };
         const now = new Date().toISOString();
         const payload: Record<string, unknown> = {
@@ -238,8 +251,8 @@ export function ContactFormModal({
           status: 'active',
         };
         if (String(formType ?? '').trim() !== '') {
-          payload.category = categoryMap[formType as keyof typeof categoryMap] ?? ContactCategory.BOTH;
-          payload.type = typeMap[formType as keyof typeof typeMap] ?? ContactType.CLIENT;
+          payload.category = categoryMap[formType as keyof typeof categoryMap] ?? 'both';
+          payload.type = typeMap[formType as keyof typeof typeMap] ?? 'client';
         }
         const newContact = addContact(payload as unknown as Parameters<typeof addContact>[0]);
         toast.success('Contact added successfully!');

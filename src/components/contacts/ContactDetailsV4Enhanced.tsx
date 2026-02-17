@@ -157,9 +157,8 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
     return [];
   };
 
-  const serializeTags = (tags: string[]): string[] => {
-    return tags; // Use array directly as it's the expected type now
-  };
+  // UI Contact type (types/contacts) uses tags as string[]; pass-through for data layer.
+  const serializeTags = (tags: string[]): string[] => tags;
 
   // ============================================================================
   // Data Loading

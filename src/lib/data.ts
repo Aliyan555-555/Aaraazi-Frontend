@@ -135,7 +135,11 @@ export const updateContact = (id: string, updates: Partial<Contact>): void => {
   const contacts = getContacts();
   const index = contacts.findIndex((c) => c.id === id);
   if (index !== -1) {
-    contacts[index] = { ...contacts[index], ...updates };
+    contacts[index] = {
+      ...contacts[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
     saveToStorage(CONTACTS_KEY, contacts);
   }
 };

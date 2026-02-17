@@ -4,7 +4,7 @@
  */
 
 import { apiClient } from '@/lib/api/client';
-import type { Contact } from '@/types/schema';
+import type { Contact as SchemaContact } from '@/types/schema';
 import {
   ContactType,
   ContactCategory,
@@ -52,7 +52,7 @@ export interface QueryContactsDto {
 }
 
 export interface ContactsListResponse {
-  data: Contact[];
+  data: SchemaContact[];
   total: number;
   page: number;
   limit: number;
@@ -77,9 +77,9 @@ class ContactsService {
   /**
    * Create a new contact
    */
-  async create(dto: CreateContactDto): Promise<Contact> {
+  async create(dto: CreateContactDto): Promise<SchemaContact> {
     try {
-      const response = await apiClient.post<Contact>(this.baseUrl, dto);
+      const response = await apiClient.post<SchemaContact>(this.baseUrl, dto);
       return response.data;
     } catch (error) {
       console.error('Failed to create contact:', error);
@@ -106,9 +106,9 @@ class ContactsService {
   /**
    * Get a single contact by ID
    */
-  async findOne(id: string): Promise<Contact> {
+  async findOne(id: string): Promise<SchemaContact> {
     try {
-      const response = await apiClient.get<Contact>(`${this.baseUrl}/${id}`);
+      const response = await apiClient.get<SchemaContact>(`${this.baseUrl}/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Failed to fetch contact ${id}:`, error);
@@ -119,9 +119,9 @@ class ContactsService {
   /**
    * Update a contact
    */
-  async update(id: string, dto: UpdateContactDto): Promise<Contact> {
+  async update(id: string, dto: UpdateContactDto): Promise<SchemaContact> {
     try {
-      const response = await apiClient.put<Contact>(
+      const response = await apiClient.put<SchemaContact>(
         `${this.baseUrl}/${id}`,
         dto,
       );
@@ -168,7 +168,7 @@ class ContactsService {
   async bulkUpdate(
     ids: string[],
     updates: UpdateContactDto,
-  ): Promise<Contact[]> {
+  ): Promise<SchemaContact[]> {
     try {
       const promises = ids.map((id) => this.update(id, updates));
       return await Promise.all(promises);

@@ -113,9 +113,8 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
     return [];
   };
 
-  const serializeTags = (tags: string[]): string[] => {
-    return tags;
-  };
+  // UI Contact type (types/contacts) uses tags as string[]; pass-through for data layer.
+  const serializeTags = (tags: string[]): string[] => tags;
 
   // Load contacts based on user role
   const loadContacts = async () => {
@@ -825,7 +824,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
         }}
         agentId={user.id}
         editingContact={editingContact}
-        defaultType={editingContact?.category as 'buyer' | 'seller' | 'tenant' | 'landlord' | 'investor' | 'vendor' | 'external-broker' | undefined}
+        defaultType={editingContact?.category}
       />
     </>
   );
