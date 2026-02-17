@@ -22,29 +22,74 @@
  * - Shared cycle indicators and counts
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { Plus, Eye, Edit, Trash2, Download, Upload, Home } from 'lucide-react';
-import { User, SellCycle, Property } from '../../types';
+import React, { useMemo, useCallback } from 'react';
+import { Plus, Trash2, Download, Upload, Home } from 'lucide-react';
+import type { User, SellCycle, Property } from '../../types';
 import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
 import { SellCycleWorkspaceCard } from './SellCycleWorkspaceCard';
-import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
+import { StatusBadge } from '../layout/StatusBadge';
 import { Column, EmptyStatePresets } from '../workspace';
-// [STUBBED] import { getSellCycles, updateSellCycle, deleteSellCycle } from '../../lib/sellCycle';
-// [STUBBED] import { getProperties } from '../../lib/data';
+<<<<<<< Updated upstream:src/components/sell-cycles/SellCyclesWorkspaceV4.tsx
+import { getSellCycles, updateSellCycle, deleteSellCycle } from '../../lib/sellCycle';
+import { getProperties } from '../../lib/data';
+=======
+>>>>>>> Stashed changes:src/components/sell-cycles/SellCyclesWorkspace.tsx
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
+import { useSharingFilters } from '../sharing/SharedCyclesFilter';
+import { useSellCycles } from '@/hooks/useSellCycles';
+import { useProperties } from '@/hooks/useProperties';
+import { logger } from '@/lib/logger';
 
+<<<<<<< Updated upstream:src/components/sell-cycles/SellCyclesWorkspaceV4.tsx
 // Phase 4E: Sharing filters
 import { SharedCyclesFilter, useSharingFilters } from '../sharing/SharedCyclesFilter';
-
-import { logger } from "../../lib/logger";
-
-// ===== STUBS for removed prototype functions =====
-const getSellCycles = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const updateSellCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const deleteSellCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
+=======
+function mapApiCycleToSellCycle(api: {
+  id: string;
+  cycleNumber: string;
+  propertyListingId: string;
+  agentId: string;
+  status: string;
+  startDate: string;
+  endDate: string | null;
+  askingPrice: string;
+  currentOfferPrice: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string | null;
+  agent?: { id: string; name: string; email: string };
+}): SellCycle {
+  const statusMap: Record<string, string> = {
+    ACTIVE: 'listed',
+    PENDING: 'pending',
+    COMPLETED: 'sold',
+    CANCELLED: 'cancelled',
+    ON_HOLD: 'on-hold',
+  };
+  return {
+    id: api.id,
+    propertyId: api.propertyListingId,
+    agentId: api.agentId,
+    agentName: api.agent?.name,
+    status: (statusMap[api.status] || api.status.toLowerCase()) as SellCycle['status'],
+    createdAt: api.createdAt,
+    updatedAt: api.updatedAt,
+    createdBy: api.createdBy ?? api.agentId,
+    sellerType: 'client',
+    sellerId: '',
+    sellerName: '',
+    askingPrice: Number(api.askingPrice) || 0,
+    commissionRate: 0,
+    commissionType: 'percentage',
+    title: `Sell cycle ${api.cycleNumber}`,
+    listedDate: api.startDate,
+    offers: [],
+    sharedWith: [],
+  };
+}
+>>>>>>> Stashed changes:src/components/sell-cycles/SellCyclesWorkspace.tsx
 
 // Helper function to format property address
 const formatPropertyAddress = (address: any): string => {
@@ -56,7 +101,7 @@ const formatPropertyAddress = (address: any): string => {
   return 'Property';
 };
 
-export interface SellCyclesWorkspaceProps {
+export interface SellCyclesWorkspaceV4Props {
   user: User;
   onNavigate: (section: string, id?: string) => void;
   onStartNew?: () => void;
@@ -66,31 +111,24 @@ export interface SellCyclesWorkspaceProps {
 /**
  * SellCyclesWorkspaceV4 - Complete workspace using template system
  */
-export const SellCyclesWorkspace: React.FC<SellCyclesWorkspaceProps> = ({
+export const SellCyclesWorkspaceV4: React.FC<SellCyclesWorkspaceV4Props> = ({
   user,
   onNavigate,
   onStartNew,
   onEditCycle,
 }) => {
-  // State
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: cyclesData, isLoading } = useSellCycles();
+  const { properties: allProperties } = useProperties();
 
-  // Load sell cycles based on user role
   const allCycles = useMemo(() => {
-    return getSellCycles(user.role === 'admin' ? undefined : user.id, user.role);
-  }, [user.id, user.role]);
+    const list = cyclesData?.items ?? [];
+    return list.map(mapApiCycleToSellCycle);
+  }, [cyclesData?.items]);
 
-  // Load properties for reference
-  const allProperties = useMemo(() => {
-    return getProperties(user.role === 'admin' ? undefined : user.id, user.role);
-  }, [user.id, user.role]);
+  const getProperty = useCallback((propertyId: string): Property | undefined => {
+    return allProperties.find((p) => p.id === propertyId);
+  }, [allProperties]);
 
-  // Helper to get property for a cycle
-  const getProperty = (propertyId: string): Property | null => {
-    return allProperties.find(p => p.id === propertyId) || null;
-  };
-
-  // Phase 4E: Sharing filters
   const {
     sharingFilter,
     setSharingFilter,
@@ -277,10 +315,10 @@ export const SellCyclesWorkspace: React.FC<SellCyclesWorkspaceProps> = ({
         { value: 'listed', label: 'Listed', count: allCycles.filter(c => c.status === 'listed').length },
         { value: 'offer-received', label: 'Offer Received', count: allCycles.filter(c => c.status === 'offer-received').length },
         { value: 'under-contract', label: 'Under Contract', count: allCycles.filter(c => c.status === 'under-contract').length },
-        { value: 'sold-pending', label: 'Sold (Pending)', count: allCycles.filter(c => c.status === 'sold-pending').length },
+        { value: 'sold-pending', label: 'Sold (Pending)', count: allCycles.filter(c => (c as { status: string }).status === 'sold-pending').length },
         { value: 'sold', label: 'Sold', count: allCycles.filter(c => c.status === 'sold').length },
-        { value: 'expired', label: 'Expired', count: allCycles.filter(c => c.status === 'expired').length },
-        { value: 'withdrawn', label: 'Withdrawn', count: allCycles.filter(c => c.status === 'withdrawn').length },
+        { value: 'expired', label: 'Expired', count: allCycles.filter(c => (c as { status: string }).status === 'expired').length },
+        { value: 'withdrawn', label: 'Withdrawn', count: allCycles.filter(c => (c as { status: string }).status === 'withdrawn').length },
       ],
       multiple: true,
     },
@@ -331,7 +369,7 @@ export const SellCyclesWorkspace: React.FC<SellCyclesWorkspaceProps> = ({
       icon: <Download className="h-4 w-4" />,
       onClick: (ids: string[]) => {
         const selected = allCycles.filter(c => ids.includes(c.id));
-        logger.log('Exporting cycles:', selected);
+        console.log('Exporting cycles:', selected);
         toast.success(`Exporting ${ids.length} cycle${ids.length > 1 ? 's' : ''}`);
       },
     },
@@ -340,43 +378,36 @@ export const SellCyclesWorkspace: React.FC<SellCyclesWorkspaceProps> = ({
       label: 'Delete Selected',
       icon: <Trash2 className="h-4 w-4" />,
       onClick: (ids: string[]) => {
-        logger.log('Delete cycles:', ids);
+        console.log('Delete cycles:', ids);
         toast.success(`${ids.length} cycle${ids.length > 1 ? 's' : ''} deleted`);
       },
       variant: 'destructive' as const,
     },
   ];
 
-  // Custom filter function
-  const handleFilter = (cycle: SellCycle, filterValues: Record<string, any>): boolean => {
-    // Status filter
-    if (filterValues.status?.length > 0 && !filterValues.status.includes(cycle.status)) {
-      return false;
-    }
+  // Custom filter function (WorkspacePageTemplate passes activeFilters as Map)
+  const handleFilter = useCallback((cycle: SellCycle, activeFilters: Map<string, any>): boolean => {
+    const status = activeFilters.get('status');
+    if (Array.isArray(status) && status.length > 0 && !status.includes(cycle.status)) return false;
 
-    // Seller type filter
-    if (filterValues.sellerType?.length > 0 && !filterValues.sellerType.includes(cycle.sellerType)) {
-      return false;
-    }
+    const sellerType = activeFilters.get('sellerType');
+    if (Array.isArray(sellerType) && sellerType.length > 0 && !sellerType.includes(cycle.sellerType)) return false;
 
-    // Published filter
-    if (filterValues.published) {
-      if (filterValues.published === 'yes' && !cycle.isPublished) return false;
-      if (filterValues.published === 'no' && cycle.isPublished) return false;
-    }
+    const published = activeFilters.get('published');
+    const isPublished = (cycle as { isPublished?: boolean }).isPublished;
+    if (published === 'yes' && !isPublished) return false;
+    if (published === 'no' && isPublished) return false;
 
-    // Has offers filter
-    if (filterValues.hasOffers) {
-      const hasOffers = cycle.offers?.length > 0;
-      if (filterValues.hasOffers === 'yes' && !hasOffers) return false;
-      if (filterValues.hasOffers === 'no' && hasOffers) return false;
-    }
+    const hasOffers = activeFilters.get('hasOffers');
+    const hasOffersCount = cycle.offers?.length > 0;
+    if (hasOffers === 'yes' && !hasOffersCount) return false;
+    if (hasOffers === 'no' && hasOffersCount) return false;
 
     return true;
-  };
+  }, []);
 
-  // Custom sort function
-  const handleSort = (cycles: SellCycle[], sortBy: string): SellCycle[] => {
+  // Custom sort function (template passes sortBy and sortOrder)
+  const handleSort = useCallback((cycles: SellCycle[], sortBy: string, _order?: 'asc' | 'desc'): SellCycle[] => {
     const sorted = [...cycles];
     
     switch (sortBy) {
@@ -398,24 +429,22 @@ export const SellCyclesWorkspace: React.FC<SellCyclesWorkspaceProps> = ({
       default:
         break;
     }
-    
     return sorted;
-  };
+  }, []);
 
   // Custom search function
-  const handleSearch = (cycle: SellCycle, query: string): boolean => {
+  const handleSearch = useCallback((cycle: SellCycle, query: string): boolean => {
     const property = getProperty(cycle.propertyId);
     const searchLower = query.toLowerCase();
-    
     return (
-      cycle.sellerName.toLowerCase().includes(searchLower) ||
-      cycle.agentName.toLowerCase().includes(searchLower) ||
-      cycle.title?.toLowerCase().includes(searchLower) ||
+      (cycle.sellerName ?? '').toLowerCase().includes(searchLower) ||
+      (cycle.agentName ?? '').toLowerCase().includes(searchLower) ||
+      (cycle.title ?? '').toLowerCase().includes(searchLower) ||
       formatPropertyAddress(property?.address).toLowerCase().includes(searchLower) ||
-      property?.propertyType?.toLowerCase().includes(searchLower) ||
-      cycle.askingPrice.toString().includes(searchLower)
+      (property?.propertyType ?? '').toLowerCase().includes(searchLower) ||
+      String(cycle.askingPrice ?? '').includes(searchLower)
     );
-  };
+  }, [getProperty]);
 
   return (
     <WorkspacePageTemplate
@@ -475,35 +504,21 @@ export const SellCyclesWorkspace: React.FC<SellCyclesWorkspaceProps> = ({
       onFilter={handleFilter}
       sortOptions={sortOptions}
       onSort={handleSort}
-      defaultSort="newest"
       
       // Bulk actions
       bulkActions={bulkActions}
-      enableBulkSelect={true}
       
       // Item actions
       onItemClick={(cycle) => onNavigate('sell-cycle-details', cycle.id)}
       
       // Empty states
-      emptyState={EmptyStatePresets.sellCycles(onStartNew || (() => {}))}
+      emptyStatePreset={EmptyStatePresets.sellCycles(onStartNew ?? (() => {}))}
       
       // Loading
       isLoading={isLoading}
       
       // Pagination
-      enablePagination={true}
-      itemsPerPage={12}
-    >
-      <SharedCyclesFilter
-        currentFilter={sharingFilter}
-        onFilterChange={setSharingFilter}
-        selectedAgent={selectedAgent}
-        onAgentChange={setSelectedAgent}
-        availableAgents={availableAgents}
-        sharedByMeCount={sharingStats.sharedByMeCount}
-        sharedWithMeCount={sharingStats.sharedWithMeCount}
-        totalCount={sharingStats.totalCount}
-      />
-    </WorkspacePageTemplate>
+      pagination={{ enabled: true, pageSize: 12, pageSizeOptions: [12, 24, 48] }}
+    />
   );
 };

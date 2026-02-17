@@ -9,7 +9,6 @@ import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Upload, Link as LinkIcon, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { propertiesApi } from '@/lib/api/properties';
 
 function normalizeImages(images: string[] | string | undefined | null): string[] {
   if (Array.isArray(images)) return images;
@@ -20,12 +19,14 @@ function normalizeImages(images: string[] | string | undefined | null): string[]
 interface ImageUploadProps {
   images: string[];
   onImagesChange: (images: string[]) => void;
+  onUploadImage?: (file: File) => Promise<{ url: string }>;
   maxImages?: number;
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   images: imagesProp,
   onImagesChange,
+  onUploadImage,
   maxImages = 10,
 }) => {
   const images = useMemo(() => normalizeImages(imagesProp), [imagesProp]);
@@ -62,7 +63,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
         setUploadProgress(Math.round(((i + 0.5) / files.length) * 100));
 
-        const { url } = await propertiesApi.uploadImage(file);
+        if (!onUploadImage) {
+          toast.error('Image upload is not configured');
+          continue;
+        }
+        const { url } = await onUploadImage(file);
         uploadedUrls.push(url);
 
         setUploadProgress(Math.round(((i + 1) / files.length) * 100));

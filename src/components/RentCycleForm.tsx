@@ -34,50 +34,50 @@ import {
   hasErrors,
   type FormErrors,
 } from '../lib/formValidation';
-// [STUBBED] import { createRentCycle } from '../lib/rentCycle';
-// [STUBBED] import { getContacts } from '../lib/data';
+import { createRentCycle } from '../lib/rentCycle';
+import { getContacts } from '../lib/data';
 import { formatPropertyAddress } from '../lib/utils';
 import { formatPKR } from '../lib/currency';
 import { QuickAddContactModal } from './QuickAddContactModal';
 import { toast } from 'sonner';
-import { 
-  Key, 
-  Users, 
-  DollarSign, 
-  Calendar, 
-  Home, 
-  Search, 
-  Plus, 
+import {
+  Key,
+  Users,
+  DollarSign,
+  Calendar,
+  Home,
+  Search,
+  Plus,
   AlertCircle,
-  X 
+  X
 } from 'lucide-react';
 
+<<<<<<< Updated upstream:src/components/RentCycleFormV2.tsx
+// ==================== TYPE DEFINITIONS ====================
+=======
 // ===== STUBS for removed prototype functions =====
 const createRentCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
-
-
-// ==================== TYPE DEFINITIONS ====================
+const getContacts = (..._args: any[]): any[] => [];
+>>>>>>> Stashed changes:src/components/RentCycleForm.tsx
 
 interface RentCycleFormData {
   // Landlord (Step 1)
   landlordId: string;
   landlordName: string;
   landlordType: 'individual' | 'agency' | 'investor' | 'corporate';
-  
+
   // Rent Details (Step 2)
   monthlyRent: string;
   securityDeposit: string;
   advanceMonths: string;
-  
+
   // Lease Terms (Step 3)
   leaseDuration: string;
   availableFrom: string;
   maintenanceFee: string;
   utilities: 'tenant' | 'landlord' | 'shared';
   commissionMonths: string;
-  
+
   // Requirements (Step 4)
   petPolicy: 'allowed' | 'not-allowed' | 'case-by-case';
   furnishingStatus: 'furnished' | 'semi-furnished' | 'unfurnished';
@@ -85,7 +85,7 @@ interface RentCycleFormData {
   specialTerms: string;
 }
 
-interface RentCycleFormProps {
+interface RentCycleFormV2Props {
   property: Property;
   user: User;
   onBack: () => void;
@@ -100,18 +100,18 @@ const step1ValidationRules = {
 };
 
 const step2ValidationRules = {
-  monthlyRent: (value: string) => 
-    required(value, 'Monthly rent') || 
+  monthlyRent: (value: string) =>
+    required(value, 'Monthly rent') ||
     positiveNumber(value, 'Monthly rent') ||
     minValue(parseFloat(value), 1, 'Monthly rent'),
 };
 
 const step3ValidationRules = {
-  leaseDuration: (value: string) => 
-    required(value, 'Lease duration') || 
+  leaseDuration: (value: string) =>
+    required(value, 'Lease duration') ||
     positiveNumber(value, 'Lease duration'),
-  commissionMonths: (value: string) => 
-    required(value, 'Commission') || 
+  commissionMonths: (value: string) =>
+    required(value, 'Commission') ||
     positiveNumber(value, 'Commission'),
 };
 
@@ -138,6 +138,7 @@ function Step1LandlordSelection({
   const [showDropdown, setShowDropdown] = useState(false);
 
   const filteredContacts = useMemo(() => {
+    if (!contacts) return [];
     if (!searchQuery.trim()) return contacts;
     const query = searchQuery.toLowerCase();
     return contacts.filter(c =>
@@ -209,7 +210,7 @@ function Step1LandlordSelection({
                 </button>
               )}
             </div>
-            
+
             {/* Dropdown */}
             {showDropdown && !formData.landlordId && (
               <div className="absolute z-10 w-full mt-1 bg-background border rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -235,7 +236,7 @@ function Step1LandlordSelection({
               </div>
             )}
           </div>
-          
+
           <Button
             type="button"
             variant="outline"
@@ -604,12 +605,12 @@ Step4Requirements.displayName = 'Step4Requirements';
 
 // ==================== MAIN COMPONENT ====================
 
-export function RentCycleForm({
+export function RentCycleFormV2({
   property,
   user,
   onBack,
   onSuccess,
-}: RentCycleFormProps) {
+}: RentCycleFormV2Props) {
   // State
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -622,19 +623,19 @@ export function RentCycleForm({
     landlordId: property.currentOwnerId || '',
     landlordName: property.currentOwnerName || '',
     landlordType: 'individual',
-    
+
     // Rent Details
     monthlyRent: '',
     securityDeposit: '',
     advanceMonths: '1',
-    
+
     // Lease Terms
     leaseDuration: '12',
     availableFrom: new Date().toISOString().split('T')[0],
     maintenanceFee: '',
     utilities: 'tenant',
     commissionMonths: '1',
-    
+
     // Requirements
     petPolicy: 'case-by-case',
     furnishingStatus: 'unfurnished',
@@ -709,30 +710,30 @@ export function RentCycleForm({
     try {
       createRentCycle({
         propertyId: property.id,
-        
+
         // Landlord
         landlordId: formData.landlordId,
         landlordName: formData.landlordName,
         landlordType: formData.landlordType,
-        
+
         // Rent Details
         monthlyRent: parseFloat(formData.monthlyRent),
         securityDeposit: formData.securityDeposit ? parseFloat(formData.securityDeposit) : undefined,
         advanceMonths: formData.advanceMonths ? parseInt(formData.advanceMonths) : undefined,
-        
+
         // Lease Terms
         leaseDuration: parseInt(formData.leaseDuration),
         availableFrom: formData.availableFrom || undefined,
         maintenanceFee: formData.maintenanceFee ? parseFloat(formData.maintenanceFee) : undefined,
         utilities: formData.utilities,
-        
+
         // Commission
         commissionMonths: parseFloat(formData.commissionMonths),
-        
+
         // Agent
         agentId: user.id,
         agentName: user.name,
-        
+
         // Requirements
         petPolicy: formData.petPolicy,
         furnishingStatus: formData.furnishingStatus,

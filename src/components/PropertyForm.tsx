@@ -17,7 +17,7 @@
  * 4. Additional Info - Features, description, images
  */
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { User, Property } from '../types';
 import { FormContainer } from './ui/form-container';
 import { FormSection } from './ui/form-section';
@@ -41,10 +41,12 @@ import { PropertyAddressFields } from './PropertyAddressFields';
 import { ImageUpload } from './properties/ImageUpload';
 import { toast } from 'sonner';
 import { Loader2, Users, Search, Plus, X, Home, Building2 } from 'lucide-react';
-import { contactsApi, type Contact } from '../lib/api/contacts';
-import { propertiesApi, type CreatePropertyData } from '../lib/api/properties';
-import { locationsApi } from '../lib/api/locations';
+import type { Contact } from '@/types/schema';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useContactSearch } from '@/hooks/useContactSearch';
+import { useLocations } from '@/hooks/useLocations';
+import { usePropertyMutations } from '@/hooks/useProperties';
+import type { CreatePropertyData } from '@/services/properties.service';
 
 
 // ==================== TYPE DEFINITIONS ====================
@@ -443,6 +445,7 @@ interface Step4Props {
   onFeatureInputChange: (value: string) => void;
   onAddFeature: () => void;
   onRemoveFeature: (index: number) => void;
+  onUploadImage: (file: File) => Promise<{ url: string }>;
 }
 
 const Step4AdditionalInfo = React.memo(({
@@ -452,6 +455,7 @@ const Step4AdditionalInfo = React.memo(({
   onFeatureInputChange,
   onAddFeature,
   onRemoveFeature,
+  onUploadImage,
 }: Step4Props) => {
   return (
     <FormSection
@@ -530,6 +534,7 @@ const Step4AdditionalInfo = React.memo(({
         <ImageUpload
           images={formData.images}
           onImagesChange={(images) => onFieldChange('images', images)}
+          onUploadImage={onUploadImage}
         />
       </FormField>
     </FormSection>
@@ -564,6 +569,8 @@ const step3ValidationRules = {
 
 export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisitionType }: PropertyFormProps) {
   const { user: authUser } = useAuthStore();
+  const { create, update, uploadImage } = usePropertyMutations();
+  const { getCountries } = useLocations();
 
   // Form state using multi-step hook
   const initialData: PropertyFormData = {
@@ -592,7 +599,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
     images: Array.isArray(editingProperty?.images)
       ? editingProperty.images
       : typeof editingProperty?.images === 'string'
-        ? (editingProperty.images || '').split(',').map((s) => s.trim()).filter(Boolean)
+        ? (editingProperty.images as string).split(',').map((s: string) => s.trim()).filter(Boolean)
         : [],
   };
 
@@ -604,35 +611,12 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
   const [showContactSearch, setShowContactSearch] = useState(false);
   const [contactSearchQuery, setContactSearchQuery] = useState(editingProperty?.currentOwnerName || '');
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loadingContacts, setLoadingContacts] = useState(false);
+
+  // Contact search via hook - no API calls in component
+  const { contacts, isLoading: loadingContacts } = useContactSearch(contactSearchQuery, 10);
 
   // Features input state
   const [featureInput, setFeatureInput] = useState('');
-
-  // Search contacts when query changes
-  useEffect(() => {
-    const searchContacts = async () => {
-      if (!contactSearchQuery || contactSearchQuery.length < 2) {
-        setContacts([]);
-        return;
-      }
-
-      try {
-        setLoadingContacts(true);
-        const response = await contactsApi.search(contactSearchQuery, { limit: 10 });
-        setContacts(response.data);
-      } catch (error) {
-        console.error('Failed to search contacts:', error);
-        toast.error('Failed to search contacts');
-      } finally {
-        setLoadingContacts(false);
-      }
-    };
-
-    const debounce = setTimeout(searchContacts, 300);
-    return () => clearTimeout(debounce);
-  }, [contactSearchQuery]);
 
   // Handle field change
   const handleChange = useCallback((field: keyof PropertyFormData, value: string | string[]) => {
@@ -755,7 +739,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
       }
 
       // Resolve country id (backend expects CUID, not code)
-      const countries = await locationsApi.getCountries();
+      const countries = await getCountries();
       const pakistan = countries.find((c) => c.code === 'PK');
       if (!pakistan) {
         toast.error('Country not found. Please ensure locations are seeded.');
@@ -775,7 +759,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
       // Prepare property data
       const propertyData: CreatePropertyData = {
         propertyType: formData.propertyType.toUpperCase() as any,
-        
+
         // Address
         address: {
           addressType: addressTypeMap[formData.propertyType] || 'RESIDENTIAL',
@@ -784,7 +768,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
           areaId: formData.areaId,
           blockId: formData.blockId || undefined,
           plotNo: formData.plotNumber || undefined,
-          buildingName: formData.buildingId || undefined, // Building name entered as text
+          buildingName: formData.buildingId || undefined,
           floorNo: formData.floorNumber || undefined,
           apartmentNo: formData.unitNumber || undefined,
         },
@@ -807,16 +791,26 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
         images: Array.isArray(formData.images) && formData.images.length > 0 ? formData.images : undefined,
 
         // Context
-        tenantId: authUser.tenantId,
-        agencyId: authUser.agencyId,
+        tenantId: authUser.tenantId || '',
+        agencyId: authUser.agencyId || '',
         branchId: authUser.branchId || undefined,
       };
 
-      // Call API
-      const response = await propertiesApi.create(propertyData);
-      
-      toast.success('Property created successfully!');
-      console.log('Property created:', response);
+      // Call appropriate API based on editing mode - via hooks, no direct API
+      if (editingProperty) {
+        const updateData = {
+          title: formData.propertyType.charAt(0).toUpperCase() + formData.propertyType.slice(1) + " in " + formData.cityId,
+          description: propertyData.description,
+          status: editingProperty.status.toUpperCase() as any,
+          listingType: (editingProperty.listingType === 'for-sale' ? 'SALE' : 'RENT') as any,
+          images: propertyData.images,
+        };
+        await update(editingProperty.id, updateData);
+        toast.success('Property updated successfully!');
+      } else {
+        await create(propertyData);
+        toast.success('Property created successfully!');
+      }
 
       // Success!
       onSuccess();
@@ -827,7 +821,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, authUser, onSuccess]);
+  }, [formData, authUser, editingProperty, onSuccess, create, update, getCountries]);
 
   // ==================== STEPS CONFIGURATION ====================
 
@@ -892,6 +886,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
           onFeatureInputChange={setFeatureInput}
           onAddFeature={handleAddFeature}
           onRemoveFeature={handleRemoveFeature}
+          onUploadImage={uploadImage}
         />
       ),
       validate: validateStep4,
@@ -909,6 +904,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
     handleClearOwner,
     handleAddFeature,
     handleRemoveFeature,
+    uploadImage,
     validateStep1,
     validateStep2,
     validateStep3,
@@ -941,7 +937,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
           isOpen={showQuickAdd}
           onClose={() => setShowQuickAdd(false)}
           onSuccess={(newContact) => {
-            handleSelectOwner(newContact);
+            handleSelectOwner(newContact as any);
             setShowQuickAdd(false);
             toast.success(`Contact "${newContact.name}" added successfully!`);
           }}

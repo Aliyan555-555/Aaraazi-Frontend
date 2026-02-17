@@ -1,25 +1,14 @@
 /**
  * PropertiesWorkspace Component
- * WORKSPACE V4: Built with WorkspacePageTemplate ✅
- * WITH REAL API INTEGRATION
- * 
+ * WORKSPACE V4: Built with WorkspacePageTemplate
+ * Uses hooks for data - no API calls in component
+ *
  * PURPOSE:
  * Complete properties workspace using the template system.
- * Fetches data from backend API with proper error handling.
- * 
- * FEATURES:
- * - Grid view (primary) and Table view (secondary)
- * - Search and filtering
- * - Sorting options
- * - Bulk actions (export, delete, assign, change status)
- * - Quick actions (view, edit, share, delete)
- * - Pagination
- * - Empty states
- * - Loading states
- * - Real API integration
+ * Data fetched via useProperties and usePropertyMutations hooks.
  */
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Plus,
   Download,
@@ -38,9 +27,8 @@ import {
   EmptyStatePresets,
 } from '../workspace';
 import { toast } from 'sonner';
-import { propertiesApi } from '@/lib/api/properties';
+import { useProperties, usePropertyMutations } from '@/hooks/useProperties';
 
-// Stub functions for features not yet implemented via API
 const exportPropertiesToCSV = (properties: any[]) => {
   console.log('Export to CSV:', properties);
   toast.info('Export functionality coming soon');
@@ -53,106 +41,33 @@ export interface PropertiesWorkspaceProps {
   onEditProperty?: (property: Property) => void;
 }
 
-/**
- * PropertiesWorkspace - Complete workspace using template system + API
- */
 export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
   user,
   onNavigate,
   onAddProperty,
   onEditProperty,
 }: PropertiesWorkspaceProps) => {
-  // State
-  const [isLoading, setIsLoading] = useState(true);
-  const [allProperties, setAllProperties] = useState<any[]>([]);
+  const { properties: transformedProperties, isLoading, refetch } = useProperties({
+    page: 1,
+    limit: 1000,
+  });
+  const { remove } = usePropertyMutations();
 
-  // Filter state - maintain state for each filter
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
 
-  // Bulk operation modals state
-  const [selectedPropertyIds, setSelectedPropertyIds] = useState<string[]>([]);
-
-  // Fetch properties from API
-  useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        setIsLoading(true);
-        const response = await propertiesApi.list({
-          page: 1,
-          limit: 1000, // Get all for client-side filtering (for now)
-        });
-        setAllProperties(response.data || []);
-      } catch (error: any) {
-        console.error('Failed to fetch properties:', error);
-        toast.error(error?.message || 'Failed to load properties');
-        setAllProperties([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProperties();
-  }, []);
-
-  // Calculate stats from API data
   const stats = useMemo(() => {
-    // Note: cycles will be implemented later, for now show basic stats
     return [
-      { label: 'Total', value: allProperties.length, variant: 'default' as const },
-      { label: 'Draft', value: allProperties.filter((p: any) => p.status === 'DRAFT').length, variant: 'secondary' as const },
-      { label: 'Active', value: allProperties.filter((p: any) => p.status === 'ACTIVE').length, variant: 'success' as const },
-      { label: 'Archived', value: allProperties.filter((p: any) => p.isArchived).length, variant: 'warning' as const },
+      { label: 'Total', value: transformedProperties.length, variant: 'default' as const },
+      { label: 'Draft', value: transformedProperties.filter((p: any) => p.status === 'draft' || (p as any).status === 'DRAFT').length, variant: 'default' as const },
+      { label: 'Active', value: transformedProperties.filter((p: any) => p.status === 'available' || (p as any).status === 'ACTIVE').length, variant: 'success' as const },
+      { label: 'Archived', value: transformedProperties.filter((p: any) => (p as any).archived).length, variant: 'warning' as const },
     ];
-  }, [allProperties]);
+  }, [transformedProperties]);
 
-  // Transform API data to match Property type
-  const transformedProperties = useMemo(() => {
-    return allProperties.map((listing: any) => ({
-      id: listing.id,
-      // Address from MasterProperty
-      address: listing.masterProperty?.address ? {
-        cityId: listing.masterProperty.address.cityId,
-        cityName: listing.masterProperty.address.city?.name || '',
-        areaId: listing.masterProperty.address.areaId,
-        areaName: listing.masterProperty.address.area?.name || '',
-        blockId: listing.masterProperty.address.blockId,
-        blockName: listing.masterProperty.address.block?.name,
-        plotNumber: listing.masterProperty.address.plotNo,
-        floorNumber: listing.masterProperty.address.floorNo,
-        unitNumber: listing.masterProperty.address.apartmentNo || listing.masterProperty.address.shopNo,
-        buildingId: listing.masterProperty.address.buildingName,
-        buildingName: listing.masterProperty.address.buildingName,
-      } : '',
-      // Physical details from MasterProperty
-      propertyType: listing.masterProperty?.type?.toLowerCase() || 'house',
-      area: listing.masterProperty?.area || 0,
-      areaUnit: listing.masterProperty?.areaUnit?.toLowerCase() || 'sqft',
-      bedrooms: listing.masterProperty?.bedrooms,
-      bathrooms: listing.masterProperty?.bathrooms,
-      floor: listing.masterProperty?.address?.floorNo,
-      constructionYear: listing.masterProperty?.constructionYear,
-      // PropertyListing specific
-      title: listing.title,
-      description: listing.description,
-      images: listing.images ? listing.images.split(',').filter(Boolean) : [],
-      status: listing.status?.toLowerCase(),
-      price: listing.price,
-      currentOwnerName: listing.masterProperty?.currentOwnerName || 'Unknown',
-      currentOwnerType: 'client',
-      // Cycles (will be populated later when cycles module is implemented)
-      activeSellCycleIds: [],
-      activeRentCycleIds: [],
-      activePurchaseCycleIds: [],
-      // Metadata
-      createdAt: listing.createdAt,
-      createdBy: listing.agentId,
-      agentId: listing.agentId,
-    }));
-  }, [allProperties]);
+  const unitLabels: Record<string, string> = { sqft: 'sq ft', sqyards: 'sq yd', marla: 'marla', kanal: 'kanal' };
 
-  // Define table columns
   const columns: Column<any>[] = [
     {
       id: 'address',
@@ -185,8 +100,8 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
       id: 'area',
       label: 'Area',
       accessor: (p) => {
-        const unitLabels = { sqft: 'sq ft', sqyards: 'sq yd', marla: 'marla', kanal: 'kanal' };
-        return `${p.area} ${unitLabels[p.areaUnit] || p.areaUnit}`;
+        const unit = (p.areaUnit || 'sqft').toLowerCase();
+        return `${p.area} ${unitLabels[unit] || p.areaUnit}`;
       },
       width: '120px',
       sortable: true,
@@ -238,7 +153,6 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
     },
   ];
 
-  // Define quick filters with state management
   const quickFilters = [
     {
       id: 'status',
@@ -280,7 +194,6 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
     },
   ];
 
-  // Define sort options
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'oldest', label: 'Oldest First' },
@@ -288,7 +201,6 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
     { value: 'area-low', label: 'Area: Low to High' },
   ];
 
-  // Define bulk actions
   const bulkActions = [
     {
       id: 'export',
@@ -307,14 +219,13 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
       onClick: async (ids: string[]) => {
         if (window.confirm(`Are you sure you want to delete ${ids.length} properties?`)) {
           try {
-            await Promise.all(ids.map(id => propertiesApi.delete(id)));
+            await Promise.all(ids.map((id) => remove(id)));
             toast.success(`Deleted ${ids.length} properties`);
-            // Refresh data
-            const response = await propertiesApi.list({ page: 1, limit: 1000 });
-            setAllProperties(response.data || []);
-          } catch (error: any) {
+            refetch();
+          } catch (error: unknown) {
             console.error('Delete error:', error);
-            toast.error('Failed to delete properties');
+            const msg = error && typeof error === 'object' && 'message' in error ? String((error as { message: string }).message) : 'Failed to delete properties';
+            toast.error(msg);
           }
         }
       },
@@ -323,9 +234,7 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
     },
   ];
 
-  // Custom filter callback for WorkspacePageTemplate
   const handleFilter = useCallback((property: any, activeFilters: Map<string, any>) => {
-    // Status filter
     const statusValues = activeFilters.get('status');
     if (statusValues && statusValues.length > 0) {
       let matchesStatus = false;
@@ -339,13 +248,11 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
       if (!matchesStatus) return false;
     }
 
-    // Type filter
     const typeValues = activeFilters.get('type');
     if (typeValues && typeValues.length > 0) {
       if (!typeValues.includes(property.propertyType)) return false;
     }
 
-    // Owner filter
     const ownerValues = activeFilters.get('owner');
     if (ownerValues && ownerValues.length > 0) {
       if (!property.currentOwnerType || !ownerValues.includes(property.currentOwnerType)) return false;
@@ -354,11 +261,8 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
     return true;
   }, []);
 
-  // Custom search callback
   const handleSearch = useCallback((property: any, query: string) => {
     const lowerQuery = query.toLowerCase();
-
-    // Format property address for search
     const propertyAddress = typeof property.address === 'string'
       ? property.address
       : formatPropertyAddress(property.address);
@@ -371,7 +275,6 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
     );
   }, []);
 
-  // Custom sort callback
   const handleSort = useCallback((items: any[], sortBy: string, _order: 'asc' | 'desc') => {
     const sorted = [...items];
 
@@ -388,50 +291,42 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
     return sorted;
   }, []);
 
-  // Handle delete with API
   const handleDeleteProperty = useCallback(async (propertyId: string) => {
     if (window.confirm('Are you sure you want to delete this property?')) {
       try {
-        await propertiesApi.delete(propertyId);
+        await remove(propertyId);
         toast.success('Property deleted');
-        // Refresh data
-        const response = await propertiesApi.list({ page: 1, limit: 1000 });
-        setAllProperties(response.data || []);
-      } catch (error: any) {
+        refetch();
+      } catch (error: unknown) {
         console.error('Delete error:', error);
-        toast.error(error?.message || 'Failed to delete property');
+        const msg = error && typeof error === 'object' && 'message' in error ? String((error as { message: string }).message) : 'Failed to delete property';
+        toast.error(msg);
       }
     }
-  }, []);
+  }, [remove, refetch]);
 
   return (
     <>
       <WorkspacePageTemplate
-        // Header
         title="Properties"
         description="Manage your property portfolio"
         stats={stats}
 
-        // Primary Action
         primaryAction={{
           label: 'Add Property',
           icon: <Plus className="h-4 w-4" />,
           onClick: onAddProperty || (() => toast.info('Add Property clicked')),
         }}
 
-        // Data
         items={transformedProperties}
         getItemId={(p) => p.id}
         isLoading={isLoading}
 
-        // View Configuration
         defaultView="grid"
         availableViews={['grid', 'table']}
 
-        // Table View
         columns={columns}
 
-        // Grid View
         renderCard={(property) => {
           const propertyAddress = typeof property.address === 'string'
             ? property.address
@@ -449,7 +344,6 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
           );
         }}
 
-        // Search & Filter
         searchPlaceholder="Search properties by address, type, or owner..."
         quickFilters={quickFilters}
         sortOptions={sortOptions}
@@ -457,27 +351,22 @@ export const PropertiesWorkspace: React.FC<PropertiesWorkspaceProps> = ({
         onFilter={handleFilter}
         onSort={handleSort}
 
-        // Bulk Actions
         bulkActions={bulkActions}
 
-        // Pagination
         pagination={{
           enabled: true,
           pageSize: 24,
           pageSizeOptions: [12, 24, 48, 96],
         }}
 
-        // Empty State
         emptyStatePreset={EmptyStatePresets.properties(
           onAddProperty || (() => toast.info('Add your first property'))
         )}
 
-        // Callbacks
         onItemClick={(property) => onNavigate('properties', property.id)}
       />
     </>
   );
 };
 
-// Default export for lazy loading
 export default PropertiesWorkspace;

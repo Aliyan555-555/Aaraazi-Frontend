@@ -16,8 +16,9 @@
  * 4. Additional Details - Marketing, exclusivity, notes
  */
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Property, User, Contact } from '../types';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Property, User } from '../types';
+import type { Contact } from '@/types/schema';
 import { FormContainer } from './ui/form-container';
 import { FormSection } from './ui/form-section';
 import { FormField } from './ui/form-field';
@@ -25,7 +26,6 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
-import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { MultiStepForm, type Step } from './ui/multi-step-form';
 import {
@@ -37,28 +37,31 @@ import {
   type FormErrors,
   compose
 } from '../lib/formValidation';
-// [STUBBED] import { createSellCycle } from '../lib/sellCycle';
-// [STUBBED] import { getContacts } from '../lib/data';
+<<<<<<< Updated upstream:src/components/SellCycleFormV2.tsx
+import { createSellCycle } from '../lib/sellCycle';
+import { getContacts } from '../lib/data';
+=======
+>>>>>>> Stashed changes:src/components/SellCycleForm.tsx
 import { formatPropertyAddress } from '../lib/utils';
 import { formatPKR } from '../lib/currency';
-import { QuickAddContactModal } from './QuickAddContactModal';
+import { ContactFormModal } from './ContactFormModal';
 import { toast } from 'sonner';
-import { 
-  Users, 
-  DollarSign, 
-  Percent, 
-  FileText, 
-  Search, 
-  Plus, 
+import {
+  Users,
+  DollarSign,
+  Percent,
+  FileText,
+  Search,
+  Plus,
   AlertCircle,
-  X 
+  X
 } from 'lucide-react';
+<<<<<<< Updated upstream:src/components/SellCycleFormV2.tsx
+=======
+import { useContactSearch } from '@/hooks/useContactSearch';
+import { useCreateSellCycle } from '@/hooks/useSellCycles';
 
-// ===== STUBS for removed prototype functions =====
-const createSellCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
-
+>>>>>>> Stashed changes:src/components/SellCycleForm.tsx
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -67,15 +70,15 @@ interface SellCycleFormData {
   sellerId: string;
   sellerName: string;
   sellerType: 'individual' | 'developer' | 'agency' | 'investor';
-  
+
   // Pricing (Step 2)
   askingPrice: string;
   minAcceptablePrice: string;
-  
+
   // Commission (Step 3)
   commissionType: 'percentage' | 'fixed';
   commissionRate: string;
-  
+
   // Additional Details (Step 4)
   marketingPlan: string;
   exclusiveListing: boolean;
@@ -86,7 +89,7 @@ interface SellCycleFormData {
   privateNotes: string;
 }
 
-interface SellCycleFormProps {
+interface SellCycleFormV2Props {
   property: Property;
   user: User;
   onBack: () => void;
@@ -123,6 +126,8 @@ interface Step1Props {
   formData: SellCycleFormData;
   errors: FormErrors<SellCycleFormData>;
   contacts: Contact[];
+  searchQuery: string;
+  onSearchQueryChange: (value: string) => void;
   onFieldChange: (field: keyof SellCycleFormData, value: any) => void;
   onQuickAdd: () => void;
 }
@@ -131,34 +136,26 @@ function Step1SellerSelection({
   formData,
   errors,
   contacts,
+  searchQuery,
+  onSearchQueryChange,
   onFieldChange,
   onQuickAdd,
 }: Step1Props) {
-  const [searchQuery, setSearchQuery] = useState(formData.sellerName || '');
   const [showDropdown, setShowDropdown] = useState(false);
-
-  // Filter contacts based on search
-  const filteredContacts = useMemo(() => {
-    if (!searchQuery.trim()) return contacts;
-    const query = searchQuery.toLowerCase();
-    return contacts.filter(c =>
-      c.name.toLowerCase().includes(query) ||
-      c.phone.includes(query)
-    );
-  }, [contacts, searchQuery]);
+  const filteredContacts = useMemo(() => contacts.slice(0, 10), [contacts]);
 
   const handleSelectContact = useCallback((contact: Contact) => {
     onFieldChange('sellerId', contact.id);
     onFieldChange('sellerName', contact.name);
-    setSearchQuery(contact.name);
+    onSearchQueryChange(contact.name);
     setShowDropdown(false);
-  }, [onFieldChange]);
+  }, [onFieldChange, onSearchQueryChange]);
 
   const handleClearSelection = useCallback(() => {
     onFieldChange('sellerId', '');
     onFieldChange('sellerName', '');
-    setSearchQuery('');
-  }, [onFieldChange]);
+    onSearchQueryChange('');
+  }, [onFieldChange, onSearchQueryChange]);
 
   return (
     <FormSection
@@ -191,10 +188,10 @@ function Step1SellerSelection({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search sellers..."
+                placeholder="Search sellers by name or phone..."
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value);
+                  onSearchQueryChange(e.target.value);
                   setShowDropdown(true);
                 }}
                 onFocus={() => setShowDropdown(true)}
@@ -210,12 +207,12 @@ function Step1SellerSelection({
                 </button>
               )}
             </div>
-            
+
             {/* Dropdown */}
             {showDropdown && !formData.sellerId && (
               <div className="absolute z-10 w-full mt-1 bg-background border rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {filteredContacts.length > 0 ? (
-                  filteredContacts.slice(0, 10).map(contact => (
+                  filteredContacts.map(contact => (
                     <button
                       key={contact.id}
                       type="button"
@@ -224,7 +221,7 @@ function Step1SellerSelection({
                     >
                       <div className="font-medium">{contact.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {contact.phone} • {contact.type}
+                        {contact.phone} • {String(contact.type)}
                       </div>
                     </button>
                   ))
@@ -236,7 +233,7 @@ function Step1SellerSelection({
               </div>
             )}
           </div>
-          
+
           <Button
             type="button"
             variant="outline"
@@ -390,10 +387,10 @@ function Step3Commission({
   // Calculate commission
   const calculatedCommission = useMemo(() => {
     if (!formData.askingPrice || !formData.commissionRate) return 0;
-    
+
     const price = parseFloat(formData.askingPrice);
     const rate = parseFloat(formData.commissionRate);
-    
+
     return formData.commissionType === 'percentage'
       ? (price * rate) / 100
       : rate;
@@ -456,8 +453,8 @@ function Step3Commission({
             <div className="flex justify-between">
               <span className="text-green-700">Commission Rate:</span>
               <span className="font-medium text-green-900">
-                {formData.commissionType === 'percentage' 
-                  ? `${formData.commissionRate}%` 
+                {formData.commissionType === 'percentage'
+                  ? `${formData.commissionRate}%`
                   : formatPKR(parseFloat(formData.commissionRate))}
               </span>
             </div>
@@ -603,33 +600,38 @@ Step4AdditionalDetails.displayName = 'Step4AdditionalDetails';
 
 // ==================== MAIN COMPONENT ====================
 
-export function SellCycleForm({
+export function SellCycleFormV2({
   property,
   user,
   onBack,
   onSuccess,
-}: SellCycleFormProps) {
+<<<<<<< Updated upstream:src/components/SellCycleFormV2.tsx
+}: SellCycleFormV2Props) {
   // State
   const [contacts, setContacts] = useState<Contact[]>([]);
+=======
+}: SellCycleFormProps) {
+  const { create, isLoading: isSubmitting } = useCreateSellCycle();
+  const [sellerSearchQuery, setSellerSearchQuery] = useState(property.currentOwnerName || '');
+  const { contacts } = useContactSearch(sellerSearchQuery, 10);
+>>>>>>> Stashed changes:src/components/SellCycleForm.tsx
   const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors<SellCycleFormData>>({});
 
-  // Form data
   const [formData, setFormData] = useState<SellCycleFormData>({
     // Seller (defaults to current owner, with fallback)
     sellerId: property.currentOwnerId || '',
     sellerName: property.currentOwnerName || '',
     sellerType: 'individual',
-    
+
     // Pricing
     askingPrice: '',
     minAcceptablePrice: '',
-    
+
     // Commission
     commissionType: 'percentage',
     commissionRate: '2',
-    
+
     // Additional
     marketingPlan: '',
     exclusiveListing: false,
@@ -640,12 +642,6 @@ export function SellCycleForm({
     privateNotes: '',
   });
 
-  // Load contacts
-  useEffect(() => {
-    const allContacts = getContacts(user.id, user.role);
-    setContacts(allContacts);
-  }, [user.id, user.role]);
-
   // Field change handler
   const handleChange = useCallback((field: keyof SellCycleFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -655,13 +651,11 @@ export function SellCycleForm({
     }
   }, [errors]);
 
-  // Quick add contact handler
   const handleQuickAddSuccess = useCallback((newContact: Contact) => {
-    setContacts(prev => [...prev, newContact]);
     handleChange('sellerId', newContact.id);
     handleChange('sellerName', newContact.name);
     setShowQuickAdd(false);
-    toast.success(`Contact "${newContact.name}" added successfully!`);
+    toast.success(`Contact "${newContact.name}" added. You can search for them next time.`);
   }, [handleChange]);
 
   // ==================== VALIDATION ====================
@@ -669,7 +663,7 @@ export function SellCycleForm({
   const validateStep1 = useCallback(async () => {
     const stepErrors = validateForm(formData, step1ValidationRules);
     setErrors(stepErrors);
-    
+
     if (hasErrors(stepErrors)) {
       toast.error('Please select a seller');
       return false;
@@ -679,7 +673,7 @@ export function SellCycleForm({
 
   const validateStep2 = useCallback(async () => {
     const stepErrors = validateForm(formData, step2ValidationRules);
-    
+
     // Additional validation for minimum price
     if (formData.minAcceptablePrice && formData.askingPrice) {
       const min = parseFloat(formData.minAcceptablePrice);
@@ -688,9 +682,9 @@ export function SellCycleForm({
         stepErrors.minAcceptablePrice = 'Minimum price cannot exceed asking price';
       }
     }
-    
+
     setErrors(stepErrors);
-    
+
     if (hasErrors(stepErrors)) {
       toast.error('Please fix pricing errors');
       return false;
@@ -701,7 +695,7 @@ export function SellCycleForm({
   const validateStep3 = useCallback(async () => {
     const stepErrors = validateForm(formData, step3ValidationRules);
     setErrors(stepErrors);
-    
+
     if (hasErrors(stepErrors)) {
       toast.error('Please fix commission errors');
       return false;
@@ -717,52 +711,28 @@ export function SellCycleForm({
   // ==================== SUBMISSION ====================
 
   const handleComplete = useCallback(async () => {
-    setIsSubmitting(true);
-
     try {
-      createSellCycle({
-        propertyId: property.id,
-        
-        // Seller
-        sellerId: formData.sellerId,
-        sellerName: formData.sellerName,
-        sellerType: formData.sellerType,
-        
-        // Pricing
+      await create({
+        propertyListingId: property.id,
         askingPrice: parseFloat(formData.askingPrice),
-        minAcceptablePrice: formData.minAcceptablePrice ? parseFloat(formData.minAcceptablePrice) : undefined,
-        
-        // Commission
-        commissionRate: parseFloat(formData.commissionRate),
-        commissionType: formData.commissionType,
-        
-        // Listing
-        marketingPlan: formData.marketingPlan || undefined,
-        exclusiveListing: formData.exclusiveListing,
-        exclusivityEndDate: formData.exclusivityEndDate || undefined,
-        
-        // Agent
-        agentId: user.id,
-        agentName: user.name,
-        
-        // Timeline
-        listedDate: formData.listedDate,
-        targetSaleDate: formData.targetSaleDate || undefined,
-        
-        // Notes
-        sellerMotivation: formData.sellerMotivation || undefined,
-        privateNotes: formData.privateNotes || undefined,
+        startDate: formData.listedDate || new Date().toISOString().split('T')[0],
+        endDate: formData.targetSaleDate || undefined,
+        notes: [
+          formData.marketingPlan,
+          formData.privateNotes,
+          formData.sellerMotivation && `Seller motivation: ${formData.sellerMotivation}`,
+        ]
+          .filter(Boolean)
+          .join('\n') || undefined,
       });
-
       toast.success('Sell cycle created successfully!');
       onSuccess();
     } catch (error) {
       console.error('Error creating sell cycle:', error);
-      toast.error('Failed to create sell cycle');
-    } finally {
-      setIsSubmitting(false);
+      const msg = error && typeof error === 'object' && 'message' in error ? String((error as { message: string }).message) : 'Failed to create sell cycle';
+      toast.error(msg);
     }
-  }, [formData, property.id, user, onSuccess]);
+  }, [formData, property.id, create, onSuccess]);
 
   // ==================== STEPS CONFIGURATION ====================
 
@@ -776,6 +746,8 @@ export function SellCycleForm({
           formData={formData}
           errors={errors}
           contacts={contacts}
+          searchQuery={sellerSearchQuery}
+          onSearchQueryChange={setSellerSearchQuery}
           onFieldChange={handleChange}
           onQuickAdd={() => setShowQuickAdd(true)}
         />
@@ -821,7 +793,7 @@ export function SellCycleForm({
       ),
       validate: validateStep4,
     },
-  ], [formData, errors, contacts, handleChange, validateStep1, validateStep2, validateStep3, validateStep4]);
+  ], [formData, errors, contacts, sellerSearchQuery, handleChange, validateStep1, validateStep2, validateStep3, validateStep4]);
 
   // ==================== RENDER ====================
 
@@ -829,7 +801,7 @@ export function SellCycleForm({
     <div className="min-h-screen bg-gray-50">
       <FormContainer
         title="Start Sell Cycle"
-        description={formatPropertyAddress(property)}
+        description={formatPropertyAddress(property.address)}
         onBack={onBack}
       >
         <MultiStepForm
@@ -837,16 +809,17 @@ export function SellCycleForm({
           onComplete={handleComplete}
           onCancel={onBack}
           isSubmitting={isSubmitting}
-          submitLabel="Start Sell Cycle"
+          submitText={isSubmitting ? 'Creating...' : 'Start Sell Cycle'}
         />
       </FormContainer>
 
-      {/* Quick Add Contact Modal */}
       {showQuickAdd && (
-        <QuickAddContactModal
+        <ContactFormModal
+          isOpen={showQuickAdd}
           onClose={() => setShowQuickAdd(false)}
           onSuccess={handleQuickAddSuccess}
-          user={user}
+          agentId={user.id}
+          defaultType="seller"
         />
       )}
     </div>

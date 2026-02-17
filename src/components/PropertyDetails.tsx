@@ -48,7 +48,7 @@ import { Badge } from './ui/badge';
 // import { MultiInvestorPurchaseModal, InvestorSharesCard } from './multi-investor-purchase';
 import { RecordTransactionModal, PropertyTransactionHistory } from './transactions';
 import { SaleDistributionModal, InvestorDistributionHistory } from './sale-distribution';
-// [STUBBED] import { getInvestorById } from '../lib/investors';
+import { getInvestorById } from '../lib/investors';
 
 // Temporary stub components until MultiInvestorPurchaseModal and InvestorSharesCard are implemented
 const InvestorSharesCard = ({ property, onNavigateToInvestor }: any) => {
@@ -78,25 +78,30 @@ import {
   Plus,
   Key,
   Award,
+  X,
 } from 'lucide-react';
 
 // Business Logic
 import { formatPKR } from '../lib/currency';
 import { formatAreaDisplay } from '../lib/areaUnits';
 import { toast } from 'sonner';
-// [STUBBED] import { getTasksByEntity, updateTask, TaskV4 } from '../lib/tasks';
+import { getTasksByEntity, updateTask, TaskV4 } from '../lib/tasks';
 import { TaskQuickAddWidget } from './tasks/TaskQuickAddWidget';
 import { TaskListView } from './tasks/TaskListView';
 
+<<<<<<< Updated upstream:src/components/PropertyDetailsV4.tsx
+interface PropertyDetailsV4Props {
+=======
 // ===== STUBS for removed prototype functions =====
 const getInvestorById = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getTasksByEntity = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTasksByEntity = (..._args: any[]): any[] => { return []; };
 const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
 type TaskV4 = any;
 // ===== END STUBS =====
 
 
 interface PropertyDetailsProps {
+>>>>>>> Stashed changes:src/components/PropertyDetails.tsx
   property: Property;
   sellCycles?: SellCycle[];
   purchaseCycles?: PurchaseCycle[];
@@ -107,10 +112,11 @@ interface PropertyDetailsProps {
   onStartSellCycle: () => void;
   onStartPurchaseCycle: () => void;
   onStartRentCycle: () => void;
+  onDelete: () => void;
   onViewCycle: (cycleId: string, type: 'sell' | 'purchase' | 'rent') => void;
 }
 
-export function PropertyDetails({
+export function PropertyDetailsV4({
   property,
   sellCycles,
   purchaseCycles,
@@ -121,8 +127,9 @@ export function PropertyDetails({
   onStartSellCycle,
   onStartPurchaseCycle,
   onStartRentCycle,
+  onDelete,
   onViewCycle,
-}: PropertyDetailsProps) {
+}: PropertyDetailsV4Props) {
   // CRITICAL FIX: Use cycles from props, not from property object
   // The property object stores activeSellCycleIds (just IDs), not the actual cycle objects
   // App.tsx fetches the actual cycles and passes them as props
@@ -524,6 +531,12 @@ export function PropertyDetails({
             label: 'Edit Property',
             icon: <FileText className="h-4 w-4" />,
             onClick: onEdit,
+          },
+          {
+            label: 'Delete Property',
+            icon: <X className="h-4 w-4" />,
+            onClick: onDelete,
+            variant: 'destructive',
           },
         ]}
       />
@@ -978,9 +991,9 @@ export function PropertyDetails({
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-base mb-4 flex items-center gap-2">
           <FileText className="h-5 w-5 text-gray-600" />
-          Property Tasks ({propertyTasks.length})
+          Property Tasks ({(propertyTasks || []).length})
         </h3>
-        {propertyTasks.length === 0 ? (
+        {(propertyTasks || []).length === 0 ? (
           <div className="text-center py-12">
             <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
             <p className="text-sm text-gray-500">No tasks for this property yet</p>
@@ -988,7 +1001,7 @@ export function PropertyDetails({
           </div>
         ) : (
           <TaskListView
-            tasks={propertyTasks}
+            tasks={propertyTasks || []}
             showSelection={false}
             onViewTask={(taskId) => {
               toast.info(`View task ${taskId}`);

@@ -5,13 +5,14 @@
  * Now using real API calls
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FormField } from './ui/form-field';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { locationsApi, type City, type Area, type Block } from '../lib/api/locations';
+import { useLocations } from '@/hooks/useLocations';
+import type { City, Area, Block } from '@/lib/api/locations';
 
 
 interface PropertyAddressFieldsProps {
@@ -45,7 +46,8 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
   errors,
   onChange
 }) => {
-  // State for location data
+  const { getCountries, getCities, getAreas, getBlocks } = useLocations();
+
   const [cities, setCities] = useState<City[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -53,14 +55,13 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
   const [loadingAreas, setLoadingAreas] = useState(false);
   const [loadingBlocks, setLoadingBlocks] = useState(false);
 
-  // Load cities on mount: use countryId if provided (CUID), else resolve Pakistan by code
   useEffect(() => {
     const loadCities = async () => {
       try {
         setLoadingCities(true);
         let effectiveCountryId = countryId;
         if (!effectiveCountryId) {
-          const countries = await locationsApi.getCountries();
+          const countries = await getCountries();
           const pakistan = countries.find((c) => c.code === 'PK');
           effectiveCountryId = pakistan?.id;
         }
@@ -68,7 +69,7 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
           setCities([]);
           return;
         }
-        const citiesData = await locationsApi.getCities(effectiveCountryId);
+        const citiesData = await getCities(effectiveCountryId);
         setCities(citiesData);
       } catch (error) {
         console.error('Failed to load cities:', error);
@@ -79,19 +80,17 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
     };
 
     loadCities();
-  }, [countryId]);
+  }, [countryId, getCountries, getCities]);
 
-  // Load areas when city changes
   useEffect(() => {
     const loadAreas = async () => {
       if (!addressData.cityId) {
         setAreas([]);
         return;
       }
-
       try {
         setLoadingAreas(true);
-        const areasData = await locationsApi.getAreas(addressData.cityId);
+        const areasData = await getAreas(addressData.cityId);
         setAreas(areasData);
       } catch (error) {
         console.error('Failed to load areas:', error);
@@ -99,21 +98,18 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
         setLoadingAreas(false);
       }
     };
-
     loadAreas();
-  }, [addressData.cityId]);
+  }, [addressData.cityId, getAreas]);
 
-  // Load blocks when area changes
   useEffect(() => {
     const loadBlocks = async () => {
       if (!addressData.areaId) {
         setBlocks([]);
         return;
       }
-
       try {
         setLoadingBlocks(true);
-        const blocksData = await locationsApi.getBlocks(addressData.areaId);
+        const blocksData = await getBlocks(addressData.areaId);
         setBlocks(blocksData);
       } catch (error) {
         console.error('Failed to load blocks:', error);
@@ -121,9 +117,8 @@ export const PropertyAddressFields: React.FC<PropertyAddressFieldsProps> = ({
         setLoadingBlocks(false);
       }
     };
-
     loadBlocks();
-  }, [addressData.areaId]);
+  }, [addressData.areaId, getBlocks]);
 
   // Determine which fields to show based on property type
   const needsBuilding = ['apartment', 'commercial'].includes(propertyType);
