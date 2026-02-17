@@ -1,27 +1,3 @@
-/**
- * SellCyclesWorkspaceV4 Component
- * WORKSPACE V4: Built with WorkspacePageTemplate ✅
- * 
- * PURPOSE:
- * Complete sell cycles workspace using the template system.
- * Demonstrates property listing and sales management.
- * 
- * FEATURES:
- * - Grid view (primary) and Table view (secondary)
- * - Search and filtering by status, seller type, agent
- * - Sorting options
- * - Bulk actions (export, change status, delete)
- * - Quick actions (view, edit, publish, delete)
- * - Pagination
- * - Empty states
- * - Loading states
- * 
- * PHASE 4E: SHARING INTEGRATION ✅
- * - SharedCyclesFilter for filtering by sharing status
- * - Filter: All Cycles, My Cycles, Shared by Me, Shared with Me
- * - Shared cycle indicators and counts
- */
-
 import React, { useMemo, useCallback } from 'react';
 import { Plus, Trash2, Download, Upload, Home } from 'lucide-react';
 import type { User, SellCycle, Property } from '../../types';
@@ -29,11 +5,6 @@ import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
 import { SellCycleWorkspaceCard } from './SellCycleWorkspaceCard';
 import { StatusBadge } from '../layout/StatusBadge';
 import { Column, EmptyStatePresets } from '../workspace';
-<<<<<<< Updated upstream:src/components/sell-cycles/SellCyclesWorkspaceV4.tsx
-import { getSellCycles, updateSellCycle, deleteSellCycle } from '../../lib/sellCycle';
-import { getProperties } from '../../lib/data';
-=======
->>>>>>> Stashed changes:src/components/sell-cycles/SellCyclesWorkspace.tsx
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { useSharingFilters } from '../sharing/SharedCyclesFilter';
@@ -41,10 +12,6 @@ import { useSellCycles } from '@/hooks/useSellCycles';
 import { useProperties } from '@/hooks/useProperties';
 import { logger } from '@/lib/logger';
 
-<<<<<<< Updated upstream:src/components/sell-cycles/SellCyclesWorkspaceV4.tsx
-// Phase 4E: Sharing filters
-import { SharedCyclesFilter, useSharingFilters } from '../sharing/SharedCyclesFilter';
-=======
 function mapApiCycleToSellCycle(api: {
   id: string;
   cycleNumber: string;
@@ -89,7 +56,6 @@ function mapApiCycleToSellCycle(api: {
     sharedWith: [],
   };
 }
->>>>>>> Stashed changes:src/components/sell-cycles/SellCyclesWorkspace.tsx
 
 // Helper function to format property address
 const formatPropertyAddress = (address: any): string => {
@@ -101,17 +67,14 @@ const formatPropertyAddress = (address: any): string => {
   return 'Property';
 };
 
-export interface SellCyclesWorkspaceV4Props {
+export interface SellCyclesWorkspaceProps {
   user: User;
   onNavigate: (section: string, id?: string) => void;
   onStartNew?: () => void;
   onEditCycle?: (cycle: SellCycle) => void;
 }
 
-/**
- * SellCyclesWorkspaceV4 - Complete workspace using template system
- */
-export const SellCyclesWorkspaceV4: React.FC<SellCyclesWorkspaceV4Props> = ({
+export const SellCyclesWorkspace: React.FC<SellCyclesWorkspaceProps> = ({
   user,
   onNavigate,
   onStartNew,

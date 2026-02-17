@@ -21,15 +21,24 @@ import {
   Users as UsersIcon, 
   UserCheck 
 } from 'lucide-react';
+<<<<<<< Updated upstream:src/components/PurchaseCycleFormV2.tsx
 import { AgencyPurchaseFormV2 } from './purchase/AgencyPurchaseFormV2';
 import { InvestorPurchaseFormV2 } from './purchase/InvestorPurchaseFormV2';
 import { ClientPurchaseFormV2 } from './purchase/ClientPurchaseFormV2';
+=======
+import { AgencyPurchaseFormLayout } from './purchase/AgencyPurchaseFormLayout';
+import { InvestorPurchaseFormLayout } from './purchase/InvestorPurchaseFormLayout';
+import { ClientPurchaseFormLayout } from './purchase/ClientPurchaseFormLayout';
+import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
+>>>>>>> Stashed changes:src/components/PurchaseCycleForm.tsx
 
 interface PurchaseCycleFormV2Props {
   property: Property;
   user: User;
   onBack: () => void;
   onSuccess: () => void;
+  /** When provided, forms submit to the from-property API instead of stub */
+  onSubmitFromProperty?: (data: CreatePurchaseCycleFromPropertyPayload) => Promise<{ id: string } | null>;
 }
 
 export function PurchaseCycleFormV2({
@@ -37,7 +46,12 @@ export function PurchaseCycleFormV2({
   user,
   onBack,
   onSuccess,
+<<<<<<< Updated upstream:src/components/PurchaseCycleFormV2.tsx
 }: PurchaseCycleFormV2Props) {
+=======
+  onSubmitFromProperty,
+}: PurchaseCycleFormProps) {
+>>>>>>> Stashed changes:src/components/PurchaseCycleForm.tsx
   const [selectedType, setSelectedType] = useState<PurchaserType | null>(null);
 
   const handleTypeSelect = (type: PurchaserType) => {
@@ -151,6 +165,7 @@ export function PurchaseCycleFormV2({
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
       {selectedType === 'investor' && (
@@ -159,6 +174,7 @@ export function PurchaseCycleFormV2({
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
       {selectedType === 'client' && (
@@ -167,6 +183,7 @@ export function PurchaseCycleFormV2({
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
     </>

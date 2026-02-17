@@ -3,14 +3,8 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-<<<<<<< Updated upstream
-import { SellCyclesWorkspaceV4 } from '@/components/sell-cycles/SellCyclesWorkspaceV4';
+import { SellCyclesWorkspace} from '@/components/sell-cycles/SellCyclesWorkspace';
 import { User, mapAuthUserToUIUser, SellCycle } from '@/types';
-=======
-import { SellCyclesWorkspace } from '@/components/sell-cycles/SellCyclesWorkspace';
-import { mapAuthUserToUIUser } from '@/types';
-import type { SellCycle } from '@/types';
->>>>>>> Stashed changes
 
 export default function SellCyclesPage() {
     const { user: saasUser } = useAuthStore();
@@ -47,7 +41,7 @@ export default function SellCyclesPage() {
     }
 
     return (
-        <SellCyclesWorkspaceV4
+        <SellCyclesWorkspace
             user={user}
             onNavigate={handleNavigate}
             onStartNew={handleStartNew}

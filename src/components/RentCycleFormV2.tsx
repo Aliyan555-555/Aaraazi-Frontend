@@ -34,8 +34,8 @@ import {
   hasErrors,
   type FormErrors,
 } from '../lib/formValidation';
-import { createRentCycle } from '../lib/rentCycle';
-import { getContacts } from '../lib/data';
+// import { createRentCycle } from '../lib/rentCycle';
+// import { getContacts } from '../lib/data';
 import { formatPropertyAddress } from '../lib/utils';
 import { formatPKR } from '../lib/currency';
 import { QuickAddContactModal } from './QuickAddContactModal';
@@ -52,13 +52,6 @@ import {
   X
 } from 'lucide-react';
 
-<<<<<<< Updated upstream:src/components/RentCycleFormV2.tsx
-// ==================== TYPE DEFINITIONS ====================
-=======
-// ===== STUBS for removed prototype functions =====
-const createRentCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getContacts = (..._args: any[]): any[] => [];
->>>>>>> Stashed changes:src/components/RentCycleForm.tsx
 
 interface RentCycleFormData {
   // Landlord (Step 1)
@@ -644,10 +637,10 @@ export function RentCycleFormV2({
   });
 
   // Load contacts
-  useEffect(() => {
-    const allContacts = getContacts(user.id, user.role);
-    setContacts(allContacts);
-  }, [user.id, user.role]);
+  // useEffect(() => {
+  //   const allContacts = getContacts(user.id, user.role);
+  //   setContacts(allContacts);
+  // }, [user.id, user.role]);
 
   // Field change handler
   const handleChange = useCallback((field: keyof RentCycleFormData, value: any) => {
@@ -707,48 +700,48 @@ export function RentCycleFormV2({
   const handleComplete = useCallback(async () => {
     setIsSubmitting(true);
 
-    try {
-      createRentCycle({
-        propertyId: property.id,
+    // try {
+    //   createRentCycle({
+    //     propertyId: property.id,
 
-        // Landlord
-        landlordId: formData.landlordId,
-        landlordName: formData.landlordName,
-        landlordType: formData.landlordType,
+    //     // Landlord
+    //     landlordId: formData.landlordId,
+    //     landlordName: formData.landlordName,
+    //     landlordType: formData.landlordType,
 
-        // Rent Details
-        monthlyRent: parseFloat(formData.monthlyRent),
-        securityDeposit: formData.securityDeposit ? parseFloat(formData.securityDeposit) : undefined,
-        advanceMonths: formData.advanceMonths ? parseInt(formData.advanceMonths) : undefined,
+    //     // Rent Details
+    //     monthlyRent: parseFloat(formData.monthlyRent),
+    //     securityDeposit: formData.securityDeposit ? parseFloat(formData.securityDeposit) : undefined,
+    //     advanceMonths: formData.advanceMonths ? parseInt(formData.advanceMonths) : undefined,
 
-        // Lease Terms
-        leaseDuration: parseInt(formData.leaseDuration),
-        availableFrom: formData.availableFrom || undefined,
-        maintenanceFee: formData.maintenanceFee ? parseFloat(formData.maintenanceFee) : undefined,
-        utilities: formData.utilities,
+    //     // Lease Terms
+    //     leaseDuration: parseInt(formData.leaseDuration),
+    //     availableFrom: formData.availableFrom || undefined,
+    //     maintenanceFee: formData.maintenanceFee ? parseFloat(formData.maintenanceFee) : undefined,
+    //     utilities: formData.utilities,
 
-        // Commission
-        commissionMonths: parseFloat(formData.commissionMonths),
+    //     // Commission
+    //     commissionMonths: parseFloat(formData.commissionMonths),
 
-        // Agent
-        agentId: user.id,
-        agentName: user.name,
+    //     // Agent
+    //     agentId: user.id,
+    //     agentName: user.name,
 
-        // Requirements
-        petPolicy: formData.petPolicy,
-        furnishingStatus: formData.furnishingStatus,
-        tenantRequirements: formData.tenantRequirements || undefined,
-        specialTerms: formData.specialTerms || undefined,
-      });
+    //     // Requirements
+    //     petPolicy: formData.petPolicy,
+    //     furnishingStatus: formData.furnishingStatus,
+    //     tenantRequirements: formData.tenantRequirements || undefined,
+    //     specialTerms: formData.specialTerms || undefined,
+    //   });
 
-      toast.success('Rent cycle created successfully!');
-      onSuccess();
-    } catch (error) {
-      console.error('Error creating rent cycle:', error);
-      toast.error('Failed to create rent cycle');
-    } finally {
-      setIsSubmitting(false);
-    }
+    //   toast.success('Rent cycle created successfully!');
+    //   onSuccess();
+    // } catch (error) {
+    //   console.error('Error creating rent cycle:', error);
+    //   toast.error('Failed to create rent cycle');
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   }, [formData, property.id, user, onSuccess]);
 
   // ==================== STEPS CONFIGURATION ====================
@@ -816,7 +809,7 @@ export function RentCycleFormV2({
     <div className="min-h-screen bg-gray-50">
       <FormContainer
         title="Start Rent Cycle"
-        description={formatPropertyAddress(property)}
+        // description={formatPropertyAddress(property)}
         onBack={onBack}
       >
         <MultiStepForm
@@ -824,7 +817,7 @@ export function RentCycleFormV2({
           onComplete={handleComplete}
           onCancel={onBack}
           isSubmitting={isSubmitting}
-          submitLabel="Start Rent Cycle"
+        // submitLabel="Start Rent Cycle"
         />
       </FormContainer>
 

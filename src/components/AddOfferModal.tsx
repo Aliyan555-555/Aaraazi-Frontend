@@ -11,9 +11,16 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { User } from '../types';
 import { toast } from 'sonner';
+<<<<<<< Updated upstream
 import { addOffer } from '../lib/sellCycle';
 import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
 
+=======
+import { useCreateOffer } from '../hooks/useOffers';
+import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
+
+
+>>>>>>> Stashed changes
 interface AddOfferModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,6 +38,8 @@ export function AddOfferModal({
   user,
   onSuccess,
 }: AddOfferModalProps) {
+  const { createOffer, isLoading: isSubmitting } = useCreateOffer();
+  
   const [formData, setFormData] = useState({
     buyerName: '',
     buyerContact: '',
@@ -42,7 +51,6 @@ export function AddOfferModal({
     agentNotes: '',
   });
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,16 +79,13 @@ export function AddOfferModal({
       return;
     }
     
-    setIsSubmitting(true);
-    
     try {
-      addOffer(sellCycleId, {
-        buyerId: `buyer_${Date.now()}`,
+      await createOffer(sellCycleId, {
         buyerName: formData.buyerName,
         buyerContact: formData.buyerContact,
         offerAmount: formData.offerAmount,
         tokenAmount: formData.tokenAmount || undefined,
-        expiryDate: formData.expiryDate || undefined,
+        validUntil: formData.expiryDate || undefined,
         conditions: formData.conditions || undefined,
         notes: formData.notes || undefined,
         agentNotes: formData.agentNotes || undefined,
@@ -91,9 +96,11 @@ export function AddOfferModal({
       handleClose();
     } catch (error) {
       console.error('Error adding offer:', error);
-      toast.error('Failed to record offer');
-    } finally {
-      setIsSubmitting(false);
+      const message =
+        error && typeof error === 'object' && 'message' in error
+          ? String((error as { message: string }).message)
+          : 'Failed to record offer';
+      toast.error(message);
     }
   };
 
