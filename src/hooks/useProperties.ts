@@ -9,6 +9,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { propertiesService } from '@/services/properties.service';
 import { transformPropertyListingToUI } from '@/lib/api/properties';
 import type { Property } from '@/types/properties';
+import type { SellCycle, PurchaseCycle, RentCycle } from '@/types';
 import type { PropertyQueryParams } from '@/services/properties.service';
 
 // ============================================================================
@@ -182,6 +183,74 @@ export function useProperty(id: string | undefined, enabled = true) {
     isLoading,
     error,
     refetch: fetchProperty,
+  };
+}
+
+// ============================================================================
+// usePropertyWithCycles - Single property + all cycles in one API call
+// ============================================================================
+
+export function usePropertyWithCycles(id: string | undefined, enabled = true) {
+  const [property, setProperty] = useState<Property | null>(null);
+  const [sellCycles, setSellCycles] = useState<SellCycle[]>([]);
+  const [purchaseCycles, setPurchaseCycles] = useState<PurchaseCycle[]>([]);
+  const [rentCycles, setRentCycles] = useState<RentCycle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPropertyWithCycles = useCallback(async () => {
+    if (!id || typeof id !== 'string') {
+      setProperty(null);
+      setSellCycles([]);
+      setPurchaseCycles([]);
+      setRentCycles([]);
+      setIsLoading(false);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await propertiesService.findOneWithCycles(id);
+      setProperty(result.property);
+      setSellCycles(result.sellCycles);
+      setPurchaseCycles(result.purchaseCycles);
+      setRentCycles(result.rentCycles);
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: string }).message)
+          : 'Failed to load property';
+      setError(message);
+      setProperty(null);
+      setSellCycles([]);
+      setPurchaseCycles([]);
+      setRentCycles([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (enabled && id) {
+      fetchPropertyWithCycles();
+    } else {
+      setProperty(null);
+      setSellCycles([]);
+      setPurchaseCycles([]);
+      setRentCycles([]);
+      setError(null);
+      setIsLoading(false);
+    }
+  }, [id, enabled, fetchPropertyWithCycles]);
+
+  return {
+    property,
+    sellCycles,
+    purchaseCycles,
+    rentCycles,
+    isLoading,
+    error,
+    refetch: fetchPropertyWithCycles,
   };
 }
 

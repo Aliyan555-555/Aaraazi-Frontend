@@ -1,8 +1,3 @@
-/**
- * Client Purchase Form V2 - Full Page Wrapper
- * Uses existing ClientPurchaseForm with full-page layout
- */
-
 import React from 'react';
 import { Property, User } from '../../types';
 import { FormContainer } from '../ui/form-container';

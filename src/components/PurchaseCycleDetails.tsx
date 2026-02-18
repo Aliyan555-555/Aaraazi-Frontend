@@ -1,29 +1,3 @@
-/**
- * Purchase Cycle Details - V5.1 with Financial Tracking ✅
- * 
- * COMPLETE REDESIGN using DetailPageTemplate system:
- * - DetailPageTemplate for consistent structure
- * - ContactCard for seller information
- * - QuickActionsPanel for sidebar actions
- * - MetricCardsGroup for statistics
- * - NotesPanel for notes management
- * - CommissionCalculator for investment analysis
- * - ActivityTimeline for activity feed
- * - All 5 UX Laws applied
- * - 8px grid system
- * - Responsive 2/3 + 1/3 layout
- * 
- * PHASE 4: Financial tracking integration for agency purchases
- * 
- * TABS:
- * 1. Overview - Summary + InfoPanels + Sidebar
- * 2. Details - Seller, Due Diligence, Financing
- * 3. Financials - Acquisition costs (Agency only)
- * 4. Payments - Payment tracking from Deal
- * 5. Activity - Timeline of all activities
- * 6. Actions - Status updates and workflows
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { PurchaseCycle, Property, User, SellCycle } from '../types';
 import { Button } from './ui/button';
@@ -91,6 +65,7 @@ import {
   AcquisitionCostModal,
 } from './agency-financials';
 
+<<<<<<< Updated upstream:src/components/PurchaseCycleDetailsV4.tsx
 // Business Logic
 import {
   updatePurchaseCycle,
@@ -112,8 +87,41 @@ import { getDealById } from '../lib/deals';
 // Offer Sending
 import { SendOfferFromPurchaseCycleModal } from './SendOfferFromPurchaseCycleModal';
 import { getSellCyclesByProperty } from '../lib/sellCycle';
+=======
+import { formatPKR } from '../lib/currency';
+import { formatPropertyAddress } from '../lib/utils';
+import { toast } from 'sonner';
+import { PaymentSummaryReadOnly } from './deals/PaymentSummaryReadOnly';
+import { SendOfferFromPurchaseCycleModal } from './SendOfferFromPurchaseCycleModal';
 
-interface PurchaseCycleDetailsV4Props {
+import { purchaseCyclesService } from '@/services/purchase-cycles.service';
+
+// Status mapping: frontend (UI) <-> backend (API)
+const UI_TO_API_STATUS: Record<string, string> = {
+  prospecting: 'ACTIVE',
+  'offer-made': 'OFFER_RECEIVED',
+  negotiation: 'NEGOTIATION',
+  accepted: 'UNDER_CONTRACT',
+  'due-diligence': 'UNDER_CONTRACT',
+  financing: 'UNDER_CONTRACT',
+  closing: 'UNDER_CONTRACT',
+  acquired: 'SOLD',
+  completed: 'COMPLETED',
+  cancelled: 'CANCELLED',
+  'on-hold': 'ON_HOLD',
+  pending: 'PENDING',
+};
+
+const completePurchase = (..._args: any[]): any => { /* TODO: implement when backend supports */ };
+const addCommunicationLog = (..._args: any[]): any => { /* TODO: implement when backend supports */ };
+const getAgencyInvestmentROI = (..._args: any[]): any => { /* TODO: implement when backend supports */ };
+const markPurchaseCycleOfferAccepted = (..._args: any[]): any => { /* TODO: implement when backend supports */ };
+const getDealById = (..._args: any[]): any => null; // TODO: use deals API when needed
+const getSellCyclesByProperty = (..._args: any[]): any[] => []; // TODO: use sell-cycles API when needed
+
+>>>>>>> Stashed changes:src/components/PurchaseCycleDetails.tsx
+
+interface PurchaseCycleDetailsProps {
   cycle: PurchaseCycle;
   property: Property;
   user: User;
@@ -122,14 +130,14 @@ interface PurchaseCycleDetailsV4Props {
   onNavigate?: (page: string, id: string) => void;
 }
 
-export function PurchaseCycleDetailsV4({
+export function PurchaseCycleDetails({
   cycle: initialCycle,
   property,
   user,
   onBack,
   onUpdate,
   onNavigate,
-}: PurchaseCycleDetailsV4Props) {
+}: PurchaseCycleDetailsProps) {
   const [cycle, setCycle] = useState<PurchaseCycle>(initialCycle);
   const [editingNegotiatedPrice, setEditingNegotiatedPrice] = useState(false);
   const [negotiatedPrice, setNegotiatedPrice] = useState(
@@ -150,27 +158,27 @@ export function PurchaseCycleDetailsV4({
     }
   };
 
-  // Load data
+  // Sync cycle from parent when it changes (e.g. after refetch)
+  useEffect(() => {
+    setCycle(initialCycle);
+  }, [initialCycle]);
+
   const loadData = () => {
-    const updatedCycle = getPurchaseCycleById(cycle.id);
-    if (updatedCycle) {
-      setCycle(updatedCycle);
-    }
+    // Parent will refetch via onUpdate; we sync from initialCycle
+    onUpdate();
   };
 
+  // Load available sell cycles (stub returns []; replace with API when sell-cycles-by-property is available)
   useEffect(() => {
-    loadData();
-  }, [cycle.id]);
-
-  // Load available sell cycles
-  useEffect(() => {
-    const sellCycles = getSellCyclesByProperty(property.id);
-    const activeSellCycles = sellCycles.filter(
-      (sc) =>
-        sc.status === 'listed' ||
-        sc.status === 'offer-received' ||
-        sc.status === 'negotiation'
-    );
+    const sellCycles = getSellCyclesByProperty(property.id) ?? [];
+    const activeSellCycles = Array.isArray(sellCycles)
+      ? sellCycles.filter(
+          (sc: { status?: string }) =>
+            sc.status === 'listed' ||
+            sc.status === 'offer-received' ||
+            sc.status === 'negotiation'
+        )
+      : [];
     setAvailableSellCycles(activeSellCycles);
   }, [property.id]);
 
@@ -217,25 +225,26 @@ export function PurchaseCycleDetailsV4({
       return;
     }
 
-    updatePurchaseCycle(cycle.id, { status: newStatus });
-    toast.success('Purchase cycle status updated');
-    loadData();
-    onUpdate();
+    const apiStatus = UI_TO_API_STATUS[newStatus] ?? newStatus.toUpperCase().replace(/-/g, '_');
+    purchaseCyclesService.update(cycle.id, { status: apiStatus }).then(() => {
+      toast.success('Purchase cycle status updated');
+      onUpdate();
+    }).catch((err) => {
+      toast.error(err?.message ?? 'Failed to update status');
+    });
   };
 
-  // Due diligence handler
+  // Due diligence handler (backend has no due-diligence fields; show toast for now)
   const handleUpdateDueDiligence = (field: keyof PurchaseCycle, value: boolean) => {
-    updatePurchaseCycle(cycle.id, { [field]: value });
-    toast.success('Due diligence updated');
-    loadData();
+    setCycle((prev) => ({ ...prev, [field]: value }));
+    toast.success('Due diligence updated (local)');
   };
 
-  // Negotiated price handler
+  // Negotiated price handler (backend has no negotiatedPrice; persist locally)
   const handleSaveNegotiatedPrice = () => {
-    updatePurchaseCycle(cycle.id, { negotiatedPrice });
-    toast.success('Negotiated price updated');
+    setCycle((prev) => ({ ...prev, negotiatedPrice }));
     setEditingNegotiatedPrice(false);
-    loadData();
+    toast.success('Negotiated price updated');
   };
 
   // Complete purchase handler
@@ -262,24 +271,35 @@ export function PurchaseCycleDetailsV4({
   // Cancel cycle handler
   const handleCancelCycle = () => {
     if (confirm('Are you sure you want to cancel this purchase cycle?')) {
-      cancelPurchaseCycle(cycle.id, 'Cancelled by user');
-      toast.success('Purchase cycle cancelled');
-      onUpdate();
-      onBack();
+      purchaseCyclesService.update(cycle.id, { status: 'CANCELLED' }).then(() => {
+        toast.success('Purchase cycle cancelled');
+        onUpdate();
+        onBack();
+      }).catch((err) => {
+        toast.error(err?.message ?? 'Failed to cancel');
+      });
     }
   };
 
-  // Communication log as notes
+  // Communication log as notes (PurchaseCycle uses communicationLog)
   const communicationNotes: Note[] = useMemo(() => {
-    return (cycle.communicationLogs || []).map((log) => ({
+    const logs = (cycle.communicationLog ?? (cycle as any).communicationLogs ?? []) as Array<{
+      id: string;
+      summary?: string;
+      createdBy?: string;
+      createdByName?: string;
+      date?: string;
+      type?: string;
+    }>;
+    return logs.map((log) => ({
       id: log.id,
-      content: log.summary,
-      createdBy: log.createdBy,
-      createdByName: log.createdByName,
-      createdAt: log.date,
-      type: log.type === 'note' ? 'internal' : 'client',
+      content: log.summary ?? '',
+      createdBy: log.createdBy ?? '',
+      createdByName: log.createdByName ?? '',
+      createdAt: log.date ?? '',
+      type: (log.type === 'note' ? 'internal' : 'client') as 'internal' | 'client',
     }));
-  }, [cycle.communicationLogs]);
+  }, [cycle.communicationLog]);
 
   // Add communication log
   const handleAddNote = (content: string, type: 'internal' | 'client' | 'general') => {
@@ -302,17 +322,17 @@ export function PurchaseCycleDetailsV4({
       { label: 'Purchase Cycle' },
     ],
     description: `${
-      cycle.purchaserType.charAt(0).toUpperCase() + cycle.purchaserType.slice(1)
+      (cycle.purchaserType ?? 'client').charAt(0).toUpperCase() + (cycle.purchaserType ?? 'client').slice(1)
     } Purchase • Created ${new Date(cycle.createdAt).toLocaleDateString()}`,
     metrics: [
       {
         label: 'Asking Price',
-        value: formatPKR(cycle.askingPrice),
+        value: formatPKR(cycle.askingPrice ?? 0),
         icon: <DollarSign className="w-4 h-4" />,
       },
       {
         label: 'Offer Amount',
-        value: formatPKR(cycle.offerAmount),
+        value: formatPKR(cycle.offerAmount ?? 0),
         icon: <TrendingDown className="w-4 h-4" />,
       },
       {
@@ -327,7 +347,7 @@ export function PurchaseCycleDetailsV4({
       },
       {
         label: 'Status',
-        value: <StatusBadge status={cycle.status} />,
+        value: (cycle.status ?? 'active').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
         icon: <Settings className="w-4 h-4" />,
       },
     ],
@@ -363,7 +383,10 @@ export function PurchaseCycleDetailsV4({
           ]
         : []),
     ],
-    status: cycle.status,
+    status: {
+      label: (cycle.status ?? 'active').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      variant: (cycle.status === 'acquired' || cycle.status === 'completed' ? 'success' : cycle.status === 'cancelled' ? 'destructive' : 'default') as 'success' | 'destructive' | 'default',
+    },
     onBack,
   };
 
@@ -371,28 +394,19 @@ export function PurchaseCycleDetailsV4({
   const connectedEntities = [
     {
       type: 'property' as const,
-      name: formatPropertyAddress(property.address),
+      name: formatPropertyAddress(property.address ?? ''),
       icon: <Home className="h-3 w-3" />,
-      onClick: () => handleNavigation('property-detail', property.id),
+      onClick: () => { if (property.id) handleNavigation('property-detail', property.id); },
     },
-    {
-      type: 'seller' as const,
-      name: cycle.sellerName,
-      icon: <UserIcon className="h-3 w-3" />,
-      onClick: () => {},
-    },
-    {
-      type: 'purchaser' as const,
-      name: cycle.purchaserName,
-      icon: <UserIcon className="h-3 w-3" />,
-      onClick: () => {},
-    },
-    {
-      type: 'agent' as const,
-      name: cycle.agentName,
-      icon: <UserIcon className="h-3 w-3" />,
-      onClick: () => {},
-    },
+    ...(cycle.sellerName
+      ? [{ type: 'seller' as const, name: cycle.sellerName, icon: <UserIcon className="h-3 w-3" />, onClick: () => {} }]
+      : []),
+    ...(cycle.purchaserName
+      ? [{ type: 'purchaser' as const, name: cycle.purchaserName, icon: <UserIcon className="h-3 w-3" />, onClick: () => {} }]
+      : []),
+    ...(cycle.agentName
+      ? [{ type: 'agent' as const, name: cycle.agentName, icon: <UserIcon className="h-3 w-3" />, onClick: () => {} }]
+      : []),
     ...(linkedDeal
       ? [
           {
@@ -490,7 +504,7 @@ export function PurchaseCycleDetailsV4({
           },
           {
             label: 'Purchaser Type',
-            value: <span className="capitalize">{cycle.purchaserType}</span>,
+            value: <span className="capitalize">{cycle.purchaserType ?? 'client'}</span>,
             icon: <UserIcon className="h-4 w-4" />,
           },
           {
@@ -751,12 +765,12 @@ export function PurchaseCycleDetailsV4({
         metrics={[
           {
             label: 'Offer Amount',
-            value: formatPKR(cycle.offerAmount),
+            value: formatPKR(cycle.offerAmount ?? 0),
             icon: <TrendingDown className="h-5 w-5" />,
             variant: 'info',
-            description: `${Math.round(
-              (cycle.offerAmount / cycle.askingPrice) * 100
-            )}% of asking`,
+            comparison: cycle.askingPrice
+              ? `${Math.round(((cycle.offerAmount ?? 0) / cycle.askingPrice) * 100)}% of asking`
+              : undefined,
           },
           ...(cycle.negotiatedPrice
             ? [
@@ -843,7 +857,7 @@ export function PurchaseCycleDetailsV4({
     <>
       {/* Seller Contact Card */}
       <ContactCard
-        name={cycle.sellerName}
+        name={cycle.sellerName ?? 'Seller'}
         role="seller"
         phone={cycle.sellerContact}
         designation={cycle.sellerType}
@@ -931,7 +945,7 @@ export function PurchaseCycleDetailsV4({
       </div>
 
       {/* Financing Information (if applicable) */}
-      {cycle.loanAmount && (
+      {cycle.loanAmount != null && cycle.loanAmount > 0 && (
         <InfoPanel
           title="Financing Information"
           data={[
@@ -943,15 +957,17 @@ export function PurchaseCycleDetailsV4({
             {
               label: 'Down Payment',
               value: formatPKR(
-                (cycle.negotiatedPrice || cycle.offerAmount) - cycle.loanAmount
+                (cycle.negotiatedPrice ?? cycle.offerAmount ?? 0) - (cycle.loanAmount ?? 0)
               ),
               icon: <Wallet className="h-4 w-4" />,
             },
             {
               label: 'Loan to Value',
-              value: `${Math.round(
-                (cycle.loanAmount / (cycle.negotiatedPrice || cycle.offerAmount)) * 100
-              )}%`,
+              value: (() => {
+                const total = cycle.negotiatedPrice ?? cycle.offerAmount ?? 0;
+                const loan = cycle.loanAmount ?? 0;
+                return total > 0 ? `${Math.round((loan / total) * 100)}%` : 'N/A';
+              })(),
             },
             {
               label: 'Status',
@@ -988,11 +1004,15 @@ export function PurchaseCycleDetailsV4({
       <AcquisitionCostModal
         isOpen={showAcquisitionCostModal}
         onClose={() => setShowAcquisitionCostModal(false)}
-        purchaseCycle={cycle}
-        property={property}
+        propertyId={property.id}
+        propertyAddress={formatPropertyAddress(property.address ?? '')}
+        purchaseDate={cycle.offerDate ?? cycle.createdAt}
+        purchaseCycleId={cycle.id}
+        userId={user.id}
+        userName={user.name}
+        initialPurchasePrice={cycle.negotiatedPrice ?? cycle.offerAmount}
         onSuccess={() => {
           setShowAcquisitionCostModal(false);
-          loadData();
           onUpdate();
         }}
       />
@@ -1069,13 +1089,14 @@ export function PurchaseCycleDetailsV4({
     }
 
     // Communication logs
-    (cycle.communicationLogs || []).forEach((log) => {
+    ((cycle.communicationLog ?? (cycle as any).communicationLogs) || []).forEach((log: { id: string; type?: string; summary?: string; date?: string; createdByName?: string }) => {
+      const logType = log.type ?? 'note';
       activityList.push({
         id: `log-${log.id}`,
         type: 'communication',
-        title: `${log.type.charAt(0).toUpperCase() + log.type.slice(1)} logged`,
+        title: `${logType.charAt(0).toUpperCase() + logType.slice(1)} logged`,
         description: log.summary,
-        date: log.date,
+        date: log.date ?? '',
         user: log.createdByName,
         icon: <FileText className="h-5 w-5 text-gray-600" />,
       });
@@ -1251,7 +1272,7 @@ export function PurchaseCycleDetailsV4({
         isOpen={showSendOfferModal}
         onClose={() => setShowSendOfferModal(false)}
         purchaseCycle={cycle}
-        sellCycle={availableSellCycles[0]} // Pass first available sell cycle
+        sellCycle={availableSellCycles[0] ?? undefined}
         property={property}
         onSuccess={() => {
           setShowSendOfferModal(false);

@@ -1,24 +1,11 @@
-/**
- * useRecentActivity Hook
- *
- * Loads recent activity data for workflow cards.
- *
- * FEATURES:
- * - Loads data from localStorage
- * - Filters to last 7 days
- * - Role-based filtering
- * - Used by QuickLaunchSection
- */
-
 import { useState, useEffect } from "react";
 import { User, Property, Contact } from "../../../types";
 import { LeadV4 } from "../../../types/leads";
 import { CRMTask } from "../../../types";
-import { getProperties, getContacts } from "../../../lib/data";
-import { getLeadsV4 } from "../../../lib/leadsV4";
-import { getAllTasks } from "../../../lib/data";
-
-// Document type (not in main types)
+const getProperties = (..._args: any[]): any[] => [];
+const getContacts = (..._args: any[]): any[] => [];
+const getLeadsV4 = (..._args: any[]): any[] => [];
+const getAllTasks = (..._args: any[]): any[] => [];
 interface Document {
   id: string;
   name?: string;

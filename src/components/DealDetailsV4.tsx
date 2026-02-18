@@ -74,36 +74,70 @@ import {
 } from 'lucide-react';
 
 // Business Logic
+<<<<<<< Updated upstream:src/components/DealDetailsV4.tsx
 import { getDealById, progressDealStage, completeDeal, cancelDeal, updateDeal } from '../lib/deals';
 import { getUserRoleInDeal } from '../lib/dealPermissions';
 import { formatPKR } from '../lib/currency';
+=======
+// [STUBBED] import { getDealById, progressDealStage, completeDeal, cancelDeal, updateDeal } from '../lib/deals';
+import { getUserRoleInDeal } from '@/lib/dealPermissions';
+import { formatPKR } from '@/lib/currency';
+>>>>>>> Stashed changes:src/components/DealDetails.tsx
 import { toast } from 'sonner';
 
 // Transaction System
-import { getTransactionGraph, getUnifiedTimeline } from '../lib/transaction-graph';
+import { getTransactionGraph, getUnifiedTimeline } from '@/lib/transaction-graph';
 
+<<<<<<< Updated upstream:src/components/DealDetailsV4.tsx
 interface DealDetailsV4Props {
   dealId: string;
+=======
+// ===== STUBS for removed prototype functions =====
+const getTasksByEntity = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateTaskV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getDealById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const progressDealStage = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const completeDeal = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const cancelDeal = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateDeal = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
+
+interface DealDetailsProps {
+  deal: Deal;
+>>>>>>> Stashed changes:src/components/DealDetails.tsx
   user: User;
   onBack: () => void;
+  onUpdate?: () => void;
   onNavigate?: (page: string, id: string) => void;
 }
 
+<<<<<<< Updated upstream:src/components/DealDetailsV4.tsx
 export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
   dealId,
+=======
+export const DealDetails: React.FC<DealDetailsProps> = ({
+  deal: initialDeal,
+>>>>>>> Stashed changes:src/components/DealDetails.tsx
   user,
   onBack,
+  onUpdate,
   onNavigate,
 }) => {
-  const [deal, setDeal] = useState<Deal | null>(getDealById(dealId));
+  const [deal, setDeal] = useState<Deal>(initialDeal);
   const [dealTasks, setDealTasks] = useState<TaskV4[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Load tasks for this deal (Tasks Module V4)
+  // Sync when parent passes updated deal (e.g. after refetch)
+  React.useEffect(() => {
+    setDeal(initialDeal);
+  }, [initialDeal]);
+
+  // Load tasks for this deal (Tasks Module V4 - stub)
   useMemo(() => {
     if (deal) {
-      const tasks = getTasksByEntity('deal', deal.id);
-      setDealTasks(tasks);
+      const tasks = getTasksByEntity('deal', deal.id) ?? [];
+      setDealTasks(Array.isArray(tasks) ? tasks : []);
     }
   }, [deal?.id, refreshTrigger]);
 
@@ -123,55 +157,27 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
     }
   };
 
-  // Transaction graph
-  const graph = useMemo(() => {
-    if (!deal) return null;
-    return getTransactionGraph(deal.id, 'deal');
-  }, [deal?.id]);
+  // Transaction graph (stub returns null; use deal data for display)
+  const graph = useMemo(() => getTransactionGraph(deal.id, 'deal'), [deal?.id]);
 
-  const timeline = useMemo(() => {
-    if (!deal) return [];
-    return getUnifiedTimeline(deal.id);
-  }, [deal?.id]);
+  const timeline = useMemo(() => getUnifiedTimeline(deal.id), [deal?.id]);
 
-  // Format property address for display
+  // Format property address for display (prefer deal.property when graph is null)
   const propertyDisplayName = useMemo(() => {
-    if (!graph?.property) return 'Property';
-
-    // Use title if available, otherwise format the address
-    if (graph.property.title) return graph.property.title;
-
-    // If address is a string, use it
-    if (typeof graph.property.address === 'string') {
-      return graph.property.address;
-    }
-
-    // If address is an object, format it
-    if (graph.property.address && typeof graph.property.address === 'object') {
-      const addr = graph.property.address;
+    const prop = graph?.property ?? deal?.property;
+    if (!prop) return 'Property';
+    if (prop.title) return prop.title;
+    if (typeof prop.address === 'string') return prop.address;
+    if (prop.address && typeof prop.address === 'object') {
+      const addr = prop.address as Record<string, unknown>;
       const parts = [];
-
       if (addr.plotNumber) parts.push(`Plot ${addr.plotNumber}`);
-      if (addr.areaName) parts.push(addr.areaName);
-      if (addr.cityName && parts.length < 2) parts.push(addr.cityName);
-
+      if (addr.areaName) parts.push(String(addr.areaName));
+      if (addr.cityName && parts.length < 2) parts.push(String(addr.cityName));
       return parts.length > 0 ? parts.join(', ') : 'Property';
     }
-
     return 'Property';
-  }, [graph?.property]);
-
-  if (!deal) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-base mb-2">Deal not found</h3>
-          <Button onClick={onBack}>Go Back</Button>
-        </div>
-      </div>
-    );
-  }
+  }, [graph?.property, deal?.property]);
 
   const userRole = getUserRoleInDeal(user.id, deal);
   const isPrimary = userRole === 'primary';
@@ -212,8 +218,9 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
 
     try {
       const updatedDeal = progressDealStage(deal.id, nextStage, user.id, user.name);
-      setDeal(updatedDeal);
+      if (updatedDeal) setDeal(updatedDeal);
       toast.success(`Deal progressed to ${getStageDisplay(nextStage)}`);
+      onUpdate?.();
     } catch (error) {
       console.error('Error progressing stage:', error);
       toast.error('Failed to progress stage');
@@ -231,8 +238,9 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
 
     try {
       const updatedDeal = completeDeal(deal.id, user.id, user.name);
-      setDeal(updatedDeal);
+      if (updatedDeal) setDeal(updatedDeal);
       toast.success('Deal completed successfully! 🎉');
+      onUpdate?.();
 
       // If cross-agent deal, show rating modal
       if (deal.agents.secondary) {
@@ -292,8 +300,9 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
         },
       });
 
-      setDeal(updatedDeal);
+      if (updatedDeal) setDeal(updatedDeal);
       toast.success('Commission marked as received from client! ✅');
+      onUpdate?.();
     } catch (error) {
       console.error('Error marking commission as received:', error);
       toast.error('Failed to mark commission as received');
@@ -903,13 +912,13 @@ export const DealDetailsV4: React.FC<DealDetailsV4Props> = ({
 
   // ==================== ACTIVITY TAB ====================
   const activities: Activity[] = useMemo(() => {
-    return (timeline || []).map((event, idx: number) => ({
+    return (timeline || []).map((event: { type?: string; title?: string; description?: string; date?: string }, idx: number) => ({
       id: `timeline-${idx}`,
-      type: event.entityType,
-      title: event.event,
+      type: (event as any).entityType ?? event.type ?? 'activity',
+      title: (event as any).event ?? event.title ?? 'Activity',
       description: event.description,
-      date: event.date,
-      user: undefined, // TransactionTimeline doesn't have actor info
+      date: event.date ?? '',
+      user: undefined,
       icon: <FileText className="h-5 w-5 text-blue-600" />,
     }));
   }, [timeline]);

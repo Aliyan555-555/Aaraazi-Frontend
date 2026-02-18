@@ -187,6 +187,53 @@ export interface PropertyListingApiResponse {
     id: string;
     name: string;
   } | null;
+  /** Included when fetching single property - all cycles in one response */
+  sellCycles?: Array<{
+    id: string;
+    cycleNumber: string;
+    propertyListingId: string;
+    agentId: string;
+    status: string;
+    startDate: string;
+    endDate: string | null;
+    askingPrice: string;
+    currentOfferPrice: string | null;
+    notes: string | null;
+    createdAt: string;
+    updatedAt: string;
+    createdBy: string | null;
+    agent?: { id: string; name: string; email: string };
+  }>;
+  purchaseCycles?: Array<{
+    id: string;
+    cycleNumber: string;
+    requirementId: string;
+    propertyListingId: string | null;
+    agentId: string;
+    status: string;
+    startDate: string;
+    endDate: string | null;
+    createdAt: string;
+    updatedAt: string;
+    createdBy: string | null;
+    agent?: { id: string; name: string; email: string };
+    requirement?: { contact?: { id: string; name: string; phone: string | null; email: string | null } };
+  }>;
+  rentCycles?: Array<{
+    id: string;
+    cycleNumber: string;
+    propertyListingId: string;
+    agentId: string;
+    status: string;
+    monthlyRent: string;
+    securityDeposit: string | null;
+    availableFrom: string;
+    leasePeriod: number;
+    createdAt: string;
+    updatedAt: string;
+    createdBy: string | null;
+    agent?: { id: string; name: string; email: string };
+  }>;
 }
 
 // ============================================================================

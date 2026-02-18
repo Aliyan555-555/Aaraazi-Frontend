@@ -7,12 +7,14 @@ import type {
   CreatePurchaseCyclePayload,
   CreatePurchaseCycleFromPropertyPayload,
   PurchaseCycleApiResponse,
+  UpdatePurchaseCyclePayload,
 } from '@/lib/api/purchase-cycles';
 
 export type {
   CreatePurchaseCyclePayload,
   CreatePurchaseCycleFromPropertyPayload,
   PurchaseCycleApiResponse,
+  UpdatePurchaseCyclePayload,
 } from '@/lib/api/purchase-cycles';
 
 class PurchaseCyclesService {
@@ -41,6 +43,17 @@ class PurchaseCyclesService {
 
   async findOne(id: string): Promise<PurchaseCycleApiResponse> {
     const response = await apiClient.get<PurchaseCycleApiResponse>(`${this.baseUrl}/${id}`);
+    return response.data;
+  }
+
+  async update(
+    id: string,
+    data: { status?: string; endDate?: string | null }
+  ): Promise<PurchaseCycleApiResponse> {
+    const response = await apiClient.patch<PurchaseCycleApiResponse>(
+      `${this.baseUrl}/${id}`,
+      data
+    );
     return response.data;
   }
 }

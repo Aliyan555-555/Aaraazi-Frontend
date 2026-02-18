@@ -1,4 +1,5 @@
 /**
+<<<<<<< Updated upstream
  * Commission Agents - Multi-Agent Commission Support
  *
  * Manages commission splits across multiple agents (internal and external)
@@ -419,3 +420,24 @@ export const migrateLegacyCommission = (deal: Deal): Deal => {
     },
   });
 };
+=======
+ * Commission Agents – Re-exports for backward compatibility.
+ *
+ * Architecture:
+ * - lib/commission-utils.ts: Pure domain logic (validation, mutations)
+ * - services/commission.service.ts: Data fetching (internal agents, external brokers)
+ * - hooks/useCommissionAgents.ts: useInternalAgents, useExternalBrokers
+ *
+ * Prefer using hooks in components; use commission-utils for pure logic.
+ */
+
+export {
+  validateCommissionSplits,
+  addAgentToCommission,
+  removeAgentFromCommission,
+  migrateLegacyCommission,
+  calculateCommissionAmount,
+} from './commission-utils';
+
+export type { CommissionAgent } from '@/types/deals';
+>>>>>>> Stashed changes

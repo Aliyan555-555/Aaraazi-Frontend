@@ -1,4 +1,5 @@
 /**
+<<<<<<< Updated upstream
  * Deal Permission System
  * Handles role-based access control for Deal Management
  * 
@@ -171,3 +172,88 @@ export const validatePermission = (
     throw new Error(getPermissionErrorMessage(permission));
   }
 };
+=======
+ * Deal permissions and role helpers
+ * Resolves user role in a deal and permission checks
+ */
+
+import type { Deal, DealPermissions } from '@/types/deals';
+
+export type DealUserRole = 'primary' | 'secondary' | 'viewer';
+
+/**
+ * Get the current user's role in the deal (primary agent, secondary agent, or viewer)
+ */
+export function getUserRoleInDeal(userId: string, deal: Deal): DealUserRole {
+  if (!userId || !deal?.agents) return 'viewer';
+  if (deal.agents.primary?.id === userId) return 'primary';
+  if (deal.agents.secondary?.id === userId) return 'secondary';
+  return 'viewer';
+}
+
+/**
+ * Human-readable role name for display
+ */
+export function getRoleDisplayName(role: DealUserRole): string {
+  const names: Record<DealUserRole, string> = {
+    primary: 'Primary Agent',
+    secondary: 'Secondary Agent',
+    viewer: 'Viewer',
+  };
+  return names[role] ?? 'Viewer';
+}
+
+const DEFAULT_PERMISSIONS: DealPermissions = {
+  canViewFinancials: true,
+  canEditNotes: true,
+  canProgressStage: true,
+  canRecordPayments: true,
+  canEditPaymentPlan: true,
+  canViewBuyerInfo: true,
+  canViewSellerInfo: true,
+  canUploadDocuments: true,
+  canViewCommission: true,
+  canEditCommission: false,
+  canEdit: true,
+  canUpdatePayments: true,
+  canProgressStages: true,
+  canCloseDeal: true,
+  canViewAll: true,
+  canDownloadDocs: true,
+  canAddNotes: true,
+  canSendMessages: true,
+  canUpdateTasks: true,
+};
+
+/**
+ * Check if the user has a specific permission for the deal
+ */
+export function checkPermission(
+  userId: string,
+  deal: Deal,
+  permission: keyof DealPermissions
+): boolean {
+  const role = getUserRoleInDeal(userId, deal);
+  if (role === 'primary') return true;
+  if (role === 'viewer') {
+    const viewOnly: (keyof DealPermissions)[] = [
+      'canViewFinancials',
+      'canViewBuyerInfo',
+      'canViewSellerInfo',
+      'canViewCommission',
+      'canViewAll',
+      'canDownloadDocs',
+    ];
+    return viewOnly.includes(permission);
+  }
+  const perms = deal.agents.secondary?.permissions ?? DEFAULT_PERMISSIONS;
+  return Boolean((perms as Record<string, boolean>)[permission]);
+}
+
+/**
+ * Message to show when user lacks a permission
+ */
+export function getPermissionErrorMessage(permission: keyof DealPermissions): string {
+  return `You don't have permission to ${permission.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}.`;
+}
+>>>>>>> Stashed changes

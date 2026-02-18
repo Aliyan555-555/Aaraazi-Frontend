@@ -5,72 +5,19 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PropertyDetails } from '@/components/PropertyDetails';
 import { mapAuthUserToUIUser } from '@/types';
-import type { SellCycle } from '@/types';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
 import { toast } from 'sonner';
-import { useProperty, usePropertyMutations } from '@/hooks/useProperties';
-import { useSellCycles } from '@/hooks/useSellCycles';
-
-function mapSellCycleApiToUI(api: {
-  id: string;
-  cycleNumber: string;
-  propertyListingId: string;
-  agentId: string;
-  status: string;
-  startDate: string;
-  endDate: string | null;
-  askingPrice: string;
-  currentOfferPrice: string | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string | null;
-  agent?: { id: string; name: string; email: string };
-}): SellCycle {
-  const statusMap: Record<string, string> = {
-    ACTIVE: 'listed',
-    PENDING: 'pending',
-    COMPLETED: 'sold',
-    CANCELLED: 'cancelled',
-    ON_HOLD: 'on-hold',
-  };
-  return {
-    id: api.id,
-    propertyId: api.propertyListingId,
-    agentId: api.agentId,
-    agentName: api.agent?.name,
-    status: (statusMap[api.status] || api.status.toLowerCase()) as SellCycle['status'],
-    createdAt: api.createdAt,
-    updatedAt: api.updatedAt,
-    createdBy: api.createdBy ?? api.agentId,
-    sellerType: 'client',
-    sellerId: '',
-    sellerName: '',
-    askingPrice: Number(api.askingPrice) || 0,
-    commissionRate: 0,
-    commissionType: 'percentage',
-    title: `Sell cycle ${api.cycleNumber}`,
-    listedDate: api.startDate,
-    offers: [],
-    sharedWith: [],
-  };
-}
+import { usePropertyWithCycles, usePropertyMutations } from '@/hooks/useProperties';
 
 export default function PropertyDetailPage() {
     const { id } = useParams();
     const { user: saasUser } = useAuthStore();
     const router = useRouter();
 
-    const { property, isLoading, error } = useProperty(id as string | undefined);
+    const { property, sellCycles, purchaseCycles, rentCycles, isLoading, error } = usePropertyWithCycles(id as string | undefined);
     const { remove } = usePropertyMutations();
-    const { cycles: sellCyclesApi } = useSellCycles(property?.id);
-
-    const sellCycles: SellCycle[] = useMemo(
-        () => (sellCyclesApi || []).map(mapSellCycleApiToUI),
-        [sellCyclesApi]
-    );
 
     const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
 
@@ -113,8 +60,8 @@ export default function PropertyDetailPage() {
         <PropertyDetails
             property={property}
             sellCycles={sellCycles}
-            purchaseCycles={[]}
-            rentCycles={[]}
+            purchaseCycles={purchaseCycles}
+            rentCycles={rentCycles}
             user={user}
             onBack={() => router.push('/dashboard/properties')}
             onEdit={() => router.push(`/dashboard/properties/${id}/edit`)}

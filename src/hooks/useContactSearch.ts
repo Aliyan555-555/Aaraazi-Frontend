@@ -11,7 +11,7 @@ import type { Contact } from '@/types/schema';
 
 const DEBOUNCE_MS = 300;
 
-export function useContactSearch(query: string, limit = 10) {
+export function useContactSearch(query: string, limit = 10, agentId?: string) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,6 +27,7 @@ export function useContactSearch(query: string, limit = 10) {
         const response = await contactsService.findAll({
           search: query,
           limit,
+          ...(agentId && { agentId }),
         });
         setContacts(response.data || []);
       } catch (err) {
@@ -38,7 +39,7 @@ export function useContactSearch(query: string, limit = 10) {
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [query, limit]);
+  }, [query, limit, agentId]);
 
   const clear = useCallback(() => setContacts([]), []);
 

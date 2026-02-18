@@ -1,4 +1,5 @@
 /**
+<<<<<<< Updated upstream
  * Transaction Graph Service - Phase 1
  * 
  * Navigates and manages relationships between:
@@ -607,3 +608,49 @@ export function getPropertyCycles(propertyId: string) {
     ),
   };
 }
+=======
+ * Transaction graph and timeline helpers
+ * Provides a unified view of deal/sell/purchase/property for headers and timelines
+ */
+
+export interface TransactionGraph {
+  deal?: {
+    id: string;
+    dealNumber: string;
+    lifecycle: { status: string; stage: string };
+    financial?: { agreedPrice: number; totalPaid: number };
+  };
+  sellCycle?: { id: string; cycleNumber: string; status: string };
+  purchaseCycle?: { id: string; cycleNumber: string; status: string };
+  property?: {
+    id: string;
+    title?: string;
+    address?: string | Record<string, unknown>;
+  };
+  buyerRequirement?: { id: string };
+}
+
+export interface TimelineEvent {
+  id: string;
+  type: string;
+  title: string;
+  description?: string;
+  date: string;
+  amount?: number;
+}
+
+/**
+ * Get transaction graph for an entity (deal, sell cycle, etc.)
+ * Returns null when no graph is available; callers can derive from current deal/property
+ */
+export function getTransactionGraph(_entityId: string, _entityType: string): TransactionGraph | null {
+  return null;
+}
+
+/**
+ * Get unified timeline events for an entity
+ */
+export function getUnifiedTimeline(_entityId: string): TimelineEvent[] {
+  return [];
+}
+>>>>>>> Stashed changes

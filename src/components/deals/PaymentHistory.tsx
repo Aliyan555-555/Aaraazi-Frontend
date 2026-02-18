@@ -13,7 +13,7 @@ import {
   Eye,
   Printer
 } from 'lucide-react';
-import { viewReceipt, hasReceipt } from '../../lib/receiptGeneration';
+import { viewReceipt } from '@/lib/receiptGeneration';
 import { toast } from 'sonner';
 
 interface PaymentHistoryProps {
@@ -179,15 +179,14 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
                   </div>
                 )}
 
-                {hasReceipt(payment) && (
-                  <div className="flex gap-2 mt-3 pt-3 border-t">
+                <div className="flex gap-2 mt-3 pt-3 border-t">
                     <Button
                       size="sm"
                       variant="outline"
                       className="flex-1"
-                      onClick={() => {
+                      onClick={async () => {
                         try {
-                          viewReceipt(payment.id);
+                          await viewReceipt(deal.id, payment.id);
                         } catch (error: any) {
                           toast.error(error.message || 'Failed to view receipt');
                         }
@@ -201,9 +200,9 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
                       size="sm"
                       variant="outline"
                       className="flex-1"
-                      onClick={() => {
+                      onClick={async () => {
                         try {
-                          viewReceipt(payment.id);
+                          await viewReceipt(deal.id, payment.id);
                           toast.success('Receipt opened in new window');
                         } catch (error: any) {
                           toast.error(error.message || 'Failed to print receipt');
@@ -214,7 +213,6 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({ deal }) => {
                       Print
                     </Button>
                   </div>
-                )}
               </div>
             </div>
           );

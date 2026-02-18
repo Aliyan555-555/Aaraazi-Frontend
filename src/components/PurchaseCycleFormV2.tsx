@@ -30,14 +30,17 @@ import { AgencyPurchaseFormLayout } from './purchase/AgencyPurchaseFormLayout';
 import { InvestorPurchaseFormLayout } from './purchase/InvestorPurchaseFormLayout';
 import { ClientPurchaseFormLayout } from './purchase/ClientPurchaseFormLayout';
 import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
+<<<<<<< Updated upstream:src/components/PurchaseCycleFormV2.tsx
 >>>>>>> Stashed changes:src/components/PurchaseCycleForm.tsx
 
 interface PurchaseCycleFormV2Props {
+=======
+interface PurchaseCycleFormProps {
+>>>>>>> Stashed changes:src/components/PurchaseCycleForm.tsx
   property: Property;
   user: User;
   onBack: () => void;
   onSuccess: () => void;
-  /** When provided, forms submit to the from-property API instead of stub */
   onSubmitFromProperty?: (data: CreatePurchaseCycleFromPropertyPayload) => Promise<{ id: string } | null>;
 }
 
@@ -47,8 +50,14 @@ export function PurchaseCycleFormV2({
   onBack,
   onSuccess,
 <<<<<<< Updated upstream:src/components/PurchaseCycleFormV2.tsx
+<<<<<<< Updated upstream:src/components/PurchaseCycleFormV2.tsx
 }: PurchaseCycleFormV2Props) {
 =======
+  onSubmitFromProperty,
+}: PurchaseCycleFormProps) {
+>>>>>>> Stashed changes:src/components/PurchaseCycleForm.tsx
+=======
+
   onSubmitFromProperty,
 }: PurchaseCycleFormProps) {
 >>>>>>> Stashed changes:src/components/PurchaseCycleForm.tsx

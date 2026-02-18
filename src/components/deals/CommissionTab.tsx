@@ -45,7 +45,7 @@ import {
   updateAgentCommissionPercentage,
   recalculateCommissionAmounts,
   migrateLegacyCommission,
-} from '../../lib/commissionAgents';
+} from '@/lib/commissionAgents';
 import { toast } from 'sonner';
 import {
   DollarSign,
@@ -189,7 +189,7 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
   // Handle add agent
   const handleAddAgent = (newAgent: Omit<CommissionAgent, 'amount' | 'status'>) => {
     try {
-      const updatedDeal = addAgentToCommission(deal.id, { ...newAgent, status: 'pending' }, totalCommission);
+      const updatedDeal = addAgentToCommission(deal, { ...newAgent, status: 'pending' }, totalCommission);
       setAgents(updatedDeal.financial.commission.agents || []);
       onUpdate(updatedDeal);
       setAddAgentModalOpen(false);
@@ -204,7 +204,7 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
     if (!confirm(`Remove ${agentName} from commission split?`)) return;
 
     try {
-      const updatedDeal = removeAgentFromCommission(deal.id, agentId);
+      const updatedDeal = removeAgentFromCommission(deal, agentId);
       setAgents(updatedDeal.financial.commission.agents || []);
       onUpdate(updatedDeal);
       toast.success(`${agentName} removed from commission`);

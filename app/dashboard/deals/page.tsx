@@ -11,21 +11,15 @@ export default function DealsPage() {
     const router = useRouter();
 
     const handleNavigate = (page: string, data?: any) => {
-        console.log(`Navigating to ${page}`, data);
-
-        // Handle internal navigation from the component
         if (page === 'deal-details' && data) {
             router.push(`/dashboard/deals/${data}`);
             return;
         }
-
         const routeMap: Record<string, string> = {
-            'dashboard': '/dashboard',
-            'deals': '/dashboard/deals',
-            // Add other mappings as needed
+            dashboard: '/dashboard',
+            deals: '/dashboard/deals',
         };
-
-        const route = routeMap[page] || `/dashboard/${page}`;
+        const route = routeMap[page] ?? `/dashboard/${page}`;
         router.push(route);
     };
 

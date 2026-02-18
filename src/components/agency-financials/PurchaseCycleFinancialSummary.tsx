@@ -33,14 +33,14 @@ export function PurchaseCycleFinancialSummary({
   property,
   onAddAcquisitionCost,
 }: PurchaseCycleFinancialSummaryProps) {
-  // Get all transactions for this property
+  // Get all transactions for this property (stub returns undefined; default to [])
   const transactions = useMemo(() => {
-    return getTransactionsByProperty(property.id);
+    return getTransactionsByProperty(property.id) ?? [];
   }, [property.id]);
 
   // Get transactions specifically for this purchase cycle
   const cycleTransactions = useMemo(() => {
-    return transactions.filter(t => t.purchaseCycleId === cycle.id);
+    return (transactions ?? []).filter(t => t.purchaseCycleId === cycle.id);
   }, [transactions, cycle.id]);
 
   // Calculate financial summary

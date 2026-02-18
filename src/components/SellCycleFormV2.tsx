@@ -1,21 +1,3 @@
-/**
- * Sell Cycle Form V2 - Full Page Multi-Step Form
- * 
- * DESIGN SYSTEM V4.1 COMPLIANT:
- * - MultiStepForm component (4 steps)
- * - FormContainer + FormSection + FormField
- * - Complete validation per step
- * - Contact search for seller selection
- * - PKR formatting
- * - Full-page layout with back button (not a modal)
- * 
- * STEPS:
- * 1. Seller Selection - Who is selling
- * 2. Pricing - Asking price and minimum acceptable
- * 3. Commission - Commission type and rate
- * 4. Additional Details - Marketing, exclusivity, notes
- */
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { Property, User } from '../types';
 import type { Contact } from '@/types/schema';
@@ -37,11 +19,6 @@ import {
   type FormErrors,
   compose
 } from '../lib/formValidation';
-<<<<<<< Updated upstream:src/components/SellCycleFormV2.tsx
-import { createSellCycle } from '../lib/sellCycle';
-import { getContacts } from '../lib/data';
-=======
->>>>>>> Stashed changes:src/components/SellCycleForm.tsx
 import { formatPropertyAddress } from '../lib/utils';
 import { formatPKR } from '../lib/currency';
 import { ContactFormModal } from './ContactFormModal';
@@ -56,14 +33,10 @@ import {
   AlertCircle,
   X
 } from 'lucide-react';
-<<<<<<< Updated upstream:src/components/SellCycleFormV2.tsx
-=======
 import { useContactSearch } from '@/hooks/useContactSearch';
 import { useCreateSellCycle } from '@/hooks/useSellCycles';
 
->>>>>>> Stashed changes:src/components/SellCycleForm.tsx
 
-// ==================== TYPE DEFINITIONS ====================
 
 interface SellCycleFormData {
   // Seller (Step 1)
@@ -89,7 +62,7 @@ interface SellCycleFormData {
   privateNotes: string;
 }
 
-interface SellCycleFormV2Props {
+interface SellCycleFormProps {
   property: Property;
   user: User;
   onBack: () => void;
@@ -473,8 +446,6 @@ function Step3Commission({
 
 Step3Commission.displayName = 'Step3Commission';
 
-// ==================== STEP 4: ADDITIONAL DETAILS ====================
-
 interface Step4Props {
   formData: SellCycleFormData;
   errors: FormErrors<SellCycleFormData>;
@@ -598,23 +569,16 @@ function Step4AdditionalDetails({
 
 Step4AdditionalDetails.displayName = 'Step4AdditionalDetails';
 
-// ==================== MAIN COMPONENT ====================
 
-export function SellCycleFormV2({
+export function SellCycleForm({
   property,
   user,
   onBack,
   onSuccess,
-<<<<<<< Updated upstream:src/components/SellCycleFormV2.tsx
-}: SellCycleFormV2Props) {
-  // State
-  const [contacts, setContacts] = useState<Contact[]>([]);
-=======
 }: SellCycleFormProps) {
   const { create, isLoading: isSubmitting } = useCreateSellCycle();
   const [sellerSearchQuery, setSellerSearchQuery] = useState(property.currentOwnerName || '');
   const { contacts } = useContactSearch(sellerSearchQuery, 10);
->>>>>>> Stashed changes:src/components/SellCycleForm.tsx
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [errors, setErrors] = useState<FormErrors<SellCycleFormData>>({});
 

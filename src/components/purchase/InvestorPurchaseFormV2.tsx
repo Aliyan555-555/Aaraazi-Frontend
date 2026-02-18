@@ -19,9 +19,16 @@ interface InvestorPurchaseFormV2Props {
 }
 
 <<<<<<< Updated upstream:src/components/purchase/InvestorPurchaseFormV2.tsx
+<<<<<<< Updated upstream:src/components/purchase/InvestorPurchaseFormV2.tsx
 export function InvestorPurchaseFormV2({ property, user, onSuccess, onCancel }: InvestorPurchaseFormV2Props) {
 =======
 export function InvestorPurchaseFormLayout({ property, user, onSuccess, onCancel, onSubmitFromProperty }: InvestorPurchaseFormLayoutProps) {
+>>>>>>> Stashed changes:src/components/purchase/InvestorPurchaseFormLayout.tsx
+=======
+
+
+export function InvestorPurchaseFormLayout({ property, user, onSuccess, onCancel, onSubmitFromProperty }: InvestorPurchaseFormLayoutProps) {
+
 >>>>>>> Stashed changes:src/components/purchase/InvestorPurchaseFormLayout.tsx
   return (
     <div className="min-h-screen bg-gray-50">

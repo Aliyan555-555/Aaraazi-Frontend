@@ -3,13 +3,14 @@
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { PurchaseCycleDetailsV4 } from '@/components/PurchaseCycleDetailsV4';
+import { PurchaseCycleDetails } from '@/components/PurchaseCycleDetails';
 import { mapAuthUserToUIUser } from '@/types';
 import type { PurchaseCycle, Property } from '@/types';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
 import { usePurchaseCycle } from '@/hooks/usePurchaseCycles';
+import { useProperty } from '@/hooks/useProperties';
 
 function mapApiToPurchaseCycle(api: {
   id: string;
@@ -22,8 +23,12 @@ function mapApiToPurchaseCycle(api: {
   createdAt: string;
   updatedAt: string;
   createdBy: string | null;
+  propertyListingId?: string | null;
   requirement?: { id: string; contact?: { name: string } };
+  propertyListing?: { id: string; title: string; propertyType?: string };
   agent?: { id: string; name: string; email: string };
+  offers?: Array<{ id: string; amount?: number; status?: string; buyer?: { name: string } }>;
+  deals?: Array<{ id: string }>;
 }): PurchaseCycle {
   const statusMap: Record<string, string> = {
     ACTIVE: 'prospecting',
@@ -33,13 +38,17 @@ function mapApiToPurchaseCycle(api: {
     ON_HOLD: 'on-hold',
     NEGOTIATION: 'negotiation',
     UNDER_CONTRACT: 'under-contract',
+    OFFER_RECEIVED: 'offer-made',
+    SOLD: 'acquired',
   };
+  const topOffer = api.offers?.[0];
+  const linkedDealId = api.deals?.[0]?.id;
   return {
     id: api.id,
-    propertyId: '',
+    propertyId: api.propertyListingId ?? '',
     agentId: api.agentId,
     agentName: api.agent?.name,
-    status: (statusMap[api.status] || api.status.toLowerCase()) as PurchaseCycle['status'],
+    status: (statusMap[api.status] || api.status.toLowerCase().replace(/_/g, '-')) as PurchaseCycle['status'],
     createdAt: api.createdAt,
     updatedAt: api.updatedAt,
     createdBy: api.createdBy ?? api.agentId,
@@ -47,19 +56,20 @@ function mapApiToPurchaseCycle(api: {
     buyerRequirementId: api.requirementId,
     purchaserName: api.requirement?.contact?.name ?? '',
     purchaserType: 'client',
-    offerAmount: 0,
-    negotiatedPrice: undefined,
-    listedDate: api.startDate,
-    offers: [],
-    sharedWith: [],
+    offerAmount: topOffer?.amount ?? 0,
+    negotiatedPrice: topOffer?.amount,
+    offerDate: api.startDate,
+    linkedDealId,
+    createdDealId: linkedDealId,
   };
 }
 
-function placeholderProperty(cycle: PurchaseCycle): Property {
+function placeholderProperty(cycle: PurchaseCycle, listingTitle?: string): Property {
+  const now = new Date().toISOString();
   return {
-    id: '',
-    title: cycle.purchaserName ? `Requirement: ${cycle.purchaserName}` : 'Requirement',
-    address: cycle.purchaserName ? `Buyer: ${cycle.purchaserName}` : 'No property linked',
+    id: cycle.propertyId || '',
+    title: listingTitle ?? (cycle.purchaserName ? `Requirement: ${cycle.purchaserName}` : 'Requirement'),
+    address: cycle.purchaserName ? `Buyer: ${cycle.purchaserName}` : (listingTitle ?? 'No property linked'),
     area: 0,
     areaUnit: 'sqft',
     propertyType: 'house',
@@ -70,6 +80,8 @@ function placeholderProperty(cycle: PurchaseCycle): Property {
     createdBy: cycle.createdBy ?? cycle.agentId,
     sharedWith: [],
     images: [],
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
@@ -87,7 +99,15 @@ export default function PurchaseCycleDetailPage() {
   const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
 
   const cycle = useMemo(() => (cycleApi ? mapApiToPurchaseCycle(cycleApi) : null), [cycleApi]);
-  const property = useMemo(() => (cycle ? placeholderProperty(cycle) : null), [cycle]);
+  const propertyListingId = cycleApi?.propertyListingId ?? cycle?.propertyId;
+  const { property: fetchedProperty } = useProperty(
+    propertyListingId && propertyListingId !== '' ? propertyListingId : undefined
+  );
+  const property = useMemo(() => {
+    if (!cycle) return null;
+    if (fetchedProperty) return fetchedProperty;
+    return placeholderProperty(cycle, cycleApi?.propertyListing?.title);
+  }, [cycle, fetchedProperty, cycleApi?.propertyListing?.title]);
 
   const handleNavigate = (page: string, navigateId: string) => {
     const section = routeMap[page] ?? page;
@@ -137,7 +157,7 @@ export default function PurchaseCycleDetailPage() {
   }
 
   return (
-    <PurchaseCycleDetailsV4
+    <PurchaseCycleDetails
       cycle={cycle}
       property={property}
       user={user}

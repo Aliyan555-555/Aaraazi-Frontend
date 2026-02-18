@@ -56,8 +56,15 @@ export interface PurchaseCycleApiResponse {
     id: string;
     contact?: { id: string; name: string; phone: string | null; email: string | null };
   };
-  propertyListing?: { id: string; title: string; propertyType: string };
+  propertyListing?: { id: string; title: string; propertyType?: string };
   agent?: { id: string; name: string; email: string };
+  offers?: Array<{ id: string; amount?: number; status?: string; buyer?: { name: string } }>;
+  deals?: Array<{ id: string }>;
+}
+
+export interface UpdatePurchaseCyclePayload {
+  status?: string;
+  endDate?: string | null;
 }
 
 export const purchaseCyclesApi = {
@@ -82,6 +89,17 @@ export const purchaseCyclesApi = {
   ): Promise<PurchaseCycleApiResponse> => {
     const response = await apiClient.post<PurchaseCycleApiResponse>(
       '/purchase-cycles/from-property',
+      data
+    );
+    return response.data;
+  },
+
+  update: async (
+    id: string,
+    data: UpdatePurchaseCyclePayload
+  ): Promise<PurchaseCycleApiResponse> => {
+    const response = await apiClient.patch<PurchaseCycleApiResponse>(
+      `/purchase-cycles/${id}`,
       data
     );
     return response.data;

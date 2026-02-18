@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { logger } from './logger';
 
 const RATINGS_KEY = 'agent_collaboration_ratings_v1';
@@ -67,4 +68,64 @@ export function getAgentAverageRating(agentId: string): number {
 
     const sum = ratings.reduce((s, r) => s + r.rating, 0);
     return Math.round((sum / ratings.length) * 10) / 10;
+=======
+/**
+ * Agent Ratings – Collaboration feedback between agents.
+ * Uses localStorage until backend API is available.
+ */
+
+const RATINGS_KEY = 'aaraazi_agent_ratings_v1';
+
+export interface AgentRating {
+  id: string;
+  targetAgentId: string;
+  targetAgentName: string;
+  fromAgentId: string;
+  fromAgentName: string;
+  dealId: string;
+  rating: number;
+  comment: string;
+  category: 'communication' | 'professionalism' | 'cooperation' | 'timing';
+  createdAt: string;
+}
+
+function getAllAgentRatings(): AgentRating[] {
+  if (typeof window === 'undefined') return [];
+  const data = window.localStorage.getItem(RATINGS_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+/**
+ * Save an agent rating.
+ */
+export function saveAgentRating(
+  rating: Omit<AgentRating, 'id' | 'createdAt'>
+): AgentRating {
+  const ratings = getAllAgentRatings();
+  const newRating: AgentRating = {
+    ...rating,
+    id: `rating_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  ratings.push(newRating);
+  window.localStorage.setItem(RATINGS_KEY, JSON.stringify(ratings));
+  return newRating;
+}
+
+/**
+ * Get ratings for a specific agent.
+ */
+export function getAgentRatings(agentId: string): AgentRating[] {
+  return getAllAgentRatings().filter((r) => r.targetAgentId === agentId);
+}
+
+/**
+ * Calculate average rating for an agent.
+ */
+export function getAgentAverageRating(agentId: string): number {
+  const ratings = getAgentRatings(agentId);
+  if (ratings.length === 0) return 0;
+  const sum = ratings.reduce((s, r) => s + r.rating, 0);
+  return Math.round((sum / ratings.length) * 10) / 10;
+>>>>>>> Stashed changes
 }

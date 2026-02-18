@@ -28,11 +28,22 @@ import { DealWorkspaceCard } from './DealWorkspaceCard';
 import { DealKanbanCard } from './DealKanbanCard';
 import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
 import { Column, EmptyStatePresets, KanbanColumn } from '../workspace';
+<<<<<<< Updated upstream:src/components/deals/DealsWorkspaceV4.tsx
 import { getDeals, updateDeal } from '../../lib/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 
 export interface DealsWorkspaceV4Props {
+=======
+import { useDeals } from '../../hooks/useDeals';
+import { formatPKR } from '../../lib/currency';
+import { toast } from 'sonner';
+import { logger } from "../../lib/logger";
+
+const updateDeal = (..._args: any[]): any => { /* TODO: wire to PATCH /deals/:id when backend supports */ };
+
+export interface DealsWorkspaceProps {
+>>>>>>> Stashed changes:src/components/deals/DealsWorkspace.tsx
   user: User;
   onNavigate: (section: string, id?: string) => void;
   onAddDeal?: () => void;
@@ -48,19 +59,13 @@ export const DealsWorkspaceV4: React.FC<DealsWorkspaceV4Props> = ({
   onAddDeal,
   onEditDeal,
 }) => {
-  // State
-  const [isLoading, setIsLoading] = useState(false);
+  const { deals: allDeals, isLoading, error, refetch } = useDeals();
 
   // Helper function to export deals to CSV
   const exportDealsToCSV = (deals: Deal[]) => {
     console.log('Exporting deals to CSV:', deals);
     // TODO: Implement actual CSV export
   };
-
-  // Load deals based on user role
-  const allDeals = useMemo(() => {
-    return getDeals(user.role === 'admin' ? undefined : user.id, user.role);
-  }, [user.id, user.role]);
 
   // Calculate stats
   const stats = useMemo(() => {

@@ -612,8 +612,8 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
   const [contactSearchQuery, setContactSearchQuery] = useState(editingProperty?.currentOwnerName || '');
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
-  // Contact search via hook - no API calls in component
-  const { contacts, isLoading: loadingContacts } = useContactSearch(contactSearchQuery, 10);
+  // Contact search via hook - only agent's contacts for owner selection
+  const { contacts, isLoading: loadingContacts } = useContactSearch(contactSearchQuery, 10, user.id);
 
   // Features input state
   const [featureInput, setFeatureInput] = useState('');
