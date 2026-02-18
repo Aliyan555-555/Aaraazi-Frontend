@@ -134,9 +134,9 @@ export function EnhancedMatchCard({
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <p className="text-muted-foreground">Offer Amount</p>
-                <p className="font-bold">{formatPKR(latestOffer.offer.offerAmount || latestOffer.offer.amount)}</p>
+                <p className="font-bold">{formatPKR(latestOffer.offer.offerAmount || latestOffer.offer.amount || 0)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {(((latestOffer.offer.offerAmount || latestOffer.offer.amount) / (match.askingPrice || match.monthlyRent || (property.price as number) || 1)) * 100).toFixed(1)}% of asking
+                  {((((latestOffer.offer.offerAmount || latestOffer.offer.amount || 0) / (match.askingPrice || match.monthlyRent || (property.price as number) || 1)) * 100).toFixed(1))}% of asking
                 </p>
               </div>
               {latestOffer.offer.counterOfferAmount && (

@@ -44,9 +44,11 @@ type ContactWithLegacy = Contact & {
 };
 
 /** Deal with legacy UI fields not on schema Deal */
-type DealWithLegacy = any & {
+type DealWithLegacy = Deal & {
   propertyAddress?: string;
   finalPrice?: number;
+  createdAt?: string;
+  status?: string;
 };
 import { TaskQuickAddWidget } from '../tasks/TaskQuickAddWidget';
 import { TaskListView } from '../tasks/TaskListView';
@@ -100,7 +102,7 @@ export interface ContactDetailsV4EnhancedProps {
   onBack: () => void;
   onEdit?: (contact: Contact) => void;
   onDelete?: (contactId: string) => void;
-  onNavigate?: (page: string, data?: any) => void;
+  onNavigate?: (page: string, data?: unknown) => void;
 }
 
 export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> = ({
@@ -140,24 +142,23 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
     console.log('✅ Features: Tag Management, Follow-up Tracking, Status Controls');
   }, []);
 
-  // Helper functions to handle tags (stored as string in schema, used as array in UI)
-  const parseTags = (tagsString: string): string[] => {
-    if (!tagsString || tagsString.trim() === '') return [];
-    try {
-      // Try parsing as JSON array first
-      const parsed = JSON.parse(tagsString);
-      if (Array.isArray(parsed)) return parsed;
-      // If not array, treat as comma-separated
-      return tagsString.split(',').map((t: string) => t.trim()).filter((t: string) => t);
-    } catch {
-      // If JSON parse fails, treat as comma-separated
-      return tagsString.split(',').map((t: string) => t.trim()).filter((t: string) => t);
+  // Helper functions to handle tags (can be string or array)
+  const getTagArray = (tags: string | string[] | undefined | null): string[] => {
+    if (Array.isArray(tags)) return tags;
+    if (typeof tags === 'string' && tags.trim() !== '') {
+      try {
+        const parsed = JSON.parse(tags) as unknown;
+        if (Array.isArray(parsed)) return parsed as string[];
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+      } catch {
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+      }
     }
+    return [];
   };
 
-  const serializeTags = (tags: string[]): string => {
-    return JSON.stringify(tags);
-  };
+  // UI Contact type (types/contacts) uses tags as string[]; pass-through for data layer.
+  const serializeTags = (tags: string[]): string[] => tags;
 
   // ============================================================================
   // Data Loading
@@ -335,15 +336,15 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
     }
   };
 
-  const handleChangeStatus = (newStatus: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED') => {
-    updateContact(contact.id, { status: newStatus } as Parameters<typeof updateContact>[1]);
-    toast.success(`Contact status changed to ${newStatus.toLowerCase()}`);
+  const handleChangeStatus = (newStatus: 'active' | 'inactive' | 'archived') => {
+    updateContact(contact.id, { status: newStatus });
+    toast.success(`Contact status changed to ${newStatus}`);
     setRefreshTrigger(prev => prev + 1);
   };
 
   const handleAddTag = () => {
     if (newTag.trim()) {
-      const currentTags = parseTags(contact.tags);
+      const currentTags = getTagArray(contact.tags);
       if (!currentTags.includes(newTag.trim())) {
         updateContact(contact.id, {
           tags: serializeTags([...currentTags, newTag.trim()]),
@@ -359,7 +360,7 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    const currentTags = parseTags(contact.tags);
+    const currentTags = getTagArray(contact.tags);
     updateContact(contact.id, {
       tags: serializeTags(currentTags.filter((t: string) => t !== tagToRemove)),
     });
@@ -444,14 +445,14 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
       onClick: handleEditClick,
     },
     {
-      label: contact.status === 'ACTIVE' ? 'Mark Inactive' : 'Mark Active',
-      icon: contact.status === 'ACTIVE' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />,
-      onClick: () => handleChangeStatus(contact.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE'),
+      label: contact.status === 'active' ? 'Mark Inactive' : 'Mark Active',
+      icon: contact.status === 'active' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />,
+      onClick: () => handleChangeStatus(contact.status === 'active' ? 'inactive' : 'active'),
     },
     {
-      label: contact.status === 'ARCHIVED' ? 'Unarchive' : 'Archive',
+      label: contact.status === 'archived' ? 'Unarchive' : 'Archive',
       icon: <Archive className="h-4 w-4" />,
-      onClick: () => handleChangeStatus(contact.status === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED'),
+      onClick: () => handleChangeStatus(contact.status === 'archived' ? 'active' : 'archived'),
     },
     {
       label: 'Delete Contact',
@@ -570,8 +571,8 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
               <div>
                 <p className="text-sm text-muted-foreground">Status</p>
                 <Badge variant={
-                  contact.status === 'ACTIVE' ? 'default' :
-                    contact.status === 'INACTIVE' ? 'secondary' :
+                  contact.status === 'active' ? 'default' :
+                    contact.status === 'inactive' ? 'secondary' :
                       'outline'
                 }>
                   {contact.status.charAt(0).toUpperCase() + contact.status.slice(1)}
@@ -636,9 +637,9 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                 Add Tag
               </Button>
             </div>
-            {parseTags(contact.tags).length > 0 ? (
+            {getTagArray(contact.tags).length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {parseTags(contact.tags).map((tag: string, index: number) => (
+                {getTagArray(contact.tags).map((tag: string, index: number) => (
                   <Badge key={index} variant="outline" className="gap-1">
                     {tag}
                     <button
@@ -780,9 +781,9 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{deal.cycles?.sellCycle?.propertyId || (deal as any).propertyAddress || 'Property'}</p>
+                      <p className="font-medium">{deal.cycles?.sellCycle?.propertyId || (deal as DealWithLegacy).propertyAddress || 'Property'}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(deal.metadata?.createdAt || (deal as any).createdAt).toLocaleDateString('en-US', {
+                        {new Date(deal.metadata?.createdAt || (deal as DealWithLegacy).createdAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
@@ -889,12 +890,12 @@ export const ContactDetailsV4Enhanced: React.FC<ContactDetailsV4EnhancedProps> =
                   </div>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Transaction: {(deal as any).propertyAddress || deal.cycles?.sellCycle?.propertyId || 'Property'}</p>
+                  <p className="text-sm font-medium">Transaction: {(deal as DealWithLegacy).propertyAddress || deal.cycles?.sellCycle?.propertyId || 'Property'}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatPKR((deal as any).finalPrice || deal.financial?.agreedPrice || 0)} • {deal.lifecycle?.status || (deal as any).status || 'active'}
+                    {formatPKR((deal as DealWithLegacy).finalPrice || deal.financial?.agreedPrice || 0)} • {deal.lifecycle?.status || (deal as DealWithLegacy).status || 'active'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(deal.metadata?.createdAt || (deal as any).createdAt).toLocaleDateString('en-US', {
+                    {new Date(deal.metadata?.createdAt || (deal as DealWithLegacy).createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',

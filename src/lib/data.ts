@@ -1,6 +1,6 @@
+import { Property } from "../types/properties";
+import { Contact } from "../types/contacts";
 import {
-  Property,
-  Contact,
   JournalEntry,
   Expense,
   Lead,
@@ -53,17 +53,29 @@ export const getPropertyById = (id: string): Property | undefined => {
   return properties.find((p) => p.id === id);
 };
 
-export const addProperty = (property: Property): void => {
+export const addProperty = (
+  property: Omit<Property, "id" | "createdAt" | "updatedAt">,
+): Property => {
   const properties = getProperties();
-  properties.push(property);
+  const newProperty: Property = {
+    ...property,
+    id: `prop_${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } as Property;
+
+  properties.push(newProperty);
   saveToStorage(PROPERTIES_KEY, properties);
-  window.dispatchEvent(new CustomEvent("propertyAdded", { detail: property }));
+  window.dispatchEvent(
+    new CustomEvent("propertyAdded", { detail: newProperty }),
+  );
+  return newProperty;
 };
 
 export const updateProperty = (
   id: string,
   updates: Partial<Property>,
-): void => {
+): Property | null => {
   const properties = getProperties();
   const index = properties.findIndex((p) => p.id === id);
   if (index !== -1) {
@@ -76,7 +88,9 @@ export const updateProperty = (
     window.dispatchEvent(
       new CustomEvent("propertyUpdated", { detail: properties[index] }),
     );
+    return properties[index] || null;
   }
+  return null;
 };
 
 export const deleteProperty = (id: string): void => {
@@ -97,17 +111,35 @@ export const getContactById = (id: string): Contact | undefined => {
   return contacts.find((c) => c.id === id);
 };
 
-export const addContact = (contact: Contact): void => {
+/** Input for adding a contact - id, createdBy, createdAt, updatedAt are auto-generated if omitted */
+export const addContact = (
+  contact: Omit<Contact, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'> &
+    Partial<Pick<Contact, 'id' | 'createdBy' | 'createdAt' | 'updatedAt'>>
+): Contact => {
   const contacts = getContacts();
-  contacts.push(contact);
+  const now = new Date().toISOString();
+  const newContact: Contact = {
+    ...contact,
+    id: contact.id ?? `contact_${Date.now()}`,
+    createdBy: contact.createdBy ?? contact.agentId ?? 'system',
+    createdAt: contact.createdAt ?? now,
+    updatedAt: contact.updatedAt ?? now,
+  } as Contact;
+  contacts.push(newContact);
   saveToStorage(CONTACTS_KEY, contacts);
+  window.dispatchEvent?.(new CustomEvent('contactAdded', { detail: newContact }));
+  return newContact;
 };
 
 export const updateContact = (id: string, updates: Partial<Contact>): void => {
   const contacts = getContacts();
   const index = contacts.findIndex((c) => c.id === id);
   if (index !== -1) {
-    contacts[index] = { ...contacts[index], ...updates };
+    contacts[index] = {
+      ...contacts[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
     saveToStorage(CONTACTS_KEY, contacts);
   }
 };

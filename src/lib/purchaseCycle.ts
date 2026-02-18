@@ -238,6 +238,27 @@ export function updatePurchaseCycle(
 }
 
 /**
+ * Delete a purchase cycle
+ */
+export function deletePurchaseCycle(id: string): void {
+  const json = localStorage.getItem(PURCHASE_CYCLES_KEY);
+  if (!json) return;
+
+  const cycles: PurchaseCycle[] = JSON.parse(json);
+  const filtered = cycles.filter((c) => c.id !== id);
+  localStorage.setItem(PURCHASE_CYCLES_KEY, JSON.stringify(filtered));
+
+  // Dispatch event so UI can update
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("cycleDeleted", {
+        detail: { cycleId: id, cycleType: "purchase" },
+      }),
+    );
+  }
+}
+
+/**
  * Add a communication log entry
  */
 export function addCommunicationLog(

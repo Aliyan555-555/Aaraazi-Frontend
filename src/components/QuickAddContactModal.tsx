@@ -36,7 +36,7 @@ export const QuickAddContactModal: React.FC<QuickAddContactModalProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | Contact['type'] | Contact['category']) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

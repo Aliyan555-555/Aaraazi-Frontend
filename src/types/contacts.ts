@@ -9,6 +9,7 @@ export type ContactType =
   | "prospect"
   | "investor"
   | "vendor"
+  | "partner"
   | "agent";
 export type ContactCategory =
   | "buyer"
@@ -17,7 +18,7 @@ export type ContactCategory =
   | "landlord"
   | "external-broker"
   | "both";
-export type ContactStatus = "active" | "inactive" | "archived";
+export type ContactStatus = "active" | "inactive" | "archived" | "blocked";
 
 export interface Contact extends Partial<ContactLeadTracking> {
   id: string;

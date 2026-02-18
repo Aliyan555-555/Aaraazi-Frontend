@@ -80,7 +80,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
   // Load contacts and shares
   const contacts = useMemo(() => {
     return getContacts().filter(contact =>
-      contact.type === 'AGENT' && contact.id !== user.id
+      contact.type === 'agent' && contact.id !== user.id
     );
   }, [user.id]);
 

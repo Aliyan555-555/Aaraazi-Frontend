@@ -75,24 +75,24 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
 
   // Calculate stats
   const stats = useMemo(() => {
-    const active = allCycles.filter(c => 
+    const active = allCycles.filter(c =>
       ['prospecting', 'offer-made', 'negotiation', 'under-contract', 'due-diligence', 'closing'].includes(c.status)
     ).length;
     const completed = allCycles.filter(c => c.status === 'completed').length;
     const underContract = allCycles.filter(c => c.status === 'under-contract').length;
-    
+
     const totalValue = allCycles
       .filter(c => ['offer-made', 'negotiation', 'under-contract', 'due-diligence', 'closing'].includes(c.status))
-      .reduce((sum, c) => sum + (c.negotiatedPrice || c.offerAmount), 0);
-    
+      .reduce((sum, c) => sum + (c.negotiatedPrice || c.offerAmount || 0), 0);
+
     return [
       { label: 'Total', value: allCycles.length, variant: 'default' as const },
       { label: 'Active', value: active, variant: 'success' as const },
       { label: 'Under Contract', value: underContract, variant: 'warning' as const },
-      { 
-        label: 'Pipeline Value', 
-        value: formatPKR(totalValue).replace('PKR ', ''), 
-        variant: 'default' as const 
+      {
+        label: 'Pipeline Value',
+        value: formatPKR(totalValue).replace('PKR ', ''),
+        variant: 'default' as const
       },
     ];
   }, [allCycles]);
@@ -104,18 +104,18 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
       label: 'Property',
       accessor: (c) => {
         const property = getProperty(c.propertyId);
-        const propertyAddress = property?.address 
+        const propertyAddress = property?.address
           ? (typeof property.address === 'string' ? property.address : formatPropertyAddress(property.address))
           : 'Property';
-        
+
         return (
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
               {property?.images?.[0] ? (
-                <img 
-                  src={property.images[0]} 
-                  alt={propertyAddress} 
-                  className="w-full h-full object-cover rounded" 
+                <img
+                  src={property.images[0]}
+                  alt={propertyAddress}
+                  className="w-full h-full object-cover rounded"
                 />
               ) : (
                 <Home className="h-6 w-6 text-gray-400" />
@@ -189,9 +189,9 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
           completed: 'Completed',
           cancelled: 'Cancelled',
         };
-        
+
         const statusLabel = statusLabels[c.status] || c.status;
-        
+
         // PHASE 5: Use StatusBadge component with auto-mapping
         return <StatusBadge status={statusLabel} size="sm" />;
       },
@@ -270,15 +270,15 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
       id: 'dueDiligence',
       label: 'Due Diligence',
       options: [
-        { 
-          value: 'complete', 
-          label: 'Complete', 
-          count: allCycles.filter(c => c.titleClear && c.inspectionDone && c.documentsVerified).length 
+        {
+          value: 'complete',
+          label: 'Complete',
+          count: allCycles.filter(c => c.titleClear && c.inspectionDone && c.documentsVerified).length
         },
-        { 
-          value: 'pending', 
-          label: 'Pending', 
-          count: allCycles.filter(c => !c.titleClear || !c.inspectionDone || !c.documentsVerified).length 
+        {
+          value: 'pending',
+          label: 'Pending',
+          count: allCycles.filter(c => !c.titleClear || !c.inspectionDone || !c.documentsVerified).length
         },
       ],
       multiple: false,
@@ -318,27 +318,31 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
   ];
 
   // Custom filter function
-  const handleFilter = (cycle: PurchaseCycle, filterValues: Record<string, any>): boolean => {
+  const handleFilter = (cycle: PurchaseCycle, activeFilters: Map<string, any>): boolean => {
     // Status filter
-    if (filterValues.status?.length > 0 && !filterValues.status.includes(cycle.status)) {
+    const statusFilter = activeFilters.get('status');
+    if (statusFilter?.length > 0 && !statusFilter.includes(cycle.status)) {
       return false;
     }
 
     // Purchaser type filter
-    if (filterValues.purchaserType?.length > 0 && !filterValues.purchaserType.includes(cycle.purchaserType)) {
+    const purchaserTypeFilter = activeFilters.get('purchaserType');
+    if (purchaserTypeFilter?.length > 0 && !purchaserTypeFilter.includes(cycle.purchaserType)) {
       return false;
     }
 
     // Financing type filter
-    if (filterValues.financingType?.length > 0 && !filterValues.financingType.includes(cycle.financingType)) {
+    const financingTypeFilter = activeFilters.get('financingType');
+    if (financingTypeFilter?.length > 0 && !financingTypeFilter.includes(cycle.financingType)) {
       return false;
     }
 
     // Due diligence filter
-    if (filterValues.dueDiligence) {
+    const dueDiligenceFilter = activeFilters.get('dueDiligence');
+    if (dueDiligenceFilter) {
       const isComplete = cycle.titleClear && cycle.inspectionDone && cycle.documentsVerified;
-      if (filterValues.dueDiligence === 'complete' && !isComplete) return false;
-      if (filterValues.dueDiligence === 'pending' && isComplete) return false;
+      if (dueDiligenceFilter === 'complete' && !isComplete) return false;
+      if (dueDiligenceFilter === 'pending' && isComplete) return false;
     }
 
     return true;
@@ -347,7 +351,7 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
   // Custom sort function
   const handleSort = (cycles: PurchaseCycle[], sortBy: string): PurchaseCycle[] => {
     const sorted = [...cycles];
-    
+
     switch (sortBy) {
       case 'newest':
         sorted.sort((a, b) => {
@@ -364,15 +368,15 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
         });
         break;
       case 'amount-high':
-        sorted.sort((a, b) => (b.negotiatedPrice || b.offerAmount) - (a.negotiatedPrice || a.offerAmount));
+        sorted.sort((a, b) => ((b.negotiatedPrice || b.offerAmount) || 0) - ((a.negotiatedPrice || a.offerAmount) || 0));
         break;
       case 'amount-low':
-        sorted.sort((a, b) => (a.negotiatedPrice || a.offerAmount) - (b.negotiatedPrice || b.offerAmount));
+        sorted.sort((a, b) => ((a.negotiatedPrice || a.offerAmount) || 0) - ((b.negotiatedPrice || b.offerAmount) || 0));
         break;
       default:
         break;
     }
-    
+
     return sorted;
   };
 
@@ -380,20 +384,20 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
   const handleSearch = (cycle: PurchaseCycle, query: string): boolean => {
     const property = getProperty(cycle.propertyId);
     const searchLower = query.toLowerCase();
-    
+
     // Format property address for search
-    const propertyAddress = property?.address 
+    const propertyAddress = property?.address
       ? (typeof property.address === 'string' ? property.address : formatPropertyAddress(property.address))
       : '';
-    
+
     return (
-      cycle.purchaserName.toLowerCase().includes(searchLower) ||
-      cycle.sellerName.toLowerCase().includes(searchLower) ||
-      cycle.agentName.toLowerCase().includes(searchLower) ||
+      (cycle.purchaserName || '').toLowerCase().includes(searchLower) ||
+      (cycle.sellerName || '').toLowerCase().includes(searchLower) ||
+      (cycle.agentName || '').toLowerCase().includes(searchLower) ||
       propertyAddress.toLowerCase().includes(searchLower) ||
-      property?.propertyType?.toLowerCase().includes(searchLower) ||
-      cycle.offerAmount.toString().includes(searchLower) ||
-      (cycle.negotiatedPrice && cycle.negotiatedPrice.toString().includes(searchLower))
+      (property?.propertyType || '').toLowerCase().includes(searchLower) ||
+      (cycle.offerAmount || 0).toString().includes(searchLower) ||
+      (cycle.negotiatedPrice ? cycle.negotiatedPrice.toString().includes(searchLower) : false)
     );
   };
 
@@ -403,14 +407,14 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
       title="Purchase Cycles"
       description="Manage property acquisitions and buying processes"
       stats={stats}
-      
+
       // Primary action
       primaryAction={{
         label: 'Start Purchase Cycle',
         icon: <Plus className="w-4 h-4" />,
         onClick: onStartNew || (() => toast.info('Start Purchase Cycle clicked')),
       }}
-      
+
       // Secondary actions
       secondaryActions={[
         {
@@ -424,18 +428,18 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
           onClick: () => toast.info('Export All clicked'),
         },
       ]}
-      
+
       // View configuration
       defaultView="grid"
       availableViews={['grid', 'table']}
-      
+
       // Data
       items={allCycles}
       getItemId={(cycle) => cycle.id}
-      
+
       // Table view
       columns={columns}
-      
+
       // Grid view
       renderCard={(cycle) => (
         <PurchaseCycleWorkspaceCard
@@ -446,7 +450,7 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
           onDelete={() => toast.info(`Delete cycle ${cycle.id}`)}
         />
       )}
-      
+
       // Search & Filter
       searchPlaceholder="Search by property, purchaser, seller, agent..."
       onSearch={handleSearch}
@@ -454,24 +458,20 @@ export const PurchaseCyclesWorkspaceV4: React.FC<PurchaseCyclesWorkspaceV4Props>
       onFilter={handleFilter}
       sortOptions={sortOptions}
       onSort={handleSort}
-      defaultSort="newest"
-      
-      // Bulk actions
+
       bulkActions={bulkActions}
-      enableBulkSelect={true}
-      
+
       // Item actions
       onItemClick={(cycle) => onNavigate('purchase-cycle-details', cycle.id)}
-      
+
       // Empty states
-      emptyState={EmptyStatePresets.purchaseCycles(onStartNew || (() => {}))}
-      
+      emptyStatePreset={EmptyStatePresets.purchaseCycles(onStartNew || (() => { }))}
+
       // Loading
       isLoading={isLoading}
-      
+
       // Pagination
-      enablePagination={true}
-      itemsPerPage={12}
+      pagination={{ enabled: true, pageSize: 12 }}
     />
   );
 };
