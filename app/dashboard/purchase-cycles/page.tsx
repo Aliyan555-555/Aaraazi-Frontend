@@ -3,29 +3,14 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-// <<<<<<< HEAD
-// import { PurchaseCyclesWorkspace } from '@/components/purchase-cycles/PurchaseCyclesWorkspace';
-// =======
-// <<<<<<< Updated upstream
-// import { PurchaseCyclesWorkspaceV4 } from '@/components/purchase-cycles/PurchaseCyclesWorkspaceV4';
-// >>>>>>> aaraazi/properties
-import { User, mapAuthUserToUIUser, PurchaseCycle } from '@/types';
-// =======
 import { PurchaseCyclesWorkspace } from '@/components/purchase-cycles/PurchaseCyclesWorkspace';
-import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
-// import { mapAuthUserToUIUser } from '@/types';
-// import type { PurchaseCycle } from '@/types';
-// >>>>>>> Stashed changes
+import { User, mapAuthUserToUIUser, PurchaseCycle } from '@/types';
 
 export default function PurchaseCyclesPage() {
     const { user: saasUser } = useAuthStore();
     const router = useRouter();
 
     const handleNavigate = (section: string, id?: string) => {
-        if (section === 'purchase-cycle-details' && id) {
-            router.push(`/dashboard/purchase-cycles/${id}`);
-            return;
-        }
         if (id) {
             router.push(`/dashboard/${section}/${id}`);
         } else {
@@ -34,22 +19,20 @@ export default function PurchaseCyclesPage() {
     };
 
     const handleStartNew = () => {
-        router.push('/dashboard/purchase-cycles/new');
+        console.log("Start new purchase cycle");
     };
 
     const handleEditCycle = (cycle: PurchaseCycle) => {
-        router.push(`/dashboard/purchase-cycles/${cycle.id}`);
+        router.push(`/dashboard/purchase-cycles/${cycle.id}/edit`);
     };
 
     const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
 
     if (!user) {
         return (
-            <GlobalLoadingScreen
-                message="Loading..."
-                className="h-[calc(100vh-4rem)]"
-                size="lg"
-            />
+            <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
         );
     }
 

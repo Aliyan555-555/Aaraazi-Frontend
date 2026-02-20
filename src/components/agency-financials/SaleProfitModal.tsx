@@ -1,3 +1,8 @@
+/**
+ * Sale & Profit Calculation Modal
+ * Records property sale and calculates complete P&L
+ * Design System V4.1 Compliant
+ */
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, DollarSign, TrendingUp, TrendingDown, Calculator, FileText, AlertCircle } from 'lucide-react';
@@ -12,11 +17,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
-// import { createMultipleTransactions } from '../../lib/agencyTransactions';
-// import { calculatePropertyFinancials, generatePropertyProfitLoss } from '../../lib/agencyFinancials';
+import { createMultipleTransactions } from '../../lib/agencyTransactions';
+import { calculatePropertyFinancials, generatePropertyProfitLoss } from '../../lib/agencyFinancials';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 
+<<<<<<< Updated upstream
+=======
+// ===== STUBS for removed prototype functions =====
+const createMultipleTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculatePropertyFinancials = (..._args: any[]): any => ({
+  totalAcquisitionCost: 0,
+  operatingProfit: 0,
+  totalIncome: 0,
+  totalExpenses: 0
+});
+const generatePropertyProfitLoss = (..._args: any[]): any => ({});
+// ===== END STUBS =====
+
+
+>>>>>>> Stashed changes
 interface SaleProfitModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -100,171 +120,158 @@ export function SaleProfitModal({
   };
 
   // Calculate all financial metrics
-  // const calculations = useMemo(() => {
-  //   // Get current financials (before sale)
-  //   const currentFinancials = calculatePropertyFinancials(
-  //     propertyId,
-  //     propertyAddress,
-  //     acquisitionDate
-  //   );
+  const calculations = useMemo(() => {
+    // Get current financials (before sale)
+    const currentFinancials = calculatePropertyFinancials(
+      propertyId,
+      propertyAddress,
+      acquisitionDate
+    );
 
-  //   const salePrice = parseAmount(formData.salePrice);
-  //   const saleCommission = parseAmount(formData.saleCommission);
-  //   const closingCosts = parseAmount(formData.closingCosts);
-  //   const saleExpenses = saleCommission + closingCosts;
-  //   const netSaleProceeds = salePrice - saleExpenses;
+    const salePrice = parseAmount(formData.salePrice);
+    const saleCommission = parseAmount(formData.saleCommission);
+    const closingCosts = parseAmount(formData.closingCosts);
+    const saleExpenses = saleCommission + closingCosts;
+    const netSaleProceeds = salePrice - saleExpenses;
 
-  //   const capitalGain = netSaleProceeds - currentFinancials.totalAcquisitionCost;
-  //   const totalProfit = capitalGain + currentFinancials.operatingProfit;
+    const capitalGain = netSaleProceeds - currentFinancials.totalAcquisitionCost;
+    const totalProfit = capitalGain + currentFinancials.operatingProfit;
 
-  //   // Calculate holding period
-  //   const acquireDate = new Date(acquisitionDate);
-  //   const sellDate = new Date(formData.saleDate);
-  //   const holdingDays = Math.floor((sellDate.getTime() - acquireDate.getTime()) / (1000 * 60 * 60 * 24));
-  //   const holdingYears = holdingDays / 365;
+    // Calculate holding period
+    const acquireDate = new Date(acquisitionDate);
+    const sellDate = new Date(formData.saleDate);
+    const holdingDays = Math.floor((sellDate.getTime() - acquireDate.getTime()) / (1000 * 60 * 60 * 24));
+    const holdingYears = holdingDays / 365;
 
-  //   // Calculate ROI
-  //   const roi = currentFinancials.totalAcquisitionCost > 0
-  //     ? (totalProfit / currentFinancials.totalAcquisitionCost) * 100
-  //     : 0;
-  //   const annualizedROI = holdingYears > 0 ? roi / holdingYears : roi;
+    // Calculate ROI
+    const roi = currentFinancials.totalAcquisitionCost > 0
+      ? (totalProfit / currentFinancials.totalAcquisitionCost) * 100
+      : 0;
+    const annualizedROI = holdingYears > 0 ? roi / holdingYears : roi;
 
-  //   return {
-  //     currentFinancials,
-  //     salePrice,
-  //     saleCommission,
-  //     closingCosts,
-  //     saleExpenses,
-  //     netSaleProceeds,
-  //     capitalGain,
-  //     totalProfit,
-  //     holdingDays,
-  //     holdingYears,
-  //     roi,
-  //     annualizedROI,
-  //   };
-  // }, [propertyId, propertyAddress, acquisitionDate, formData.salePrice, formData.saleCommission, formData.closingCosts, formData.saleDate]);
+    return {
+      currentFinancials,
+      salePrice,
+      saleCommission,
+      closingCosts,
+      saleExpenses,
+      netSaleProceeds,
+      capitalGain,
+      totalProfit,
+      holdingDays,
+      holdingYears,
+      roi,
+      annualizedROI,
+    };
+  }, [propertyId, propertyAddress, acquisitionDate, formData.salePrice, formData.saleCommission, formData.closingCosts, formData.saleDate]);
 
   const handleSubmit = async () => {
     // Validation
-    // if (!formData.salePrice || parseAmount(formData.salePrice) <= 0) {
-    //   toast.error('Please enter a valid sale price');
-    //   return;
-    // }
+    if (!formData.salePrice || parseAmount(formData.salePrice) <= 0) {
+      toast.error('Please enter a valid sale price');
+      return;
+    }
 
-    // if (!formData.saleDate) {
-    //   toast.error('Please select a sale date');
-    //   return;
-    // }
+    if (!formData.saleDate) {
+      toast.error('Please select a sale date');
+      return;
+    }
 
     // Validate sale date is after acquisition date
-    // if (new Date(formData.saleDate) < new Date(acquisitionDate)) {
-    //   toast.error('Sale date cannot be before acquisition date');
-    //   return;
-    // }
+    if (new Date(formData.saleDate) < new Date(acquisitionDate)) {
+      toast.error('Sale date cannot be before acquisition date');
+      return;
+    }
 
-    // setIsSubmitting(true);
+    setIsSubmitting(true);
 
-    // try {
-    //   // Create sale transaction records
-    //   const transactions = [];
+    try {
+      // Create sale transaction records
+      const transactions = [];
 
-    //   // Sale Price
-    //   transactions.push({
-    //     propertyId,
-    //     propertyAddress,
-    //     category: 'sale' as const,
-    //     type: 'sale_price' as const,
-    //     amount: parseAmount(formData.salePrice),
-    //     date: formData.saleDate,
-    //     description: 'Property sale price',
-    //     notes: formData.notes || undefined,
-    //     sellCycleId,
-    //     dealId,
-    //     recordedBy: userId,
-    //     recordedByName: userName,
-    //   });
+      // Sale Price
+      transactions.push({
+        propertyId,
+        propertyAddress,
+        category: 'sale' as const,
+        type: 'sale_price' as const,
+        amount: parseAmount(formData.salePrice),
+        date: formData.saleDate,
+        description: 'Property sale price',
+        notes: formData.notes || undefined,
+        sellCycleId,
+        dealId,
+        recordedBy: userId,
+        recordedByName: userName,
+      });
 
-    //   // Sale Commission
-    //   if (parseAmount(formData.saleCommission) > 0) {
-    //     transactions.push({
-    //       propertyId,
-    //       propertyAddress,
-    //       category: 'sale' as const,
-    //       type: 'sale_commission' as const,
-    //       amount: parseAmount(formData.saleCommission),
-    //       date: formData.saleDate,
-    //       description: 'Sale commission',
-    //       sellCycleId,
-    //       dealId,
-    //       recordedBy: userId,
-    //       recordedByName: userName,
-    //     });
-    //   }
+      // Sale Commission
+      if (parseAmount(formData.saleCommission) > 0) {
+        transactions.push({
+          propertyId,
+          propertyAddress,
+          category: 'sale' as const,
+          type: 'sale_commission' as const,
+          amount: parseAmount(formData.saleCommission),
+          date: formData.saleDate,
+          description: 'Sale commission',
+          sellCycleId,
+          dealId,
+          recordedBy: userId,
+          recordedByName: userName,
+        });
+      }
 
-    //   // Closing Costs
-    //   if (parseAmount(formData.closingCosts) > 0) {
-    //     transactions.push({
-    //       propertyId,
-    //       propertyAddress,
-    //       category: 'sale' as const,
-    //       type: 'closing_costs' as const,
-    //       amount: parseAmount(formData.closingCosts),
-    //       date: formData.saleDate,
-    //       description: 'Closing costs',
-    //       sellCycleId,
-    //       dealId,
-    //       recordedBy: userId,
-    //       recordedByName: userName,
-    //     });
-    //   }
+      // Closing Costs
+      if (parseAmount(formData.closingCosts) > 0) {
+        transactions.push({
+          propertyId,
+          propertyAddress,
+          category: 'sale' as const,
+          type: 'closing_costs' as const,
+          amount: parseAmount(formData.closingCosts),
+          date: formData.saleDate,
+          description: 'Closing costs',
+          sellCycleId,
+          dealId,
+          recordedBy: userId,
+          recordedByName: userName,
+        });
+      }
 
-    //   // Save all transactions
-    //   // createMultipleTransactions(transactions);
+      // Save all transactions
+      createMultipleTransactions(transactions);
 
-    //   // Generate P&L statement
-    //   const pnl = generatePropertyProfitLoss(
-    //     propertyId,
-    //     propertyAddress,
-    //     acquisitionDate,
-    //     formData.saleDate,
-    //     userId
-    //   );
+      // Generate P&L statement
+      const pnl = generatePropertyProfitLoss(
+        propertyId,
+        propertyAddress,
+        acquisitionDate,
+        formData.saleDate,
+        userId
+      );
 
-    //   // Success message with profit details
-    //   const profitMessage = calculations.totalProfit >= 0
-    //     ? `Profit: ${formatPKR(calculations.totalProfit)}`
-    //     : `Loss: ${formatPKR(Math.abs(calculations.totalProfit))}`;
+      // Success message with profit details
+      const profitMessage = calculations.totalProfit >= 0
+        ? `Profit: ${formatPKR(calculations.totalProfit)}`
+        : `Loss: ${formatPKR(Math.abs(calculations.totalProfit))}`;
 
-    //   toast.success('Property sale recorded successfully', {
-    //     description: `${profitMessage} | ROI: ${calculations.roi.toFixed(2)}%`,
-    //     duration: 5000,
-    //   });
+      toast.success('Property sale recorded successfully', {
+        description: `${profitMessage} | ROI: ${calculations.roi.toFixed(2)}%`,
+        duration: 5000,
+      });
 
-    //   onSuccess?.();
-    //   onClose();
-    // } catch (error) {
-    //   console.error('Error recording sale:', error);
-    //   toast.error('Failed to record sale. Please try again.');
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error('Error recording sale:', error);
+      toast.error('Failed to record sale. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const { currentFinancials, netSaleProceeds, capitalGain, totalProfit, holdingDays, roi, annualizedROI } = {
-    currentFinancials: {
-      totalAcquisitionCost: 0,
-      operatingProfit: 0,
-      totalIncome: 0,
-      totalExpenses: 0,
-    },
-    netSaleProceeds: 0,
-    capitalGain: 0,
-    totalProfit: 0,
-    holdingDays: 0,
-    roi: 0,
-    annualizedROI: 0,
-  };
+  const { currentFinancials, netSaleProceeds, capitalGain, totalProfit, holdingDays, roi, annualizedROI } = calculations;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

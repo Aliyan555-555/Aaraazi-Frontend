@@ -1,3 +1,8 @@
+/**
+ * Middleware configuration
+ * Single source of truth for routes, auth cookie, and matcher
+ */
+
 export const AUTH_COOKIE_NAME = 'aaraazi-auth';
 export const AUTH_COOKIE_PATH = '/';
 export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days

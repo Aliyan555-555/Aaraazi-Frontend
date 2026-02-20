@@ -11,27 +11,14 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { User } from '../types';
 import { toast } from 'sonner';
-// <<<<<<< HEAD
 // [STUBBED] import { addOffer } from '../lib/sellCycle';
-// import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
+import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
 
 // ===== STUBS for removed prototype functions =====
-// const addOffer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addOffer = (..._args: any[]): any => { /* stub - prototype function removed */ };
 // ===== END STUBS =====
 
 
-// =======
-// <<<<<<< Updated upstream
-// import { addOffer } from '../lib/sellCycle';
-import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
-
-// =======
-import { useCreateOffer } from '../hooks/useOffers';
-// import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
-
-
-// >>>>>>> Stashed changes
-// >>>>>>> aaraazi/properties
 interface AddOfferModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,8 +36,6 @@ export function AddOfferModal({
   user,
   onSuccess,
 }: AddOfferModalProps) {
-  const { createOffer, isLoading: isSubmitting } = useCreateOffer();
-  
   const [formData, setFormData] = useState({
     buyerName: '',
     buyerContact: '',
@@ -62,6 +47,7 @@ export function AddOfferModal({
     agentNotes: '',
   });
   
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,13 +76,16 @@ export function AddOfferModal({
       return;
     }
     
+    setIsSubmitting(true);
+    
     try {
-      await createOffer(sellCycleId, {
+      addOffer(sellCycleId, {
+        buyerId: `buyer_${Date.now()}`,
         buyerName: formData.buyerName,
         buyerContact: formData.buyerContact,
         offerAmount: formData.offerAmount,
         tokenAmount: formData.tokenAmount || undefined,
-        validUntil: formData.expiryDate || undefined,
+        expiryDate: formData.expiryDate || undefined,
         conditions: formData.conditions || undefined,
         notes: formData.notes || undefined,
         agentNotes: formData.agentNotes || undefined,
@@ -107,11 +96,9 @@ export function AddOfferModal({
       handleClose();
     } catch (error) {
       console.error('Error adding offer:', error);
-      const message =
-        error && typeof error === 'object' && 'message' in error
-          ? String((error as { message: string }).message)
-          : 'Failed to record offer';
-      toast.error(message);
+      toast.error('Failed to record offer');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

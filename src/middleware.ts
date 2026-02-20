@@ -1,17 +1,10 @@
-import type { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+<<<<<<< Updated upstream
 
-// <<<<<<< HEAD
 import { logger } from "./lib/logger";
-// =======
-// <<<<<<< Updated upstream
-// >>>>>>> aaraazi/properties
 // ============================================================================
 // Types & Interfaces
 // ============================================================================
-// =======
-// import { logger } from "./lib/logger";
-import { runMiddleware } from './middleware/chain';
-// >>>>>>> Stashed changes
 
 interface AuthData {
   user: {
@@ -273,7 +266,12 @@ function createRedirectUrl(
   return url;
 }
 
-
+// ============================================================================
+// Middleware Function
+// ============================================================================
+=======
+import { runMiddleware } from './middleware/chain';
+>>>>>>> Stashed changes
 
 export function middleware(request: NextRequest) {
   return runMiddleware(request);

@@ -13,25 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
-// <<<<<<< HEAD
 // [STUBBED] import { createPurchaseCycle } from '../../lib/purchaseCycle';
-// =======
-// <<<<<<< Updated upstream
-// import { createPurchaseCycle } from '../../lib/purchaseCycle';
-// >>>>>>> aaraazi/properties
-// import { createInvestorInvestmentsFromPurchase, transferPropertyToInvestors, validateInvestorShares } from '../../lib/multiInvestorPurchase';
-// =======
-// import { validateInvestorShares } from '../../lib/formValidation';
-// >>>>>>> Stashed changes
+import { createInvestorInvestmentsFromPurchase, transferPropertyToInvestors, validateInvestorShares } from '../../lib/multiInvestorPurchase';
 import { Users, AlertCircle, DollarSign, Edit, X } from 'lucide-react';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { InvestorSelectionModal } from './InvestorSelectionModal';
-// <<<<<<< Updated upstream
-// =======
-// import { logger } from "../../lib/logger";
-import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
-// >>>>>>> Stashed changes
 
 import { logger } from "../../lib/logger";
 
@@ -44,7 +31,6 @@ interface InvestorPurchaseFormProps {
   user: User;
   onSuccess: () => void;
   onCancel: () => void;
-  onSubmitFromProperty?: (data: CreatePurchaseCycleFromPropertyPayload) => Promise<{ id: string } | null>;
 }
 
 export function InvestorPurchaseForm({
@@ -52,7 +38,6 @@ export function InvestorPurchaseForm({
   user,
   onSuccess,
   onCancel,
-  onSubmitFromProperty,
 }: InvestorPurchaseFormProps) {
   const [showInvestorModal, setShowInvestorModal] = useState(false);
   const [selectedInvestors, setSelectedInvestors] = useState<InvestorShare[]>([]);
@@ -174,8 +159,8 @@ export function InvestorPurchaseForm({
     setIsSubmitting(true);
 
     try {
+      // Build investor names for display
       const investorNames = selectedInvestors.map(inv => inv.investorName).join(', ');
-// <<<<<<< Updated upstream
       
       logger.log('📝 Creating purchase cycle with data:', {
         propertyId: property.id,
@@ -245,33 +230,6 @@ export function InvestorPurchaseForm({
       logger.log('🎉 Investor purchase completed successfully!');
       toast.success(`Multi-investor purchase cycle created with ${selectedInvestors.length} investor${selectedInvestors.length !== 1 ? 's' : ''}!`);
       onSuccess();
-// =======
-      const firstInvestor = selectedInvestors[0];
-
-      if (onSubmitFromProperty) {
-        const payload: CreatePurchaseCycleFromPropertyPayload = {
-          propertyListingId: property.id,
-          purchaserType: 'investor',
-          contactId: firstInvestor?.investorId || undefined,
-          buyerName: investorNames,
-          buyerPhone: '03000000000',
-          sellerName: formData.sellerName.trim(),
-          sellerContact: formData.sellerContact.trim() || undefined,
-          offerAmount: parseFloat(formData.offerAmount),
-          askingPrice: parseFloat(formData.askingPrice) || undefined,
-          facilitationFee: formData.facilitationFee ? parseFloat(formData.facilitationFee) : undefined,
-          financingType: formData.financingType,
-          targetCloseDate: formData.targetCloseDate || undefined,
-          notes: formData.notes || undefined,
-        };
-        const cycle = await onSubmitFromProperty(payload);
-        logger.log('✅ Purchase cycle created:', cycle?.id);
-        toast.success(`Multi-investor purchase cycle created with ${selectedInvestors.length} investor${selectedInvestors.length !== 1 ? 's' : ''}!`);
-        onSuccess();
-      } else {
-        toast.info('Purchase cycle creation is only available from the property-based flow.');
-      }
-// >>>>>>> Stashed changes
     } catch (error) {
       logger.error('❌ Error creating purchase cycle:', error);
       toast.error('Failed to create purchase cycle');

@@ -1,28 +1,23 @@
+/**
+ * Agency Purchase Form - V4.0
+ * When the agency is buying a property as an investment
+ * PHASE 4: Integrated with AcquisitionCostModal for financial tracking
+ */
+
 import React, { useState } from 'react';
-import { Property, User } from '../../types';
+import { Property, User, PurchaseCycle } from '../../types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-// <<<<<<< HEAD
 // [STUBBED] import { createPurchaseCycle } from '../../lib/purchaseCycle';
-// =======
-// <<<<<<< Updated upstream
-// import { createPurchaseCycle } from '../../lib/purchaseCycle';
-// =======
-// >>>>>>> Stashed changes
-// >>>>>>> aaraazi/properties
 import { DollarSign, TrendingUp, Calculator, AlertCircle, Receipt } from 'lucide-react';
 import { formatPKR } from '../../lib/currency';
+import { formatPropertyAddress } from '../../lib/utils';
 import { toast } from 'sonner';
 import { AcquisitionCostModal } from '../agency-financials/AcquisitionCostModal';
-// <<<<<<< Updated upstream
-// =======
-import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
-import { formatPropertyAddress } from '@/lib/utils';
-// >>>>>>> Stashed changes
 
 // ===== STUBS for removed prototype functions =====
 const createPurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
@@ -34,7 +29,6 @@ interface AgencyPurchaseFormProps {
   user: User;
   onSuccess: () => void;
   onCancel: () => void;
-  onSubmitFromProperty?: (data: CreatePurchaseCycleFromPropertyPayload) => Promise<{ id: string } | null>;
 }
 
 export function AgencyPurchaseForm({
@@ -42,7 +36,6 @@ export function AgencyPurchaseForm({
   user,
   onSuccess,
   onCancel,
-  onSubmitFromProperty,
 }: AgencyPurchaseFormProps) {
   const [formData, setFormData] = useState({
     // Seller info
@@ -109,35 +102,48 @@ export function AgencyPurchaseForm({
     setIsSubmitting(true);
 
     try {
-      if (onSubmitFromProperty) {
-        const payload: CreatePurchaseCycleFromPropertyPayload = {
-          propertyListingId: property.id,
-          purchaserType: 'agency',
-          sellerName: formData.sellerName.trim(),
-          sellerContact: formData.sellerContact.trim() || undefined,
-          offerAmount: parseFloat(formData.offerAmount),
-          askingPrice: parseFloat(formData.askingPrice) || undefined,
-          financingType: formData.financingType,
-          targetCloseDate: formData.targetCloseDate || undefined,
-          notes: formData.investmentNotes || undefined,
-          purpose: formData.purpose,
-          expectedResaleValue: formData.expectedResaleValue ? parseFloat(formData.expectedResaleValue) : undefined,
-          renovationBudget: formData.renovationBudget ? parseFloat(formData.renovationBudget) : undefined,
-          targetROI: formData.targetROI ? parseFloat(formData.targetROI) : undefined,
-          investmentNotes: formData.investmentNotes || undefined,
-        };
-        const newCycle = await onSubmitFromProperty(payload);
-        toast.success('Agency purchase cycle created successfully!');
-        if (newCycle?.id) {
-          setCreatedCycleId(newCycle.id);
-          setShowAcquisitionModal(true);
-        } else {
-          onSuccess();
-        }
-      } else {
-        toast.info('Purchase cycle creation is only available from the property-based flow.');
-        setIsSubmitting(false);
-      }
+      // Create purchase cycle
+      const newCycle = createPurchaseCycle({
+        propertyId: property.id,
+        
+        // Purchaser (Agency)
+        purchaserType: 'agency',
+        purchaserId: 'AGENCY_ID', // Would come from SaaS context
+        purchaserName: 'Agency Investment',
+        
+        // Seller
+        sellerId: `seller_${Date.now()}`,
+        sellerName: formData.sellerName,
+        sellerContact: formData.sellerContact,
+        sellerType: formData.sellerType,
+        
+        // Pricing
+        askingPrice: parseFloat(formData.askingPrice),
+        offerAmount: parseFloat(formData.offerAmount),
+        
+        // Investment details
+        purpose: formData.purpose,
+        expectedResaleValue: formData.expectedResaleValue ? parseFloat(formData.expectedResaleValue) : undefined,
+        renovationBudget: formData.renovationBudget ? parseFloat(formData.renovationBudget) : undefined,
+        targetROI: formData.targetROI ? parseFloat(formData.targetROI) : undefined,
+        investmentNotes: formData.investmentNotes || undefined,
+        
+        // Financing
+        financingType: formData.financingType,
+        
+        // Agent
+        agentId: user.id,
+        agentName: user.name,
+        
+        // Dates
+        targetCloseDate: formData.targetCloseDate || undefined,
+      });
+
+      toast.success('Agency purchase cycle created successfully!');
+      
+      // Phase 4: Store cycle ID and open acquisition cost modal
+      setCreatedCycleId(newCycle.id);
+      setShowAcquisitionModal(true);
     } catch (error) {
       console.error('Error creating purchase cycle:', error);
       toast.error('Failed to create purchase cycle');
