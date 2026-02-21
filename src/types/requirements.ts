@@ -30,7 +30,7 @@ export interface BuyerRequirement extends Partial<RequirementLeadTracking> {
     createdAt: string;
     updatedAt: string;
 
-    // V4.0 UI Fields (Optional)
+    // UI Fields (Optional)
     urgency?: 'high' | 'medium' | 'low' | 'normal';
     targetMoveDate?: string;
     financingType?: string;
@@ -61,7 +61,7 @@ export interface RentRequirement extends Partial<RequirementLeadTracking> {
     createdAt: string;
     updatedAt: string;
 
-    // V4.0 UI Fields (Optional)
+    // UI Fields (Optional)
     urgency?: 'high' | 'medium' | 'low' | 'normal';
     targetMoveDate?: string;
     additionalNotes?: string;

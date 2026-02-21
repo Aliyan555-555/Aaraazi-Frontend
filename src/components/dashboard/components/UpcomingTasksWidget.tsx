@@ -9,7 +9,7 @@
  * - Quick complete action
  * - Navigate to task details
  * 
- * DESIGN: Design System V4.1 compliant
+ * DESIGN: Design System compliant
  * UX LAWS: Miller's Law (5±2 items), Fitts's Law (large targets)
  * 
  * @example
@@ -21,8 +21,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { User } from '../../../types';
-import { TaskV4 } from '../../../types/tasks';
-import { getAllTasksV4, updateTask } from '../../../lib/tasks';
+import { Task } from '../../../types/tasks';
+import { getAllTasks, updateTask } from '../../../lib/tasks';
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -102,7 +102,7 @@ function formatDueDate(dueDate: string): { text: string; color: string; icon: Re
 /**
  * Get upcoming tasks (next 7 days, not completed)
  */
-function getUpcomingTasks(tasks: TaskV4[]): TaskV4[] {
+function getUpcomingTasks(tasks: Task[]): Task[] {
   const now = new Date();
   const sevenDaysFromNow = new Date();
   sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
@@ -131,7 +131,7 @@ function getUpcomingTasks(tasks: TaskV4[]): TaskV4[] {
  * Task Row Component
  */
 interface TaskRowProps {
-  task: TaskV4;
+  task: Task;
   user: User;
   onComplete: () => void;
   onView: () => void;
@@ -219,7 +219,7 @@ export const UpcomingTasksWidget: React.FC<UpcomingTasksWidgetProps> = ({
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Load tasks
-  const tasks = useMemo(() => getAllTasksV4(user.id, user.role), [user.id, user.role, refreshKey]);
+  const tasks = useMemo(() => getAllTasks(user.id, user.role), [user.id, user.role, refreshKey]);
 
   // Get upcoming tasks
   const upcomingTasks = useMemo(() => getUpcomingTasks(tasks), [tasks]);

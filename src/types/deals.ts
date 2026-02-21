@@ -129,11 +129,17 @@ export interface Deal {
           percentage: number;
           amount: number;
           status: "pending" | "paid" | "cancelled";
+          paidDate?: string;
+          approvedBy?: string;
+          approvedAt?: string;
         };
         secondaryAgent?: {
           percentage: number;
           amount: number;
           status: "pending" | "paid" | "cancelled";
+          paidDate?: string;
+          approvedBy?: string;
+          approvedAt?: string;
         };
         agency: {
           percentage: number;
@@ -649,6 +655,177 @@ export interface LinkCyclesResult {
     rentCycle?: string;
   };
   errors?: string[];
+}
+
+// ============================================
+// BACKEND API RESPONSE TYPES (Prisma-aligned)
+// ============================================
+
+/**
+ * Deal response from backend API — matches Prisma Deal model.
+ * Use this for data fetched from /deals endpoints.
+ */
+export interface DealApiResponse {
+  id: string;
+  dealNumber: string;
+  tenantId: string;
+  agencyId: string;
+  notes: string;
+  branchId: string | null;
+  sellCycleId: string | null;
+  purchaseCycleId: string | null;
+  propertyListingId: string | null;
+  masterPropertyId: string | null;
+  primaryAgentId: string;
+  secondaryAgentId: string | null;
+  buyerContactId: string | null;
+  sellerContactId: string | null;
+  status: 'ACTIVE' | 'ON_HOLD' | 'CANCELLED' | 'COMPLETED';
+  stage:
+    | 'NEGOTIATION'
+    | 'OFFER_ACCEPTED'
+    | 'AGREEMENT_SIGNING'
+    | 'DOCUMENTATION'
+    | 'PAYMENT_PROCESSING'
+    | 'PAYMENT'
+    | 'HANDOVER_PREP'
+    | 'TRANSFER_REGISTRATION'
+    | 'TRANSFER'
+    | 'FINAL_HANDOVER'
+    | 'COMPLETED';
+  agreedPrice: string; // Decimal as string from Prisma
+  commissionTotal: string | null;
+  closingDate: string | null;
+  actualClosingDate: string | null;
+  ownershipTransferred: boolean;
+  masterDataSynced: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  createdBy: string | null;
+  updatedBy: string | null;
+
+  // Relations (conditionally included)
+  primaryAgent?: { id: string; name: string; email: string };
+  secondaryAgent?: { id: string; name: string; email: string } | null;
+  buyerContact?: { id: string; name: string; phone: string; email: string } | null;
+  sellerContact?: { id: string; name: string; phone: string; email: string } | null;
+  propertyListing?: {
+    id: string;
+    title: string;
+    masterProperty?: {
+      address?: { fullAddress: string; city?: unknown; area?: unknown };
+    };
+  } | null;
+  sellCycle?: { id: string; cycleNumber: string; agentId: string } | null;
+  purchaseCycle?: { id: string; cycleNumber: string; agentId: string } | null;
+  payments?: DealPaymentApiResponse[];
+  stageTrackings?: DealStageTrackingApiResponse[];
+}
+
+/** Payment record from the backend API — matches Prisma DealPayment model */
+export interface DealPaymentApiResponse {
+  id: string;
+  paymentNumber: string;
+  tenantId: string;
+  agencyId: string;
+  dealId: string;
+  amount: string; // Decimal as string
+  dueDate: string;
+  paidDate: string | null;
+  status: 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'CANCELLED';
+  type: 'TOKEN' | 'DOWN_PAYMENT' | 'INSTALLMENT' | 'FINAL_PAYMENT' | 'AD_HOC';
+  method: string | null;
+  notes: string | null;
+  createdAt: string;
+  createdBy: string | null;
+}
+
+/** Stage tracking record from the backend API */
+export interface DealStageTrackingApiResponse {
+  id: string;
+  dealId: string;
+  stage: string;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'BLOCKED';
+  startedAt: string | null;
+  completedAt: string | null;
+  notes: string | null;
+  createdBy: string | null;
+}
+
+/** List entry for deals — simpler shape for listings */
+export interface DealListApiResponse {
+  id: string;
+  dealNumber: string;
+  status: DealApiResponse['status'];
+  stage: DealApiResponse['stage'];
+  agreedPrice: string;
+  commissionTotal: string | null;
+  createdAt: string;
+  primaryAgent?: { id: string; name: string; email: string };
+  buyerContact?: { id: string; name: string; phone: string; email: string } | null;
+  sellerContact?: { id: string; name: string; phone: string; email: string } | null;
+  propertyListing?: {
+    id: string;
+    title: string;
+    masterProperty?: { address?: { fullAddress: string } };
+  } | null;
+}
+
+/**
+ * Lease API response — matches Prisma Lease model
+ */
+export interface LeaseApiResponse {
+  id: string;
+  leaseNumber: string;
+  tenantId: string;
+  agencyId: string;
+  rentCycleId: string;
+  propertyListingId: string;
+  tenantContactId: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: string; // Decimal as string
+  securityDeposit: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'TERMINATED' | 'PENDING' | 'RENEWED';
+  contractUrl: string | null;
+  signedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  tenantContact?: { id: string; name: string; phone: string; email: string } | null;
+  rentPayments?: RentPaymentApiResponse[];
+}
+
+/**
+ * Rent payment API response — matches Prisma RentPayment model
+ */
+export interface RentPaymentApiResponse {
+  id: string;
+  paymentNumber: string;
+  leaseId: string;
+  month: string;
+  amountExpected: string;
+  amountPaid: string;
+  paidDate: string | null;
+  status: 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'WAIVED';
+  notes: string | null;
+  createdAt: string;
+}
+
+/**
+ * Rent cycle application (DealOffer with contact) from backend
+ */
+export interface RentApplicationApiResponse {
+  id: string;
+  offerNumber: string;
+  rentCycleId: string;
+  buyerId: string;
+  offerAmount: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN' | 'COUNTERED' | 'EXPIRED';
+  notes: string | null;
+  createdAt: string;
+  buyer?: { id: string; name: string; phone: string; email: string } | null;
 }
 
 // ============================================

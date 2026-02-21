@@ -48,7 +48,7 @@ interface ExpenseListProps {
  * 
  * Table displaying all expense records with selection, filtering, and actions.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Table components
  * - Uses StatusBadge for status display
  * - No Tailwind typography classes

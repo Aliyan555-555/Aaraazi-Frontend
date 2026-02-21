@@ -12,7 +12,7 @@
  * - Click to launch workflow
  * 
  * DESIGN:
- * - Follows Design System V4.1
+ * - Follows Design System
  * - Brand colors (Forest Green, Terracotta)
  * - NO Tailwind typography classes
  * 

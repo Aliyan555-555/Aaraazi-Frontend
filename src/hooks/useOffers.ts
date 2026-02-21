@@ -1,6 +1,6 @@
 /**
  * Offers Hooks
- * Mutations for creating, accepting, rejecting, and countering offers
+ * Mutations for creating, accepting, and rejecting offers
  */
 
 import { useState, useCallback } from 'react';
@@ -89,36 +89,4 @@ export function useRejectOffer() {
   );
 
   return { rejectOffer, isLoading, error };
-}
-
-export function useCounterOffer() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const counterOffer = useCallback(
-    async (sellCycleId: string, offerId: string, counterAmount: number) => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const offer = await offersService.counter(
-          sellCycleId,
-          offerId,
-          counterAmount,
-        );
-        return offer;
-      } catch (err: unknown) {
-        const message =
-          err && typeof err === 'object' && 'message' in err
-            ? String((err as { message: string }).message)
-            : 'Failed to counter offer';
-        setError(message);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
-
-  return { counterOffer, isLoading, error };
 }

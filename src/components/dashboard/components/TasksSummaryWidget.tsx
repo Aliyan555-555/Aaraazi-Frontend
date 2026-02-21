@@ -9,7 +9,7 @@
  * - Completion rate
  * - Quick navigation to tasks
  * 
- * DESIGN: Design System V4.1 compliant
+ * DESIGN: Design System compliant
  * UX LAWS: Miller's Law (5±2 metrics)
  * 
  * @example
@@ -21,8 +21,8 @@
 
 import React, { useMemo } from 'react';
 import { User } from '../../../types';
-import { TaskV4, TaskStatus } from '../../../types/tasks';
-import { getAllTasksV4 } from '../../../lib/tasks';
+import { Task, TaskStatus } from '../../../types/tasks';
+import { getAllTasks } from '../../../lib/tasks';
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -42,7 +42,7 @@ interface TasksSummaryWidgetProps {
 /**
  * Calculate task statistics
  */
-function getTaskStats(tasks: TaskV4[]) {
+function getTaskStats(tasks: Task[]) {
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'completed').length;
   const inProgress = tasks.filter(t => t.status === 'in-progress').length;
@@ -82,7 +82,7 @@ export const TasksSummaryWidget: React.FC<TasksSummaryWidgetProps> = ({
   onNavigate,
 }) => {
   // Load tasks
-  const tasks = useMemo(() => getAllTasksV4(user.id, user.role), [user.id, user.role]);
+  const tasks = useMemo(() => getAllTasks(user.id, user.role), [user.id, user.role]);
   
   // Calculate stats
   const stats = useMemo(() => getTaskStats(tasks), [tasks]);

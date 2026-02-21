@@ -12,7 +12,7 @@
  * - Re-run from history
  * - Export history to CSV
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState, useMemo } from 'react';

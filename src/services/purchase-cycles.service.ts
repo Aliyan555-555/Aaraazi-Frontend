@@ -56,6 +56,18 @@ class PurchaseCyclesService {
     );
     return response.data;
   }
+
+  async completePurchase(id: string, finalPrice: number): Promise<PurchaseCycleApiResponse> {
+    const response = await apiClient.post<PurchaseCycleApiResponse>(
+      `${this.baseUrl}/${id}/complete`,
+      { finalPrice },
+    );
+    return response.data;
+  }
+
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`${this.baseUrl}/${id}`);
+  }
 }
 
 export const purchaseCyclesService = new PurchaseCyclesService();

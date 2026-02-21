@@ -55,7 +55,7 @@ const CHART_OF_ACCOUNTS = [
  * Modal for creating manual journal entries in the general ledger.
  * Supports double-entry bookkeeping with debit/credit validation.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Dialog, Input, Select components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

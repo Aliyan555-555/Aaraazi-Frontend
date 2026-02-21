@@ -5,7 +5,7 @@
  * Features:
  * - Shows buyer/agent information (with privacy controls)
  * - Offer amount and details
- * - Accept/Reject/Counter actions
+ * - Accept/Reject actions
  * - Coordination options
  * - Status tracking
  */
@@ -36,7 +36,6 @@ interface CrossAgentOfferCardProps {
   offer: CrossAgentOffer;
   onAccept: (offerId: string, notes?: string) => void;
   onReject: (offerId: string, reason: string) => void;
-  onCounter: (offerId: string, counterAmount: number, notes: string) => void;
   onScheduleMeeting: (offerId: string, date: string) => void;
   canRespond?: boolean; // If the current user can respond to this offer
   showBuyerContact?: boolean; // If buyer contact should be revealed
@@ -46,7 +45,6 @@ export const CrossAgentOfferCard: React.FC<CrossAgentOfferCardProps> = ({
   offer,
   onAccept,
   onReject,
-  onCounter,
   onScheduleMeeting,
   canRespond = true,
   showBuyerContact = false,

@@ -12,12 +12,12 @@
 
 import { useState, useEffect } from 'react';
 import { User, Property } from '../../../types';
-import { LeadV4 } from '../../../types/leads';
+import { DashboardLead } from '../../../types/leads';
 import { CRMTask, CRMInteraction } from '../../../types';
 import { PerformanceMetric } from '../components/PerformanceCard';
 import { calculatePerformanceMetrics } from '../utils/calculatePerformanceMetrics';
 import { getProperties } from '../../../lib/data';
-import { getLeadsV4 } from '../../../lib/leadsV4';
+import { getDashboardLeads } from '../../../lib/dashboardLeads';
 import { getAllTasks, getAllInteractions } from '../../../lib/data';
 import { getAllAgents } from '../../../lib/auth';
 
@@ -45,7 +45,7 @@ export function usePerformanceData(user: User): PerformanceData {
 
       // Load all required data
       const properties = getProperties(userId, userRole);
-      const leads = getLeadsV4(userId, userRole);
+      const leads = getDashboardLeads(userId, userRole);
       const tasks = getAllTasks(userId, userRole);
       const interactions = getAllInteractions(userId, userRole);
       const users = getAllAgents();

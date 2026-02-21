@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { TaskDetailsV4 } from '@/components/tasks/TaskDetailsV4';
+import { TaskDetails } from '@/components/tasks/TaskDetails';
 import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
 
@@ -37,7 +37,7 @@ export default function TaskDetailPage() {
     };
 
     return (
-        <TaskDetailsV4
+        <TaskDetails
             taskId={id}
             user={user}
             onBack={() => router.push('/dashboard/tasks')}

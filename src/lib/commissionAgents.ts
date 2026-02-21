@@ -1,5 +1,4 @@
 /**
-<<<<<<< Updated upstream
  * Commission Agents - Multi-Agent Commission Support
  *
  * Manages commission splits across multiple agents (internal and external)
@@ -9,7 +8,7 @@ import { Deal, CommissionAgent, CommissionStatus } from "../types/deals";
 import { User } from "../types";
 import { updateDeal } from "./deals";
 import { getContactById } from "./data";
-import { getAllAgents } from "./data";
+import { getAllAgents } from "./auth";
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -318,22 +317,27 @@ export const markAgentCommissionPaid = (
   }
 
   // Find and update agent
-  const agent = deal.financial.commission.agents.find(
-    (a: CommissionAgent) => a.id === agentId,
+  const updatedAgents = deal.financial.commission.agents.map(
+    (agent: CommissionAgent) =>
+      agent.id === agentId
+        ? ({
+            ...agent,
+            status: "paid" as CommissionStatus,
+            paidDate: new Date().toISOString(),
+            approvedBy: paidBy, // Use the passed paidBy parameter
+            approvedAt: new Date().toISOString(),
+          } as CommissionAgent) // Cast to CommissionAgent
+        : agent,
   );
-
-  if (!agent) {
-    throw new Error(`Agent ${agentId} not found`);
-  }
-
-  agent.status = "paid";
-  agent.paidDate = new Date().toISOString();
 
   // Update deal
   return updateDeal(dealId, {
     financial: {
       ...deal.financial,
-      commission: deal.financial.commission,
+      commission: {
+        ...deal.financial.commission,
+        agents: updatedAgents,
+      },
     },
   });
 };
@@ -347,7 +351,7 @@ export const getAgentDetails = (
 ) => {
   if (entityType === "user") {
     const users = getAllAgents();
-    return users.find((u) => u.id === agentId);
+    return users.find((u: User) => u.id === agentId); // Added type annotation for 'u'
   } else {
     return getContactById(agentId);
   }
@@ -406,38 +410,19 @@ export const migrateLegacyCommission = (deal: Deal): Deal => {
     });
   }
 
-  return updateDeal(deal.id, {
+  const updatedDeal = updateDeal(deal.id, {
     financial: {
       ...deal.financial,
       commission: {
         ...deal.financial.commission,
-        agents,
+        agents: agents,
         _legacy: {
           primaryAgent: deal.financial.commission.split?.primaryAgent,
           secondaryAgent: deal.financial.commission.split?.secondaryAgent,
         },
-      },
+      } as any,
     },
   });
+
+  return updatedDeal;
 };
-=======
- * Commission Agents – Re-exports for backward compatibility.
- *
- * Architecture:
- * - lib/commission-utils.ts: Pure domain logic (validation, mutations)
- * - services/commission.service.ts: Data fetching (internal agents, external brokers)
- * - hooks/useCommissionAgents.ts: useInternalAgents, useExternalBrokers
- *
- * Prefer using hooks in components; use commission-utils for pure logic.
- */
-
-export {
-  validateCommissionSplits,
-  addAgentToCommission,
-  removeAgentFromCommission,
-  migrateLegacyCommission,
-  calculateCommissionAmount,
-} from './commission-utils';
-
-export type { CommissionAgent } from '@/types/deals';
->>>>>>> Stashed changes

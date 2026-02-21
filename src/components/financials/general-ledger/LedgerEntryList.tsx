@@ -41,7 +41,7 @@ interface LedgerEntryListProps {
  * 
  * Table displaying all general ledger entries with double-entry bookkeeping.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Table components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

@@ -356,7 +356,7 @@ export const SubmitOfferModal: React.FC<SubmitOfferModalProps> = ({
                 <p className="font-medium mb-1">Important:</p>
                 <ul className="space-y-1 list-disc list-inside">
                   <li>Your offer will be sent to {match.listingAgentName}</li>
-                  <li>The listing agent may accept, reject, or counter your offer</li>
+                  <li>The listing agent may accept or reject your offer</li>
                   <li>You'll receive a notification when they respond</li>
                   <li>Your buyer's contact details will only be revealed if the offer is accepted</li>
                 </ul>

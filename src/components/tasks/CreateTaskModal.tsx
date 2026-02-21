@@ -9,12 +9,12 @@
  * - Checklist builder
  * - Time estimation
  * 
- * DESIGN: Design System V4.1 compliant
+ * DESIGN: Design System compliant
  */
 
 import React, { useState } from 'react';
 import { User } from '../../types';
-import { TaskV4, TaskTemplate, TaskPriority, TaskCategory, TaskEntityType, RecurrencePattern } from '../../types/tasks';
+import { Task, TaskTemplate, TaskPriority, TaskCategory, TaskEntityType, RecurrencePattern } from '../../types/tasks';
 import { createTask, createTaskFromTemplate, getTaskTemplates } from '../../lib/tasks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
@@ -47,7 +47,7 @@ interface CreateTaskModalProps {
   open: boolean;
   onClose: () => void;
   user: User;
-  onTaskCreated: (task: TaskV4) => void;
+  onTaskCreated: (task: Task) => void;
   
   // Pre-fill options
   entityType?: TaskEntityType;

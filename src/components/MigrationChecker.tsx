@@ -27,11 +27,11 @@ export function MigrationChecker({ onMigrationComplete }: MigrationCheckerProps)
   const checkMigrationStatus = () => {
     const status = getMigrationStatus();
     
-    // If migration not complete, check if there's V2 data
+    // If migration not complete, check if there's data
     if (!status.isComplete) {
       const v2Data = localStorage.getItem('properties');
       if (v2Data) {
-        // V2 data exists, prompt migration
+        // data exists, prompt migration
         setShowPrompt(true);
       }
     }

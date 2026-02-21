@@ -333,8 +333,7 @@ export function updateOffer(
         // Update purchase cycle status to accepted
         updatePurchaseCycle(acceptedOffer.linkedPurchaseCycleId, {
           status: "accepted",
-          negotiatedPrice:
-            acceptedOffer.counterOfferAmount || acceptedOffer.offerAmount,
+          negotiatedPrice: acceptedOffer.offerAmount,
           acceptanceDate: new Date().toISOString().split("T")[0],
         });
 
@@ -588,35 +587,6 @@ export function rejectOffer(sellCycleId: string, offerId: string): void {
 }
 
 /**
- * Counter an offer
- */
-export function counterOffer(
-  sellCycleId: string,
-  offerId: string,
-  counterAmount: number,
-): void {
-  const cycle = getSellCycleById(sellCycleId);
-  if (!cycle) {
-    throw new Error("Sell cycle not found");
-  }
-
-  const updatedOffers = cycle.offers.map((o) => ({
-    ...o,
-    ...(o.id === offerId
-      ? {
-          status: "countered" as const,
-          counterOfferAmount: counterAmount,
-        }
-      : {}),
-  }));
-
-  updateSellCycle(sellCycleId, {
-    offers: updatedOffers,
-    status: "negotiation",
-  });
-}
-
-/**
  * Close/Complete a sell cycle (property sold)
  * This handles ownership transfer and transaction creation
  */
@@ -862,16 +832,6 @@ export function getLatestOfferForProperty(
   }
 
   return null;
-}
-
-/**
- * V3.0: Withdraw an offer (change status to cancelled)
- */
-export function withdrawOffer(sellCycleId: string, offerId: string): void {
-  updateOffer(sellCycleId, offerId, {
-    status: "rejected", // Use rejected status to indicate withdrawal
-    agentNotes: `Offer withdrawn by agent on ${new Date().toLocaleDateString()}`,
-  });
 }
 
 // ============================================

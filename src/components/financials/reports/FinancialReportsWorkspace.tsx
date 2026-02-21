@@ -174,7 +174,7 @@ const REPORT_TEMPLATES: ReportTemplate[] = [
  * - Comparative analysis (YoY, MoM)
  * - Report history tracking
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses WorkspaceHeader with stats
  * - Uses WorkspaceSearchBar with filters
  * - Uses ReportTemplateCard components

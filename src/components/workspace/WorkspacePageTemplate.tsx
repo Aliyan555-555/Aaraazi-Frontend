@@ -1,30 +1,3 @@
-/**
- * WorkspacePageTemplate - Main Template Component
- * PHASE 5.1: Core Template System ✅
- * 
- * PURPOSE:
- * Main orchestrator for all workspace/listing pages. Provides consistent
- * structure, state management, and UX patterns across Properties, Cycles,
- * Deals, and Requirements workspaces.
- * 
- * FEATURES:
- * - Multiple view modes (Table, Grid, Kanban)
- * - Integrated search, filter, and sort
- * - Bulk selection and actions
- * - Pagination support
- * - Empty states
- * - UX laws implementation
- * 
- * USAGE:
- * <WorkspacePageTemplate
- *   title="Properties"
- *   items={properties}
- *   columns={propertyColumns}
- *   renderCard={(item) => <PropertyCard {...item} />}
- *   onItemClick={handlePropertyClick}
- * />
- */
-
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { WorkspaceHeader } from './WorkspaceHeader';
 import { WorkspaceSearchBar, QuickFilter, SortOption } from './WorkspaceSearchBar';
@@ -94,7 +67,7 @@ export interface WorkspacePageTemplateProps<T> {
   stats?: Array<{
     label: string;
     value: number | string;
-    variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+    variant?: 'default' | 'success' | 'warning' | 'destructive' | 'info';
     icon?: React.ReactNode;
   }>;
 
@@ -187,11 +160,10 @@ export interface WorkspacePageTemplateProps<T> {
  * WorkspacePageTemplate - Main template component
  * Memoized for performance
  */
-export const WorkspacePageTemplate = React.memo(<T,>({
+const WorkspacePageTemplateInner = React.memo(<T,>({
   // Header
   title,
   description,
-  icon,
   stats = [],
 
   // Actions
@@ -270,7 +242,7 @@ export const WorkspacePageTemplate = React.memo(<T,>({
    */
   useEffect(() => {
     const newActiveFilters = new Map<string, any>();
-    
+
     quickFilters.forEach(filter => {
       if (filter.value) {
         // Only add to activeFilters if value is not empty
@@ -283,18 +255,36 @@ export const WorkspacePageTemplate = React.memo(<T,>({
         }
       }
     });
-    
+
     setActiveFilters(newActiveFilters);
   }, [quickFilters]);
 
   // ==================== DATA PROCESSING ====================
 
   /**
+   * Enhance quickFilters with internal state management
+   */
+  const enhancedQuickFilters = useMemo(() => {
+    return quickFilters.map(filter => ({
+      ...filter,
+      value: activeFilters.get(filter.id) || (filter.multiple ? [] : ''),
+      onChange: (value: any) => {
+        setActiveFilters(prev => {
+          const next = new Map(prev);
+          next.set(filter.id, value);
+          return next;
+        });
+        setCurrentPage(1);
+      }
+    }));
+  }, [quickFilters, activeFilters]);
+
+  /**
    * Filter items based on search query
    */
   const searchedItems = useMemo(() => {
     if (!searchQuery.trim()) return items;
-    
+
     if (onSearch) {
       return items.filter(item => onSearch(item, searchQuery));
     }
@@ -346,7 +336,7 @@ export const WorkspacePageTemplate = React.memo(<T,>({
       const bValue = (b as any)[sortBy];
 
       if (aValue === bValue) return 0;
-      
+
       const comparison = aValue > bValue ? 1 : -1;
       return sortOrder === 'asc' ? comparison : -comparison;
     });
@@ -469,7 +459,6 @@ export const WorkspacePageTemplate = React.memo(<T,>({
       <WorkspaceHeader
         title={title}
         description={description}
-        icon={icon}
         stats={stats}
         primaryAction={primaryAction}
         secondaryActions={secondaryActions}
@@ -483,7 +472,7 @@ export const WorkspacePageTemplate = React.memo(<T,>({
         searchValue={searchQuery}
         onSearchChange={handleSearchChange}
         placeholder={searchPlaceholder}
-        quickFilters={quickFilters}
+        quickFilters={enhancedQuickFilters}
         sortOptions={sortOptions}
         sortValue={sortBy}
         onSortChange={handleSortChange}
@@ -566,6 +555,7 @@ export const WorkspacePageTemplate = React.memo(<T,>({
       )}
     </div>
   );
-}) as <T>(props: WorkspacePageTemplateProps<T>) => React.ReactElement;
+})
 
-WorkspacePageTemplate.displayName = 'WorkspacePageTemplate';
+export const WorkspacePageTemplate = WorkspacePageTemplateInner as <T>(props: WorkspacePageTemplateProps<T>) => React.ReactElement;
+(WorkspacePageTemplate as any).displayName = 'WorkspacePageTemplate';

@@ -10,7 +10,7 @@
  * - Configure time and day settings
  * - View next run time
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState, useEffect } from 'react';

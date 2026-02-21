@@ -1,6 +1,6 @@
 /**
  * BuyerRequirementWorkspaceCard Component
- * Custom card for Buyer Requirements Workspace V4
+ * Custom card for Buyer Requirements Workspace
  * 
  * Uses WorkspaceCard with buyer requirement-specific customization
  */

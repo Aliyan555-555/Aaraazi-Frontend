@@ -10,7 +10,7 @@
  * - Quick template preview
  * - Duplicate templates
  * 
- * DESIGN: Design System V4.1 compliant
+ * DESIGN: Design System compliant
  * UX LAWS: Miller's Law (7±2 items per view), Fitts's Law (large touch targets)
  * 
  * @example

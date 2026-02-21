@@ -84,11 +84,10 @@ export function deleteOffer(offerId: string): void {
 }
 
 export function updateOfferStatus(
-  offerId: string, 
-  newStatus: 'active' | 'accepted' | 'rejected' | 'countered',
+  offerId: string,
+  newStatus: 'active' | 'accepted' | 'rejected',
   userId: string,
   notes?: string,
-  counterAmount?: number
 ): void {
   try {
     const offer = getOfferById(offerId);
@@ -109,11 +108,7 @@ export function updateOfferStatus(
     offer.updatedAt = new Date().toISOString();
     offer.statusHistory = offer.statusHistory || [];
     offer.statusHistory.push(statusChange);
-    
-    if (newStatus === 'countered' && counterAmount) {
-      offer.counterAmount = counterAmount;
-    }
-    
+
     saveOffer(offer);
     
     // CRITICAL FIX: When offer is accepted, create a deal
@@ -273,10 +268,6 @@ export function validateOffer(offer: Partial<Offer>): string[] {
   
   if (!offer.dateReceived) {
     errors.push('Date received is required');
-  }
-  
-  if (offer.status === 'countered' && (!offer.counterAmount || offer.counterAmount <= 0)) {
-    errors.push('Counter amount is required for countered offers');
   }
   
   return errors;

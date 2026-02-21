@@ -19,7 +19,7 @@ interface PropertyProfitLossModalProps {
  * Detailed Profit & Loss statement for a single property.
  * Shows acquisition costs, operating income/expenses, and sale details.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Dialog and Tabs components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

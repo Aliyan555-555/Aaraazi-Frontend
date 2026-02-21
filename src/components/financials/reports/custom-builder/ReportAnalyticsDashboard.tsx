@@ -10,7 +10,7 @@
  * - Sharing statistics
  * - Trend analysis
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useMemo } from 'react';

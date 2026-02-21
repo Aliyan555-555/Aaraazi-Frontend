@@ -22,7 +22,7 @@
 // Supabase removed - using localStorage only
 import { config, devLog, verboseLog } from './config';
 
-// const BACKEND_URL = `https://${projectId}.supabase.co/functions/v1/make-server-c0858a00`;
+// const BACKEND_URL = `https://${projectId}.supabase.co/functions//make-server-c0858a00`;
 
 interface DataServiceConfig {
   useSupabase: boolean;

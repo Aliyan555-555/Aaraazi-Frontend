@@ -1,7 +1,7 @@
 /**
  * Dashboard Type Definitions
  * 
- * TypeScript interfaces and types for the DashboardV4 component system.
+ * TypeScript interfaces and types for the Dashboard component system.
  */
 
 // ============================================

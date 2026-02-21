@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { TaskV4, TaskStatus, TaskPriority } from '../../types/tasks';
+import { Task, TaskStatus, TaskPriority } from '../../types/tasks';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
@@ -36,7 +36,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 
 interface TaskListViewProps {
-  tasks: TaskV4[];
+  tasks: Task[];
   selectedTasks?: string[];
   onTaskSelect?: (taskId: string, selected: boolean) => void;
   onSelectAll?: (selected: boolean) => void;

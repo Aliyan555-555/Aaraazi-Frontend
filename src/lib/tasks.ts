@@ -11,7 +11,7 @@
  */
 
 import {
-  TaskV4,
+  Task,
   TaskTemplate,
   TaskAutomationRule,
   TaskStatus,
@@ -25,7 +25,7 @@ import {
   TaskTimeEntry,
   TaskActivity,
 } from "../types/tasks";
-export type { TaskV4 } from "../types/tasks";
+export type { Task } from "../types/tasks";
 import { User } from "../types";
 
 const STORAGE_KEY = "aaraazi_tasks_v4";
@@ -42,12 +42,12 @@ function generateId(): string {
 /**
  * Get all tasks
  */
-export function getAllTasksV4(userId: string, userRole: string): TaskV4[] {
+export function getAllTasks(userId: string, userRole: string): Task[] {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return [];
 
-    const allTasks: TaskV4[] = JSON.parse(data);
+    const allTasks: Task[] = JSON.parse(data);
 
     // Filter based on user role
     if (userRole === "admin") {
@@ -71,12 +71,12 @@ export function getAllTasksV4(userId: string, userRole: string): TaskV4[] {
 /**
  * Get task by ID
  */
-export function getTaskById(taskId: string): TaskV4 | null {
+export function getTaskById(taskId: string): Task | null {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return null;
 
-    const tasks: TaskV4[] = JSON.parse(data);
+    const tasks: Task[] = JSON.parse(data);
     return tasks.find((t) => t.id === taskId) || null;
   } catch (error) {
     console.error("Error loading task:", error);
@@ -87,10 +87,10 @@ export function getTaskById(taskId: string): TaskV4 | null {
 /**
  * Create new task
  */
-export function createTask(taskData: Partial<TaskV4>, user: User): TaskV4 {
+export function createTask(taskData: Partial<Task>, user: User): Task {
   const now = new Date().toISOString();
 
-  const newTask: TaskV4 = {
+  const newTask: Task = {
     id: generateId(),
     title: taskData.title || "New Task",
     description: taskData.description,
@@ -136,7 +136,7 @@ export function createTask(taskData: Partial<TaskV4>, user: User): TaskV4 {
   };
 
   // Save to storage
-  const tasks = getAllTasksV4(user.id, user.role);
+  const tasks = getAllTasks(user.id, user.role);
   tasks.push(newTask);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 
@@ -151,14 +151,14 @@ export function createTask(taskData: Partial<TaskV4>, user: User): TaskV4 {
  */
 export function updateTask(
   taskId: string,
-  updates: Partial<TaskV4>,
+  updates: Partial<Task>,
   user: User,
-): TaskV4 | null {
+): Task | null {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return null;
 
-    const tasks: TaskV4[] = JSON.parse(data);
+    const tasks: Task[] = JSON.parse(data);
     const taskIndex = tasks.findIndex((t) => t.id === taskId);
 
     if (taskIndex === -1) return null;
@@ -170,17 +170,17 @@ export function updateTask(
     const changes: { field: string; oldValue: any; newValue: any }[] = [];
 
     Object.keys(updates).forEach((key) => {
-      if (oldTask[key as keyof TaskV4] !== updates[key as keyof TaskV4]) {
+      if (oldTask[key as keyof Task] !== updates[key as keyof Task]) {
         changes.push({
           field: key,
-          oldValue: oldTask[key as keyof TaskV4],
-          newValue: updates[key as keyof TaskV4],
+          oldValue: oldTask[key as keyof Task],
+          newValue: updates[key as keyof Task],
         });
       }
     });
 
     // Update task
-    const updatedTask: TaskV4 = {
+    const updatedTask: Task = {
       ...oldTask,
       ...updates,
       updatedAt: now,
@@ -227,7 +227,7 @@ export function deleteTask(taskId: string): boolean {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return false;
 
-    const tasks: TaskV4[] = JSON.parse(data);
+    const tasks: Task[] = JSON.parse(data);
     const filtered = tasks.filter(
       (t) => t.id !== taskId && t.parentTaskId !== taskId,
     );
@@ -243,12 +243,12 @@ export function deleteTask(taskId: string): boolean {
 /**
  * Get subtasks
  */
-export function getSubtasks(parentTaskId: string): TaskV4[] {
+export function getSubtasks(parentTaskId: string): Task[] {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return [];
 
-    const tasks: TaskV4[] = JSON.parse(data);
+    const tasks: Task[] = JSON.parse(data);
     return tasks.filter((t) => t.parentTaskId === parentTaskId);
   } catch (error) {
     console.error("Error loading subtasks:", error);
@@ -377,12 +377,12 @@ export function updateChecklistItem(
 export function getTasksByEntity(
   entityType: TaskEntityType,
   entityId: string,
-): TaskV4[] {
+): Task[] {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return [];
 
-    const tasks: TaskV4[] = JSON.parse(data);
+    const tasks: Task[] = JSON.parse(data);
     return tasks.filter(
       (t) => t.entityType === entityType && t.entityId === entityId,
     );
@@ -395,8 +395,8 @@ export function getTasksByEntity(
 /**
  * Get overdue tasks
  */
-export function getOverdueTasks(userId: string, userRole: string): TaskV4[] {
-  const tasks = getAllTasksV4(userId, userRole);
+export function getOverdueTasks(userId: string, userRole: string): Task[] {
+  const tasks = getAllTasks(userId, userRole);
   const now = new Date();
 
   return tasks.filter((task) => {
@@ -437,7 +437,7 @@ export function calculateAgentWorkload(
     };
   }
 
-  const allTasks: TaskV4[] = JSON.parse(data);
+  const allTasks: Task[] = JSON.parse(data);
   const agentTasks = allTasks.filter(
     (t) => t.agentId === agentId || t.assignedTo.includes(agentId),
   );
@@ -562,9 +562,9 @@ export function calculateAgentWorkload(
  * Create recurring task instance
  */
 export function createRecurringTaskInstance(
-  parentTask: TaskV4,
+  parentTask: Task,
   user: User,
-): TaskV4 {
+): Task {
   if (!parentTask.recurrenceConfig) {
     throw new Error("Task is not recurring");
   }
@@ -742,9 +742,9 @@ function getDefaultTemplates(): TaskTemplate[] {
  */
 export function createTaskFromTemplate(
   templateId: string,
-  overrides: Partial<TaskV4>,
+  overrides: Partial<Task>,
   user: User,
-): TaskV4 {
+): Task {
   const templates = getTaskTemplates();
   const template = templates.find((t) => t.id === templateId);
 
@@ -1111,9 +1111,9 @@ export function triggerAutomation(
   trigger: TaskAutomationRule["trigger"],
   entityData: any,
   user: User,
-): TaskV4[] {
+): Task[] {
   const rules = getAutomationRules().filter((r) => r.enabled);
-  const createdTasks: TaskV4[] = [];
+  const createdTasks: Task[] = [];
 
   rules.forEach((rule) => {
     // Check if trigger matches

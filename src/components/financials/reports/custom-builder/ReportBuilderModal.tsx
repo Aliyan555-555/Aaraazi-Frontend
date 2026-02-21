@@ -10,7 +10,7 @@
  * - Live preview
  * - Save custom templates
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Dialog
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

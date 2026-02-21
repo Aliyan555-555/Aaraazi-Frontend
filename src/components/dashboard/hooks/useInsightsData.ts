@@ -13,13 +13,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { User, Property } from "../../../types";
-import { LeadV4 } from "../../../types/leads";
-import { TaskV4 } from "../../../types/tasks";
+import { DashboardLead } from "../../../types/leads";
+import { Task } from "../../../types/tasks";
 import { Insight } from "../components/InsightCard";
 import { detectInsights } from "../utils/detectInsights";
 import { getProperties } from "../../../lib/data";
-import { getLeadsV4 } from "../../../lib/leadsV4";
-import { getAllTasksV4 } from "../../../lib/tasks";
+import { getDashboardLeads } from "../../../lib/dashboardLeads";
+import { getAllTasks } from "../../../lib/tasks";
 import { getAllAgents } from "../../../lib/auth";
 
 export interface InsightsData {
@@ -82,8 +82,8 @@ export function useInsightsData(
 
       // Load all required data
       const properties = getProperties(userId, userRole);
-      const leads = getLeadsV4(userId, userRole);
-      const tasks = getAllTasksV4(userId || user.id, userRole);
+      const leads = getDashboardLeads(userId, userRole);
+      const tasks = getAllTasks(userId || user.id, userRole);
       const users = getAllAgents();
 
       // Detect insights

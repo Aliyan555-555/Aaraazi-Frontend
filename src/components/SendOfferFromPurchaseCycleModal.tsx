@@ -164,7 +164,7 @@ export function SendOfferFromPurchaseCycleModal({
             <h4 className="font-medium text-blue-900 mb-1">Bidirectional Linking</h4>
             <p className="text-sm text-blue-700">
               This offer will be linked to both your purchase cycle and the seller's sell cycle. 
-              Any updates (acceptance, counter-offers, etc.) will be synchronized automatically.
+              Any updates (acceptance or rejection) will be synchronized automatically.
             </p>
           </div>
         </div>

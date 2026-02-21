@@ -264,6 +264,30 @@ export function mapDealListApiToUI(api: DealListApiResponse): Deal {
   } as Deal;
 }
 
+export interface UpdateDealPayload {
+  notes?: string;
+  secondaryAgentId?: string;
+  sellerContactId?: string;
+  buyerContactId?: string;
+}
+
+export interface ProgressStagePayload {
+  stage: string;
+  notes?: string;
+}
+
+export interface RecordPaymentPayload {
+  amount: number;
+  paymentType: string;
+  paidAt?: string;
+  notes?: string;
+  reference?: string;
+}
+
+export interface CancelDealPayload {
+  reason: string;
+}
+
 class DealsService {
   private readonly baseUrl = '/deals';
 
@@ -281,9 +305,33 @@ class DealsService {
       return null;
     }
   }
+
+  async updateDeal(id: string, payload: UpdateDealPayload): Promise<void> {
+    await apiClient.patch(`${this.baseUrl}/${id}`, payload);
+  }
+
+  async progressStage(id: string, payload: ProgressStagePayload): Promise<void> {
+    await apiClient.post(`${this.baseUrl}/${id}/progress-stage`, payload);
+  }
+
+  async recordPayment(id: string, payload: RecordPaymentPayload): Promise<void> {
+    await apiClient.post(`${this.baseUrl}/${id}/payments`, payload);
+  }
+
+  async completeDeal(id: string): Promise<void> {
+    await apiClient.post(`${this.baseUrl}/${id}/complete`, {});
+  }
+
+  async cancelDeal(id: string, reason: string): Promise<void> {
+    await apiClient.post(`${this.baseUrl}/${id}/cancel`, { reason });
+  }
+
+  async findBySellCycle(sellCycleId: string): Promise<DealListApiResponse[]> {
+    const response = await apiClient.get<DealListApiResponse[]>(
+      `${this.baseUrl}/by-sell-cycle/${sellCycleId}`,
+    );
+    return Array.isArray(response.data) ? response.data : [];
+  }
 }
 
 export const dealsService = new DealsService();
-
-// Fix: we referenced `deal` and `stages` before declaration. Build stages and deal in one pass.
-// Re-reading the mapper - I had a bug: I used `deal.lifecycle.timeline.stages` and `stages` before defining deal. Let me rewrite the mapper without self-reference.

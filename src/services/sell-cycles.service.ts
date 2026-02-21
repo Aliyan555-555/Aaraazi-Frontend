@@ -41,6 +41,27 @@ class SellCyclesService {
       throw error;
     }
   }
+
+  async update(id: string, data: Partial<{
+    askingPrice: number;
+    currentOfferPrice: number;
+    status: string;
+    endDate: string;
+    notes: string;
+    commissionRate: number;
+  }>): Promise<SellCycleApiResponse> {
+    const response = await apiClient.patch<SellCycleApiResponse>(`${this.baseUrl}/${id}`, data);
+    return response.data;
+  }
+
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`${this.baseUrl}/${id}`);
+  }
+
+  async getOffers(id: string): Promise<unknown[]> {
+    const response = await apiClient.get<unknown[]>(`${this.baseUrl}/${id}/offers`);
+    return Array.isArray(response.data) ? response.data : [];
+  }
 }
 
 export const sellCyclesService = new SellCyclesService();

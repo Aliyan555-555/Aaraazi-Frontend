@@ -1,19 +1,27 @@
 /**
- * CommissionTab Component - Multi-Agent Support
+ * CommissionTab - Redesigned Simple & Intuitive Commission Management
  * 
- * Comprehensive commission management with support for:
- * - Multiple internal agents
- * - External brokers
- * - Flexible splits
- * - Status tracking per agent
- * - Backward compatibility with legacy structure
+ * REDESIGN GOALS:
+ * - Single unified view (no confusing tabs)
+ * - Inline editing (no edit mode toggle)
+ * - Amount AND percentage support (toggle between input types)
+ * - Real-time validation and visual feedback
+ * - Support for manual adjustments to match real-world scenarios
  * 
- * Features:
- * - Add/Remove agents dynamically
- * - Edit commission structure
- * - Status management (Admin only)
- * - Real-time validation
+ * FEATURES:
+ * - Multi-agent support (internal + external)
  * - Agency split configuration
+ * - Dual input mode: PKR amount ⇄ Percentage
+ * - Visual allocation progress bar
+ * - Inline status management (admin)
+ * - Real-time calculation and validation
+ * 
+ * STRUCTURE:
+ * 1. Header Card - Total commission configuration
+ * 2. Allocation Progress - Visual breakdown
+ * 3. Agent Rows - Inline editable agents
+ * 4. Agency Row - Inline editable agency split
+ * 5. Validation Footer - Real-time feedback
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -24,6 +32,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Badge } from '../ui/badge';
+import { Progress } from '../ui/progress';
 import {
   Select,
   SelectContent,
@@ -31,8 +40,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { CommissionSplitCard } from './CommissionSplitCard';
 import { CommissionStatusBadge, CommissionStatus } from './CommissionStatusBadge';
 import { ChangeCommissionStatusModal } from './ChangeCommissionStatusModal';
 import { AddAgentToCommissionModal } from './AddAgentToCommissionModal';
@@ -42,26 +49,23 @@ import {
   validateCommissionSplits,
   addAgentToCommission,
   removeAgentFromCommission,
-  updateAgentCommissionPercentage,
-  recalculateCommissionAmounts,
   migrateLegacyCommission,
-} from '@/lib/commissionAgents';
+} from '../../lib/commissionAgents';
 import { toast } from 'sonner';
 import {
   DollarSign,
   Users,
   Building2,
-  Edit,
-  Save,
-  X,
   AlertCircle,
-  TrendingUp,
-  Info,
   CheckCircle2,
   Plus,
   Trash2,
+  Info,
+  Percent,
+  Banknote,
+  ArrowRightLeft,
+  Home,
 } from 'lucide-react';
-import { Progress } from '../ui/progress';
 
 interface CommissionTabProps {
   deal: Deal;
@@ -70,98 +74,238 @@ interface CommissionTabProps {
   onUpdate: (updatedDeal: Deal) => void;
 }
 
+type InputMode = 'percentage' | 'amount';
+
+interface AgentEditState {
+  mode: InputMode;
+  value: string;
+}
+
 export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTabProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedRate, setEditedRate] = useState(deal.financial.commission.rate.toString());
-  const [editedAgencyPct, setEditedAgencyPct] = useState(
-    deal.financial.commission.split.agency.percentage.toString()
-  );
-  const [payoutTrigger, setPayoutTrigger] = useState<string>(
-    deal.financial.commission.payoutTrigger || 'full-payment'
-  );
-  const [agents, setAgents] = useState<CommissionAgent[]>([]);
-
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [addAgentModalOpen, setAddAgentModalOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<{
-    agent: CommissionAgent;
-    index: number;
-  } | null>(null);
-
   const isAdmin = user.role === 'admin';
   const canEdit = isAdmin || isPrimary;
 
   // Initialize and migrate legacy structure
   useEffect(() => {
-    let currentDeal = deal;
-
-    // Migrate legacy structure if needed
     if (!deal.financial.commission.agents || deal.financial.commission.agents.length === 0) {
-      currentDeal = migrateLegacyCommission(deal);
-      onUpdate(currentDeal);
+      const migratedDeal = migrateLegacyCommission(deal);
+      onUpdate(migratedDeal);
     }
+  }, [deal.id]);
 
-    // Set agents from deal
-    if (currentDeal.financial.commission.agents) {
-      setAgents([...currentDeal.financial.commission.agents]);
+  // State
+  const [agents, setAgents] = useState<CommissionAgent[]>(
+    deal.financial.commission.agents || []
+  );
+  const [commissionRate, setCommissionRate] = useState(
+    deal.financial.commission.rate.toString()
+  );
+  const [payoutTrigger, setPayoutTrigger] = useState<string>(
+    deal.financial.commission.payoutTrigger || 'full-payment'
+  );
+
+  // Agent edit states
+  const [agentEditStates, setAgentEditStates] = useState<Record<string, AgentEditState>>({});
+
+  // Agency edit state
+  const [agencyMode, setAgencyMode] = useState<InputMode>('percentage');
+  const [agencyValue, setAgencyValue] = useState(
+    deal.financial.commission.split.agency.percentage.toString()
+  );
+
+  // Modals
+  const [addAgentModalOpen, setAddAgentModalOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedAgentForStatus, setSelectedAgentForStatus] = useState<{
+    agent: CommissionAgent;
+    index: number;
+  } | null>(null);
+
+  // Sync state when deal changes
+  useEffect(() => {
+    setAgents(deal.financial.commission.agents || []);
+    setCommissionRate(deal.financial.commission.rate.toString());
+    setPayoutTrigger(deal.financial.commission.payoutTrigger || 'full-payment');
+    setAgencyValue(deal.financial.commission.split.agency.percentage.toString());
+  }, [deal.id]);
+
+  // Calculations
+  const totalCommission = useMemo(() => {
+    const rate = parseFloat(commissionRate) || 0;
+    return (deal.financial.agreedPrice * rate) / 100;
+  }, [deal.financial.agreedPrice, commissionRate]);
+
+  const agencyAmount = useMemo(() => {
+    const pct = parseFloat(agencyValue) || 0;
+    if (agencyMode === 'percentage') {
+      return (totalCommission * pct) / 100;
+    } else {
+      return parseFloat(agencyValue) || 0;
     }
-  }, [deal.id]); // Only run when deal changes
+  }, [totalCommission, agencyValue, agencyMode]);
+
+  const agencyPercentage = useMemo(() => {
+    if (agencyMode === 'percentage') {
+      return parseFloat(agencyValue) || 0;
+    } else {
+      const amt = parseFloat(agencyValue) || 0;
+      return totalCommission > 0 ? (amt / totalCommission) * 100 : 0;
+    }
+  }, [totalCommission, agencyValue, agencyMode]);
+
+  // Calculate agent amounts and percentages
+  const processedAgents = useMemo(() => {
+    return agents.map(agent => {
+      const state = agentEditStates[agent.id];
+      if (!state) {
+        return {
+          ...agent,
+          displayPercentage: agent.percentage,
+          displayAmount: agent.amount,
+        };
+      }
+
+      const value = parseFloat(state.value) || 0;
+      if (state.mode === 'percentage') {
+        return {
+          ...agent,
+          displayPercentage: value,
+          displayAmount: (totalCommission * value) / 100,
+        };
+      } else {
+        return {
+          ...agent,
+          displayPercentage: totalCommission > 0 ? (value / totalCommission) * 100 : 0,
+          displayAmount: value,
+        };
+      }
+    });
+  }, [agents, agentEditStates, totalCommission]);
 
   // Calculate totals
-  const totalCommission = deal.financial.commission.total;
-  const agency = deal.financial.commission.split.agency;
+  const totalAllocatedPercentage = useMemo(() => {
+    const agentTotal = processedAgents.reduce((sum, a) => sum + a.displayPercentage, 0);
+    return agentTotal + agencyPercentage;
+  }, [processedAgents, agencyPercentage]);
 
-  // Calculate used percentage
-  const usedPercentage = useMemo(() => {
-    const agentTotal = agents.reduce((sum, agent) => sum + agent.percentage, 0);
-    return agentTotal + parseFloat(editedAgencyPct || '0');
-  }, [agents, editedAgencyPct]);
+  const totalAllocatedAmount = useMemo(() => {
+    const agentTotal = processedAgents.reduce((sum, a) => sum + a.displayAmount, 0);
+    return agentTotal + agencyAmount;
+  }, [processedAgents, agencyAmount]);
 
-  // Validation
-  const validation = useMemo(() => {
-    return validateCommissionSplits(agents, parseFloat(editedAgencyPct || '0'));
-  }, [agents, editedAgencyPct]);
+  const remainingAmount = totalCommission - totalAllocatedAmount;
+  const remainingPercentage = 100 - totalAllocatedPercentage;
 
-  // Handle save
-  const handleSave = () => {
-    if (!validation.valid) {
-      toast.error(validation.message);
+  const isValid = Math.abs(remainingPercentage) < 0.01 && remainingAmount >= -0.01;
+
+  // Get agent input value
+  const getAgentInputValue = (agentId: string, agent: CommissionAgent) => {
+    const state = agentEditStates[agentId];
+    if (state) return state.value;
+    return agent.percentage.toString();
+  };
+
+  // Get agent mode
+  const getAgentMode = (agentId: string): InputMode => {
+    return agentEditStates[agentId]?.mode || 'percentage';
+  };
+
+  // Toggle agent input mode
+  const toggleAgentMode = (agentId: string, currentMode: InputMode, agent: CommissionAgent) => {
+    const newMode: InputMode = currentMode === 'percentage' ? 'amount' : 'percentage';
+    const currentState = agentEditStates[agentId];
+
+    let newValue: string;
+    if (currentState) {
+      const val = parseFloat(currentState.value) || 0;
+      if (currentMode === 'percentage') {
+        // Switching to amount
+        newValue = ((totalCommission * val) / 100).toFixed(0);
+      } else {
+        // Switching to percentage
+        newValue = (totalCommission > 0 ? (val / totalCommission) * 100 : 0).toFixed(2);
+      }
+    } else {
+      // Initialize from agent data
+      newValue = newMode === 'percentage'
+        ? agent.percentage.toString()
+        : agent.amount.toString();
+    }
+
+    setAgentEditStates(prev => ({
+      ...prev,
+      [agentId]: { mode: newMode, value: newValue },
+    }));
+  };
+
+  // Update agent value
+  const updateAgentValue = (agentId: string, value: string) => {
+    const mode = getAgentMode(agentId);
+    setAgentEditStates(prev => ({
+      ...prev,
+      [agentId]: { mode, value },
+    }));
+  };
+
+  // Toggle agency mode
+  const toggleAgencyMode = () => {
+    const newMode: InputMode = agencyMode === 'percentage' ? 'amount' : 'percentage';
+
+    let newValue: string;
+    const val = parseFloat(agencyValue) || 0;
+    if (agencyMode === 'percentage') {
+      // Switching to amount
+      newValue = ((totalCommission * val) / 100).toFixed(0);
+    } else {
+      // Switching to percentage
+      newValue = (totalCommission > 0 ? (val / totalCommission) * 100 : 0).toFixed(2);
+    }
+
+    setAgencyMode(newMode);
+    setAgencyValue(newValue);
+  };
+
+  // Save commission configuration
+  const handleSaveConfiguration = () => {
+    if (!canEdit) {
+      toast.error('You do not have permission to edit commission');
       return;
     }
 
-    const rate = parseFloat(editedRate);
+    if (!isValid) {
+      toast.error('Commission splits must total 100%');
+      return;
+    }
+
+    const rate = parseFloat(commissionRate);
     if (rate < 0.1 || rate > 100) {
       toast.error('Commission rate must be between 0.1% and 100%');
       return;
     }
 
-    const agencyPct = parseFloat(editedAgencyPct);
-    const newTotal = (deal.financial.agreedPrice * rate) / 100;
-
-    // Recalculate all agent amounts
-    const updatedAgents = agents.map(agent => ({
-      ...agent,
-      amount: (newTotal * agent.percentage) / 100,
-    }));
-
-    const agencyAmt = (newTotal * agencyPct) / 100;
-
     try {
+      // Update agents with new values
+      const updatedAgents = processedAgents.map(agent => ({
+        ...agents.find(a => a.id === agent.id)!,
+        percentage: agent.displayPercentage,
+        amount: agent.displayAmount,
+      }));
+
       const updatedDeal = updateDeal(deal.id, {
         financial: {
           ...deal.financial,
           commission: {
             ...deal.financial.commission,
-            total: newTotal,
+            total: totalCommission,
             rate,
             payoutTrigger: payoutTrigger as any,
             agents: updatedAgents,
             split: {
               ...deal.financial.commission.split,
               agency: {
-                ...agency,
-                percentage: agencyPct,
-                amount: agencyAmt,
+                ...deal.financial.commission.split.agency,
+                percentage: agencyPercentage,
+                amount: agencyAmount,
               },
             },
           },
@@ -169,27 +313,18 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
       });
 
       setAgents(updatedAgents);
+      setAgentEditStates({});
       onUpdate(updatedDeal);
-      setIsEditing(false);
-      toast.success('Commission structure updated successfully');
+      toast.success('Commission configuration saved successfully');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update commission');
+      toast.error(error.message || 'Failed to save commission');
     }
   };
 
-  // Handle cancel
-  const handleCancel = () => {
-    setEditedRate(deal.financial.commission.rate.toString());
-    setEditedAgencyPct(deal.financial.commission.split.agency.percentage.toString());
-    setPayoutTrigger(deal.financial.commission.payoutTrigger || 'full-payment');
-    setAgents(deal.financial.commission.agents ? [...deal.financial.commission.agents] : []);
-    setIsEditing(false);
-  };
-
-  // Handle add agent
+  // Add agent
   const handleAddAgent = (newAgent: Omit<CommissionAgent, 'amount' | 'status'>) => {
     try {
-      const updatedDeal = addAgentToCommission(deal, { ...newAgent, status: 'pending' }, totalCommission);
+      const updatedDeal = addAgentToCommission(deal.id, { ...newAgent, status: 'pending' }, totalCommission);
       setAgents(updatedDeal.financial.commission.agents || []);
       onUpdate(updatedDeal);
       setAddAgentModalOpen(false);
@@ -199,13 +334,26 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
     }
   };
 
-  // Handle remove agent
+  // Remove agent
   const handleRemoveAgent = (agentId: string, agentName: string) => {
+    if (!canEdit) {
+      toast.error('You do not have permission to remove agents');
+      return;
+    }
+
     if (!confirm(`Remove ${agentName} from commission split?`)) return;
 
     try {
-      const updatedDeal = removeAgentFromCommission(deal, agentId);
+      const updatedDeal = removeAgentFromCommission(deal.id, agentId);
       setAgents(updatedDeal.financial.commission.agents || []);
+
+      // Remove from edit states
+      setAgentEditStates(prev => {
+        const newState = { ...prev };
+        delete newState[agentId];
+        return newState;
+      });
+
       onUpdate(updatedDeal);
       toast.success(`${agentName} removed from commission`);
     } catch (error: any) {
@@ -215,444 +363,491 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
 
   // Handle status change
   const handleStatusChange = (newStatus: CommissionStatus, reason: string) => {
-    if (!selectedAgent || !isAdmin) return;
+    if (!isAdmin) return;
 
     const now = new Date().toISOString();
 
     try {
-      const updatedAgents = [...agents];
-      const agent = updatedAgents[selectedAgent.index];
+      if (selectedAgentForStatus) {
+        // Update agent status
+        const updatedAgents = [...agents];
+        const agent = updatedAgents[selectedAgentForStatus.index];
 
-      agent.status = newStatus;
+        agent.status = newStatus;
 
-      if (newStatus === 'approved') {
-        agent.approvedBy = user.name;
-        agent.approvedAt = now;
-      }
+        if (newStatus === 'approved') {
+          agent.approvedBy = user.name;
+          agent.approvedAt = now;
+        }
 
-      if (newStatus === 'paid') {
-        agent.paidDate = now;
-      }
+        if (newStatus === 'paid') {
+          agent.paidDate = now;
+        }
 
-      if (reason) {
-        agent.notes = reason;
-      }
+        if (reason) {
+          agent.notes = reason;
+        }
 
-      const updatedDeal = updateDeal(deal.id, {
-        financial: {
-          ...deal.financial,
-          commission: {
-            ...deal.financial.commission,
-            agents: updatedAgents,
+        const updatedDeal = updateDeal(deal.id, {
+          financial: {
+            ...deal.financial,
+            commission: {
+              ...deal.financial.commission,
+              agents: updatedAgents,
+            },
           },
-        },
-      });
+        });
 
-      setAgents(updatedAgents);
-      onUpdate(updatedDeal);
-      toast.success(`Commission status updated to ${newStatus}`);
+        setAgents(updatedAgents);
+        onUpdate(updatedDeal);
+        toast.success(`Commission status updated to ${newStatus}`);
+      } else {
+        // Update agency status
+        const updatedDeal = updateDeal(deal.id, {
+          financial: {
+            ...deal.financial,
+            commission: {
+              ...deal.financial.commission,
+              split: {
+                ...deal.financial.commission.split,
+                agency: {
+                  ...deal.financial.commission.split.agency,
+                  status: newStatus,
+                  notes: reason || deal.financial.commission.split.agency.notes,
+                },
+              },
+            },
+          },
+        });
+
+        onUpdate(updatedDeal);
+        toast.success(`Agency commission status updated to ${newStatus}`);
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to update status');
     }
   };
 
-  // Handle agency status change
-  const handleAgencyStatusChange = (newStatus: CommissionStatus, reason: string) => {
-    if (!isAdmin) return;
-
-    try {
-      const updatedDeal = updateDeal(deal.id, {
-        financial: {
-          ...deal.financial,
-          commission: {
-            ...deal.financial.commission,
-            split: {
-              ...deal.financial.commission.split,
-              agency: {
-                ...agency,
-                status: newStatus,
-                notes: reason || agency.notes,
-              },
-            },
-          },
-        },
-      });
-
-      onUpdate(updatedDeal);
-      toast.success(`Agency commission status updated to ${newStatus}`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update agency status');
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header with Edit Controls */}
+      {/* Header Card - Total Commission Configuration */}
       <Card className="p-6">
         <div className="flex items-start justify-between mb-6">
           <div>
             <h2 className="text-lg font-semibold mb-2">Commission Management</h2>
             <p className="text-sm text-gray-600">
-              Manage commission splits across multiple agents and track payment status
+              Configure and track commission splits across agents and agency
             </p>
           </div>
-
-          {canEdit && !isEditing && (
-            <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Commission
-            </Button>
-          )}
-
-          {isEditing && (
-            <div className="flex gap-2">
-              <Button
-                onClick={handleSave}
-                size="sm"
-                disabled={!validation.valid}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-              <Button onClick={handleCancel} variant="outline" size="sm">
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-            </div>
-          )}
         </div>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="h-5 w-5 text-blue-600" />
-              <p className="text-sm text-gray-600">Total Commission</p>
-            </div>
-            <p className="text-2xl font-semibold text-gray-900">{formatPKR(totalCommission)}</p>
-            <p className="text-sm text-gray-600 mt-1">
-              {deal.financial.commission.rate}% of {formatPKR(deal.financial.agreedPrice)}
+        {/* Configuration Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          {/* Total Commission */}
+          <div>
+            <Label htmlFor="commission-rate" className="mb-2 flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-gray-600" />
+              Commission Rate (%)
+            </Label>
+            <Input
+              id="commission-rate"
+              type="number"
+              value={commissionRate}
+              onChange={(e) => setCommissionRate(e.target.value)}
+              min="0.1"
+              max="100"
+              step="0.1"
+              disabled={!canEdit}
+              className="mt-1"
+            />
+            <p className="text-sm text-gray-600 mt-2">
+              Total: {formatPKR(totalCommission)}
             </p>
           </div>
 
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-5 w-5 text-purple-600" />
-              <p className="text-sm text-gray-600">Total Agents</p>
+          {/* Deal Price (Read-only) */}
+          <div>
+            <Label className="mb-2 flex items-center gap-2">
+              <Home className="h-4 w-4 text-gray-600" />
+              Deal Price
+            </Label>
+            <div className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 mt-1">
+              <p className="font-medium text-gray-900">{formatPKR(deal.financial.agreedPrice)}</p>
             </div>
-            <p className="text-2xl font-semibold text-gray-900">
-              {agents.length} {agents.length === 1 ? 'Agent' : 'Agents'}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              {agents.filter(a => a.type === 'internal').length} Internal, {agents.filter(a => a.type === 'external').length} External
+            <p className="text-sm text-gray-600 mt-2">
+              Base amount for commission
             </p>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Building2 className="h-5 w-5 text-gray-600" />
-              <p className="text-sm text-gray-600">Agency Split</p>
+          {/* Payout Trigger */}
+          <div>
+            <Label htmlFor="payout-trigger" className="mb-2 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-gray-600" />
+              Payout Trigger
+            </Label>
+            <Select
+              value={payoutTrigger}
+              onValueChange={setPayoutTrigger}
+              disabled={!canEdit}
+            >
+              <SelectTrigger id="payout-trigger" className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="booking">At Booking</SelectItem>
+                <SelectItem value="50-percent">At 50% Payment</SelectItem>
+                <SelectItem value="possession">At Possession</SelectItem>
+                <SelectItem value="full-payment">At Full Payment</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-gray-600 mt-2">
+              When commission is paid
+            </p>
+          </div>
+        </div>
+
+        {/* Save Button */}
+        {canEdit && (
+          <div className="flex justify-end">
+            <Button
+              onClick={handleSaveConfiguration}
+              disabled={!isValid}
+              size="sm"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Save Configuration
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* Allocation Progress Bar */}
+      <Card className="p-6">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">Commission Allocation</h3>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Allocated</p>
+                <p className={`font-semibold ${isValid ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                  {totalAllocatedPercentage.toFixed(2)}%
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Remaining</p>
+                <p className={`font-semibold ${Math.abs(remainingPercentage) < 0.01 ? 'text-green-600' : 'text-orange-600'
+                  }`}>
+                  {remainingPercentage.toFixed(2)}%
+                </p>
+              </div>
             </div>
-            <p className="text-2xl font-semibold text-gray-900">
-              {agency.percentage}%
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              {formatPKR(agency.amount)}
-            </p>
+          </div>
+
+          <Progress
+            value={Math.min(totalAllocatedPercentage, 100)}
+            className={`h-3 ${isValid ? 'bg-green-100' : 'bg-red-100'
+              }`}
+          />
+
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-gray-600">Total Allocated Amount</p>
+              <p className="font-semibold text-gray-900">{formatPKR(totalAllocatedAmount)}</p>
+            </div>
+            <div>
+              <p className="text-gray-600">Remaining Amount</p>
+              <p className={`font-semibold ${Math.abs(remainingAmount) < 1 ? 'text-green-600' : 'text-orange-600'
+                }`}>
+                {formatPKR(remainingAmount)}
+              </p>
+            </div>
           </div>
         </div>
       </Card>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="configure">Configure</TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6 mt-6">
-          {/* Agent Commission Cards */}
+      {/* Agents Section */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Agent Commissions</h3>
-              {canEdit && !isEditing && (
-                <Button onClick={() => setAddAgentModalOpen(true)} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Agent
-                </Button>
-              )}
-            </div>
-
-            {agents.length === 0 ? (
-              <Card className="p-8 text-center">
-                <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">
-                  No agents added to commission yet
-                </p>
-                {canEdit && (
-                  <Button onClick={() => setAddAgentModalOpen(true)} variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add First Agent
-                  </Button>
-                )}
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {agents.map((agent, index) => (
-                  <div key={agent.id} className="space-y-3">
-                    <CommissionSplitCard
-                      type={agent.type}
-                      name={agent.name}
-                      percentage={agent.percentage}
-                      amount={agent.amount}
-                      status={agent.status}
-                      payoutTrigger={deal.financial.commission.payoutTrigger}
-                      paidDate={agent.paidDate}
-                      approvedBy={agent.approvedBy}
-                      approvedAt={agent.approvedAt}
-                      notes={agent.notes}
-                      email={agent.email}
-                      phone={agent.phone}
-                    />
-
-                    <div className="flex gap-2">
-                      {isAdmin && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => {
-                            setSelectedAgent({ agent, index });
-                            setStatusModalOpen(true);
-                          }}
-                        >
-                          Change Status
-                        </Button>
-                      )}
-                      {canEdit && !isEditing && agents.length > 1 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleRemoveAgent(agent.id, agent.name)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <h3 className="font-semibold mb-1">Agent Commissions</h3>
+            <p className="text-sm text-gray-600">
+              {agents.length} {agents.length === 1 ? 'agent' : 'agents'} • {' '}
+              {agents.filter(a => a.type === 'internal').length} internal, {' '}
+              {agents.filter(a => a.type === 'external').length} external
+            </p>
           </div>
+          {canEdit && (
+            <Button onClick={() => setAddAgentModalOpen(true)} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Agent
+            </Button>
+          )}
+        </div>
 
-          {/* Agency Split */}
-          <div>
-            <h3 className="font-semibold mb-4">Agency Commission</h3>
-            <CommissionSplitCard
-              type="agency"
-              name="Agency Commission"
-              percentage={agency.percentage}
-              amount={agency.amount}
-              status={(agency.status as CommissionStatus) || 'pending'}
-              notes={agency.notes}
-            />
-
-            {isAdmin && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => {
-                  setSelectedAgent(null);
-                  setStatusModalOpen(true);
-                }}
-              >
-                Change Agency Status
+        {agents.length === 0 ? (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 mb-4">No agents added to commission yet</p>
+            {canEdit && (
+              <Button onClick={() => setAddAgentModalOpen(true)} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Agent
               </Button>
             )}
           </div>
-        </TabsContent>
+        ) : (
+          <div className="space-y-4">
+            {processedAgents.map((agent, index) => {
+              const mode = getAgentMode(agent.id);
+              const value = getAgentInputValue(agent.id, agent);
+              const originalAgent = agents[index];
 
-        {/* Configure Tab */}
-        <TabsContent value="configure" className="space-y-6 mt-6">
-          {!canEdit ? (
-            <Card className="p-8 text-center">
-              <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">
-                Only the primary agent or admin can modify commission settings
-              </p>
-            </Card>
-          ) : !isEditing ? (
-            <Card className="p-8 text-center">
-              <Info className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">
-                Click "Edit Commission" to modify the commission structure
-              </p>
-            </Card>
-          ) : (
-            <Card className="p-6">
-              <h3 className="font-semibold mb-6">Commission Configuration</h3>
-
-              <div className="space-y-6">
-                {/* Commission Rate */}
-                <div>
-                  <Label htmlFor="commission-rate">Commission Rate (%)</Label>
-                  <Input
-                    id="commission-rate"
-                    type="number"
-                    value={editedRate}
-                    onChange={(e) => setEditedRate(e.target.value)}
-                    min="0.1"
-                    max="100"
-                    step="0.1"
-                    className="mt-2"
-                  />
-                  <p className="text-sm text-gray-600 mt-1">
-                    Total: {formatPKR((deal.financial.agreedPrice * (parseFloat(editedRate) || 0)) / 100)}
-                  </p>
-                </div>
-
-                {/* Payout Trigger */}
-                <div>
-                  <Label htmlFor="payout-trigger">Payout Trigger</Label>
-                  <Select value={payoutTrigger} onValueChange={setPayoutTrigger}>
-                    <SelectTrigger id="payout-trigger" className="mt-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="booking">At Booking</SelectItem>
-                      <SelectItem value="50-percent">At 50% Payment</SelectItem>
-                      <SelectItem value="possession">At Possession</SelectItem>
-                      <SelectItem value="full-payment">At Full Payment</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Split Management */}
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium">Commission Distribution</h4>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">Total:</span>
-                      <span className={`font-semibold ${Math.abs(usedPercentage - 100) < 0.01 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                        {usedPercentage.toFixed(1)}%
-                      </span>
+              return (
+                <div
+                  key={agent.id}
+                  className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium text-gray-900">{agent.name}</p>
+                        <Badge
+                          variant="secondary"
+                          className={agent.type === 'external'
+                            ? 'bg-orange-100 text-orange-800 border-orange-200'
+                            : 'bg-blue-100 text-blue-800 border-blue-200'
+                          }
+                        >
+                          {agent.type === 'internal' ? 'Internal' : 'External'}
+                        </Badge>
+                        <div
+                          className="cursor-pointer"
+                          onClick={() => {
+                            if (isAdmin) {
+                              setSelectedAgentForStatus({ agent: originalAgent, index });
+                              setStatusModalOpen(true);
+                            }
+                          }}
+                        >
+                          <CommissionStatusBadge
+                            status={originalAgent.status}
+                          />
+                        </div>
+                      </div>
+                      {agent.email && (
+                        <p className="text-sm text-gray-600">{agent.email}</p>
+                      )}
                     </div>
-                  </div>
-
-                  <Progress
-                    value={usedPercentage}
-                    className={`h-2 ${Math.abs(usedPercentage - 100) < 0.01 ? '' : 'bg-red-100'
-                      }`}
-                  />
-
-                  {/* Agents List */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <Label>Agents ({agents.length})</Label>
+                    {canEdit && agents.length > 1 && (
                       <Button
-                        type="button"
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() => setAddAgentModalOpen(true)}
+                        onClick={() => handleRemoveAgent(agent.id, agent.name)}
                       >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Agent
+                        <Trash2 className="h-4 w-4 text-red-600" />
                       </Button>
-                    </div>
-
-                    {agents.length === 0 ? (
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                        <p className="text-sm text-gray-600">No agents added yet</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {agents.map((agent) => (
-                          <div key={agent.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <p className="font-medium">{agent.name}</p>
-                                  <Badge
-                                    variant="secondary"
-                                    className={agent.type === 'external' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'}
-                                  >
-                                    {agent.type === 'internal' ? 'Internal' : 'External'}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-gray-600">
-                                  {agent.percentage}% • {formatPKR((totalCommission * agent.percentage) / 100)}
-                                </p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveAgent(agent.id, agent.name)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-600" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
                     )}
                   </div>
 
-                  {/* Agency Split */}
-                  <div>
-                    <Label htmlFor="agency-pct">Agency Split (%)</Label>
-                    <Input
-                      id="agency-pct"
-                      type="number"
-                      value={editedAgencyPct}
-                      onChange={(e) => setEditedAgencyPct(e.target.value)}
-                      min="0"
-                      max="20"
-                      step="0.1"
-                      className="mt-2"
-                    />
-                    <p className="text-sm text-gray-600 mt-1">
-                      Amount: {formatPKR(((deal.financial.agreedPrice * (parseFloat(editedRate) || 0)) / 100) * (parseFloat(editedAgencyPct) || 0) / 100)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Validation Message */}
-                {!validation.valid && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-red-900">Validation Error</p>
-                        <p className="text-sm text-red-700 mt-1">{validation.message}</p>
+                  {/* Input Row */}
+                  <div className="grid grid-cols-12 gap-2 items-end">
+                    <div className="col-span-7">
+                      <Label htmlFor={`agent-${agent.id}`} className="text-xs mb-1">
+                        {mode === 'percentage' ? 'Percentage' : 'Amount'}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id={`agent-${agent.id}`}
+                          type="number"
+                          value={value}
+                          onChange={(e) => updateAgentValue(agent.id, e.target.value)}
+                          min="0"
+                          step={mode === 'percentage' ? '0.1' : '1'}
+                          disabled={!canEdit}
+                          className="pr-12"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-medium">
+                          {mode === 'percentage' ? '%' : 'PKR'}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {validation.valid && agents.length > 0 && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      <p className="text-sm text-green-800">
-                        Commission splits are valid and total 100%
+                    <div className="col-span-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleAgentMode(agent.id, mode, originalAgent)}
+                        disabled={!canEdit}
+                        className="w-full"
+                      >
+                        <ArrowRightLeft className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="col-span-2 text-right pb-2">
+                      <p className="text-xs text-gray-600 mb-0.5">
+                        {mode === 'percentage' ? 'Amount' : '%'}
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {mode === 'percentage'
+                          ? formatPKR(agent.displayAmount)
+                          : `${agent.displayPercentage.toFixed(2)}%`
+                        }
                       </p>
                     </div>
                   </div>
-                )}
+
+                  {/* Additional Info */}
+                  {originalAgent.notes && (
+                    <div className="mt-3 bg-blue-50 border border-blue-200 rounded p-2">
+                      <p className="text-xs text-blue-800">
+                        <Info className="h-3 w-3 inline mr-1" />
+                        {originalAgent.notes}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Agency Section */}
+      <Card className="p-6">
+        <div className="mb-6">
+          <h3 className="font-semibold mb-1">Agency Commission</h3>
+          <p className="text-sm text-gray-600">
+            Agency's portion of the total commission
+          </p>
+        </div>
+
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Building2 className="h-5 w-5 text-gray-600" />
+                <p className="font-medium text-gray-900">Agency Split</p>
+                <div
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (isAdmin) {
+                      setSelectedAgentForStatus(null);
+                      setStatusModalOpen(true);
+                    }
+                  }}
+                >
+                  <CommissionStatusBadge
+                    status={(deal.financial.commission.split.agency.status as CommissionStatus) || 'pending'}
+                  />
+                </div>
               </div>
-            </Card>
+              <p className="text-sm text-gray-600">
+                Portion retained by the agency
+              </p>
+            </div>
+          </div>
+
+          {/* Input Row */}
+          <div className="grid grid-cols-12 gap-2 items-end">
+            <div className="col-span-7">
+              <Label htmlFor="agency-commission" className="text-xs mb-1">
+                {agencyMode === 'percentage' ? 'Percentage' : 'Amount'}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="agency-commission"
+                  type="number"
+                  value={agencyValue}
+                  onChange={(e) => setAgencyValue(e.target.value)}
+                  min="0"
+                  step={agencyMode === 'percentage' ? '0.1' : '1'}
+                  disabled={!canEdit}
+                  className="pr-12"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 font-medium">
+                  {agencyMode === 'percentage' ? '%' : 'PKR'}
+                </div>
+              </div>
+            </div>
+            <div className="col-span-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleAgencyMode}
+                disabled={!canEdit}
+                className="w-full"
+              >
+                <ArrowRightLeft className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="col-span-2 text-right pb-2">
+              <p className="text-xs text-gray-600 mb-0.5">
+                {agencyMode === 'percentage' ? 'Amount' : '%'}
+              </p>
+              <p className="text-sm font-medium text-gray-900">
+                {agencyMode === 'percentage'
+                  ? formatPKR(agencyAmount)
+                  : `${agencyPercentage.toFixed(2)}%`
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* Additional Info */}
+          {deal.financial.commission.split.agency.notes && (
+            <div className="mt-3 bg-blue-50 border border-blue-200 rounded p-2">
+              <p className="text-xs text-blue-800">
+                <Info className="h-3 w-3 inline mr-1" />
+                {deal.financial.commission.split.agency.notes}
+              </p>
+            </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      </Card>
+
+      {/* Validation Footer */}
+      <Card className={`p-4 ${isValid
+        ? 'bg-green-50 border-green-200'
+        : 'bg-red-50 border-red-200'
+        }`}>
+        <div className="flex items-start gap-3">
+          {isValid ? (
+            <>
+              <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-green-900">
+                  Commission allocation is valid
+                </p>
+                <p className="text-sm text-green-700 mt-1">
+                  All splits total exactly 100% ({formatPKR(totalCommission)})
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium text-red-900">
+                  Commission allocation incomplete
+                </p>
+                <p className="text-sm text-red-700 mt-1">
+                  {totalAllocatedPercentage > 100
+                    ? `Over-allocated by ${(totalAllocatedPercentage - 100).toFixed(2)}% (${formatPKR(Math.abs(remainingAmount))})`
+                    : `Under-allocated by ${(100 - totalAllocatedPercentage).toFixed(2)}% (${formatPKR(remainingAmount)})`
+                  }
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </Card>
 
       {/* Add Agent Modal */}
       <AddAgentToCommissionModal
         open={addAgentModalOpen}
         onClose={() => setAddAgentModalOpen(false)}
         currentAgents={agents}
-        agencyPercentage={parseFloat(editedAgencyPct || '0')}
+        agencyPercentage={agencyPercentage}
         totalCommission={totalCommission}
         onAdd={handleAddAgent}
       />
@@ -663,19 +858,19 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
           open={statusModalOpen}
           onClose={() => {
             setStatusModalOpen(false);
-            setSelectedAgent(null);
+            setSelectedAgentForStatus(null);
           }}
-          currentStatus={selectedAgent ? selectedAgent.agent.status : (agency.status as CommissionStatus) || 'pending'}
-          agentName={selectedAgent ? selectedAgent.agent.name : 'Agency'}
-          splitType={selectedAgent ? 'primary' : 'agency'}
+          currentStatus={
+            selectedAgentForStatus
+              ? selectedAgentForStatus.agent.status
+              : (deal.financial.commission.split.agency.status as CommissionStatus) || 'pending'
+          }
+          agentName={selectedAgentForStatus ? selectedAgentForStatus.agent.name : 'Agency'}
+          splitType={selectedAgentForStatus ? 'primary' : 'agency'}
           onConfirm={(newStatus, reason) => {
-            if (selectedAgent) {
-              handleStatusChange(newStatus, reason);
-            } else {
-              handleAgencyStatusChange(newStatus, reason);
-            }
+            handleStatusChange(newStatus, reason);
             setStatusModalOpen(false);
-            setSelectedAgent(null);
+            setSelectedAgentForStatus(null);
           }}
         />
       )}

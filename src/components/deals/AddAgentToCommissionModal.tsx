@@ -33,11 +33,7 @@ import { useInternalAgents, useExternalBrokers } from '@/hooks/useCommissionAgen
 import { formatPKR } from '@/lib/currency';
 import { CommissionAgent } from '@/types/deals';
 import { toast } from 'sonner';
-<<<<<<< Updated upstream
-
-=======
 import { logger } from '@/lib/logger';
->>>>>>> Stashed changes
 interface AddAgentToCommissionModalProps {
   open: boolean;
   onClose: () => void;
@@ -129,7 +125,7 @@ export function AddAgentToCommissionModal({
       onAdd(newAgent);
 
       // Only reset and close if successful (no error thrown)
-      // Note: The parent component (CommissionTabV2) will show success toast
+      // Note: The parent component (CommissionTab) will show success toast
       setSelectedAgent(null);
       setPercentage('');
       setNotes('');

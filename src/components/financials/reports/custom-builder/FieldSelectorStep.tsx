@@ -4,7 +4,7 @@
  * Step 2 of custom report builder - Select fields to include in report.
  * Two-column layout with available fields and selected fields.
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useMemo, useState } from 'react';

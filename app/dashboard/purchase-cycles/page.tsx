@@ -3,15 +3,10 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-<<<<<<< Updated upstream
-import { PurchaseCyclesWorkspaceV4 } from '@/components/purchase-cycles/PurchaseCyclesWorkspaceV4';
-import { User, mapAuthUserToUIUser, PurchaseCycle } from '@/types';
-=======
 import { PurchaseCyclesWorkspace } from '@/components/purchase-cycles/PurchaseCyclesWorkspace';
 import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
 import { mapAuthUserToUIUser } from '@/types';
-import type { PurchaseCycle } from '@/types';
->>>>>>> Stashed changes
+import type { User, PurchaseCycle } from '@/types';
 
 export default function PurchaseCyclesPage() {
     const { user: saasUser } = useAuthStore();
@@ -50,7 +45,7 @@ export default function PurchaseCyclesPage() {
     }
 
     return (
-        <PurchaseCyclesWorkspaceV4
+        <PurchaseCyclesWorkspace
             user={user}
             onNavigate={handleNavigate}
             onStartNew={handleStartNew}

@@ -31,7 +31,7 @@ interface ExpenseWorkspaceProps {
  * - Bulk actions (approve, reject, delete)
  * - Export to CSV/JSON
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses WorkspaceHeader with stats
  * - Uses WorkspaceSearchBar with filters
  * - Uses MetricCard components

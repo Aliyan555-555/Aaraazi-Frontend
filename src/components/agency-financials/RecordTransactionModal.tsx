@@ -1,7 +1,7 @@
 /**
  * Record Transaction Modal
  * Records income or expense during property ownership
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState, useEffect } from 'react';

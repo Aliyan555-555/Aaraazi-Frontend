@@ -1,7 +1,7 @@
 /**
  * Sell Cycle Financial Summary Component
  * Displays financial tracking for sell cycles including sale transactions and profitability
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useMemo } from 'react';

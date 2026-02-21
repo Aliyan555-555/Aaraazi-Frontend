@@ -5,7 +5,7 @@
  */
 
 // Main component
-export { DashboardV4 } from "./DashboardV4";
+export { Dashboard } from "./Dashboard";
 
 // Sections (Phase 1-6)
 export { HeroSection } from "./sections/HeroSection";

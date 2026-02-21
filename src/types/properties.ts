@@ -37,7 +37,7 @@ export interface Property {
   id: string;
   title: string;
   description?: string;
-  address: string | any; // V4 often uses string, but can be PropertyAddress
+  address: string | any; // often uses string, but can be PropertyAddress
   addressDetails?: PropertyAddress;
   city?: string;
   area: number | string;

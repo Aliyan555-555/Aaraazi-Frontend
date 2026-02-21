@@ -1,5 +1,5 @@
 /**
- * Template Registry - All available templates in aaraazi Design System V4.1
+ * Template Registry - All available templates in aaraazi Design System
  * 
  * PURPOSE:
  * Centralized registry of all page templates to avoid duplication and provide
@@ -40,9 +40,9 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateRegistryEntry> = {
     path: '/components/layout/DetailPageTemplate.tsx',
     useCase: 'Single entity detail pages with tabs, metrics, and related entities',
     examples: [
-      'PropertyDetailsV4',
-      'BuyerRequirementDetailsV4',
-      'RentRequirementDetailsV4',
+      'PropertyDetails',
+      'BuyerRequirementDetails',
+      'RentRequirementDetails',
     ],
     created: '2024-12',
     reason: 'Standard pattern for all entity detail pages',
@@ -66,8 +66,8 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateRegistryEntry> = {
     path: '/components/workspace/WorkspaceTemplate.tsx',
     useCase: 'List/grid/kanban views of multiple entities with search and filters',
     examples: [
-      'PropertiesWorkspaceV4',
-      'BuyerRequirementsWorkspaceV4',
+      'PropertiesWorkspace',
+      'BuyerRequirementsWorkspace',
     ],
     created: '2024-12',
     reason: 'Standard pattern for all workspace/listing pages',

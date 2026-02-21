@@ -1,50 +1,3 @@
-/**
- * WorkspaceSearchBar Component
- * 
- * Unified search and filter component for workspace pages
- * Provides global search, quick filters, and advanced filtering
- * 
- * FEATURES:
- * - Global search with debouncing
- * - Quick filter chips (status, agent, date range, etc.)
- * - Clear all filters
- * - Sort options
- * - Filter count badge
- * 
- * UX LAWS:
- * - Fitts's Law: Large search input, accessible filter chips
- * - Miller's Law: Max 7 quick filters visible
- * - Hick's Law: Progressive disclosure (advanced filters)
- * - Jakob's Law: Familiar search patterns (magnifying glass icon)
- * - Aesthetic-Usability: Clean design, clear affordances
- * 
- * @example
- * <WorkspaceSearchBar
- *   searchValue={searchTerm}
- *   onSearchChange={setSearchTerm}
- *   placeholder="Search properties..."
- *   quickFilters={[
- *     {
- *       id: 'status',
- *       label: 'Status',
- *       options: [
- *         { value: 'available', label: 'Available', count: 45 },
- *         { value: 'sold', label: 'Sold', count: 105 }
- *       ],
- *       value: selectedStatus,
- *       onChange: setSelectedStatus
- *     }
- *   ]}
- *   sortOptions={[
- *     { value: 'newest', label: 'Newest First' },
- *     { value: 'price-high', label: 'Price: High to Low' }
- *   ]}
- *   sortValue={sortBy}
- *   onSortChange={setSortBy}
- *   onClearAll={handleClearFilters}
- * />
- */
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -70,17 +23,17 @@ interface FilterOption {
   count?: number;
 }
 
-interface QuickFilter {
+export interface QuickFilter {
   id: string;
   label: string;
   type?: 'multi-select' | 'single-select' | 'toggle';
   options?: FilterOption[];
-  value: string | string[] | boolean;
-  onChange: (value: string | string[] | boolean) => void;
+  value?: string | string[] | boolean;
+  onChange?: (value: string | string[] | boolean) => void;
   multiple?: boolean;
 }
 
-interface SortOption {
+export interface SortOption {
   value: string;
   label: string;
 }
@@ -90,18 +43,18 @@ export interface WorkspaceSearchBarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   placeholder?: string;
-  
+
   // Quick filters (Miller's Law: max 7)
   quickFilters?: QuickFilter[];
-  
+
   // Sort
   sortOptions?: SortOption[];
   sortValue?: string;
   onSortChange?: (value: string) => void;
-  
+
   // Actions
   onClearAll?: () => void;
-  
+
   // Styling
   className?: string;
 }
@@ -184,7 +137,7 @@ export const WorkspaceSearchBar: React.FC<WorkspaceSearchBarProps> = ({
                 key={filter.id}
                 variant={filter.value ? 'default' : 'outline'}
                 size="default"
-                onClick={() => filter.onChange(!filter.value)}
+                onClick={() => filter.onChange?.(!filter.value)}
                 className="gap-2"
               >
                 <SlidersHorizontal className="w-4 h-4" />
@@ -205,8 +158,8 @@ export const WorkspaceSearchBar: React.FC<WorkspaceSearchBarProps> = ({
                   <SlidersHorizontal className="w-4 h-4" />
                   {filter.label}
                   {(() => {
-                    const count = Array.isArray(filter.value) 
-                      ? filter.value.length 
+                    const count = Array.isArray(filter.value)
+                      ? filter.value.length
                       : filter.value ? 1 : 0;
                     return count > 0 ? (
                       <Badge variant="default" className="ml-1 px-1.5 py-0.5" style={{ fontSize: 'var(--text-xs)' }}>
@@ -233,16 +186,15 @@ export const WorkspaceSearchBar: React.FC<WorkspaceSearchBarProps> = ({
                               const newValue = isSelected
                                 ? filter.value.filter((v) => v !== option.value)
                                 : [...filter.value, option.value];
-                              filter.onChange(newValue);
+                              filter.onChange?.(newValue);
                             } else {
-                              filter.onChange(isSelected ? '' : option.value);
+                              filter.onChange?.(isSelected ? '' : option.value);
                             }
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                            isSelected
-                              ? 'bg-gray-100 font-medium'
-                              : 'hover:bg-gray-50'
-                          }`}
+                          className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${isSelected
+                            ? 'bg-gray-100 font-medium'
+                            : 'hover:bg-gray-50'
+                            }`}
                           style={{ fontSize: 'var(--text-sm)' }}
                         >
                           <div className="flex items-center justify-between">
@@ -318,7 +270,7 @@ export const WorkspaceSearchBar: React.FC<WorkspaceSearchBarProps> = ({
                   <Badge key={filter.id} variant="outline" className="gap-1">
                     {filter.label}
                     <button
-                      onClick={() => filter.onChange(false)}
+                      onClick={() => filter.onChange?.(false)}
                       className="ml-1 hover:text-gray-900"
                       aria-label={`Remove ${filter.label} filter`}
                     >
@@ -333,16 +285,16 @@ export const WorkspaceSearchBar: React.FC<WorkspaceSearchBarProps> = ({
               return values.map((value) => {
                 const option = filter.options?.find((o) => o.value === value);
                 if (!option) return null;
-                
+
                 return (
                   <Badge key={`${filter.id}-${value}`} variant="outline" className="gap-1">
                     {filter.label}: {option.label}
                     <button
                       onClick={() => {
                         if (Array.isArray(filter.value)) {
-                          filter.onChange(filter.value.filter((v) => v !== value));
+                          filter.onChange?.(filter.value.filter((v) => v !== value));
                         } else {
-                          filter.onChange('');
+                          filter.onChange?.('');
                         }
                       }}
                       className="ml-1 hover:text-gray-900"

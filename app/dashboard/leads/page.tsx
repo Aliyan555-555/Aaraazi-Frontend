@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import LeadWorkspaceV4 from '@/components/leads/LeadWorkspaceV4';
+import LeadWorkspace from '@/components/leads/LeadWorkspace';
 import { User, mapAuthUserToUIUser } from '@/types';
 
 export default function LeadsPage() {
@@ -40,7 +40,7 @@ export default function LeadsPage() {
     }
 
     return (
-        <LeadWorkspaceV4
+        <LeadWorkspace
             user={user}
             onNavigate={handleNavigate}
             onCreateLead={() => console.log("Create lead clicked")}

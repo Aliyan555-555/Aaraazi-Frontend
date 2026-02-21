@@ -10,7 +10,7 @@
  * - Revoke access
  * - View sharing statistics
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState, useEffect, useMemo } from 'react';

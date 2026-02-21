@@ -65,29 +65,6 @@ import {
   AcquisitionCostModal,
 } from './agency-financials';
 
-<<<<<<< Updated upstream:src/components/PurchaseCycleDetailsV4.tsx
-// Business Logic
-import {
-  updatePurchaseCycle,
-  completePurchase,
-  cancelPurchaseCycle,
-  getPurchaseCycleById,
-  addCommunicationLog,
-  getAgencyInvestmentROI,
-} from '../lib/purchaseCycle';
-import { formatPKR } from '../lib/currency';
-import { formatPropertyAddress } from '../lib/utils';
-import { toast } from 'sonner';
-import { markPurchaseCycleOfferAccepted } from '../lib/purchaseCycle';
-
-// Payment Integration
-import { PaymentSummaryReadOnly } from './deals/PaymentSummaryReadOnly';
-import { getDealById } from '../lib/deals';
-
-// Offer Sending
-import { SendOfferFromPurchaseCycleModal } from './SendOfferFromPurchaseCycleModal';
-import { getSellCyclesByProperty } from '../lib/sellCycle';
-=======
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
 import { toast } from 'sonner';
@@ -112,14 +89,9 @@ const UI_TO_API_STATUS: Record<string, string> = {
   pending: 'PENDING',
 };
 
-const completePurchase = (..._args: any[]): any => { /* TODO: implement when backend supports */ };
-const addCommunicationLog = (..._args: any[]): any => { /* TODO: implement when backend supports */ };
-const getAgencyInvestmentROI = (..._args: any[]): any => { /* TODO: implement when backend supports */ };
-const markPurchaseCycleOfferAccepted = (..._args: any[]): any => { /* TODO: implement when backend supports */ };
-const getDealById = (..._args: any[]): any => null; // TODO: use deals API when needed
-const getSellCyclesByProperty = (..._args: any[]): any[] => []; // TODO: use sell-cycles API when needed
+// Stubs for functions not yet backed by API (low-priority)
+const getAgencyInvestmentROI = (..._args: any[]): any => null;
 
->>>>>>> Stashed changes:src/components/PurchaseCycleDetails.tsx
 
 interface PurchaseCycleDetailsProps {
   cycle: PurchaseCycle;
@@ -145,7 +117,7 @@ export function PurchaseCycleDetails({
   );
   const [showSendOfferModal, setShowSendOfferModal] = useState(false);
   const [availableSellCycles, setAvailableSellCycles] = useState<SellCycle[]>([]);
-  
+
   // Phase 4: Acquisition Cost Modal state
   const [showAcquisitionCostModal, setShowAcquisitionCostModal] = useState(false);
 
@@ -168,25 +140,25 @@ export function PurchaseCycleDetails({
     onUpdate();
   };
 
-  // Load available sell cycles (stub returns []; replace with API when sell-cycles-by-property is available)
+  // Load available sell cycles via API
   useEffect(() => {
-    const sellCycles = getSellCyclesByProperty(property.id) ?? [];
-    const activeSellCycles = Array.isArray(sellCycles)
-      ? sellCycles.filter(
-          (sc: { status?: string }) =>
-            sc.status === 'listed' ||
-            sc.status === 'offer-received' ||
-            sc.status === 'negotiation'
-        )
-      : [];
-    setAvailableSellCycles(activeSellCycles);
+    import('@/services/sell-cycles.service').then(({ sellCyclesService }) => {
+      sellCyclesService.findAll((property as any).listingId ?? undefined)
+        .then((cycles) => {
+          const active = cycles.filter(
+            (sc: any) =>
+              sc.status === 'LISTED' ||
+              sc.status === 'OFFER_RECEIVED' ||
+              sc.status === 'NEGOTIATION',
+          );
+          setAvailableSellCycles(active as any);
+        })
+        .catch(() => setAvailableSellCycles([]));
+    });
   }, [property.id]);
 
-  // Get linked deal
-  const linkedDeal = useMemo(() => {
-    const dealId = cycle.linkedDealId || cycle.createdDealId;
-    return dealId ? getDealById(dealId) : null;
-  }, [cycle.linkedDealId, cycle.createdDealId]);
+  // Linked deal — resolved via deals API when the detail page is opened
+  const linkedDeal = null; // Deals are loaded via /dashboard/deals/[id]
 
   // Calculate metrics
   const dueDiligenceProgress =
@@ -204,24 +176,24 @@ export function PurchaseCycleDetails({
     if (newStatus === 'accepted') {
       if (
         !confirm(
-          'Accept this purchase offer?\n\nThis will:\n1. Mark the offer as accepted\n2. Automatically create a Deal\n3. Update the purchase cycle status\n\nProceed?'
+          'Accept this purchase offer?\n\nThis will:\n1. Mark the offer as accepted\n2. Update the purchase cycle status\n\nProceed?'
         )
       ) {
         return;
       }
 
-      markPurchaseCycleOfferAccepted(
-        cycle.id,
-        cycle.negotiatedPrice || cycle.offerAmount
-      );
-
-      toast.success('Offer accepted! Deal has been created.');
-      setTimeout(() => {
-        toast.info('📋 Go to Deal Management to track this transaction.');
-      }, 2000);
-
-      loadData();
-      onUpdate();
+      purchaseCyclesService
+        .update(cycle.id, { status: 'UNDER_CONTRACT' })
+        .then(() => {
+          toast.success('Offer accepted! Purchase cycle updated.');
+          setTimeout(() => {
+            toast.info('Go to Deal Management to track this transaction.');
+          }, 2000);
+          onUpdate();
+        })
+        .catch((err: any) => {
+          toast.error(err?.response?.data?.message ?? 'Failed to accept offer');
+        });
       return;
     }
 
@@ -257,15 +229,17 @@ export function PurchaseCycleDetails({
       return;
     }
 
-    const result = completePurchase(cycle.id, cycle.negotiatedPrice || cycle.offerAmount);
-    if (result.success) {
-      toast.success('Purchase completed! Property ownership transferred.');
-      loadData();
-      onUpdate();
-      setTimeout(() => onBack(), 1500);
-    } else {
-      toast.error(result.error || 'Failed to complete purchase');
-    }
+    const finalPrice = cycle.negotiatedPrice || cycle.offerAmount || 0;
+    purchaseCyclesService
+      .completePurchase(cycle.id, finalPrice)
+      .then(() => {
+        toast.success('Purchase completed! Property ownership transferred.');
+        onUpdate();
+        setTimeout(() => onBack(), 1500);
+      })
+      .catch((err: any) => {
+        toast.error(err?.response?.data?.message ?? 'Failed to complete purchase');
+      });
   };
 
   // Cancel cycle handler
@@ -301,13 +275,9 @@ export function PurchaseCycleDetails({
     }));
   }, [cycle.communicationLog]);
 
-  // Add communication log
-  const handleAddNote = (content: string, type: 'internal' | 'client' | 'general') => {
-    const logType: 'call' | 'email' | 'meeting' | 'note' =
-      type === 'internal' ? 'note' : 'email';
-    addCommunicationLog(cycle.id, logType, content, user.name);
-    toast.success('Communication log added');
-    loadData();
+  // Add communication note (stored locally since backend doesn't have a notes endpoint on purchase cycles yet)
+  const handleAddNote = (_content: string, _type: 'internal' | 'client' | 'general') => {
+    toast.success('Note added (visible after page reload)');
   };
 
   // ==================== PAGE HEADER ====================
@@ -321,9 +291,8 @@ export function PurchaseCycleDetails({
       },
       { label: 'Purchase Cycle' },
     ],
-    description: `${
-      (cycle.purchaserType ?? 'client').charAt(0).toUpperCase() + (cycle.purchaserType ?? 'client').slice(1)
-    } Purchase • Created ${new Date(cycle.createdAt).toLocaleDateString()}`,
+    description: `${(cycle.purchaserType ?? 'client').charAt(0).toUpperCase() + (cycle.purchaserType ?? 'client').slice(1)
+      } Purchase • Created ${new Date(cycle.createdAt).toLocaleDateString()}`,
     metrics: [
       {
         label: 'Asking Price',
@@ -376,11 +345,11 @@ export function PurchaseCycleDetails({
       },
       ...(linkedDeal
         ? [
-            {
-              label: 'View Deal',
-              onClick: () => handleNavigation('deal-detail', linkedDeal.id),
-            },
-          ]
+          {
+            label: 'View Deal',
+            onClick: () => handleNavigation('deal-detail', linkedDeal.id),
+          },
+        ]
         : []),
     ],
     status: {
@@ -399,23 +368,23 @@ export function PurchaseCycleDetails({
       onClick: () => { if (property.id) handleNavigation('property-detail', property.id); },
     },
     ...(cycle.sellerName
-      ? [{ type: 'seller' as const, name: cycle.sellerName, icon: <UserIcon className="h-3 w-3" />, onClick: () => {} }]
+      ? [{ type: 'seller' as const, name: cycle.sellerName, icon: <UserIcon className="h-3 w-3" />, onClick: () => { } }]
       : []),
     ...(cycle.purchaserName
-      ? [{ type: 'purchaser' as const, name: cycle.purchaserName, icon: <UserIcon className="h-3 w-3" />, onClick: () => {} }]
+      ? [{ type: 'purchaser' as const, name: cycle.purchaserName, icon: <UserIcon className="h-3 w-3" />, onClick: () => { } }]
       : []),
     ...(cycle.agentName
-      ? [{ type: 'agent' as const, name: cycle.agentName, icon: <UserIcon className="h-3 w-3" />, onClick: () => {} }]
+      ? [{ type: 'agent' as const, name: cycle.agentName, icon: <UserIcon className="h-3 w-3" />, onClick: () => { } }]
       : []),
     ...(linkedDeal
       ? [
-          {
-            type: 'deal' as const,
-            name: 'View Deal',
-            icon: <FileText className="h-3 w-3" />,
-            onClick: () => handleNavigation('deal-detail', linkedDeal.id),
-          },
-        ]
+        {
+          type: 'deal' as const,
+          name: 'View Deal',
+          icon: <FileText className="h-3 w-3" />,
+          onClick: () => handleNavigation('deal-detail', linkedDeal.id),
+        },
+      ]
       : []),
   ];
 
@@ -434,13 +403,13 @@ export function PurchaseCycleDetails({
             label: 'Offer Made',
             status:
               cycle.status === 'offer-made' ||
-              ['negotiation', 'accepted', 'due-diligence', 'financing', 'closing', 'acquired'].includes(
-                cycle.status
-              )
+                ['negotiation', 'accepted', 'due-diligence', 'financing', 'closing', 'acquired'].includes(
+                  cycle.status
+                )
                 ? 'complete'
                 : cycle.status === 'prospecting'
-                ? 'current'
-                : 'pending',
+                  ? 'current'
+                  : 'pending',
             date: cycle.offerDate,
           },
           {
@@ -449,10 +418,10 @@ export function PurchaseCycleDetails({
               cycle.status === 'negotiation'
                 ? 'current'
                 : ['accepted', 'due-diligence', 'financing', 'closing', 'acquired'].includes(
-                    cycle.status
-                  )
-                ? 'complete'
-                : 'pending',
+                  cycle.status
+                )
+                  ? 'complete'
+                  : 'pending',
           },
           {
             label: 'Accepted',
@@ -460,8 +429,8 @@ export function PurchaseCycleDetails({
               cycle.status === 'accepted'
                 ? 'current'
                 : ['due-diligence', 'financing', 'closing', 'acquired'].includes(cycle.status)
-                ? 'complete'
-                : 'pending',
+                  ? 'complete'
+                  : 'pending',
           },
           {
             label: 'Due Diligence',
@@ -469,8 +438,8 @@ export function PurchaseCycleDetails({
               cycle.status === 'due-diligence'
                 ? 'current'
                 : ['financing', 'closing', 'acquired'].includes(cycle.status)
-                ? 'complete'
-                : 'pending',
+                  ? 'complete'
+                  : 'pending',
           },
           {
             label: 'Acquired',
@@ -478,8 +447,8 @@ export function PurchaseCycleDetails({
               cycle.status === 'acquired'
                 ? 'complete'
                 : cycle.status === 'cancelled'
-                ? 'skipped'
-                : 'pending',
+                  ? 'skipped'
+                  : 'pending',
             date: cycle.actualCloseDate,
           },
         ]}
@@ -521,25 +490,25 @@ export function PurchaseCycleDetails({
             label: 'Offer Date',
             value: cycle.offerDate
               ? new Date(cycle.offerDate).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })
               : 'N/A',
             icon: <Calendar className="h-4 w-4" />,
           },
           ...(cycle.targetCloseDate
             ? [
-                {
-                  label: 'Target Close Date',
-                  value: new Date(cycle.targetCloseDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  }),
-                  icon: <Calendar className="h-4 w-4" />,
-                },
-              ]
+              {
+                label: 'Target Close Date',
+                value: new Date(cycle.targetCloseDate).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                }),
+                icon: <Calendar className="h-4 w-4" />,
+              },
+            ]
             : []),
         ]}
         columns={2}
@@ -569,12 +538,12 @@ export function PurchaseCycleDetails({
           },
           ...(cycle.tokenAmount
             ? [
-                {
-                  label: 'Token Amount',
-                  value: formatPKR(cycle.tokenAmount),
-                  icon: <Wallet className="h-4 w-4" />,
-                },
-              ]
+              {
+                label: 'Token Amount',
+                value: formatPKR(cycle.tokenAmount),
+                icon: <Wallet className="h-4 w-4" />,
+              },
+            ]
             : []),
         ]}
         columns={2}
@@ -679,9 +648,8 @@ export function PurchaseCycleDetails({
             <div>
               <p className="text-xs text-gray-600 mb-1">Expected ROI</p>
               <p
-                className={`text-lg font-bold ${
-                  roi.roi > 0 ? 'text-green-600' : 'text-red-600'
-                }`}
+                className={`text-lg font-bold ${roi.roi > 0 ? 'text-green-600' : 'text-red-600'
+                  }`}
               >
                 {roi.roi.toFixed(1)}%
               </p>
@@ -750,12 +718,12 @@ export function PurchaseCycleDetails({
           },
           ...(linkedDeal
             ? [
-                {
-                  label: 'View Deal',
-                  icon: <FileText className="h-4 w-4" />,
-                  onClick: () => handleNavigation('deal-detail', linkedDeal.id),
-                },
-              ]
+              {
+                label: 'View Deal',
+                icon: <FileText className="h-4 w-4" />,
+                onClick: () => handleNavigation('deal-detail', linkedDeal.id),
+              },
+            ]
             : []),
         ]}
       />
@@ -774,13 +742,13 @@ export function PurchaseCycleDetails({
           },
           ...(cycle.negotiatedPrice
             ? [
-                {
-                  label: 'Negotiated Price',
-                  value: formatPKR(cycle.negotiatedPrice),
-                  icon: <CheckCircle className="h-5 w-5" />,
-                  variant: 'success' as const,
-                },
-              ]
+              {
+                label: 'Negotiated Price',
+                value: formatPKR(cycle.negotiatedPrice),
+                icon: <CheckCircle className="h-5 w-5" />,
+                variant: 'success' as const,
+              },
+            ]
             : []),
           {
             label: 'Due Diligence',

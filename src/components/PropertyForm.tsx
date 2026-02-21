@@ -1,5 +1,5 @@
 /**
- * Property Form V2 - Multi-Step Form (4 Steps) ✅
+ * Property Form - Multi-Step Form (4 Steps) ✅
  * 
  * PHASE 3 COMPLIANT:
  * - MultiStepForm component for 4-step wizard

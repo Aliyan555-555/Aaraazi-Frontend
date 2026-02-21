@@ -12,12 +12,12 @@
  * DATA SOURCES:
  * - Sell Cycles (for pipeline and revenue)
  * - Properties (for inventory)
- * - Leads V4 (for conversion)
+ * - Leads (for conversion)
  * - Contacts (for conversion)
  */
 
 import { SellCycle, Property, Contact } from "../../../types";
-import { LeadV4 } from "../../../types/leads";
+import { DashboardLead } from "../../../types/leads";
 import { DashboardMetrics } from "../types/dashboard.types";
 
 /**
@@ -135,10 +135,10 @@ export function calculateAvailableInventory(properties: Property[]): number {
 
 /**
  * Calculate conversion rate
- * Percentage of leads V4 that converted to contacts
+ * Percentage of Leads that converted to contacts
  */
 export function calculateConversionRate(
-  leads: LeadV4[],
+  leads: DashboardLead[],
   contacts: Contact[],
 ): {
   rate: number;
@@ -167,7 +167,7 @@ export function calculateConversionRate(
  * Calculate conversion trend
  * Percentage change vs last 30 days
  */
-export function calculateConversionTrend(leads: LeadV4[]): {
+export function calculateConversionTrend(leads: DashboardLead[]): {
   direction: "up" | "down" | "neutral";
   value: number;
 } {
@@ -252,7 +252,7 @@ export function calculatePipelineTrend(sellCycles: SellCycle[]): {
 export function calculateDashboardMetrics(
   sellCycles: SellCycle[],
   properties: Property[],
-  leads: LeadV4[],
+  leads: DashboardLead[],
   contacts: Contact[],
 ): DashboardMetrics {
   const activePipeline = calculateActivePipeline(sellCycles);

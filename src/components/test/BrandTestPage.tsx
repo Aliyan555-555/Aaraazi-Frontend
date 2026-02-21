@@ -20,8 +20,7 @@ export function BrandTestPage() {
       {/* Header */}
       <div className="bg-white border-b border-neutral-200 px-8 py-6">
         <h1 className="text-2xl font-semibold text-slate-700">
-          aaraazi Brand Design System v2.0
-        </h1>
+          aaraazi Brand Design System </h1>
         <p className="text-sm text-slate-400 mt-1">
           Visual test page for the new brand colors, typography, and spacing
         </p>
@@ -782,7 +781,7 @@ export function BrandTestPage() {
       <div className="bg-white border-t border-neutral-200 px-8 py-6 mt-12">
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-400">
-            aaraazi Brand Design System v2.0 • January 2026
+            aaraazi Brand Design System • January 2026
           </p>
           <div className="flex items-center gap-4">
             <span className="text-xs text-slate-400">Built with Inter font</span>

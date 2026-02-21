@@ -8,7 +8,7 @@
  * - Validation and error handling
  * - Partial update support (skip failed tasks)
  * 
- * DESIGN: Design System V4.1 compliant
+ * DESIGN: Design System compliant
  * UX LAWS: Miller's Law (7±2 fields), Hick's Law (progressive disclosure)
  * 
  * @example
@@ -23,8 +23,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { User } from '../../types';
-import { TaskV4, TaskStatus, TaskPriority, TaskCategory } from '../../types/tasks';
-import { getTaskById, updateTask, getAllTasksV4 } from '../../lib/tasks';
+import { Task, TaskStatus, TaskPriority, TaskCategory } from '../../types/tasks';
+import { getTaskById, updateTask, getAllTasks } from '../../lib/tasks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -151,7 +151,7 @@ export const BulkEditTasksModal: React.FC<BulkEditTasksModalProps> = ({
 
   // Load tasks to preview changes
   const tasks = useMemo(() => {
-    return taskIds.map(id => getTaskById(id)).filter(Boolean) as TaskV4[];
+    return taskIds.map(id => getTaskById(id)).filter(Boolean) as Task[];
   }, [taskIds]);
 
   // Reset form when modal opens/closes
@@ -259,7 +259,7 @@ export const BulkEditTasksModal: React.FC<BulkEditTasksModalProps> = ({
 
     try {
       // Build update object with only selected fields
-      const updates: Partial<TaskV4> = {};
+      const updates: Partial<Task> = {};
       
       if (fieldSelections.status && editedFields.status) {
         updates.status = editedFields.status;

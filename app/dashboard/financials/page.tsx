@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { FinancialsHubV4 } from '@/components/financials/FinancialsHubV4';
+import { FinancialsHub } from '@/components/financials/FinancialsHub';
 import { User, mapAuthUserToUIUser } from '@/types';
 
 export default function FinancialsPage() {
@@ -22,7 +22,7 @@ export default function FinancialsPage() {
     }
 
     return (
-        <FinancialsHubV4
+        <FinancialsHub
             user={user}
             defaultModule={null}
             onNavigate={handleNavigate}

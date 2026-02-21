@@ -2,7 +2,7 @@
  * Property Financials Tab
  * Complete financial view for agency-owned properties
  * Shows acquisition costs, operations, and profitability
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import { useState, useMemo } from 'react';

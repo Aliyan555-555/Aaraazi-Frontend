@@ -9,6 +9,10 @@ import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { AddApplicationModal } from '@/components/rent-cycles/AddApplicationModal';
+import { ApproveApplicationModal } from '@/components/rent-cycles/ApproveApplicationModal';
+import { SignLeaseModal } from '@/components/rent-cycles/SignLeaseModal';
+import { RecordRentPaymentModal } from '@/components/rent-cycles/RecordRentPaymentModal';
 import {
   AlertCircle,
   ArrowLeft,
@@ -187,6 +191,12 @@ export default function RentCycleDetailPage() {
   const { cycle, isLoading, error, refetch } = useRentCycle(cycleId);
   const { update: updateCycle, isLoading: isUpdating } = useUpdateRentCycle();
 
+  // Modal state
+  const [showAddApplicationModal, setShowAddApplicationModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showSignLeaseModal, setShowSignLeaseModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
   // ── Status transition ──────────────────────────────────────
   const handleStatusChange = async (newStatus: string) => {
     if (!cycleId) return;
@@ -272,7 +282,44 @@ export default function RentCycleDetailPage() {
           Back to Rent Cycles
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Lease workflow action buttons */}
+          {(cycle.status === 'LISTED' || cycle.status === 'SHOWING' || cycle.status === 'AVAILABLE') && (
+            <Button
+              size="sm"
+              onClick={() => setShowAddApplicationModal(true)}
+            >
+              Add Application
+            </Button>
+          )}
+          {cycle.status === 'APPLICATION_RECEIVED' && (
+            <Button
+              size="sm"
+              onClick={() => setShowApproveModal(true)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Approve Application
+            </Button>
+          )}
+          {cycle.status === 'APPLICATION_RECEIVED' && (
+            <Button
+              size="sm"
+              onClick={() => setShowSignLeaseModal(true)}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              Sign Lease
+            </Button>
+          )}
+          {(cycle.status === 'LEASED' || cycle.status === 'ACTIVE') && (
+            <Button
+              size="sm"
+              onClick={() => setShowPaymentModal(true)}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              Record Payment
+            </Button>
+          )}
+
           {/* Status transition buttons */}
           {nextStatuses.map((ns) => (
             <Button
@@ -475,6 +522,43 @@ export default function RentCycleDetailPage() {
           </DetailCard>
         </div>
       </div>
+
+      {/* Lease Management Modals */}
+      {showAddApplicationModal && cycleId && (
+        <AddApplicationModal
+          rentCycleId={cycleId}
+          onClose={() => setShowAddApplicationModal(false)}
+          onSuccess={() => { setShowAddApplicationModal(false); refetch(); }}
+        />
+      )}
+
+      {showApproveModal && cycleId && (
+        <ApproveApplicationModal
+          rentCycleId={cycleId}
+          applications={(cycle.offers ?? []) as any}
+          onClose={() => setShowApproveModal(false)}
+          onSuccess={() => { setShowApproveModal(false); refetch(); }}
+        />
+      )}
+
+      {showSignLeaseModal && cycleId && (
+        <SignLeaseModal
+          rentCycleId={cycleId}
+          leasePeriod={cycle.leasePeriod}
+          applications={(cycle.offers ?? []) as any}
+          onClose={() => setShowSignLeaseModal(false)}
+          onSuccess={() => { setShowSignLeaseModal(false); refetch(); }}
+        />
+      )}
+
+      {showPaymentModal && cycleId && (
+        <RecordRentPaymentModal
+          rentCycleId={cycleId}
+          monthlyRent={cycle.monthlyRent}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => { setShowPaymentModal(false); refetch(); }}
+        />
+      )}
     </div>
   );
 }

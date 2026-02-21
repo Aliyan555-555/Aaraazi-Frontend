@@ -1,6 +1,6 @@
 /**
  * Offers API Client
- * Handles offer creation, acceptance, rejection, and counter-offers
+ * Handles offer creation, acceptance, and rejection
  */
 
 import { apiClient } from './client';
@@ -16,10 +16,6 @@ export interface CreateOfferPayload {
   validUntil?: string;
   notes?: string;
   agentNotes?: string;
-}
-
-export interface CounterOfferPayload {
-  counterAmount: number;
 }
 
 export interface OfferApiResponse {
@@ -85,21 +81,6 @@ export const offersApi = {
   ): Promise<OfferApiResponse> => {
     const response = await apiClient.post<OfferApiResponse>(
       `/sell-cycles/${sellCycleId}/offers/${offerId}/reject`,
-    );
-    return response.data;
-  },
-
-  /**
-   * Counter an offer
-   */
-  counter: async (
-    sellCycleId: string,
-    offerId: string,
-    payload: CounterOfferPayload,
-  ): Promise<OfferApiResponse> => {
-    const response = await apiClient.post<OfferApiResponse>(
-      `/sell-cycles/${sellCycleId}/offers/${offerId}/counter`,
-      payload,
     );
     return response.data;
   },

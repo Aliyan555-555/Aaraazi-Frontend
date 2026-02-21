@@ -5,6 +5,7 @@
  */
 
 import { rentCyclesApi } from '@/lib/api/rent-cycles';
+import { apiClient } from '@/lib/api/client';
 import type {
   CreateRentCyclePayload,
   UpdateRentCyclePayload,
@@ -50,6 +51,52 @@ class RentCyclesService {
       console.error(`Failed to update ${this.baseLabel} ${id}:`, error);
       throw error;
     }
+  }
+
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/rent-cycles/${id}`);
+  }
+
+  async addApplication(id: string, contactId: string, notes?: string): Promise<unknown> {
+    const response = await apiClient.post(`/rent-cycles/${id}/applications`, { contactId, notes });
+    return response.data;
+  }
+
+  async approveApplication(id: string, applicationId: string): Promise<unknown> {
+    const response = await apiClient.post(`/rent-cycles/${id}/applications/${applicationId}/approve`, {});
+    return response.data;
+  }
+
+  async signLease(
+    id: string,
+    payload: { applicationId: string; leaseStartDate: string; leaseEndDate: string },
+  ): Promise<unknown> {
+    const response = await apiClient.post(`/rent-cycles/${id}/lease`, payload);
+    return response.data;
+  }
+
+  async recordPayment(
+    id: string,
+    payload: { month: string; amountPaid: number; paymentDate?: string; notes?: string },
+  ): Promise<unknown> {
+    const response = await apiClient.post(`/rent-cycles/${id}/payments`, payload);
+    return response.data;
+  }
+
+  async renewLease(
+    id: string,
+    payload: { newMonthlyRent: number; newLeasePeriod: number; newEndDate: string },
+  ): Promise<unknown> {
+    const response = await apiClient.post(`/rent-cycles/${id}/renew`, payload);
+    return response.data;
+  }
+
+  async endLease(
+    id: string,
+    payload: { moveOutDate: string; depositReturned?: boolean; notes?: string },
+  ): Promise<unknown> {
+    const response = await apiClient.post(`/rent-cycles/${id}/end`, payload);
+    return response.data;
   }
 }
 

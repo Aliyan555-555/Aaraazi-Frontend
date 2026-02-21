@@ -309,7 +309,7 @@ export interface Lead {
 // ============================================
 
 /**
- * Old Lead structure (V1)
+ * Old Lead structure ()
  * Keep for reference during migration
  * DO NOT USE - use Lead interface above
  */
@@ -329,13 +329,13 @@ export interface LegacyLead {
 }
 
 // ============================================
-// V4 DASHBOARD TYPES
+// Dashboard TYPES
 // ============================================
 
 /**
- * Lead type formatted for V4 Dashboard
+ * Lead type formatted for Dashboard
  */
-export interface LeadV4 {
+export interface DashboardLead {
   id: string;
   contactId: string;
   agentId: string;

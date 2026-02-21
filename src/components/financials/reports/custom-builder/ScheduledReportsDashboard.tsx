@@ -11,7 +11,7 @@
  * - See execution history
  * - Quick run scheduled reports
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState, useMemo } from 'react';

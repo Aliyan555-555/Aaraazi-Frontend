@@ -1,7 +1,7 @@
 /**
  * Error Boundary Component
  * Catches JavaScript errors anywhere in the component tree
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';

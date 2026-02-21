@@ -157,7 +157,7 @@ export interface TaskAttachment {
 /**
  * Enhanced Task (extends CRMTask with advanced features)
  */
-export interface TaskV4 extends Omit<
+export interface Task extends Omit<
   CRMTask,
   "dueDate" | "priority" | "status"
 > {
@@ -381,7 +381,7 @@ export interface TaskBoardColumn {
   id: string;
   title: string;
   status: TaskStatus;
-  tasks: TaskV4[];
+  tasks: Task[];
   limit?: number; // WIP limit
 }
 

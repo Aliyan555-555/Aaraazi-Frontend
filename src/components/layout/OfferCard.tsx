@@ -63,7 +63,6 @@ export interface OfferCardProps {
   onAccept?: () => void;
   onReject?: () => void;
   onView?: () => void;
-  onCounter?: () => void;
   className?: string;
 }
 
@@ -75,7 +74,6 @@ export function OfferCard({
   onAccept,
   onReject,
   onView,
-  onCounter,
   className = '',
 }: OfferCardProps) {
   // Calculate percentage of asking price
@@ -239,11 +237,6 @@ export function OfferCard({
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Accept Offer
-                  </Button>
-                )}
-                {onCounter && (
-                  <Button size="sm" variant="outline" onClick={onCounter}>
-                    Counter
                   </Button>
                 )}
                 {onReject && (

@@ -4,7 +4,7 @@
  * Display card for saved custom report templates.
  * Shows template info and provides actions to run, edit, or delete.
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React from 'react';

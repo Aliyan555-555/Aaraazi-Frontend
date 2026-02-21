@@ -65,22 +65,26 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
 
     try {
       const input: CreatePaymentPlanInput = {
-        downPaymentPercentage,
+        dealId: deal.id,
+        totalAmount: totalAmount,
+        downPaymentAmount,
         downPaymentDate,
         numberOfInstallments,
         frequency,
         firstInstallmentDate,
+        createdByUserId: currentUserId,
+        createdByName: currentUserName,
       };
 
-      const updatedDeal = createPaymentPlan(
-        deal.id,
-        currentUserId,
-        currentUserName,
-        input
-      );
+      const updatedDeal = await createPaymentPlan(input);
 
       toast.success('Payment plan created successfully');
-      onSuccess(updatedDeal);
+      // Only pass a valid Deal object to onSuccess - never undefined or Promise
+      if (updatedDeal && typeof updatedDeal === 'object' && updatedDeal.parties) {
+        onSuccess(updatedDeal);
+      } else {
+        onSuccess(deal);
+      }
       onClose();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create payment plan');

@@ -3,10 +3,11 @@
  * Handles offer operations
  */
 
-import { offersApi, CreateOfferPayload, CounterOfferPayload } from '@/lib/api/offers';
+import { offersApi, CreateOfferPayload } from '@/lib/api/offers';
 import type { OfferApiResponse, AcceptOfferResponse } from '@/lib/api/offers';
+import { apiClient } from '@/lib/api/client';
 
-export type { CreateOfferPayload, CounterOfferPayload, OfferApiResponse, AcceptOfferResponse } from '@/lib/api/offers';
+export type { CreateOfferPayload, OfferApiResponse, AcceptOfferResponse } from '@/lib/api/offers';
 
 class OffersService {
   async create(
@@ -45,17 +46,18 @@ class OffersService {
     }
   }
 
-  async counter(
-    sellCycleId: string,
-    offerId: string,
-    counterAmount: number,
-  ): Promise<OfferApiResponse> {
-    try {
-      return await offersApi.counter(sellCycleId, offerId, { counterAmount });
-    } catch (error) {
-      console.error('Failed to counter offer:', error);
-      throw error;
-    }
+  async findAll(sellCycleId: string): Promise<OfferApiResponse[]> {
+    const response = await apiClient.get<OfferApiResponse[]>(
+      `/sell-cycles/${sellCycleId}/offers`,
+    );
+    return Array.isArray(response.data) ? response.data : [];
+  }
+
+  async findOne(sellCycleId: string, offerId: string): Promise<OfferApiResponse> {
+    const response = await apiClient.get<OfferApiResponse>(
+      `/sell-cycles/${sellCycleId}/offers/${offerId}`,
+    );
+    return response.data;
   }
 }
 

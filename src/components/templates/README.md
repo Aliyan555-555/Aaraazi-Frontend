@@ -1,4 +1,4 @@
-# aaraazi Templates - Design System V4.1
+# aaraazi Templates - Design System
 
 **Templates Directory** - Extended templates for special use cases
 
@@ -116,7 +116,7 @@ When creating a new template, ensure:
  * - [Alternative 1] (use [TemplateX])
  * - [Alternative 2] (use [TemplateY])
  * 
- * FOLLOWS DESIGN SYSTEM V4.1:
+ * FOLLOWS Design System:
  * - UX Laws: [List specific laws applied]
  * - Design Tokens: [List tokens used]
  * - Accessibility: [List standards met]
@@ -186,7 +186,7 @@ console.log(TEMPLATE_REGISTRY.dashboard);
 
 ## 🎨 Design System Compliance
 
-All templates in this directory MUST follow Design System V4.1 standards:
+All templates in this directory MUST follow Design System standards:
 
 ### UX Laws (Mandatory)
 

@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { TaskV4, TaskPriority } from '../../types/tasks';
+import { Task, TaskPriority } from '../../types/tasks';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -17,7 +17,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { startOfMonth, endOfMonth, eachDayOfInterval, format, isSameDay, isSameMonth, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
 
 interface TaskCalendarViewProps {
-  tasks: TaskV4[];
+  tasks: Task[];
   onViewTask: (taskId: string) => void;
   onDateClick: (date: Date) => void;
 }
@@ -60,7 +60,7 @@ export const TaskCalendarView: React.FC<TaskCalendarViewProps> = ({
   
   // Group tasks by date
   const tasksByDate = useMemo(() => {
-    const grouped: Record<string, TaskV4[]> = {};
+    const grouped: Record<string, Task[]> = {};
     
     tasks.forEach(task => {
       const dateKey = format(new Date(task.dueDate), 'yyyy-MM-dd');

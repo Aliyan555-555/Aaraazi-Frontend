@@ -1,31 +1,9 @@
-/**
- * ActionCenterSection Component
- * 
- * Displays prioritized actions that need attention.
- * 
- * FEATURES:
- * - Intelligent action detection
- * - Priority-based sorting
- * - Quick actions (complete, snooze, view)
- * - Empty state when nothing needs attention
- * - Show top 6 actions (Miller's Law)
- * - "View All" link for more
- * 
- * DESIGN:
- * - Follows Design System V4.1
- * - Brand colors (Forest Green, Terracotta)
- * - NO Tailwind typography classes
- * 
- * UX LAWS:
- * - Miller's Law: Show 5±2 items (we show 6)
- * - Hick's Law: Prioritized, not overwhelming
- * - Fitts's Law: Large click targets
- */
-
 import React, { useMemo } from 'react';
-import { User } from '../../../types';
+import { User, SellCycle, Property } from '../../../types';
 import { ActionItem } from '../components/ActionItem';
 import { detectAllActions, getActionSummary, DashboardAction } from '../utils/detectActions';
+import { Task } from '../../../types/tasks';
+import { DashboardLead } from '../../../types/leads';
 import {
   CheckCircle2,
   Sparkles,
@@ -34,10 +12,10 @@ import {
 
 interface ActionCenterSectionProps {
   user: User;
-  tasks: any[];
-  leads: any[];
-  properties: any[];
-  sellCycles: any[];
+  tasks: Task[];
+  leads: DashboardLead[];
+  properties: Property[];
+  sellCycles: SellCycle[];
   onNavigate: (route: string, id?: string) => void;
   loading?: boolean;
 }

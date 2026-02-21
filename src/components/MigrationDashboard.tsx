@@ -1,6 +1,6 @@
 /**
  * Migration Dashboard - V3.0
- * UI for managing data migration from V2 to V3
+ * UI for managing data migration from to V3
  */
 
 import React, { useState, useEffect } from 'react';
@@ -179,7 +179,7 @@ export function MigrationDashboard() {
           Data Migration Dashboard
         </h1>
         <p className="text-sm text-muted-foreground">
-          Migrate your data from V2.0 to V3.0 structure
+          Migrate your data from to V3.0 structure
         </p>
       </div>
 

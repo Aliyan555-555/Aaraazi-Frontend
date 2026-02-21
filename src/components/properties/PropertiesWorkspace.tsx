@@ -1,6 +1,6 @@
 /**
  * PropertiesWorkspace Component
- * WORKSPACE V4: Built with WorkspacePageTemplate
+ * Workspace: Built with WorkspacePageTemplate
  * Uses hooks for data - no API calls in component
  *
  * PURPOSE:

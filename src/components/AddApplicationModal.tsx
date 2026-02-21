@@ -1,6 +1,5 @@
 /**
- * Add Application Modal - V4.0
- * Modal for recording tenant applications on a rent cycle
+ * Add Application Modal - * Modal for recording tenant applications on a rent cycle
  */
 
 import React, { useState } from 'react';

@@ -50,7 +50,7 @@ export interface WorkspaceContentProps<T> {
 /**
  * WorkspaceContent - Main content area with view switching
  */
-export const WorkspaceContent = React.memo(<T,>({
+const WorkspaceContentInner = React.memo(<T,>({
   viewMode,
   items,
   isLoading = false,
@@ -123,9 +123,10 @@ export const WorkspaceContent = React.memo(<T,>({
     default:
       return null;
   }
-}) as <T>(props: WorkspaceContentProps<T>) => React.ReactElement;
+})
 
-WorkspaceContent.displayName = 'WorkspaceContent';
+export const WorkspaceContent = WorkspaceContentInner as <T>(props: WorkspaceContentProps<T>) => React.ReactElement;
+(WorkspaceContent as any).displayName = 'WorkspaceContent';
 
 // ==================== TABLE VIEW ====================
 
@@ -372,24 +373,49 @@ const KanbanView = <T,>({
               key={column.id}
               className="flex-shrink-0 w-80 bg-gray-50 rounded-lg border border-gray-200"
             >
-            {/* Column Header */}
-            <div className="p-4 border-b bg-white rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium">{column.label}</h3>
-                <span className="text-sm text-gray-600">{columnItems.length}</span>
+              {/* Column Header */}
+              <div className="p-4 border-b bg-white rounded-t-lg">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">{column.label}</h3>
+                  <span className="text-sm text-gray-600">{columnItems.length}</span>
+                </div>
               </div>
-            </div>
 
-            {/* Column Items */}
-            <div className="p-3 space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
-              {columnItems.map((item, index) => {
-                const itemId = getItemId(item);
-                const isSelected = selectedIds.has(itemId);
+              {/* Column Items */}
+              <div className="p-3 space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                {columnItems.map((item, index) => {
+                  const itemId = getItemId(item);
+                  const isSelected = selectedIds.has(itemId);
 
-                if (renderCard) {
+                  if (renderCard) {
+                    return (
+                      <div key={itemId} className="relative">
+                        <div className="absolute top-2 left-2 z-10">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              onSelectItem(itemId, e.target.checked);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            aria-label={`Select item ${itemId}`}
+                          />
+                        </div>
+                        {renderCard(item, index)}
+                      </div>
+                    );
+                  }
+
+                  // Default kanban card
                   return (
-                    <div key={itemId} className="relative">
-                      <div className="absolute top-2 left-2 z-10">
+                    <div
+                      key={itemId}
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => onItemClick?.(item)}
+                    >
+                      <div className="absolute top-2 left-2">
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -402,44 +428,19 @@ const KanbanView = <T,>({
                           aria-label={`Select item ${itemId}`}
                         />
                       </div>
-                      {renderCard(item, index)}
+                      <pre className="text-xs overflow-auto mt-6">{JSON.stringify(item, null, 2)}</pre>
                     </div>
                   );
-                }
+                })}
 
-                // Default kanban card
-                return (
-                  <div
-                    key={itemId}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => onItemClick?.(item)}
-                  >
-                    <div className="absolute top-2 left-2">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          onSelectItem(itemId, e.target.checked);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        aria-label={`Select item ${itemId}`}
-                      />
-                    </div>
-                    <pre className="text-xs overflow-auto mt-6">{JSON.stringify(item, null, 2)}</pre>
+                {columnItems.length === 0 && (
+                  <div className="text-center py-8 text-sm text-gray-500">
+                    No items
                   </div>
-                );
-              })}
-
-              {columnItems.length === 0 && (
-                <div className="text-center py-8 text-sm text-gray-500">
-                  No items
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        );
+          );
         })}
       </div>
     </div>

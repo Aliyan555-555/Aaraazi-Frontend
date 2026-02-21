@@ -4,12 +4,12 @@
  * Quick task addition widget for entity detail pages
  * Allows creating tasks directly from Property, Lead, Contact, Deal pages
  * 
- * DESIGN: Design System V4.1 compliant
+ * DESIGN: Design System compliant
  */
 
 import React, { useState } from 'react';
 import { User } from '../../types';
-import { TaskV4, TaskCategory, TaskEntityType } from '../../types/tasks';
+import { Task, TaskCategory, TaskEntityType } from '../../types/tasks';
 import { createTask } from '../../lib/tasks';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
@@ -27,7 +27,7 @@ interface TaskQuickAddWidgetProps {
   entityType: TaskEntityType;
   entityId: string;
   entityName: string;
-  onTaskCreated?: (task: TaskV4) => void;
+  onTaskCreated?: (task: Task) => void;
   suggestedCategory?: TaskCategory;
 }
 

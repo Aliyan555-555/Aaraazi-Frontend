@@ -33,7 +33,7 @@ const BUDGETS_KEY = 'budget_categories';
  * - Period-based budgeting
  * - Real-time expense integration
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses WorkspaceHeader with stats
  * - Uses WorkspaceSearchBar with filters
  * - Uses BudgetCategoryCard components

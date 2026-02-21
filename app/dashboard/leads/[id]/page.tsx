@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { LeadDetailsV4 } from '@/components/leads/LeadDetailsV4';
+import { LeadDetails } from '@/components/leads/LeadDetails';
 import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
 
@@ -37,7 +37,7 @@ export default function LeadDetailPage() {
     };
 
     return (
-        <LeadDetailsV4
+        <LeadDetails
             leadId={id}
             user={user}
             onBack={() => router.push('/dashboard/leads')}

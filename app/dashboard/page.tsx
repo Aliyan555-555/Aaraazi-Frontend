@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRequireAuth } from '@/hooks/useAuth';
-import { DashboardV4 } from '@/components/dashboard/DashboardV4';
+import { Dashboard } from '@/components/dashboard/Dashboard';
 import { mapAuthUserToUIUser } from '@/types';
 import { Loader2 } from 'lucide-react';
 
@@ -51,7 +51,7 @@ export default function DashboardPage() {
     if (!user) return null;
 
     return (
-        <DashboardV4
+        <Dashboard
             user={user}
             onNavigate={handleNavigate}
             currentModule="agency"

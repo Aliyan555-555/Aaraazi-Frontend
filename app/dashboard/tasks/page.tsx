@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { TasksWorkspaceV4 } from '@/components/tasks/TasksWorkspaceV4';
+import { TasksWorkspace } from '@/components/tasks/TasksWorkspace';
 import { User, mapAuthUserToUIUser } from '@/types';
 
 export default function TasksPage() {
@@ -32,7 +32,7 @@ export default function TasksPage() {
     }
 
     return (
-        <TasksWorkspaceV4
+        <TasksWorkspace
             user={user}
             onNavigate={handleNavigate}
             onCreateTask={() => console.log("Create task")}

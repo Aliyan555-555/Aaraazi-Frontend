@@ -4,7 +4,7 @@
  * 
  * PURPOSE:
  * Tracks all cross-agent offers and rental applications submitted by the current agent.
- * Follows WorkspacePageTemplate for consistent UX and Design System V4.1.
+ * Follows WorkspacePageTemplate for consistent UX and Design System.
  */
 
 import React, { useMemo, useCallback } from 'react';

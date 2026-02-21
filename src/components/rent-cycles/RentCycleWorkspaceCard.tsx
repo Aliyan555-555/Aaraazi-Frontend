@@ -1,6 +1,6 @@
 /**
  * RentCycleWorkspaceCard Component
- * Custom card for Rent Cycles Workspace V4
+ * Custom card for Rent Cycles Workspace
  * 
  * Uses WorkspaceCard with rent cycle-specific customization
  */

@@ -11,7 +11,7 @@
  * - Clickable
  * - Responsive
  * 
- * DESIGN SYSTEM V4.1:
+ * Design System:
  * - NO Tailwind typography classes (uses globals.css)
  * - Brand colors: #2D6A54 (Forest Green), #C17052 (Terracotta), #363F47 (Slate)
  * - Warm Cream background on hover: #E8E2D5

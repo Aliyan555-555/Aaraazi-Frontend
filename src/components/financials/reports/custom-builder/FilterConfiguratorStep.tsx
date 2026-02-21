@@ -10,7 +10,7 @@
  * - AND/OR logical operators
  * - Quick filter presets
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState, useMemo } from 'react';

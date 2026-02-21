@@ -1,25 +1,7 @@
-/**
- * Action Detection Utilities
- *
- * Detects items that need attention and prioritizes them.
- *
- * ACTION TYPES:
- * 1. Overdue Follow-ups - CRM tasks past due date
- * 2. Stale Leads - Leads not contacted in 7+ days
- * 3. Inactive Properties - Properties without active cycles
- * 4. Expiring Offers - Offers expiring in next 48 hours
- * 5. Upcoming Appointments - Meetings in next 24 hours
- *
- * PRIORITY LEVELS:
- * - critical (red) - Overdue, urgent action required
- * - high (orange) - Needs attention today
- * - medium (yellow) - Should handle soon
- * - low (blue) - Can wait, but good to handle
- */
 
 import { SellCycle, Property, Contact } from "../../../types";
-import { LeadV4 } from "../../../types/leads";
-import { TaskV4 } from "../../../types/tasks";
+import { DashboardLead } from "../../../types/leads";
+import { Task } from "../../../types/tasks";
 
 export type ActionPriority = "critical" | "high" | "medium" | "low";
 export type ActionType =
@@ -56,7 +38,7 @@ function daysBetween(date1: Date, date2: Date): number {
 /**
  * Detect overdue CRM tasks
  */
-export function detectOverdueTasks(tasks: TaskV4[]): DashboardAction[] {
+export function detectOverdueTasks(tasks: Task[]): DashboardAction[] {
   const now = new Date();
   const actions: DashboardAction[] = [];
 
@@ -97,7 +79,7 @@ export function detectOverdueTasks(tasks: TaskV4[]): DashboardAction[] {
 /**
  * Detect stale leads (not contacted in 7+ days)
  */
-export function detectStaleLeads(leads: LeadV4[]): DashboardAction[] {
+export function detectStaleLeads(leads: DashboardLead[]): DashboardAction[] {
   const now = new Date();
   const actions: DashboardAction[] = [];
 
@@ -248,7 +230,7 @@ export function detectExpiringOffers(
 /**
  * Detect upcoming appointments (next 24 hours)
  */
-export function detectUpcomingAppointments(tasks: TaskV4[]): DashboardAction[] {
+export function detectUpcomingAppointments(tasks: Task[]): DashboardAction[] {
   const actions: DashboardAction[] = [];
   const now = new Date();
   const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -292,7 +274,7 @@ export function detectUpcomingAppointments(tasks: TaskV4[]): DashboardAction[] {
 /**
  * Detect new leads (created in last 24 hours, not yet contacted)
  */
-export function detectNewLeads(leads: LeadV4[]): DashboardAction[] {
+export function detectNewLeads(leads: DashboardLead[]): DashboardAction[] {
   const actions: DashboardAction[] = [];
   const now = new Date();
   const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -356,8 +338,8 @@ function getPriorityScore(priority: ActionPriority): number {
  * Detect all actions and return sorted by priority
  */
 export function detectAllActions(
-  tasks: TaskV4[],
-  leads: LeadV4[],
+  tasks: Task[],
+  leads: DashboardLead[],
   properties: Property[],
   sellCycles: SellCycle[],
 ): DashboardAction[] {

@@ -3,7 +3,7 @@ import { SellCycle, Property, User, Offer } from '../types';
 import { PropertyAddressDisplay, useFormattedAddress } from './PropertyAddressDisplay';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { useAcceptOffer, useRejectOffer, useCounterOffer } from '../hooks/useOffers';
+import { useAcceptOffer, useRejectOffer } from '../hooks/useOffers';
 import { OFFER_STATUS, SELL_CYCLE_STATUS } from '../constants/enums';
 
 // DetailPageTemplate System
@@ -53,7 +53,6 @@ import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
 import { toast } from 'sonner';
 import { AddOfferModal } from './AddOfferModal';
-import { CounterOfferModal } from './CounterOfferModal';
 import { PaymentSummaryReadOnly } from './deals/PaymentSummaryReadOnly';
 import { SellCycleFinancialSummary, SaleProfitModal } from './agency-financials';
 
@@ -91,15 +90,12 @@ export function SellCycleDetails({
 }: SellCycleDetailsProps) {
   const [cycle, setCycle] = useState<SellCycle>(initialCycle);
   const [showAddOfferModal, setShowAddOfferModal] = useState(false);
-  const [showCounterOfferModal, setShowCounterOfferModal] = useState(false);
-  const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   // Phase 5: Sale financial tracking
   const [showSaleProfitModal, setShowSaleProfitModal] = useState(false);
 
   // Offer hooks
   const { acceptOffer, isLoading: isAccepting } = useAcceptOffer();
   const { rejectOffer, isLoading: isRejecting } = useRejectOffer();
-  const { counterOffer, isLoading: isCountering } = useCounterOffer();
 
   // Dialog state
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -137,30 +133,6 @@ export function SellCycleDetails({
       message: 'Reject this offer? This cannot be undone.'
     });
     setConfirmDialogOpen(true);
-  };
-
-  const handleCounterOfferClick = (offerId: string) => {
-    setSelectedOfferId(offerId);
-    setShowCounterOfferModal(true);
-  };
-
-  const handleCounterOfferSubmit = async (counterAmount: number) => {
-    if (!selectedOfferId) return;
-
-    try {
-      await counterOffer(cycle.id, selectedOfferId, counterAmount);
-      toast.success('Counter offer sent successfully');
-      setShowCounterOfferModal(false);
-      setSelectedOfferId(null);
-      onUpdate(); // Refetch cycle data
-    } catch (error) {
-      logger.error('Error countering offer:', error);
-      const message =
-        error && typeof error === 'object' && 'message' in error
-          ? String((error as { message: string }).message)
-          : 'Failed to counter offer';
-      toast.error(message);
-    }
   };
 
   const executeConfirmAction = async () => {
@@ -795,15 +767,6 @@ export function SellCycleDetails({
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => handleCounterOfferClick(offer.id)}
-              className="h-8"
-              title="Counter Offer"
-            >
-              <DollarSign className="h-4 w-4 text-blue-600" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
               onClick={() => handleRejectOfferClick(offer.id)}
               className="h-8"
               title="Reject Offer"
@@ -1079,23 +1042,6 @@ export function SellCycleDetails({
           setShowSaleProfitModal(false);
           onUpdate();
         }}
-      />
-
-      {/* Counter Offer Modal */}
-      <CounterOfferModal
-        isOpen={showCounterOfferModal}
-        onClose={() => {
-          setShowCounterOfferModal(false);
-          setSelectedOfferId(null);
-        }}
-        offer={
-          selectedOfferId
-            ? cycle.offers.find((o) => o.id === selectedOfferId) || null
-            : null
-        }
-        askingPrice={cycle.askingPrice}
-        onSubmit={handleCounterOfferSubmit}
-        isSubmitting={isCountering}
       />
 
       {/* Confirmation Dialog for Offers */}

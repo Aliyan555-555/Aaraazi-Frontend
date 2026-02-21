@@ -1,11 +1,11 @@
 /**
- * Rent Cycles Workspace V4 - Barrel Export
+ * Rent Cycles Workspace - Barrel Export
  * 
  * Centralized exports for all rent cycles workspace components
  */
 
-export { RentCyclesWorkspaceV4 } from './RentCyclesWorkspaceV4';
+export { RentCyclesWorkspace } from './RentCyclesWorkspace';
 export { RentCycleWorkspaceCard } from './RentCycleWorkspaceCard';
 
-export type { RentCyclesWorkspaceV4Props } from './RentCyclesWorkspaceV4';
+export type { RentCyclesWorkspaceProps } from './RentCyclesWorkspace';
 export type { RentCycleWorkspaceCardProps } from './RentCycleWorkspaceCard';

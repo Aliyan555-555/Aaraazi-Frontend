@@ -26,7 +26,7 @@
  * - Report generation (consider ReportTemplate)
  * - Form submission (use FormTemplate)
  * 
- * FOLLOWS DESIGN SYSTEM V4.1:
+ * FOLLOWS Design System:
  * - UX Laws: Max 5 metrics (Miller), 44px buttons (Fitts), 3 primary actions (Hick)
  * - Design Tokens: 8px grid, CSS variables for colors
  * - Accessibility: WCAG 2.1 AA, keyboard nav, ARIA labels

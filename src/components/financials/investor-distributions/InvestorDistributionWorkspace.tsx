@@ -35,7 +35,7 @@ const DISTRIBUTIONS_KEY = 'investor_distributions';
  * - Export capabilities
  * - Persistent storage in localStorage
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses WorkspaceHeader with stats
  * - Uses WorkspaceSearchBar with filters
  * - Uses MetricCard components

@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ContactsWorkspaceV4 } from '@/components/contacts/ContactsWorkspaceV4';
+import { ContactsWorkspace } from '@/components/contacts/ContactsWorkspace';
 import { User, mapAuthUserToUIUser } from '@/types';
 
 export default function ContactsPage() {
@@ -38,7 +38,7 @@ export default function ContactsPage() {
     }
 
     return (
-        <ContactsWorkspaceV4
+        <ContactsWorkspace
             user={user}
             onNavigate={handleNavigate}
             onAddContact={() => console.log("Add contact clicked")}

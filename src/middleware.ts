@@ -1,13 +1,6 @@
-import type { NextRequest, NextResponse } from 'next/server';
-
-<<<<<<< Updated upstream
-// ============================================================================
-// Types & Interfaces
-// ============================================================================
-=======
+import type { NextRequest, NextResponse } from "next/server";
 import { logger } from "./lib/logger";
-import { runMiddleware } from './middleware/chain';
->>>>>>> Stashed changes
+import { runMiddleware } from "./middleware/chain";
 
 interface AuthData {
   user: {
@@ -33,85 +26,81 @@ interface RouteConfig {
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
-  '/auth/agency-code',
-  '/auth/login',
-  '/auth/register',
-  '/auth/forgot-password',
-  '/auth/reset-password',
-  '/auth/verify-email',
+  "/auth/agency-code",
+  "/auth/login",
+  "/auth/register",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/verify-email",
 ];
 
 // Routes that should redirect to dashboard if already authenticated
-const AUTH_ONLY_ROUTES = [
-  '/auth/agency-code',
-  '/auth/login',
-  '/auth/register',
-];
+const AUTH_ONLY_ROUTES = ["/auth/agency-code", "/auth/login", "/auth/register"];
 
 // Role-based route configuration
 const PROTECTED_ROUTES: RouteConfig[] = [
   // Admin routes - SAAS_ADMIN only
   {
-    path: '/admin',
-    allowedRoles: ['SAAS_ADMIN'],
+    path: "/admin",
+    allowedRoles: ["SAAS_ADMIN"],
     requireAuth: true,
   },
   {
-    path: '/admin/users',
-    allowedRoles: ['SAAS_ADMIN'],
+    path: "/admin/users",
+    allowedRoles: ["SAAS_ADMIN"],
     requireAuth: true,
   },
   {
-    path: '/admin/tenants',
-    allowedRoles: ['SAAS_ADMIN'],
+    path: "/admin/tenants",
+    allowedRoles: ["SAAS_ADMIN"],
     requireAuth: true,
   },
   {
-    path: '/admin/settings',
-    allowedRoles: ['SAAS_ADMIN'],
+    path: "/admin/settings",
+    allowedRoles: ["SAAS_ADMIN"],
     requireAuth: true,
   },
 
   // Manager routes - AGENCY_OWNER and AGENCY_MANAGER
   {
-    path: '/dashboard/settings',
-    allowedRoles: ['SAAS_ADMIN', 'AGENCY_OWNER', 'AGENCY_MANAGER'],
+    path: "/dashboard/settings",
+    allowedRoles: ["SAAS_ADMIN", "AGENCY_OWNER", "AGENCY_MANAGER"],
     requireAuth: true,
   },
   {
-    path: '/dashboard/reports',
-    allowedRoles: ['SAAS_ADMIN', 'AGENCY_OWNER', 'AGENCY_MANAGER'],
+    path: "/dashboard/reports",
+    allowedRoles: ["SAAS_ADMIN", "AGENCY_OWNER", "AGENCY_MANAGER"],
     requireAuth: true,
   },
   {
-    path: '/dashboard/financials',
-    allowedRoles: ['SAAS_ADMIN', 'AGENCY_OWNER', 'AGENCY_MANAGER'],
+    path: "/dashboard/financials",
+    allowedRoles: ["SAAS_ADMIN", "AGENCY_OWNER", "AGENCY_MANAGER"],
     requireAuth: true,
   },
 
   // All authenticated users
   {
-    path: '/dashboard',
+    path: "/dashboard",
     requireAuth: true,
   },
 ];
 
 // Static file extensions to ignore
 const STATIC_FILE_EXTENSIONS = [
-  '.ico',
-  '.png',
-  '.jpg',
-  '.jpeg',
-  '.gif',
-  '.webp',
-  '.svg',
-  '.css',
-  '.js',
-  '.json',
-  '.woff',
-  '.woff2',
-  '.ttf',
-  '.eot',
+  ".ico",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".css",
+  ".js",
+  ".json",
+  ".woff",
+  ".woff2",
+  ".ttf",
+  ".eot",
 ];
 
 // ============================================================================
@@ -145,7 +134,7 @@ function isAuthOnlyRoute(pathname: string): boolean {
 function getProtectedRoute(pathname: string): RouteConfig | null {
   // Sort by path length (longest first) to match most specific route
   const sorted = [...PROTECTED_ROUTES].sort(
-    (a, b) => b.path.length - a.path.length
+    (a, b) => b.path.length - a.path.length,
   );
   return sorted.find((route) => pathname.startsWith(route.path)) || null;
 }
@@ -157,7 +146,7 @@ function getProtectedRoute(pathname: string): RouteConfig | null {
 function getAuthFromRequest(request: NextRequest): AuthData {
   try {
     // Try to get auth from cookie (if we implement cookie-based auth)
-    const authCookie = request.cookies.get('aaraazi-auth');
+    const authCookie = request.cookies.get("aaraazi-auth");
     if (authCookie?.value) {
       const authData = JSON.parse(authCookie.value);
       return {
@@ -168,8 +157,8 @@ function getAuthFromRequest(request: NextRequest): AuthData {
     }
 
     // Fallback: Check Authorization header
-    const authHeader = request.headers.get('authorization');
-    if (authHeader?.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
       return {
         user: null,
@@ -184,7 +173,7 @@ function getAuthFromRequest(request: NextRequest): AuthData {
       isAuthenticated: false,
     };
   } catch (error) {
-    console.error('Error parsing auth data:', error);
+    console.error("Error parsing auth data:", error);
     return {
       user: null,
       accessToken: null,
@@ -198,7 +187,7 @@ function getAuthFromRequest(request: NextRequest): AuthData {
  */
 function hasRequiredRole(
   userRole: string | undefined,
-  allowedRoles: string[] | undefined
+  allowedRoles: string[] | undefined,
 ): boolean {
   if (!allowedRoles || allowedRoles.length === 0) {
     return true; // No role restriction
@@ -215,24 +204,21 @@ function hasRequiredRole(
 function addSecurityHeaders(response: NextResponse): NextResponse {
   // Content Security Policy
   response.headers.set(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:3000;"
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:3000;",
   );
 
   // Other security headers
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set(
-    'Referrer-Policy',
-    'strict-origin-when-cross-origin'
-  );
-  response.headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=()'
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()",
   );
 
   // Remove powered-by header for security
-  response.headers.delete('X-Powered-By');
+  response.headers.delete("X-Powered-By");
 
   return response;
 }
@@ -241,7 +227,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
  * Log request for monitoring
  */
 function logRequest(request: NextRequest, status: string): void {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     const timestamp = new Date().toISOString();
     const method = request.method;
     const url = request.url;
@@ -252,29 +238,21 @@ function logRequest(request: NextRequest, status: string): void {
 /**
  * Create redirect URL with return path
  */
-function createRedirectUrl(
-  request: NextRequest,
-  destination: string
-): URL {
+function createRedirectUrl(request: NextRequest, destination: string): URL {
   const url = new URL(destination, request.url);
 
   // Store attempted URL for redirect after login
-  if (
-    destination.includes('/auth/') &&
-    request.nextUrl.pathname !== '/'
-  ) {
-    url.searchParams.set('redirect', request.nextUrl.pathname);
+  if (destination.includes("/auth/") && request.nextUrl.pathname !== "/") {
+    url.searchParams.set("redirect", request.nextUrl.pathname);
   }
 
   return url;
 }
-
-
 
 export function middleware(request: NextRequest) {
   return runMiddleware(request);
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

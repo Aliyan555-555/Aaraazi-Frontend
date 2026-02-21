@@ -22,10 +22,10 @@ interface FinancialModuleCardProps {
 /**
  * FinancialModuleCard Component
  * 
- * Reusable card component for financial modules on the FinancialsHubV4 dashboard.
+ * Reusable card component for financial modules on the FinancialsHub dashboard.
  * Displays module icon, title, description, optional badge, and up to 4 stats.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - No Tailwind typography classes (text-*, font-*)
  * - Uses 8px spacing grid
  * - Consistent border-radius (rounded-lg)

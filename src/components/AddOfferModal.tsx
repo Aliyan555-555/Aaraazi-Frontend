@@ -11,16 +11,8 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { User } from '../types';
 import { toast } from 'sonner';
-<<<<<<< Updated upstream
-import { addOffer } from '../lib/sellCycle';
-import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
-
-=======
 import { useCreateOffer } from '../hooks/useOffers';
 import { DollarSign, User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
-
-
->>>>>>> Stashed changes
 interface AddOfferModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,7 +31,7 @@ export function AddOfferModal({
   onSuccess,
 }: AddOfferModalProps) {
   const { createOffer, isLoading: isSubmitting } = useCreateOffer();
-  
+
   const [formData, setFormData] = useState({
     buyerName: '',
     buyerContact: '',
@@ -50,35 +42,35 @@ export function AddOfferModal({
     notes: '',
     agentNotes: '',
   });
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Reset errors
     setErrors({});
-    
+
     // Validation
     if (!formData.buyerName) {
       setErrors({ buyerName: 'Buyer name is required' });
       toast.error('Please enter buyer name');
       return;
     }
-    
+
     if (!formData.offerAmount || formData.offerAmount <= 0) {
       setErrors({ offerAmount: 'Offer amount must be greater than 0' });
       toast.error('Please enter a valid offer amount');
       return;
     }
-    
+
     // CRITICAL: Validate token amount doesn't exceed offer amount
     if (formData.tokenAmount > formData.offerAmount) {
       setErrors({ tokenAmount: 'Token money cannot exceed offer amount' });
       toast.error('Token money cannot exceed offer amount');
       return;
     }
-    
+
     try {
       await createOffer(sellCycleId, {
         buyerName: formData.buyerName,
@@ -90,7 +82,7 @@ export function AddOfferModal({
         notes: formData.notes || undefined,
         agentNotes: formData.agentNotes || undefined,
       });
-      
+
       toast.success('Offer recorded successfully');
       onSuccess();
       handleClose();
@@ -123,18 +115,18 @@ export function AddOfferModal({
   const handleOfferAmountChange = (value: number) => {
     const newOfferAmount = value || 0;
     let newTokenAmount = formData.tokenAmount;
-    
+
     // If token amount exceeds new offer amount, cap it at offer amount
     if (newTokenAmount > newOfferAmount) {
       newTokenAmount = newOfferAmount;
     }
-    
+
     setFormData({
       ...formData,
       offerAmount: newOfferAmount,
       tokenAmount: newTokenAmount,
     });
-    
+
     // Clear errors when user corrects
     if (errors.tokenAmount) {
       setErrors({ ...errors, tokenAmount: '' });
@@ -145,14 +137,14 @@ export function AddOfferModal({
   const handleTokenAmountChange = (value: number) => {
     const newTokenAmount = value || 0;
     const newErrors = { ...errors };
-    
+
     // Validate token amount doesn't exceed offer amount
     if (newTokenAmount > formData.offerAmount) {
       newErrors.tokenAmount = 'Token money cannot exceed offer amount';
     } else {
       delete newErrors.tokenAmount;
     }
-    
+
     setFormData({ ...formData, tokenAmount: newTokenAmount });
     setErrors(newErrors);
   };
@@ -176,7 +168,7 @@ export function AddOfferModal({
               <UserIcon className="h-4 w-4" />
               Buyer Information
             </h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="buyerName">
@@ -226,14 +218,13 @@ export function AddOfferModal({
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">% of Asking:</span>
-                    <span 
-                      className={`font-medium ${
-                        formData.offerAmount >= askingPrice 
-                          ? 'text-green-600' 
-                          : formData.offerAmount >= askingPrice * 0.9 
-                          ? 'text-yellow-600' 
+                    <span
+                      className={`font-medium ${formData.offerAmount >= askingPrice
+                        ? 'text-green-600'
+                        : formData.offerAmount >= askingPrice * 0.9
+                          ? 'text-yellow-600'
                           : 'text-red-600'
-                      }`}
+                        }`}
                     >
                       {percentageOfAsking}%
                     </span>
@@ -241,7 +232,7 @@ export function AddOfferModal({
                 </>
               )}
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="offerAmount">
@@ -291,7 +282,7 @@ export function AddOfferModal({
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    {formData.offerAmount > 0 
+                    {formData.offerAmount > 0
                       ? `${((formData.tokenAmount / formData.offerAmount) * 100).toFixed(1)}% of offer`
                       : '0.0% of offer'}
                     {formData.offerAmount > 0 && formData.tokenAmount > 0 && formData.tokenAmount <= formData.offerAmount && (
@@ -376,8 +367,8 @@ export function AddOfferModal({
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting || Object.keys(errors).length > 0 || formData.tokenAmount > formData.offerAmount}
             >
               {isSubmitting ? 'Recording...' : 'Record Offer'}
