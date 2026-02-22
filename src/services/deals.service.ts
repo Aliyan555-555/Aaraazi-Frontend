@@ -192,20 +192,31 @@ export function mapDealApiToUI(api: DealDetailApiResponse): Deal {
       },
     },
     collaboration: {
-      primaryAgentNotes: (api.notesRel ?? []).map((n) => ({
+      primaryAgentNotes: [],
+      sharedNotes: (api.notesRel ?? []).map((n) => ({
         id: n.id,
         content: n.content,
         createdBy: n.createdBy ?? '',
         createdByName: '',
         createdAt: n.createdAt,
       })),
-      sharedNotes: [],
       secondaryAgentNotes: [],
       communications: [],
       lastUpdatedBy: { agentId: '', agentName: '', timestamp: api.updatedAt, action: '' },
     },
     tasks: [],
-    documents: [],
+    documents: (api.documents ?? []).map((d) => ({
+      id: d.id,
+      name: d.name,
+      type: d.type,
+      category: (d.category?.toLowerCase() ?? 'other') as 'agreement' | 'payment' | 'legal' | 'transfer' | 'other',
+      url: d.url,
+      uploadedBy: d.uploadedBy ?? '',
+      uploadedByName: '',
+      uploadedAt: d.uploadedAt,
+      required: false,
+      status: (d.status?.toLowerCase() ?? 'uploaded') as 'pending' | 'uploaded' | 'verified' | 'rejected',
+    })),
     sync: { lastSyncedAt: '', sellCycleLastUpdated: '', purchaseCycleLastUpdated: '', isInSync: true },
     metadata: { createdAt: api.createdAt, updatedAt: api.updatedAt, createdBy: '' },
   };
@@ -282,10 +293,21 @@ export interface RecordPaymentPayload {
   paidAt?: string;
   notes?: string;
   reference?: string;
+  method?: string;
+  installmentId?: string;
 }
 
 export interface CancelDealPayload {
   reason: string;
+}
+
+export interface CreatePaymentSchedulePayload {
+  totalAmount: number;
+  downPaymentAmount: number;
+  downPaymentDate: string;
+  numberOfInstallments: number;
+  frequency: 'MONTHLY' | 'QUARTERLY';
+  firstInstallmentDate: string;
 }
 
 class DealsService {
@@ -316,6 +338,24 @@ class DealsService {
 
   async recordPayment(id: string, payload: RecordPaymentPayload): Promise<void> {
     await apiClient.post(`${this.baseUrl}/${id}/payments`, payload);
+  }
+
+  async createNote(dealId: string, content: string): Promise<void> {
+    await apiClient.post(`${this.baseUrl}/${dealId}/notes`, { content });
+  }
+
+  async createDocument(
+    dealId: string,
+    payload: { name: string; url: string; type: string; category: string },
+  ): Promise<void> {
+    await apiClient.post(`${this.baseUrl}/${dealId}/documents`, payload);
+  }
+
+  async createPaymentSchedule(
+    dealId: string,
+    payload: CreatePaymentSchedulePayload,
+  ): Promise<void> {
+    await apiClient.post(`${this.baseUrl}/${dealId}/payment-schedules`, payload);
   }
 
   async completeDeal(id: string): Promise<void> {

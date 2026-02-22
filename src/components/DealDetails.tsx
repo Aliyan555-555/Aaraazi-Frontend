@@ -33,6 +33,7 @@ import { DualAgentHeader } from './deals/DualAgentHeader';
 import { PermissionGate } from './deals/PermissionGate';
 import { TaskList } from './deals/TaskList';
 import { DocumentList as DealDocumentList } from './deals/DocumentList';
+import { AddDealDocumentModal } from './deals/AddDealDocumentModal';
 import { NotesPanel as DealNotesPanel } from './deals/NotesPanel';
 import { CommissionTab } from './deals/CommissionTab';
 import { AgentRatingModal } from './sharing/AgentRatingModal';
@@ -74,7 +75,6 @@ import {
 } from 'lucide-react';
 
 // Business Logic
-import { cancelDeal, updateDeal } from '../lib/deals';
 import { dealsService } from '@/services/deals.service';
 import { getUserRoleInDeal } from '../lib/dealPermissions';
 import { formatPKR } from '../lib/currency';
@@ -121,6 +121,7 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
   const [showRecordPayment, setShowRecordPayment] = useState(false);
   const [selectedInstallment, setSelectedInstallment] = useState<any>(null);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showAddDocument, setShowAddDocument] = useState(false);
 
   // Navigation helper
   const handleNavigation = (page: string, id: string) => {
@@ -132,9 +133,15 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
   };
 
   // Transaction graph (stub returns null; use deal data for display)
-  const graph = useMemo(() => getTransactionGraph(deal.id, 'deal'), [deal?.id]);
+  const graph = useMemo(
+    () => (deal?.id != null ? getTransactionGraph(deal.id, 'deal') : null),
+    [deal?.id],
+  );
 
-  const timeline = useMemo(() => getUnifiedTimeline(deal.id), [deal?.id]);
+  const timeline = useMemo(
+    () => (deal?.id != null ? getUnifiedTimeline(deal.id) : []),
+    [deal?.id],
+  );
 
   // Format property address for display (prefer deal.property when graph is null)
   const propertyDisplayName = useMemo(() => {
@@ -229,6 +236,22 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     }
   };
 
+  // Cancel deal handler — uses backend API
+  const handleCancelDeal = async () => {
+    const reason = prompt('Enter reason for cancelling this deal:');
+    if (!reason?.trim()) return;
+
+    try {
+      await dealsService.cancelDeal(deal.id, reason.trim());
+      toast.success('Deal cancelled');
+      onUpdate?.();
+      onBack?.();
+    } catch (error) {
+      console.error('Error cancelling deal:', error);
+      toast.error('Failed to cancel deal');
+    }
+  };
+
   // Mark commission as received from client
   const handleMarkCommissionReceived = async () => {
     if (!deal) return;
@@ -261,7 +284,8 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
         receivedByName: user.name,
       };
 
-      const updatedDeal = updateDeal(deal.id, {
+      setDeal({
+        ...deal,
         financial: {
           ...deal.financial,
           commission: updatedCommission,
@@ -276,8 +300,6 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           },
         },
       });
-
-      if (updatedDeal) setDeal(updatedDeal);
       toast.success('Commission marked as received from client! ✅');
       onUpdate?.();
     } catch (error) {
@@ -333,15 +355,14 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           },
         ]
         : [],
-    secondaryActions:
-      deal.lifecycle.status === 'active' && deal.lifecycle.stage !== 'final-handover'
-        ? [
-          {
-            label: 'Progress Stage',
-            onClick: handleProgressStage,
-          },
-        ]
-        : [],
+    secondaryActions: deal.lifecycle.status === 'active'
+      ? [
+        ...(deal.lifecycle.stage !== 'final-handover'
+          ? [{ label: 'Progress Stage', onClick: handleProgressStage }]
+          : []),
+        { label: 'Cancel Deal', onClick: handleCancelDeal },
+      ]
+      : [],
     status: {
       label: deal.lifecycle.status,
       variant: (deal.lifecycle.status === 'active' ? 'success'
@@ -915,12 +936,31 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
 
       {/* Documents */}
       <div className="mt-6">
-        <DealDocumentList deal={deal} currentUserId={user.id} />
+        <DealDocumentList
+          deal={deal}
+          currentUserId={user.id}
+          onUploadDocument={() => setShowAddDocument(true)}
+          onViewDocument={(doc) => doc.url && window.open(doc.url, '_blank')}
+          onDownloadDocument={(doc) => doc.url && window.open(doc.url, '_blank')}
+        />
       </div>
 
       {/* Notes */}
       <div className="mt-6">
-        <DealNotesPanel deal={deal} currentUserId={user.id} currentUserName={user.name} />
+        <DealNotesPanel
+          deal={deal}
+          currentUserId={user.id}
+          currentUserName={user.name}
+          onAddNote={async (content, _isPrivate) => {
+            try {
+              await dealsService.createNote(deal.id, content);
+              onUpdate?.();
+            } catch (e) {
+              console.error('Failed to add note:', e);
+              toast.error('Failed to add note');
+            }
+          }}
+        />
       </div>
     </>
   );
@@ -990,12 +1030,9 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           deal={deal}
           currentUserId={user.id}
           currentUserName={user.name}
-          onSuccess={(updatedDeal) => {
-            if (updatedDeal && typeof updatedDeal === 'object' && updatedDeal.parties) {
-              setDeal(updatedDeal);
-            }
+          onSuccess={async () => {
+            await onUpdate?.();
             setShowCreatePlan(false);
-            onUpdate?.();
           }}
         />
       )}
@@ -1027,12 +1064,23 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           deal={deal}
           currentUserId={user.id}
           currentUserName={user.name}
-          onSuccess={(updatedDeal) => {
-            if (updatedDeal && typeof updatedDeal === 'object' && updatedDeal.parties) {
-              setDeal(updatedDeal);
-            }
+          selectedInstallment={selectedInstallment}
+          onSuccess={async () => {
+            await onUpdate?.();
             setShowRecordPayment(false);
             setSelectedInstallment(null);
+          }}
+        />
+      )}
+
+      {showAddDocument && (
+        <AddDealDocumentModal
+          open={showAddDocument}
+          onClose={() => setShowAddDocument(false)}
+          dealId={deal.id}
+          onCreateDocument={async (payload) => {
+            await dealsService.createDocument(deal.id, payload);
+            setShowAddDocument(false);
             onUpdate?.();
           }}
         />

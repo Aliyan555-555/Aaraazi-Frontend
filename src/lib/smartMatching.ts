@@ -1,15 +1,3 @@
-/**
- * Smart Matching System
- * Automatically matches shared sell/rent cycles with buyer/rent requirements
- * 
- * Matching Logic:
- * - Sell Cycle (shared) ↔ Buyer Requirement
- * - Rent Cycle (shared) ↔ Rent Requirement
- * 
- * Scoring: 0-100% match score based on weighted criteria
- * Threshold: 70% minimum for a valid match
- */
-
 import {
   Property,
   BuyerRequirement,
@@ -397,38 +385,15 @@ export function runMatchingForAllSharedCycles(
 /**
  * Save matches to localStorage
  */
-export function saveMatches(matches: PropertyMatch[]): void {
-  try {
-    const existingMatches = getMatches();
-
-    // Merge new matches with existing (avoid duplicates)
-    const matchMap = new Map<string, PropertyMatch>();
-
-    // Add existing matches
-    existingMatches.forEach(m => matchMap.set(m.matchId, m));
-
-    // Add/update new matches
-    matches.forEach(m => matchMap.set(m.matchId, m));
-
-    const allMatches = Array.from(matchMap.values());
-
-    localStorage.setItem(MATCHES_KEY, JSON.stringify(allMatches));
-  } catch (error) {
-    logger.error('Error saving matches:', error);
-  }
+export function saveMatches(_matches: PropertyMatch[]): void {
+  // no-op (stub)
 }
 
 /**
  * Get all matches
  */
 export function getMatches(): PropertyMatch[] {
-  try {
-    const data = localStorage.getItem(MATCHES_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch (error) {
-    logger.error('Error loading matches:', error);
-    return [];
-  }
+  return [];
 }
 
 /**
@@ -450,29 +415,15 @@ export function getMatchesForAgent(agentId: string): PropertyMatch[] {
 /**
  * Update a match
  */
-export function updateMatch(matchId: string, updates: Partial<PropertyMatch>): void {
-  try {
-    const matches = getMatches();
-    const index = matches.findIndex(m => m.matchId === matchId);
-
-    if (index !== -1) {
-      matches[index] = {
-        ...matches[index],
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      };
-      localStorage.setItem(MATCHES_KEY, JSON.stringify(matches));
-    }
-  } catch (error) {
-    logger.error('Error updating match:', error);
-  }
+export function updateMatch(_matchId: string, _updates: Partial<PropertyMatch>): void {
+  // no-op (stub)
 }
 
 /**
  * Clear all matches (for testing)
  */
 export function clearMatches(): void {
-  localStorage.removeItem(MATCHES_KEY);
+  // no-op (stub)
 }
 
 // ============================================
@@ -483,12 +434,7 @@ export function clearMatches(): void {
  * Get buyer requirements
  */
 function getBuyerRequirements(_userId: string, _userRole: string): BuyerRequirement[] {
-  try {
-    const data = localStorage.getItem('buyer_requirements_v3');
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
+  return [];
 }
 
 /**

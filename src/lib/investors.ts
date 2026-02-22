@@ -30,17 +30,7 @@ const INVESTMENTS_KEY = "estate_investor_investments";
  * Used for investor syndication in purchase cycles
  */
 export function initializeInvestorData(): void {
-  // Check if investors exist, if not create empty array
-  const investorsJson = localStorage.getItem(INVESTORS_KEY);
-  if (!investorsJson) {
-    localStorage.setItem(INVESTORS_KEY, JSON.stringify([]));
-  }
-
-  // Check if investments exist, if not create empty array
-  const investmentsJson = localStorage.getItem(INVESTMENTS_KEY);
-  if (!investmentsJson) {
-    localStorage.setItem(INVESTMENTS_KEY, JSON.stringify([]));
-  }
+  // no-op (stub - no localStorage)
 }
 
 // ============================================

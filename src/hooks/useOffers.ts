@@ -1,92 +1,39 @@
 /**
- * Offers Hooks
+ * Offers Hooks - Zustand-based
  * Mutations for creating, accepting, and rejecting offers
  */
 
-import { useState, useCallback } from 'react';
-import { offersService } from '@/services/offers.service';
+'use client';
+
+import { useOffersStore } from '@/store/useOffersStore';
 import type { CreateOfferPayload } from '@/services/offers.service';
 
 export function useCreateOffer() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const createOffer = useCallback(
-    async (sellCycleId: string, payload: CreateOfferPayload) => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const offer = await offersService.create(sellCycleId, payload);
-        return offer;
-      } catch (err: unknown) {
-        const message =
-          err && typeof err === 'object' && 'message' in err
-            ? String((err as { message: string }).message)
-            : 'Failed to create offer';
-        setError(message);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
-
-  return { createOffer, isLoading, error };
+  const createLoading = useOffersStore((s) => s.createLoading);
+  const createError = useOffersStore((s) => s.createError);
+  return {
+    createOffer: useOffersStore.getState().createOffer,
+    isLoading: createLoading,
+    error: createError,
+  };
 }
 
 export function useAcceptOffer() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const acceptOffer = useCallback(
-    async (sellCycleId: string, offerId: string) => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await offersService.accept(sellCycleId, offerId);
-        return result;
-      } catch (err: unknown) {
-        const message =
-          err && typeof err === 'object' && 'message' in err
-            ? String((err as { message: string }).message)
-            : 'Failed to accept offer';
-        setError(message);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
-
-  return { acceptOffer, isLoading, error };
+  const acceptLoading = useOffersStore((s) => s.acceptLoading);
+  const acceptError = useOffersStore((s) => s.acceptError);
+  return {
+    acceptOffer: useOffersStore.getState().acceptOffer,
+    isLoading: acceptLoading,
+    error: acceptError,
+  };
 }
 
 export function useRejectOffer() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const rejectOffer = useCallback(
-    async (sellCycleId: string, offerId: string) => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const offer = await offersService.reject(sellCycleId, offerId);
-        return offer;
-      } catch (err: unknown) {
-        const message =
-          err && typeof err === 'object' && 'message' in err
-            ? String((err as { message: string }).message)
-            : 'Failed to reject offer';
-        setError(message);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
-
-  return { rejectOffer, isLoading, error };
+  const rejectLoading = useOffersStore((s) => s.rejectLoading);
+  const rejectError = useOffersStore((s) => s.rejectError);
+  return {
+    rejectOffer: useOffersStore.getState().rejectOffer,
+    isLoading: rejectLoading,
+    error: rejectError,
+  };
 }

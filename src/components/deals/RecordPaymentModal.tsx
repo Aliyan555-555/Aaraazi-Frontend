@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
-import { recordAdHocPayment, recordInstallmentPayment, RecordAdHocPaymentInput, RecordInstallmentPaymentInput } from '../../lib/dealPayments';
+import { dealsService } from '@/services/deals.service';
 import { Deal, PaymentInstallment } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
@@ -18,7 +18,8 @@ interface RecordPaymentModalProps {
   currentUserId: string;
   currentUserName: string;
   selectedInstallment?: PaymentInstallment; // If provided, record against this installment
-  onSuccess: (updatedDeal: Deal) => void;
+  /** Called after payment is recorded. Should trigger deal refetch. Awaited before closing. */
+  onSuccess: () => void | Promise<void>;
 }
 
 export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
@@ -84,85 +85,35 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      let updatedDeal: Deal;
+      const paymentType = isAdHoc ? 'AD_HOC' : 'INSTALLMENT';
+      const methodMap: Record<string, string> = {
+        cash: 'CASH',
+        cheque: 'CHEQUE',
+        'bank-transfer': 'BANK_TRANSFER',
+        online: 'ONLINE',
+      };
+      const method = methodMap[paymentMethod] ?? 'BANK_TRANSFER';
+
+      await dealsService.recordPayment(deal.id, {
+        amount: numAmount,
+        paymentType,
+        paidAt: paidDate,
+        notes: notes || undefined,
+        reference: referenceNumber || undefined,
+        method,
+        installmentId: selectedInstallment?.id,
+      });
 
       if (isAdHoc) {
-        // Record ad-hoc payment
-        const input: RecordAdHocPaymentInput = {
-          amount: numAmount,
-          paidDate,
-          paymentMethod,
-          referenceNumber: referenceNumber || undefined,
-          receiptNumber: receiptNumber || undefined,
-          notes: notes || undefined,
-        };
-
-        updatedDeal = recordAdHocPayment(
-          deal.id,
-          currentUserId,
-          currentUserName,
-          input
-        );
-
-        // Find the newly created payment to get receipt number
-        const newPayment = updatedDeal.financial.payments[updatedDeal.financial.payments.length - 1];
-
-        toast.success(
-          `Payment recorded successfully! Receipt ${newPayment.receiptNumber} generated.`,
-          { duration: 5000 }
-        );
+        toast.success('Payment recorded successfully!');
+      } else if (numAmount > expectedAmount) {
+        const excess = numAmount - expectedAmount;
+        toast.success(`Payment recorded. Overpayment of ${formatPKR(excess)} recorded.`);
       } else {
-        // Record installment payment
-        const input: RecordInstallmentPaymentInput = {
-          installmentId: selectedInstallment!.id,
-          amount: numAmount,
-          paidDate,
-          paymentMethod,
-          referenceNumber: referenceNumber || undefined,
-          receiptNumber: receiptNumber || undefined,
-          notes: notes || undefined,
-        };
-
-        updatedDeal = recordInstallmentPayment(
-          deal.id,
-          currentUserId,
-          currentUserName,
-          input
-        );
-
-        // Check for overpayment
-        if (numAmount > expectedAmount) {
-          const excess = numAmount - expectedAmount;
-
-          // Get updated installment
-          const updatedInstallment = updatedDeal.financial.paymentPlan?.installments.find(
-            i => i.id === selectedInstallment!.id
-          );
-
-          if (updatedInstallment) {
-            // Find next pending installment
-            const nextPending = updatedDeal.financial.paymentPlan?.installments.find(
-              i => (i.sequence ?? 0) > (updatedInstallment.sequence ?? 0) && (i.status === 'pending' || i.status === 'partial')
-            );
-
-            if (nextPending) {
-              toast.info(
-                `Overpayment of ${formatPKR(excess)} recorded. Next pending: ${nextPending.description}`,
-                { duration: 5000 }
-              );
-            } else {
-              toast.info(
-                `Overpayment of ${formatPKR(excess)} recorded. No pending installments to credit.`,
-                { duration: 5000 }
-              );
-            }
-          }
-        }
-
         toast.success('Payment recorded successfully');
       }
 
-      onSuccess(updatedDeal);
+      await onSuccess();
       onClose();
     } catch (error: any) {
       toast.error(error.message || 'Failed to record payment');

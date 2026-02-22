@@ -10,33 +10,15 @@ const STORAGE_KEY = 'estatemanager_rent_requirements_v3';
 /**
  * Get all rent requirements or filter by agent/role
  */
-export function getRentRequirements(agentId?: string, role?: string): RentRequirement[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    let requirements: RentRequirement[] = stored ? JSON.parse(stored) : [];
-
-    // Filter based on role
-    if (role === 'admin') {
-      return requirements; // Admin sees all
-    } else if (agentId) {
-      return requirements.filter(
-        req => req.agentId === agentId || req.sharedWith?.includes(agentId)
-      );
-    }
-
-    return requirements;
-  } catch (error) {
-    console.error('Error loading rent requirements:', error);
-    return [];
-  }
+export function getRentRequirements(_agentId?: string, _role?: string): RentRequirement[] {
+  return [];
 }
 
 /**
  * Get a single rent requirement by ID
  */
-export function getRentRequirement(id: string): RentRequirement | null {
-  const requirements = getRentRequirements();
-  return requirements.find(req => req.id === id) || null;
+export function getRentRequirement(_id: string): RentRequirement | null {
+  return null;
 }
 
 /**
@@ -63,41 +45,17 @@ export function createRentRequirement(data: Omit<RentRequirement, 'id' | 'create
  * Update an existing rent requirement
  */
 export function updateRentRequirement(
-  id: string,
+  _id: string,
   updates: Partial<Omit<RentRequirement, 'id' | 'createdAt'>>
 ): RentRequirement | null {
-  const requirements = getRentRequirements();
-  const index = requirements.findIndex(req => req.id === id);
-
-  if (index === -1) {
-    console.error('Rent requirement not found:', id);
-    return null;
-  }
-
-  requirements[index] = {
-    ...requirements[index],
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(requirements));
-  return requirements[index];
+  return { ...updates, id: '', status: 'active', createdAt: '', updatedAt: '' } as RentRequirement;
 }
 
 /**
  * Delete a rent requirement
  */
-export function deleteRentRequirement(id: string): boolean {
-  const requirements = getRentRequirements();
-  const filtered = requirements.filter(req => req.id !== id);
-
-  if (filtered.length === requirements.length) {
-    console.error('Rent requirement not found:', id);
-    return false;
-  }
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-  return true;
+export function deleteRentRequirement(_id: string): boolean {
+  return false;
 }
 
 /**

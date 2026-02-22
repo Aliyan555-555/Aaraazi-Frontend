@@ -95,9 +95,8 @@ export default function ReportsWorkspace({ onNavigate }: ReportsWorkspaceProps) 
   };
   
   // Handle template update (after sharing)
-  const handleTemplateUpdate = (updatedTemplate: ReportTemplate) => {
-    // Template will be reloaded from localStorage on next render
-    // Just close the modal
+  const handleTemplateUpdate = (_updatedTemplate: ReportTemplate) => {
+    // Modal closed
   };
   
   // Handle export report

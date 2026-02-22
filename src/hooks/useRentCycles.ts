@@ -1,150 +1,68 @@
 /**
- * Rent Cycles Hooks
- * All rent cycle API access should go through these hooks.
- * No direct apiClient calls in components.
+ * Rent Cycles Hooks - Zustand-based
  */
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { rentCyclesService } from '@/services/rent-cycles.service';
-import type { CreateRentCyclePayload, UpdateRentCyclePayload } from '@/services/rent-cycles.service';
+import { useEffect } from 'react';
+import { useRentCyclesStore } from '@/store/useRentCyclesStore';
+import type { RentCycleApiSingle, RentCycleApiList } from '@/store/useRentCyclesStore';
 
-// ─────────────────────────────────────────────────────────────
-// Derived types
-// ─────────────────────────────────────────────────────────────
+export type { RentCycleApiSingle, RentCycleApiList };
 
-export type RentCycleApiSingle = Awaited<ReturnType<typeof rentCyclesService.findOne>>;
-export type RentCycleApiList = Awaited<ReturnType<typeof rentCyclesService.findAll>>;
+const EMPTY_RENT_LIST = { data: [], isLoading: true, error: null };
+const EMPTY_RENT_DETAIL = { data: null, isLoading: true, error: null };
+const EMPTY_RENT_DETAIL_OFF = { data: null, isLoading: false, error: null };
 
-// ─────────────────────────────────────────────────────────────
-// List hook
-// ─────────────────────────────────────────────────────────────
+function listKey(propertyListingId?: string): string {
+  return propertyListingId ?? '__all__';
+}
 
-/**
- * Fetch all rent cycles for the current agency.
- * Optionally filter by a specific property listing.
- */
 export function useRentCycles(propertyListingId?: string) {
-  const [cycles, setCycles] = useState<RentCycleApiList>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await rentCyclesService.findAll(propertyListingId);
-      setCycles(data);
-      return data;
-    } catch (err: unknown) {
-      const msg =
-        err && typeof err === 'object' && 'message' in err
-          ? String((err as { message: string }).message)
-          : 'Failed to load rent cycles';
-      setError(msg);
-      setCycles([]);
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [propertyListingId]);
+  const key = listKey(propertyListingId);
+  const entry = useRentCyclesStore((s) => s.lists[key] ?? EMPTY_RENT_LIST);
 
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    useRentCyclesStore.getState().fetchList(propertyListingId);
+  }, [key]);
 
-  return { cycles, isLoading, error, refetch };
+  return {
+    cycles: entry.data,
+    isLoading: entry.isLoading,
+    error: entry.error,
+    refetch: () => useRentCyclesStore.getState().fetchList(propertyListingId),
+  };
 }
 
-// ─────────────────────────────────────────────────────────────
-// Single-item hook
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Fetch a single rent cycle by ID.
- * Pass `enabled = false` to skip the initial fetch.
- */
 export function useRentCycle(id: string | undefined, enabled = true) {
-  const [cycle, setCycle] = useState<RentCycleApiSingle | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const refetch = useCallback(async () => {
-    if (!id || typeof id !== 'string') return null;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await rentCyclesService.findOne(id);
-      setCycle(data);
-      return data;
-    } catch (err: unknown) {
-      const msg =
-        err && typeof err === 'object' && 'message' in err
-          ? String((err as { message: string }).message)
-          : 'Failed to load rent cycle';
-      setError(msg);
-      setCycle(null);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id]);
+  const entry = useRentCyclesStore((s) => (id ? (s.details[id] ?? EMPTY_RENT_DETAIL) : EMPTY_RENT_DETAIL_OFF));
 
   useEffect(() => {
-    if (id && typeof id === 'string' && enabled) {
-      refetch();
-    } else {
-      setCycle(null);
-      setError(null);
-      setIsLoading(false);
+    if (enabled && id) {
+      useRentCyclesStore.getState().fetchDetail(id);
     }
-  }, [id, enabled, refetch]);
+  }, [id, enabled]);
 
-  return { cycle, isLoading, error, refetch };
+  return {
+    cycle: entry.data,
+    isLoading: entry.isLoading,
+    error: entry.error,
+    refetch: () => (id ? useRentCyclesStore.getState().fetchDetail(id) : Promise.resolve()),
+  };
 }
 
-// ─────────────────────────────────────────────────────────────
-// Create mutation hook
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Create a rent cycle. Returns `{ create, isLoading }`.
- * Shows a toast on success/error when used with the `toast` parameter.
- */
 export function useCreateRentCycle() {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const create = useCallback(async (data: CreateRentCyclePayload) => {
-    setIsLoading(true);
-    try {
-      return await rentCyclesService.create(data);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return { create, isLoading };
+  const mutateLoading = useRentCyclesStore((s) => s.mutateLoading);
+  return {
+    create: useRentCyclesStore.getState().create,
+    isLoading: mutateLoading,
+  };
 }
 
-// ─────────────────────────────────────────────────────────────
-// Update mutation hook
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Update a rent cycle's status or mutable fields.
- */
 export function useUpdateRentCycle() {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const update = useCallback(async (id: string, data: UpdateRentCyclePayload) => {
-    setIsLoading(true);
-    try {
-      return await rentCyclesService.update(id, data);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return { update, isLoading };
+  const mutateLoading = useRentCyclesStore((s) => s.mutateLoading);
+  return {
+    update: useRentCyclesStore.getState().update,
+    isLoading: mutateLoading,
+  };
 }

@@ -72,6 +72,16 @@ export interface DealDetailApiResponse extends DealListApiResponse {
       paidDate: string | null;
     }>;
   }>;
+  documents?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    category: string;
+    status: string;
+    uploadedAt: string;
+    uploadedBy?: string | null;
+  }>;
 }
 
 export const dealsApi = {

@@ -463,35 +463,12 @@ export function getFinancialSummary(
   };
 }
 
-// ============================================================================
-// STORAGE HELPERS
-// ============================================================================
 
-const BUDGET_STORAGE_KEY = 'estatemanager_budgets';
 
-export function saveBudgets(budgets: MonthlyBudget[]): void {
-  try {
-    localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify(budgets));
-  } catch (error) {
-    console.error('Failed to save budgets:', error);
-  }
+export function saveBudgets(_budgets: MonthlyBudget[]): void {
+  // no-op (stub)
 }
 
 export function loadBudgets(): MonthlyBudget[] {
-  try {
-    const data = localStorage.getItem(BUDGET_STORAGE_KEY);
-    return data ? JSON.parse(data) : getDefaultBudgets();
-  } catch (error) {
-    console.error('Failed to load budgets:', error);
-    return getDefaultBudgets();
-  }
-}
-
-function getDefaultBudgets(): MonthlyBudget[] {
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const categories: MonthlyBudget['category'][] = ['marketing', 'operations', 'salaries', 'office', 'technology', 'other'];
-  
-  return categories.map(category => 
-    createMonthlyBudget(currentMonth, category, 0)
-  );
+  return [];
 }

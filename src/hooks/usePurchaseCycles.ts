@@ -1,112 +1,69 @@
 /**
- * Purchase Cycles Hooks
+ * Purchase Cycles Hooks - Zustand-based
  */
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { purchaseCyclesService } from '@/services/purchase-cycles.service';
-import type {
-  CreatePurchaseCyclePayload,
-  CreatePurchaseCycleFromPropertyPayload,
-} from '@/services/purchase-cycles.service';
+import { useEffect } from 'react';
+import { usePurchaseCyclesStore } from '@/store/usePurchaseCyclesStore';
+import type { PurchaseCycleApiSingle } from '@/store/usePurchaseCyclesStore';
+
+export type { PurchaseCycleApiSingle };
+
+const EMPTY_PURCHASE_LIST = { data: [], isLoading: true, error: null };
+const EMPTY_PURCHASE_DETAIL = { data: null, isLoading: true, error: null };
+const EMPTY_PURCHASE_DETAIL_OFF = { data: null, isLoading: false, error: null };
+
+function listKey(requirementId?: string): string {
+  return requirementId ?? '__all__';
+}
 
 export function useCreatePurchaseCycle() {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const create = useCallback(async (data: CreatePurchaseCyclePayload) => {
-    setIsLoading(true);
-    try {
-      return await purchaseCyclesService.create(data);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return { create, isLoading };
+  const createLoading = usePurchaseCyclesStore((s) => s.createLoading);
+  return {
+    create: usePurchaseCyclesStore.getState().create,
+    isLoading: createLoading,
+  };
 }
 
 export function useCreatePurchaseCycleFromProperty() {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const createFromProperty = useCallback(
-    async (data: CreatePurchaseCycleFromPropertyPayload) => {
-      setIsLoading(true);
-      try {
-        return await purchaseCyclesService.createFromProperty(data);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
-
-  return { createFromProperty, isLoading };
+  const createLoading = usePurchaseCyclesStore((s) => s.createLoading);
+  return {
+    createFromProperty: usePurchaseCyclesStore.getState().createFromProperty,
+    isLoading: createLoading,
+  };
 }
 
 export function usePurchaseCycles(requirementId?: string) {
-  const [cycles, setCycles] = useState<Awaited<ReturnType<typeof purchaseCyclesService.findAll>>>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await purchaseCyclesService.findAll(requirementId);
-      setCycles(data);
-      return data;
-    } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: string }).message) : 'Failed to load purchase cycles';
-      setError(msg);
-      setCycles([]);
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [requirementId]);
+  const key = listKey(requirementId);
+  const entry = usePurchaseCyclesStore((s) => s.lists[key] ?? EMPTY_PURCHASE_LIST);
 
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    usePurchaseCyclesStore.getState().fetchList(requirementId);
+  }, [key]);
 
-  return { data: { items: cycles }, cycles, isLoading, error, refetch };
+  return {
+    data: { items: entry.data },
+    cycles: entry.data,
+    isLoading: entry.isLoading,
+    error: entry.error,
+    refetch: () => usePurchaseCyclesStore.getState().fetchList(requirementId),
+  };
 }
 
-export type PurchaseCycleApiSingle = Awaited<ReturnType<typeof purchaseCyclesService.findOne>>;
-
 export function usePurchaseCycle(id: string | undefined, enabled = true) {
-  const [cycle, setCycle] = useState<PurchaseCycleApiSingle | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const refetch = useCallback(async () => {
-    if (!id || typeof id !== 'string') return null;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await purchaseCyclesService.findOne(id);
-      setCycle(data);
-      return data;
-    } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: string }).message) : 'Failed to load purchase cycle';
-      setError(msg);
-      setCycle(null);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id]);
+  const entry = usePurchaseCyclesStore((s) => (id ? (s.details[id] ?? EMPTY_PURCHASE_DETAIL) : EMPTY_PURCHASE_DETAIL_OFF));
 
   useEffect(() => {
-    if (id && typeof id === 'string' && enabled) {
-      refetch();
-    } else {
-      setCycle(null);
-      setError(null);
-      setIsLoading(false);
+    if (enabled && id) {
+      usePurchaseCyclesStore.getState().fetchDetail(id);
     }
-  }, [id, enabled, refetch]);
+  }, [id, enabled]);
 
-  return { cycle, isLoading, error, refetch };
+  return {
+    cycle: entry.data,
+    isLoading: entry.isLoading,
+    error: entry.error,
+    refetch: () => (id ? usePurchaseCyclesStore.getState().fetchDetail(id) : Promise.resolve()),
+  };
 }

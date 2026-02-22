@@ -1,47 +1,26 @@
 /**
- * useContactSearch - Debounced contact search for forms
- * No direct API calls in components - use this hook
+ * useContactSearch - Zustand-based
+ * Debounced contact search for forms
  */
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { contactsService } from '@/services/contacts.service';
-import type { Contact } from '@/types/schema';
-
-const DEBOUNCE_MS = 300;
+import { useEffect } from 'react';
+import { useContactSearchStore } from '@/store/useContactSearchStore';
 
 export function useContactSearch(query: string, limit = 10, agentId?: string) {
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const results = useContactSearchStore((s) => s.results);
+  const isLoading = useContactSearchStore((s) => s.isLoading);
 
   useEffect(() => {
-    if (!query || query.length < 2) {
-      setContacts([]);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        setIsLoading(true);
-        const response = await contactsService.findAll({
-          search: query,
-          limit,
-          ...(agentId && { agentId }),
-        });
-        setContacts(response.data || []);
-      } catch (err) {
-        console.error('Contact search failed:', err);
-        setContacts([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
+    useContactSearchStore.getState().search(query, limit, agentId);
   }, [query, limit, agentId]);
 
-  const clear = useCallback(() => setContacts([]), []);
+  const clear = useContactSearchStore.getState().clear;
 
-  return { contacts, isLoading, clear };
+  return {
+    contacts: results,
+    isLoading,
+    clear,
+  };
 }

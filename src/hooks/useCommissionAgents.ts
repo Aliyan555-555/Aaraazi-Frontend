@@ -1,13 +1,14 @@
 /**
- * Commission Agents Hooks
+ * Commission Agents Hooks - Zustand-based
  * useInternalAgents – sync from auth store
- * useExternalBrokers – lazy fetch when modal opens
+ * useExternalBrokers – Zustand store
  */
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { commissionService } from '@/services/commission.service';
+import { useCommissionAgentsStore } from '@/store/useCommissionAgentsStore';
 import type { AgentOption } from '@/services/commission.service';
 
 /**
@@ -21,38 +22,22 @@ export function useInternalAgents(): AgentOption[] {
  * External brokers from contacts API. Fetches when enabled (e.g. modal open).
  */
 export function useExternalBrokers(enabled: boolean) {
-  const [brokers, setBrokers] = useState<AgentOption[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await commissionService.getExternalBrokers();
-      setBrokers(data);
-      return data;
-    } catch (err: unknown) {
-      const msg =
-        err && typeof err === 'object' && 'message' in err
-          ? String((err as { message: string }).message)
-          : 'Failed to load external brokers';
-      setError(msg);
-      setBrokers([]);
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const brokers = useCommissionAgentsStore((s) => s.brokers);
+  const isLoading = useCommissionAgentsStore((s) => s.isLoading);
+  const error = useCommissionAgentsStore((s) => s.error);
 
   useEffect(() => {
     if (enabled) {
-      refetch();
+      useCommissionAgentsStore.getState().fetchBrokers();
     } else {
-      setBrokers([]);
-      setError(null);
+      useCommissionAgentsStore.getState().clear();
     }
-  }, [enabled, refetch]);
+  }, [enabled]);
 
-  return { brokers, isLoading, error, refetch };
+  return {
+    brokers,
+    isLoading,
+    error,
+    refetch: () => useCommissionAgentsStore.getState().fetchBrokers(),
+  };
 }

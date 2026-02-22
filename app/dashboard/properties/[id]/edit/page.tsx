@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { PropertyForm } from '@/components/_PropertyForm';
+import { PropertyForm } from '@/components/PropertyForm';
 import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
 import { Loader2, AlertCircle } from 'lucide-react';

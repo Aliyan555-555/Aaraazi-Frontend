@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { createPaymentPlan, CreatePaymentPlanInput } from '../../lib/dealPayments';
+import { dealsService } from '@/services/deals.service';
 import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
@@ -16,7 +16,8 @@ interface CreatePaymentPlanModalProps {
   deal: Deal;
   currentUserId: string;
   currentUserName: string;
-  onSuccess: (updatedDeal: Deal) => void;
+  /** Called after plan is created. Should trigger deal refetch. Awaited before closing. */
+  onSuccess: () => void | Promise<void>;
 }
 
 export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
@@ -64,27 +65,17 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const input: CreatePaymentPlanInput = {
-        dealId: deal.id,
-        totalAmount: totalAmount,
+      await dealsService.createPaymentSchedule(deal.id, {
+        totalAmount,
         downPaymentAmount,
         downPaymentDate,
         numberOfInstallments,
-        frequency,
+        frequency: frequency.toUpperCase() as 'MONTHLY' | 'QUARTERLY',
         firstInstallmentDate,
-        createdByUserId: currentUserId,
-        createdByName: currentUserName,
-      };
-
-      const updatedDeal = await createPaymentPlan(input);
+      });
 
       toast.success('Payment plan created successfully');
-      // Only pass a valid Deal object to onSuccess - never undefined or Promise
-      if (updatedDeal && typeof updatedDeal === 'object' && updatedDeal.parties) {
-        onSuccess(updatedDeal);
-      } else {
-        onSuccess(deal);
-      }
+      await onSuccess();
       onClose();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create payment plan');

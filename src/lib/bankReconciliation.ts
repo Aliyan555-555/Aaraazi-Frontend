@@ -95,74 +95,11 @@ export interface ImportedStatement {
  * Auto-match bank transactions with ledger entries using fuzzy matching
  */
 export function autoMatchTransactions(
-  bankTransactions: BankTransaction[],
-  ledgerEntries: LedgerEntry[],
-  rules: ReconciliationRule[] = []
+  _bankTransactions: BankTransaction[],
+  _ledgerEntries: LedgerEntry[],
+  _rules: ReconciliationRule[] = []
 ): ReconciliationMatch[] {
-  const matches: ReconciliationMatch[] = [];
-  const matchedLedgerIds = new Set<string>();
-  const matchedBankIds = new Set<string>();
-
-  // Sort by priority (highest first)
-  const sortedRules = [...rules].filter(r => r.enabled).sort((a, b) => b.priority - a.priority);
-
-  // First pass: Apply rules
-  for (const rule of sortedRules) {
-    for (const bankTx of bankTransactions) {
-      if (matchedBankIds.has(bankTx.id)) continue;
-
-      for (const ledgerEntry of ledgerEntries) {
-        if (matchedLedgerIds.has(ledgerEntry.id)) continue;
-
-        if (ruleMatches(rule, bankTx, ledgerEntry)) {
-          const match: ReconciliationMatch = {
-            bankTransaction: bankTx,
-            ledgerEntry: ledgerEntry,
-            confidence: calculateConfidence(bankTx, ledgerEntry, rule),
-            matchReason: `Rule: ${rule.name}`,
-            autoMatched: true,
-          };
-
-          matches.push(match);
-          matchedBankIds.add(bankTx.id);
-          matchedLedgerIds.add(ledgerEntry.id);
-          break;
-        }
-      }
-    }
-  }
-
-  // Second pass: Fuzzy matching for unmatched transactions
-  for (const bankTx of bankTransactions) {
-    if (matchedBankIds.has(bankTx.id)) continue;
-
-    let bestMatch: ReconciliationMatch | null = null;
-    let bestConfidence = 0;
-
-    for (const ledgerEntry of ledgerEntries) {
-      if (matchedLedgerIds.has(ledgerEntry.id)) continue;
-
-      const confidence = calculateFuzzyMatch(bankTx, ledgerEntry);
-      if (confidence > bestConfidence && confidence >= 70) {
-        bestConfidence = confidence;
-        bestMatch = {
-          bankTransaction: bankTx,
-          ledgerEntry: ledgerEntry,
-          confidence,
-          matchReason: 'Fuzzy match (amount + date + description)',
-          autoMatched: true,
-        };
-      }
-    }
-
-    if (bestMatch) {
-      matches.push(bestMatch);
-      matchedBankIds.add(bankTx.id);
-      matchedLedgerIds.add(bestMatch.ledgerEntry.id);
-    }
-  }
-
-  return matches;
+  return [];
 }
 
 /**
@@ -583,29 +520,19 @@ export function detectDiscrepancies(
 // ============================================
 
 /**
- * Save reconciliation history
+ * Save reconciliation history (stub - no persistence)
  */
-export function saveReconciliationHistory(history: ReconciliationHistory): void {
-  const key = 'bank_reconciliation_history';
-  const existing = JSON.parse(localStorage.getItem(key) || '[]') as ReconciliationHistory[];
-  existing.push(history);
-  localStorage.setItem(key, JSON.stringify(existing));
+export function saveReconciliationHistory(_history: ReconciliationHistory): void {
+  // no-op
 }
 
 /**
- * Get reconciliation history
+ * Get reconciliation history (stub)
  */
 export function getReconciliationHistory(
-  reconciliationId?: string
+  _reconciliationId?: string
 ): ReconciliationHistory[] {
-  const key = 'bank_reconciliation_history';
-  const all = JSON.parse(localStorage.getItem(key) || '[]') as ReconciliationHistory[];
-
-  if (reconciliationId) {
-    return all.filter(h => h.reconciliationId === reconciliationId);
-  }
-
-  return all;
+  return [];
 }
 
 // ============================================
@@ -653,20 +580,16 @@ export function getDefaultReconciliationRules(): ReconciliationRule[] {
 }
 
 /**
- * Save reconciliation rules
+ * Save reconciliation rules (stub - no persistence)
  */
-export function saveReconciliationRules(rules: ReconciliationRule[]): void {
-  localStorage.setItem('bank_reconciliation_rules', JSON.stringify(rules));
+export function saveReconciliationRules(_rules: ReconciliationRule[]): void {
+  // no-op
 }
 
 /**
- * Get reconciliation rules
+ * Get reconciliation rules (stub)
  */
 export function getReconciliationRules(): ReconciliationRule[] {
-  const stored = localStorage.getItem('bank_reconciliation_rules');
-  if (stored) {
-    return JSON.parse(stored) as ReconciliationRule[];
-  }
   return getDefaultReconciliationRules();
 }
 
@@ -693,8 +616,8 @@ function saveBankTransactions(transactions: BankTransaction[]): void {
 }
 
 /**
- * Get imported statements
+ * Get imported statements (stub)
  */
 export function getImportedStatements(): ImportedStatement[] {
-  return JSON.parse(localStorage.getItem('bank_imported_statements') || '[]') as ImportedStatement[];
+  return [];
 }
