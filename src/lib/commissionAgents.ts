@@ -1,22 +1,9 @@
-/**
- * Commission Agents - Multi-Agent Commission Support
- *
- * Manages commission splits across multiple agents (internal and external)
- */
 
 import { Deal, CommissionAgent, CommissionStatus } from "../types/deals";
 import { User } from "../types";
-import { updateDeal } from "./deals";
 import { getContactById } from "./data";
 import { getAllAgents } from "./auth";
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Get all available internal agents (users)
- */
 export const getAvailableInternalAgents = (): User[] => {
   const agents = getAllAgents();
 
@@ -33,10 +20,6 @@ export const getAvailableInternalAgents = (): User[] => {
   return agents;
 };
 
-/**
- * Get all available external brokers (contacts)
- * NOTE: Contacts use 'category' field (not 'type') with value 'external-broker'
- */
 export const getAvailableExternalBrokers = () => {
   // IMPORTANT: Use correct localStorage key (matches /lib/data.ts)
   const CRM_CONTACTS_KEY = "crm_contacts";
@@ -410,19 +393,20 @@ export const migrateLegacyCommission = (deal: Deal): Deal => {
     });
   }
 
-  const updatedDeal = updateDeal(deal.id, {
+  // In-memory migration only - do not call updateDeal (uses local storage).
+  // Deals from API are not in local store; parent will update React state via onUpdate.
+  return {
+    ...deal,
     financial: {
       ...deal.financial,
       commission: {
         ...deal.financial.commission,
-        agents: agents,
+        agents,
         _legacy: {
           primaryAgent: deal.financial.commission.split?.primaryAgent,
           secondaryAgent: deal.financial.commission.split?.secondaryAgent,
         },
-      } as any,
+      } as Deal["financial"]["commission"],
     },
-  });
-
-  return updatedDeal;
+  };
 };

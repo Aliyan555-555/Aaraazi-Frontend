@@ -1,5 +1,7 @@
 /**
  * Purchase Cycles API
+ * Types are used by purchase-cycles.service and components.
+ * @deprecated For API calls prefer purchaseCyclesService from @/services/purchase-cycles.service or @/modules/purchase-cycles. Do not use purchaseCyclesApi in new code.
  */
 
 import { apiClient } from './client';
@@ -67,6 +69,7 @@ export interface UpdatePurchaseCyclePayload {
   endDate?: string | null;
 }
 
+/** @deprecated Use purchaseCyclesService from @/services/purchase-cycles.service instead */
 export const purchaseCyclesApi = {
   create: async (data: CreatePurchaseCyclePayload): Promise<PurchaseCycleApiResponse> => {
     const response = await apiClient.post<PurchaseCycleApiResponse>('/purchase-cycles', data);

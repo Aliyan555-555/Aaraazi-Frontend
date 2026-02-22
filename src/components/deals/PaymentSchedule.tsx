@@ -24,6 +24,8 @@ interface PaymentScheduleProps {
   currentUserId: string;
   currentUserName: string;
   onDealUpdate: (updatedDeal: Deal) => void;
+  /** Called when payment is recorded (no deal object). Parent should refetch. */
+  onPaymentRecorded?: () => void | Promise<void>;
   onAddInstallment: () => void;
 }
 
@@ -32,6 +34,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
   currentUserId,
   currentUserName,
   onDealUpdate,
+  onPaymentRecorded,
   onAddInstallment,
 }) => {
   const [recordPaymentModal, setRecordPaymentModal] = useState<{
@@ -287,7 +290,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
           currentUserId={currentUserId}
           currentUserName={currentUserName}
           selectedInstallment={recordPaymentModal.installment}
-          onSuccess={onDealUpdate}
+          onSuccess={onPaymentRecorded ?? (() => {})}
         />
       )}
 

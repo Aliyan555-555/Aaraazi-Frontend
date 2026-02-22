@@ -1,7 +1,7 @@
 import React from 'react';
 import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
-import { getPaymentSummary } from '../../lib/dealPayments';
+import { getPaymentSummaryFromDeal } from '../../lib/dealPayments';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Button } from '../ui/button';
@@ -28,7 +28,7 @@ export const PaymentSummaryReadOnly: React.FC<PaymentSummaryReadOnlyProps> = ({
   onViewFullDetails,
   compact = false,
 }) => {
-  const summary = getPaymentSummary(deal.id);
+  const summary = getPaymentSummaryFromDeal(deal);
 
   const getPaymentStateInfo = () => {
     switch (summary.paymentPlanStatus) {

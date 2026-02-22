@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
-import { dealsService } from '@/services/deals.service';
+import { useDealMutations } from '@/hooks/useDeals';
 import { Deal, PaymentInstallment } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
@@ -39,6 +39,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [overpaymentWarning, setOverpaymentWarning] = useState<string | null>(null);
+  const { recordPayment } = useDealMutations();
 
   const isAdHoc = !selectedInstallment;
   const expectedAmount = selectedInstallment ? selectedInstallment.amount - (selectedInstallment.paidAmount ?? 0) : 0;
@@ -94,7 +95,7 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
       };
       const method = methodMap[paymentMethod] ?? 'BANK_TRANSFER';
 
-      await dealsService.recordPayment(deal.id, {
+      await recordPayment(deal.id, {
         amount: numAmount,
         paymentType,
         paidAt: paidDate,

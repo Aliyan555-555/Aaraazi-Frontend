@@ -1,38 +1,15 @@
-/**
- * DealsWorkspace Component
- * Workspace: Built with WorkspacePageTemplate ✅
- * 
- * PURPOSE:
- * Complete deals workspace using the template system.
- * Most complex workspace with 3 view modes: Kanban, Table, Grid.
- * 
- * FEATURES:
- * - Kanban view (primary) - Deal pipeline stages
- * - Table view (secondary) - Data-dense view
- * - Grid view (tertiary) - Card-based view
- * - Search and filtering
- * - Sorting options
- * - Bulk actions (export, change stage, delete)
- * - Quick actions (view, change stage, edit)
- * - Stage-based organization
- * - Payment tracking
- * - Dual-agent support
- */
-
-import React, { useState, useMemo, useCallback } from 'react';
-import { Plus, Eye, Edit, Trash2, Download, Upload, FileText, CheckCircle2 } from 'lucide-react';
+import React, { useMemo, useCallback } from 'react';
+import { Plus,Trash2, Download, FileText, CheckCircle2 } from 'lucide-react';
 import { User } from '../../types';
 import { Deal } from '../../types/deals';
 import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
 import { DealWorkspaceCard } from './DealWorkspaceCard';
 import { DealKanbanCard } from './DealKanbanCard';
-import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
-import { Column, EmptyStatePresets, KanbanColumn } from '../workspace';
-import { getDeals, updateDeal } from '../../lib/deals';
+import { StatusBadge } from '../layout/StatusBadge';
+import { Column,KanbanColumn } from '../workspace';
 import { useDeals } from '../../hooks/useDeals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
-import { logger } from "../../lib/logger";
 
 export interface DealsWorkspaceProps {
   user: User;
@@ -41,9 +18,6 @@ export interface DealsWorkspaceProps {
   onEditDeal?: (deal: Deal) => void;
 }
 
-/**
- * DealsWorkspace - Complete workspace using template system
- */
 export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
   user,
   onNavigate,
@@ -110,10 +84,15 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
       id: 'final-handover',
       label: 'Final Handover',
     },
+    {
+      id: 'completed',
+      label: 'Completed',
+    },
   ];
 
-  // Function to get kanban column for a deal
+  // Function to get kanban column for a deal (completed status overrides stage)
   const getKanbanColumn = useCallback((deal: Deal) => {
+    if (deal.lifecycle.status === 'completed') return 'completed';
     return deal.lifecycle.stage;
   }, []);
 
@@ -272,6 +251,10 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
         { value: 'agreement-signing', label: 'Agreement Signing' },
         { value: 'documentation', label: 'Documentation' },
         { value: 'payment-processing', label: 'Payment Processing' },
+        { value: 'handover-prep', label: 'Handover Prep' },
+        { value: 'transfer-registration', label: 'Transfer Reg.' },
+        { value: 'final-handover', label: 'Final Handover' },
+        { value: 'completed', label: 'Completed' },
       ],
     },
     {

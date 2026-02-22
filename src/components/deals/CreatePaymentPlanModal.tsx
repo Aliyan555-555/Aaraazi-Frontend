@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { dealsService } from '@/services/deals.service';
+import { useDealMutations } from '@/hooks/useDeals';
 import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
@@ -34,6 +34,7 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
   const [frequency, setFrequency] = useState<'monthly' | 'quarterly'>('monthly');
   const [firstInstallmentDate, setFirstInstallmentDate] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createPaymentSchedule } = useDealMutations();
 
   const totalAmount = deal.financial.agreedPrice;
   const downPaymentAmount = totalAmount * (downPaymentPercentage / 100);
@@ -65,7 +66,7 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      await dealsService.createPaymentSchedule(deal.id, {
+      await createPaymentSchedule(deal.id, {
         totalAmount,
         downPaymentAmount,
         downPaymentDate,

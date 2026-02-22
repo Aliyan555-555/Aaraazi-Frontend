@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { DealsWorkspace } from '@/components/deals/DealsWorkspace';
-import { User, mapAuthUserToUIUser } from '@/types';
+import { mapAuthUserToUIUser } from '@/types';
 
 export default function DealsPage() {
     const { user: saasUser } = useAuthStore();

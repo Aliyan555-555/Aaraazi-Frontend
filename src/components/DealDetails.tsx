@@ -31,7 +31,6 @@ import { StatusBadge } from './layout/StatusBadge';
 // Deal-Specific Components
 import { DualAgentHeader } from './deals/DualAgentHeader';
 import { PermissionGate } from './deals/PermissionGate';
-import { TaskList } from './deals/TaskList';
 import { DocumentList as DealDocumentList } from './deals/DocumentList';
 import { AddDealDocumentModal } from './deals/AddDealDocumentModal';
 import { NotesPanel as DealNotesPanel } from './deals/NotesPanel';
@@ -39,8 +38,8 @@ import { CommissionTab } from './deals/CommissionTab';
 import { AgentRatingModal } from './sharing/AgentRatingModal';
 
 // Tasks Module Integration
-import { getTasksByEntity, updateTask } from '../lib/tasks';
 import { Task } from '../types/tasks';
+import type { DealTask } from '../types/deals';
 import { TaskQuickAddWidget } from './tasks/TaskQuickAddWidget';
 import { TaskListView } from './tasks/TaskListView';
 
@@ -75,13 +74,14 @@ import {
 } from 'lucide-react';
 
 // Business Logic
-import { dealsService } from '@/services/deals.service';
+import { useDealMutations } from '@/hooks/useDeals';
 import { getUserRoleInDeal } from '../lib/dealPermissions';
 import { formatPKR } from '../lib/currency';
 import { toast } from 'sonner';
 
 // Transaction System
-import { getTransactionGraph, getUnifiedTimeline } from '@/lib/transaction-graph';
+import { getTransactionGraph } from '@/lib/transaction-graph';
+import { useDealTimeline } from '@/hooks/useDealTimeline';
 
 interface DealDetailsProps {
   deal: Deal;
@@ -98,22 +98,59 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
   onUpdate,
   onNavigate,
 }) => {
-  const [deal, setDeal] = useState<Deal>(initialDeal);
-  const [dealTasks, setDealTasks] = useState<Task[]>([]);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const {
+    progressStage: progressStageMutation,
+    completeDeal: completeDealMutation,
+    cancelDeal: cancelDealMutation,
+    createNote: createNoteMutation,
+    createDocument: createDocumentMutation,
+    createDealTask: createDealTaskMutation,
+    updateDealTask: updateDealTaskMutation,
+  } = useDealMutations();
+  const [deal, setDeal] = useState<Deal | null>(initialDeal ?? null);
 
   // Sync when parent passes updated deal (e.g. after refetch)
   React.useEffect(() => {
-    setDeal(initialDeal);
+    setDeal(initialDeal ?? null);
   }, [initialDeal]);
 
-  // Load tasks for this deal (Tasks Module - stub)
-  useMemo(() => {
-    if (deal) {
-      const tasks = getTasksByEntity('deal', deal.id) ?? [];
-      setDealTasks(Array.isArray(tasks) ? tasks : []);
-    }
-  }, [deal?.id, refreshTrigger]);
+  // Convert DealTask[] to Task[] for TaskListView
+  const dealTasksAsTasks = React.useMemo((): Task[] => {
+    const tasks = deal?.tasks ?? [];
+    const now = new Date().toISOString();
+    return tasks.map((dt: DealTask) => ({
+      id: dt.id,
+      title: dt.title,
+      description: dt.description,
+      status: dt.status as Task['status'],
+      priority: dt.priority as Task['priority'],
+      dueDate: dt.dueDate,
+      progress: dt.status === 'completed' ? 100 : 0,
+      agentId: dt.assignedTo,
+      assignedTo: [dt.assignedTo],
+      createdBy: '',
+      completed: dt.status === 'completed',
+      completedAt: dt.completedAt,
+      category: 'follow-up',
+      hasSubtasks: false,
+      isRecurring: false,
+      checklist: [],
+      blockedBy: [],
+      blocking: [],
+      watchers: [],
+      comments: [],
+      timeEntries: [],
+      attachments: [],
+      reminders: [],
+      tags: [],
+      isTemplate: false,
+      entityType: 'deal',
+      entityId: deal?.id,
+      entityName: deal?.dealNumber,
+      createdAt: dt.createdAt ?? now,
+      updatedAt: now,
+    })) as Task[];
+  }, [deal?.tasks, deal?.id, deal?.dealNumber]);
 
   // Payment system modals
   const [showCreatePlan, setShowCreatePlan] = useState(false);
@@ -138,11 +175,6 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     [deal?.id],
   );
 
-  const timeline = useMemo(
-    () => (deal?.id != null ? getUnifiedTimeline(deal.id) : []),
-    [deal?.id],
-  );
-
   // Format property address for display (prefer deal.property when graph is null)
   const propertyDisplayName = useMemo(() => {
     const prop = graph?.property ?? deal?.property;
@@ -160,14 +192,32 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     return 'Property';
   }, [graph?.property, deal?.property]);
 
+  const activities = useDealTimeline(deal);
+
+  // Guard: do not render if deal is missing (e.g. invalid update callback)
+  if (!deal || !deal.id) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-muted-foreground">
+        <AlertCircle className="h-12 w-12 mb-4 opacity-50" />
+        <p className="text-sm">Deal data unavailable. Please refresh the page.</p>
+        <Button variant="outline" className="mt-4" onClick={onBack}>
+          Back to Deals
+        </Button>
+      </div>
+    );
+  }
+
   const userRole = getUserRoleInDeal(user.id, deal);
   const isPrimary = userRole === 'primary';
 
-  // Calculate progress
+  // Calculate progress (prototype: completed deal = 100%)
   const calculateOverallProgress = () => {
+    if (deal.lifecycle.stage === 'completed' || deal.lifecycle.status === 'completed') {
+      return 100;
+    }
     const stages = Object.values(deal.lifecycle.timeline.stages);
     const completed = stages.filter((s) => s.status === 'completed').length;
-    return (completed / stages.length) * 100;
+    return stages.length > 0 ? (completed / stages.length) * 100 : 0;
   };
 
   const getStageDisplay = (stage: string) => {
@@ -203,7 +253,7 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     const apiStage = toApiStage(nextStage);
 
     try {
-      await dealsService.progressStage(deal.id, { stage: apiStage });
+      await progressStageMutation(deal.id, { stage: apiStage });
       toast.success(`Deal progressed to ${getStageDisplay(nextStage)}`);
       onUpdate?.();
     } catch (error) {
@@ -222,7 +272,7 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     if (!confirm(confirmMessage)) return;
 
     try {
-      await dealsService.completeDeal(deal.id);
+      await completeDealMutation(deal.id);
       toast.success('Deal completed successfully! 🎉');
       onUpdate?.();
 
@@ -242,7 +292,7 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     if (!reason?.trim()) return;
 
     try {
-      await dealsService.cancelDeal(deal.id, reason.trim());
+      await cancelDealMutation(deal.id, reason.trim());
       toast.success('Deal cancelled');
       onUpdate?.();
       onBack?.();
@@ -309,10 +359,10 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
   };
 
   // ==================== PAGE HEADER ====================
-  const sellerName = deal.parties?.seller?.name ?? 'Seller';
-  const buyerName = deal.parties?.buyer?.name ?? 'Buyer';
-  const sellerContact = deal.parties?.seller?.contact ?? '';
-  const buyerContact = deal.parties?.buyer?.contact ?? '';
+  const sellerName = deal?.parties?.seller?.name ?? 'Seller';
+  const buyerName = deal?.parties?.buyer?.name ?? 'Buyer';
+  const sellerContact = deal?.parties?.seller?.contact ?? '';
+  const buyerContact = deal?.parties?.buyer?.contact ?? '';
   const pageHeader = {
     title: deal.dealNumber,
     breadcrumbs: [
@@ -832,7 +882,14 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
             deal={deal}
             currentUserId={user.id}
             currentUserName={user.name}
-            onDealUpdate={(updatedDeal) => setDeal(updatedDeal)}
+            onDealUpdate={(updatedDeal) => {
+              if (updatedDeal && typeof updatedDeal === 'object' && updatedDeal.parties) {
+                setDeal(updatedDeal);
+              }
+            }}
+            onPaymentRecorded={async () => {
+              await onUpdate?.();
+            }}
             onAddInstallment={() => setShowAddInstallment(true)}
           />
         </div>
@@ -847,29 +904,35 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
   );
 
   // ==================== TASKS TAB ====================
+  const TASK_STATUS_TO_API: Record<string, string> = {
+    'not-started': 'PENDING',
+    'in-progress': 'IN_PROGRESS',
+    completed: 'COMPLETED',
+    cancelled: 'CANCELLED',
+    waiting: 'IN_PROGRESS',
+    overdue: 'OVERDUE',
+  };
   const tasksContent = (
     <div className="space-y-6">
-      {/* Quick Add Widget - Tasks Module */}
+      {/* Quick Add Widget - Tasks Module (API-backed for deals) */}
       <TaskQuickAddWidget
         user={user}
         entityType="deal"
         entityId={deal.id}
         entityName={deal.dealNumber}
-        onTaskCreated={() => {
-          const updatedTasks = getTasksByEntity('deal', deal.id);
-          setDealTasks(updatedTasks);
-          setRefreshTrigger(prev => prev + 1);
-          toast.success('Task created successfully');
+        onCreateTaskApi={async (payload) => {
+          await createDealTaskMutation(deal.id, payload);
+          await onUpdate?.();
         }}
       />
 
-      {/* Tasks List - Tasks Module */}
+      {/* Tasks List - Tasks from backend */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-base mb-4 flex items-center gap-2">
           <CheckSquare className="h-5 w-5 text-gray-600" />
-          Deal Tasks ({dealTasks.length})
+          Deal Tasks ({dealTasksAsTasks.length})
         </h3>
-        {dealTasks.length === 0 ? (
+        {dealTasksAsTasks.length === 0 ? (
           <div className="text-center py-12">
             <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-gray-300" />
             <p className="text-sm text-gray-500">No tasks for this deal yet</p>
@@ -877,54 +940,25 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           </div>
         ) : (
           <TaskListView
-            tasks={dealTasks}
+            tasks={dealTasksAsTasks}
             showSelection={false}
             onViewTask={(taskId) => {
               toast.info(`View task ${taskId}`);
-              // In full app: onNavigate('task-details', taskId)
             }}
-            onStatusChange={(taskId, status) => {
-              updateTask(taskId, { status }, user);
-              const updatedTasks = getTasksByEntity('deal', deal.id);
-              setDealTasks(updatedTasks);
-              setRefreshTrigger(prev => prev + 1);
+            onStatusChange={async (taskId, status) => {
+              await updateDealTaskMutation(deal.id, taskId, {
+                status: TASK_STATUS_TO_API[status] ?? 'PENDING',
+              });
+              await onUpdate?.();
               toast.success('Task status updated');
             }}
           />
         )}
       </div>
-
-      {/* Legacy Deal Tasks Section - Keep for backwards compatibility */}
-      {deal.tasks && deal.tasks.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            <h3 className="text-base text-amber-900">
-              Legacy Deal Tasks ({deal.tasks.length})
-            </h3>
-          </div>
-          <p className="text-sm text-amber-800 mb-4">
-            These are old-style deal tasks. New tasks should be created using the widget above.
-          </p>
-          <TaskList deal={deal} currentUserId={user.id} />
-        </div>
-      )}
     </div>
   );
 
   // ==================== ACTIVITY TAB ====================
-  const activities: Activity[] = useMemo(() => {
-    return (timeline || []).map((event: { type?: string; title?: string; description?: string; date?: string }, idx: number) => ({
-      id: `timeline-${idx}`,
-      type: (event as any).entityType ?? event.type ?? 'activity',
-      title: (event as any).event ?? event.title ?? 'Activity',
-      description: event.description,
-      date: event.date ?? '',
-      user: undefined,
-      icon: <FileText className="h-5 w-5 text-blue-600" />,
-    }));
-  }, [timeline]);
-
   const activityContent = (
     <>
       {/* Activity Timeline */}
@@ -953,7 +987,7 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           currentUserName={user.name}
           onAddNote={async (content, _isPrivate) => {
             try {
-              await dealsService.createNote(deal.id, content);
+              await createNoteMutation(deal.id, content);
               onUpdate?.();
             } catch (e) {
               console.error('Failed to add note:', e);
@@ -972,8 +1006,9 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
       user={user}
       isPrimary={isPrimary}
       onUpdate={(updatedDeal) => {
-        setDeal(updatedDeal);
+        if (updatedDeal) setDeal(updatedDeal);
       }}
+      onRefetch={onUpdate}
     />
   );
 
@@ -1044,12 +1079,9 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           deal={deal}
           currentUserId={user.id}
           currentUserName={user.name}
-          onSuccess={(updatedDeal) => {
-            if (updatedDeal && typeof updatedDeal === 'object' && updatedDeal.parties) {
-              setDeal(updatedDeal);
-            }
+          onSuccess={async () => {
             setShowAddInstallment(false);
-            onUpdate?.();
+            await onUpdate?.();
           }}
         />
       )}
@@ -1079,7 +1111,7 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           onClose={() => setShowAddDocument(false)}
           dealId={deal.id}
           onCreateDocument={async (payload) => {
-            await dealsService.createDocument(deal.id, payload);
+            await createDocumentMutation(deal.id, payload);
             setShowAddDocument(false);
             onUpdate?.();
           }}

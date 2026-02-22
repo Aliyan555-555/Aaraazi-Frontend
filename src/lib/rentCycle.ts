@@ -1,6 +1,11 @@
 /**
  * Rent Cycle Management Service - V3.0
  * Handles all rental/leasing operations
+ *
+ * @legacy This module uses localStorage and mock data (lib/data). For production backend
+ * integration use rentCyclesService from @/services/rent-cycles.service and the
+ * @/modules/rent-cycles hooks. New code should prefer the service layer; this file is
+ * kept for backward compatibility.
  */
 
 import { RentCycle, Property, SharingSettings, PrivacySettings, CollaborationData } from '../types';

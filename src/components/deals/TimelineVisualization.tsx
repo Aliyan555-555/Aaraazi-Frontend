@@ -88,9 +88,10 @@ export const TimelineVisualization: React.FC<TimelineVisualizationProps> = ({ de
     return deal.lifecycle.stage === stage;
   };
 
-  // Calculate overall completion
+  // Calculate overall completion (prototype: completed deal = 100%)
+  const isDealCompleted = deal.lifecycle.stage === 'completed' || deal.lifecycle.status === 'completed';
   const completedStages = stages.filter(s => getStageStatus(s.key).status === 'completed').length;
-  const overallProgress = (completedStages / stages.length) * 100;
+  const overallProgress = isDealCompleted ? 100 : (completedStages / stages.length) * 100;
 
   return (
     <div className="space-y-6">

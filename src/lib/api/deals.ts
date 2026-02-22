@@ -82,6 +82,31 @@ export interface DealDetailApiResponse extends DealListApiResponse {
     uploadedAt: string;
     uploadedBy?: string | null;
   }>;
+  commissions?: Array<{
+    id: string; // Commission record id (for updateCommissionStatus)
+    agentId: string;
+    amount: string;
+    rate?: string | null;
+    splitPercentage?: string | null;
+    status: string;
+    paidAt?: string | null;
+    approvedBy?: string | null;
+    approvedAt?: string | null;
+    agent?: { id: string; name: string; email: string };
+  }>;
+  tasks?: Array<{
+    id: string;
+    title: string;
+    description?: string | null;
+    dueDate: string;
+    status: string;
+    priority: string;
+    type?: string;
+    assignedToId: string;
+    assignedTo?: { id: string; name: string; email: string };
+    completedAt?: string | null;
+    createdAt?: string;
+  }>;
 }
 
 export const dealsApi = {

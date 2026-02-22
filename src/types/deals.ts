@@ -23,6 +23,7 @@ export type CommissionStatus =
 
 export interface CommissionAgent {
   id: string; // User ID or Contact ID
+  commissionId?: string; // Backend Commission record id (for status updates)
   type: "internal" | "external"; // internal=User agent, external=Contact broker
   entityType: "user" | "contact"; // For data fetching
   name: string;

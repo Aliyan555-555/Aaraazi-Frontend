@@ -22,24 +22,50 @@ import { Plus, Calendar as CalendarIcon, X, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
+export interface CreateTaskApiPayload {
+  title: string;
+  description?: string;
+  assignedToId: string;
+  dueDate: string;
+  priority?: string;
+  type?: string;
+}
+
 interface TaskQuickAddWidgetProps {
   user: User;
   entityType: TaskEntityType;
   entityId: string;
   entityName: string;
   onTaskCreated?: (task: Task) => void;
+  /** When provided (e.g. for deals), use API instead of localStorage */
+  onCreateTaskApi?: (payload: CreateTaskApiPayload) => Promise<void>;
   suggestedCategory?: TaskCategory;
 }
 
 /**
  * TaskQuickAddWidget Component
  */
+const CATEGORY_TO_TYPE: Record<string, string> = {
+  'follow-up': 'FOLLOW_UP',
+  viewing: 'VIEWING',
+  documentation: 'DOCUMENT',
+  negotiation: 'OTHER',
+  inspection: 'INSPECTION',
+  meeting: 'MEETING',
+  administrative: 'OTHER',
+  marketing: 'OTHER',
+  financial: 'OTHER',
+  legal: 'OTHER',
+  custom: 'OTHER',
+};
+
 export const TaskQuickAddWidget: React.FC<TaskQuickAddWidgetProps> = ({
   user,
   entityType,
   entityId,
   entityName,
   onTaskCreated,
+  onCreateTaskApi,
   suggestedCategory,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -47,10 +73,37 @@ export const TaskQuickAddWidget: React.FC<TaskQuickAddWidgetProps> = ({
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<TaskCategory>(suggestedCategory || 'follow-up');
   const [dueDate, setDueDate] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000));
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) {
       toast.error('Please enter a task title');
+      return;
+    }
+    
+    if (onCreateTaskApi) {
+      setIsSubmitting(true);
+      try {
+        await onCreateTaskApi({
+          title: title.trim(),
+          description: description.trim() || undefined,
+          assignedToId: user.id,
+          dueDate: dueDate.toISOString(),
+          priority: 'MEDIUM',
+          type: CATEGORY_TO_TYPE[category] || 'OTHER',
+        });
+        setTitle('');
+        setDescription('');
+        setCategory(suggestedCategory || 'follow-up');
+        setDueDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
+        setIsExpanded(false);
+        toast.success('Task created successfully');
+      } catch (error) {
+        console.error('Error creating task:', error);
+        toast.error('Failed to create task');
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
     
@@ -69,7 +122,6 @@ export const TaskQuickAddWidget: React.FC<TaskQuickAddWidgetProps> = ({
       
       toast.success('Task created successfully');
       
-      // Reset form
       setTitle('');
       setDescription('');
       setCategory(suggestedCategory || 'follow-up');

@@ -1,6 +1,7 @@
 /**
  * Rent Cycles API Client
  * Handles rent cycle CRUD operations against the NestJS backend.
+ * Used internally by rentCyclesService. Components should use rentCyclesService from @/services/rent-cycles.service or @/modules/rent-cycles.
  */
 
 import { apiClient } from './client';

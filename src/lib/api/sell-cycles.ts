@@ -1,6 +1,7 @@
 /**
  * Sell Cycles API Client
- * Handles sell cycle creation and listing
+ * Types (CreateSellCyclePayload, SellCycleApiResponse) are used by sell-cycles.service.
+ * @deprecated Prefer sellCyclesService from @/services/sell-cycles.service or @/modules/sell-cycles. Do not use sellCyclesApi in new code.
  */
 
 import { apiClient } from './client';
@@ -34,6 +35,7 @@ export interface SellCycleApiResponse {
   agent?: { id: string; name: string; email: string };
 }
 
+/** @deprecated Use sellCyclesService from @/services/sell-cycles.service instead */
 export const sellCyclesApi = {
   create: async (data: CreateSellCyclePayload): Promise<SellCycleApiResponse> => {
     const response = await apiClient.post<SellCycleApiResponse>('/sell-cycles', data);

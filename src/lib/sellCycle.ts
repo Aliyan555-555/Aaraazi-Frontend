@@ -1,6 +1,12 @@
 /**
  * Sell Cycle Management Service - V3.0
  * Handles all operations related to selling properties
+ *
+ * @legacy This module uses localStorage and mock data (lib/data, lib/deals). For production
+ * backend integration use sellCyclesService from @/services/sell-cycles.service and the
+ * @/modules/sell-cycles hooks (useSellCycles, useSellCycle, useCreateSellCycle). New code
+ * should prefer the service layer; this file is kept for backward compatibility with
+ * dashboard, matching, and transaction-graph code that still rely on it.
  */
 
 import {

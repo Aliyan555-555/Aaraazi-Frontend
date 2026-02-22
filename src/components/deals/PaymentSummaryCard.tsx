@@ -1,7 +1,7 @@
 import React from 'react';
 import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
-import { getPaymentSummary } from '../../lib/dealPayments';
+import { getPaymentSummaryFromDeal } from '../../lib/dealPayments';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
@@ -31,7 +31,7 @@ export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
   onExport,
   isPrimaryAgent,
 }) => {
-  const summary = getPaymentSummary(deal.id);
+  const summary = getPaymentSummaryFromDeal(deal);
 
   const getPaymentStateInfo = () => {
     switch (summary.paymentPlanStatus) {

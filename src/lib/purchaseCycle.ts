@@ -1,6 +1,11 @@
 /**
  * Purchase Cycle Management Service - V3.0
  * Handles all three types of purchases: Agency, Investor, Client
+ *
+ * @legacy This module uses localStorage and mock data (lib/data, lib/sellCycle). For production
+ * backend integration use purchaseCyclesService from @/services/purchase-cycles.service and the
+ * @/modules/purchase-cycles hooks. New code should prefer the service layer; this file is kept
+ * for backward compatibility.
  */
 
 import {

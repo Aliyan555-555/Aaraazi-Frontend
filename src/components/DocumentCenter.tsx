@@ -10,7 +10,6 @@ import { getGeneratedDocuments, deleteGeneratedDocument, replacePlaceholders } f
 import { DOCUMENT_TEMPLATES, DocumentType, GeneratedDocument } from '../types/documents';
 import { useDocumentsApi } from '@/modules/documents';
 import { useAuthStore } from '@/store/useAuthStore';
-import { uploadDocument } from '@/lib/api/documents';
 import { toast } from 'sonner';
 
 const iconMap = {
@@ -53,7 +52,7 @@ export function DocumentCenter() {
     [agencyId, tenantId]
   );
 
-  const { documents: apiDocuments, downloadPdf, remove: removeApi, refetch } = useDocumentsApi(queryParams);
+  const { documents: apiDocuments, downloadPdf, remove: removeApi, refetch, upload } = useDocumentsApi(queryParams);
 
   const apiIds = useMemo(() => new Set(apiDocuments.map((d) => d.id)), [apiDocuments]);
 
@@ -141,7 +140,7 @@ export function DocumentCenter() {
 
     setUploadingFile(true);
     try {
-      await uploadDocument(file, {
+      await upload(file, {
         documentName: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
         documentType: 'CUSTOM',
         agencyId,
