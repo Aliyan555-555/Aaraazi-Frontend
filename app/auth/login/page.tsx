@@ -10,6 +10,7 @@ import { Building2, ArrowRight, AlertCircle, Loader2, Mail, Lock, Eye, EyeOff, A
 import { useAuthStore } from '@/store/useAuthStore';
 import { useLogin } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/client';
+import { loginFormSchema } from '@/lib/validation';
 import type { LoginDto } from '@/types/auth.types';
 import Image from 'next/image';
 
@@ -52,14 +53,25 @@ export default function LoginPage() {
             return;
         }
 
+        const formResult = loginFormSchema.safeParse({
+            email: email.trim(),
+            password,
+            selectedAgencyId: selectedAgencyId || undefined,
+        });
+
+        if (!formResult.success) {
+            setValidationError(formResult.error.errors[0]?.message ?? 'Invalid input');
+            return;
+        }
+
         const agencyIdToUse = selectedAgencyId || agencies[0]?.id;
 
         try {
             const credentials: LoginDto = {
                 tenantId,
                 agencyId: agencyIdToUse,
-                email: email.trim(),
-                password,
+                email: formResult.data.email,
+                password: formResult.data.password,
             };
 
             await login(credentials);

@@ -1,0 +1,211 @@
+/**
+ * Auth Store Session Persistence Tests
+ * Verifies that session data persists across page reloads and user sessions
+ */
+
+import { act, waitFor } from '@testing-library/react';
+import { useAuthStore } from '../useAuthStore';
+
+const STORAGE_KEY = 'aaraazi-auth-storage';
+
+const mockSetAuthToken = jest.fn();
+const mockClearAuthToken = jest.fn();
+
+jest.mock('@/services/auth.service', () => ({
+  authService: {
+    login: jest.fn(),
+    logout: jest.fn(),
+    getSession: jest.fn(),
+    validateSession: jest.fn(),
+  },
+}));
+
+jest.mock('@/lib/api/client', () => ({
+  setAuthToken: (...args: unknown[]) => mockSetAuthToken(...args),
+  clearAuthToken: (...args: unknown[]) => mockClearAuthToken(...args),
+}));
+
+describe('useAuthStore - Session Persistence', () => {
+  const mockUser = {
+    id: 'user-1',
+    email: 'test@example.com',
+    name: 'Test User',
+    role: 'admin',
+    status: 'active',
+    agencyId: 'agency-1',
+    tenantId: 'tenant-1',
+    permissions: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const mockBranding = {
+    companyName: 'Test Agency',
+    primaryColor: '#000000',
+    secondaryColor: '#ffffff',
+  };
+
+  const mockAgency = {
+    id: 'agency-1',
+    name: 'Test Agency',
+    code: 'TEST',
+    type: 'agency',
+    tenantId: 'tenant-1',
+  };
+
+  let localStorageMock: Record<string, string>;
+
+  beforeEach(() => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+    localStorageMock = {};
+    mockSetAuthToken.mockClear();
+    mockClearAuthToken.mockClear();
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => {
+      return localStorageMock[key] ?? null;
+    });
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string, value: string) => {
+      localStorageMock[key] = value;
+    });
+    jest.spyOn(Storage.prototype, 'removeItem').mockImplementation((key: string) => {
+      delete localStorageMock[key];
+    });
+    jest.spyOn(Storage.prototype, 'clear').mockImplementation(() => {
+      localStorageMock = {};
+    });
+
+    act(() => {
+      useAuthStore.persist.clearStorage();
+      useAuthStore.getState().reset();
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('persists auth state to localStorage on login', async () => {
+    const { authService } = require('@/services/auth.service');
+    const mockAccessToken = 'mock-access-token-123';
+    authService.login.mockResolvedValue({
+      accessToken: mockAccessToken,
+      expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      user: mockUser,
+    });
+    authService.getSession.mockRejectedValue(new Error('skip session fetch'));
+
+    await act(async () => {
+      useAuthStore.getState().setTenant('tenant-1', mockBranding, [mockAgency]);
+    });
+
+    await act(async () => {
+      await useAuthStore.getState().login({
+        tenantId: 'tenant-1',
+        email: 'test@example.com',
+        password: 'password123',
+      });
+    });
+
+    const stored = localStorageMock[STORAGE_KEY];
+    expect(stored).toBeDefined();
+
+    const parsed = JSON.parse(stored!);
+    expect(parsed.state).toBeDefined();
+    expect(parsed.state.user).toEqual(mockUser);
+    expect(parsed.state.accessToken).toBe(mockAccessToken);
+    expect(parsed.state.tenantId).toBe('tenant-1');
+    expect(parsed.state.isAuthenticated).toBe(true);
+  });
+
+  it('rehydrates persisted state from localStorage on rehydrate', async () => {
+    const persistedState = {
+      state: {
+        user: mockUser,
+        accessToken: 'persisted-token-456',
+        tenantId: 'tenant-1',
+        agencyId: 'agency-1',
+        branding: mockBranding,
+        agencies: [mockAgency],
+        currentModule: null,
+        isAuthenticated: true,
+      },
+      version: 0,
+    };
+
+    localStorageMock[STORAGE_KEY] = JSON.stringify(persistedState);
+
+    await act(async () => {
+      await useAuthStore.persist.rehydrate();
+    });
+
+    await waitFor(() => {
+      const state = useAuthStore.getState();
+      expect(state.user).toEqual(mockUser);
+      expect(state.accessToken).toBe('persisted-token-456');
+      expect(state.tenantId).toBe('tenant-1');
+      expect(state.agencyId).toBe('agency-1');
+      expect(state.isAuthenticated).toBe(true);
+      expect(state.isInitialized).toBe(true);
+    });
+  });
+
+  it('calls setAuthToken when rehydrating with accessToken', async () => {
+    const persistedState = {
+      state: {
+        user: mockUser,
+        accessToken: 'rehydration-token',
+        tenantId: 'tenant-1',
+        agencyId: 'agency-1',
+        branding: mockBranding,
+        agencies: [mockAgency],
+        currentModule: null,
+        isAuthenticated: true,
+      },
+      version: 0,
+    };
+
+    localStorageMock[STORAGE_KEY] = JSON.stringify(persistedState);
+
+    await act(async () => {
+      await useAuthStore.persist.rehydrate();
+    });
+
+    await waitFor(() => {
+      expect(mockSetAuthToken).toHaveBeenCalledWith('rehydration-token');
+    });
+  });
+
+  it('clears persisted state on logout', async () => {
+    const { authService } = require('@/services/auth.service');
+    authService.login.mockResolvedValue({
+      accessToken: 'login-token',
+      expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      user: mockUser,
+    });
+    authService.getSession.mockRejectedValue(new Error('skip'));
+    authService.logout.mockResolvedValue(undefined);
+
+    await act(async () => {
+      useAuthStore.getState().setTenant('tenant-1', mockBranding, [mockAgency]);
+    });
+    await act(async () => {
+      await useAuthStore.getState().login({
+        tenantId: 'tenant-1',
+        email: 'test@example.com',
+        password: 'password123',
+      });
+    });
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+
+    await act(async () => {
+      await useAuthStore.getState().logout();
+    });
+
+    const stored = localStorageMock[STORAGE_KEY];
+    expect(stored).toBeDefined();
+    const parsed = JSON.parse(stored!);
+    expect(parsed.state.isAuthenticated).toBe(false);
+    expect(parsed.state.user).toBeNull();
+    expect(parsed.state.accessToken).toBeNull();
+  });
+});

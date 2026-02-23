@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, Search, AlertCircle, ArrowRight, CircuitBoard } from 'lucide-react';
+import { Building2, AlertCircle, ArrowRight, CircuitBoard } from 'lucide-react';
 import { useTenantLookup, useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/client';
+import { tenantLookupSchema } from '@/lib/validation';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -17,6 +18,7 @@ import { useRouter } from 'next/navigation';
 export default function AgencyCodeScreen() {
     const router = useRouter();
     const [domain, setDomain] = useState('');
+    const [fieldError, setFieldError] = useState<string | null>(null);
     const { lookupTenant, isLoading, error, clearError } = useTenantLookup();
     const { isAuthenticated } = useAuth();
 
@@ -30,13 +32,16 @@ export default function AgencyCodeScreen() {
     const handleLookup = async (e: React.FormEvent) => {
         e.preventDefault();
         clearError();
+        setFieldError(null);
 
-        if (!domain.trim()) {
+        const result = tenantLookupSchema.safeParse({ domain: domain.trim() });
+        if (!result.success) {
+            setFieldError(result.error.errors[0]?.message ?? 'Invalid input');
             return;
         }
 
         try {
-            await lookupTenant({ domain: domain.trim() });
+            await lookupTenant({ domain: result.data.domain });
             // Hook automatically navigates to /auth/login on success
         } catch (err) {
             console.error('Tenant lookup failed:', err);
@@ -90,10 +95,10 @@ export default function AgencyCodeScreen() {
                                     </p>
                                 </div>
 
-                                {error && (
+                                {(error || fieldError) && (
                                     <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
                                         <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                                        <span>{getErrorMessage(error)}</span>
+                                        <span>{fieldError ?? getErrorMessage(error)}</span>
                                     </div>
                                 )}
 
