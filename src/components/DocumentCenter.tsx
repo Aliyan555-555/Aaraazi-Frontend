@@ -78,6 +78,11 @@ export function DocumentCenter() {
     setLocalDocuments(getGeneratedDocuments());
   }, []);
 
+  // Load documents on mount (client-only) to avoid SSR localStorage access
+  useEffect(() => {
+    setDocuments(getGeneratedDocuments());
+  }, []);
+
   const handleTemplateClick = (templateId: DocumentType) => {
     setSelectedTemplate(templateId);
     setShowGenerator(true);

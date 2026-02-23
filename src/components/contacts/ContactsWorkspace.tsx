@@ -328,12 +328,12 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
       accessor: (c) => {
         // Enums mapping
         const typeColors: Record<ContactType, string> = {
-          [ContactType.CLIENT]: 'bg-green-100 text-green-800',
-          [ContactType.PROSPECT]: 'bg-blue-100 text-blue-800',
-          [ContactType.INVESTOR]: 'bg-purple-100 text-purple-800',
-          [ContactType.VENDOR]: 'bg-gray-100 text-gray-800',
-          [ContactType.PARTNER]: 'bg-gray-100 text-gray-800',
-          [ContactType.AGENT]: 'bg-indigo-100 text-indigo-800',
+          client: 'bg-green-100 text-green-800',
+          prospect: 'bg-blue-100 text-blue-800',
+          investor: 'bg-purple-100 text-purple-800',
+          vendor: 'bg-gray-100 text-gray-800',
+          partner: 'bg-gray-100 text-gray-800',
+          agent: 'bg-indigo-100 text-indigo-800',
         };
         return (
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[c.type]}`}>
@@ -353,21 +353,21 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
         }
 
         const categoryColors: Record<ContactCategory, string> = {
-          [ContactCategory.BUYER]: 'bg-green-100 text-green-800',
-          [ContactCategory.SELLER]: 'bg-blue-100 text-blue-800',
-          [ContactCategory.TENANT]: 'bg-purple-100 text-purple-800',
-          [ContactCategory.LANDLORD]: 'bg-gray-100 text-gray-800',
-          [ContactCategory.EXTERNAL_BROKER]: 'bg-orange-100 text-orange-800',
-          [ContactCategory.BOTH]: 'bg-yellow-100 text-yellow-800',
+          buyer: 'bg-green-100 text-green-800',
+          seller: 'bg-blue-100 text-blue-800',
+          tenant: 'bg-purple-100 text-purple-800',
+          landlord: 'bg-gray-100 text-gray-800',
+          'external-broker': 'bg-orange-100 text-orange-800',
+          both: 'bg-yellow-100 text-yellow-800',
         };
 
         const categoryLabels: Record<ContactCategory, string> = {
-          [ContactCategory.BUYER]: 'Buyer',
-          [ContactCategory.SELLER]: 'Seller',
-          [ContactCategory.TENANT]: 'Tenant',
-          [ContactCategory.LANDLORD]: 'Landlord',
-          [ContactCategory.EXTERNAL_BROKER]: 'External Broker',
-          [ContactCategory.BOTH]: 'Both',
+          buyer: 'Buyer',
+          seller: 'Seller',
+          tenant: 'Tenant',
+          landlord: 'Landlord',
+          'external-broker': 'External Broker',
+          both: 'Both',
         };
 
         return (
@@ -384,10 +384,10 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
       label: 'Status',
       accessor: (c) => {
         const statusLabels: Record<ContactStatus, string> = {
-          [ContactStatus.ACTIVE]: 'Active',
-          [ContactStatus.INACTIVE]: 'Inactive',
-          [ContactStatus.ARCHIVED]: 'Archived',
-          [ContactStatus.BLOCKED]: 'Blocked',
+          active: 'Active',
+          inactive: 'Inactive',
+          archived: 'Archived',
+          blocked: 'Blocked',
         };
 
         const statusLabel = statusLabels[c.status] || c.status;
@@ -475,15 +475,15 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
                 Edit Contact
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.ACTIVE)} disabled={c.status === ContactStatus.ACTIVE}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'active')} disabled={c.status === 'active'}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Mark Active
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.INACTIVE)} disabled={c.status === ContactStatus.INACTIVE}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'inactive')} disabled={c.status === 'inactive'}>
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Mark Inactive
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.ARCHIVED)} disabled={c.status === ContactStatus.ARCHIVED}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'archived')} disabled={c.status === 'archived'}>
                 <Archive className="h-4 w-4 mr-2" />
                 Archive
               </DropdownMenuItem>
