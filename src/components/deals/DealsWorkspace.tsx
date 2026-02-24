@@ -24,7 +24,7 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
   onAddDeal,
   onEditDeal,
 }) => {
-  const { deals: allDeals, isLoading, error, refetch } = useDeals();
+  const { deals: allDeals, isLoading } = useDeals();
 
   // Helper function to export deals to CSV
   const exportDealsToCSV = (deals: Deal[]) => {
@@ -36,7 +36,7 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
   const stats = useMemo(() => {
     const active = allDeals.filter(d => d.lifecycle.status === 'active').length;
     const completed = allDeals.filter(d => d.lifecycle.status === 'completed').length;
-    const onHold = allDeals.filter(d => d.lifecycle.status === 'on-hold').length;
+    // const onHold = allDeals.filter(d => d.lifecycle.status === 'on-hold').length;
 
     const totalValue = allDeals
       .filter(d => d.lifecycle.status === 'active')
@@ -84,15 +84,11 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
       id: 'final-handover',
       label: 'Final Handover',
     },
-    {
-      id: 'completed',
-      label: 'Completed',
-    },
   ];
 
-  // Function to get kanban column for a deal (completed status overrides stage)
+  // Per prototype: completed deals stay in Final Handover column; no separate "Completed" column
   const getKanbanColumn = useCallback((deal: Deal) => {
-    if (deal.lifecycle.status === 'completed') return 'completed';
+    if (deal.lifecycle.status === 'completed') return 'final-handover';
     return deal.lifecycle.stage;
   }, []);
 
@@ -169,7 +165,7 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
       id: 'stage',
       label: 'Stage',
       accessor: (d) => {
-        const stageLabels = {
+        const stageLabels: Record<string, string> = {
           'offer-accepted': 'Offer Accepted',
           'agreement-signing': 'Agreement',
           'documentation': 'Documentation',
@@ -177,11 +173,11 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
           'handover-prep': 'Handover Prep',
           'transfer-registration': 'Transfer',
           'final-handover': 'Final',
-          'completed': 'Completed',
+          'completed': 'Final Handover',
         };
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            {(stageLabels as any)[d.lifecycle.stage] || d.lifecycle.stage}
+            {stageLabels[d.lifecycle.stage] || d.lifecycle.stage}
           </span>
         );
       },

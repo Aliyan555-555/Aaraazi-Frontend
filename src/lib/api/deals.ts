@@ -17,6 +17,7 @@ export interface DealListApiResponse {
   commissionTotal: string | null;
   createdAt: string;
   updatedAt: string;
+  closingDate?: string | null;
   primaryAgent?: { id: string; name: string; email: string };
   secondaryAgent?: { id: string; name: string; email: string } | null;
   buyerContact?: { id: string; name: string; phone: string | null; email: string | null } | null;
@@ -32,6 +33,7 @@ export interface DealListApiResponse {
       };
     };
   } | null;
+  payments?: Array<{ amount: string; paidDate: string | null }>;
 }
 
 /** Backend deal detail (from findOne with includes) */

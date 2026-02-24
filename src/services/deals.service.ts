@@ -113,10 +113,10 @@ export function mapDealApiToUI(api: DealDetailApiResponse): Deal {
     };
   });
 
-  // Completed deal must always show "completed" stage
+  // Completed deals show final-handover as last stage (per prototype); status indicates completion
   const isCompleted = (api.status && String(api.status).toUpperCase() === 'COMPLETED')
     || (api.stage && String(api.stage).toUpperCase() === 'COMPLETED');
-  const currentStage = isCompleted ? 'completed' : (STAGE_TO_UI[api.stage] ?? 'offer-accepted');
+  const currentStage = isCompleted ? 'final-handover' : (STAGE_TO_UI[api.stage] ?? 'offer-accepted');
   const offerAccepted = stageMap.OFFER_ACCEPTED ?? defaultStageProgress();
   const agreementSigning = stageMap.AGREEMENT_SIGNING ?? defaultStageProgress();
   const documentation = stageMap.DOCUMENTATION ?? defaultStageProgress();
@@ -336,7 +336,16 @@ export function mapDealApiToUI(api: DealDetailApiResponse): Deal {
 /** Map list item to minimal Deal for workspace (list/cards) */
 export function mapDealListApiToUI(api: DealListApiResponse): Deal {
   const agreedPrice = toNum(api.agreedPrice);
-  const stage = STAGE_TO_UI[api.stage] ?? 'offer-accepted';
+  const totalPaid = (api.payments ?? [])
+    .filter((p) => p.paidDate)
+    .reduce((sum, p) => sum + toNum(p.amount), 0);
+  const balanceRemaining = Math.max(0, agreedPrice - totalPaid);
+  const paymentState =
+    totalPaid >= agreedPrice ? 'fully-paid' : totalPaid > 0 ? 'partially-paid' : 'no-plan';
+  const isCompleted =
+    (api.status && String(api.status).toUpperCase() === 'COMPLETED') ||
+    (api.stage && String(api.stage).toUpperCase() === 'COMPLETED');
+  const stage = isCompleted ? 'final-handover' : (STAGE_TO_UI[api.stage] ?? 'offer-accepted');
   const status = STATUS_TO_UI[api.status] ?? 'active';
   const def = defaultStageProgress();
   return {
@@ -354,10 +363,16 @@ export function mapDealListApiToUI(api: DealListApiResponse): Deal {
     property: { id: api.propertyListing?.id ?? '', title: api.propertyListing?.title, address: formatAddress(api.propertyListing ?? undefined) },
     financial: {
       agreedPrice,
-      paymentState: 'no-plan',
-      totalPaid: 0,
-      balanceRemaining: agreedPrice,
-      payments: [],
+      paymentState,
+      totalPaid,
+      balanceRemaining,
+      payments: (api.payments ?? []).map((p) => ({
+        id: '',
+        amount: toNum(p.amount),
+        status: (p.paidDate ? 'paid' : 'pending') as 'paid' | 'pending',
+        recordedBy: '',
+        paidDate: p.paidDate ?? undefined,
+      })),
       commission: { total: toNum(api.commissionTotal), rate: 0, split: { primaryAgent: { percentage: 100, amount: toNum(api.commissionTotal), status: 'pending' }, agency: { percentage: 0, amount: 0 } } },
       transferCosts: { stampDuty: 0, registrationFee: 0, legalFees: 0, societyFee: 0, other: 0, total: 0 },
     },
@@ -366,7 +381,7 @@ export function mapDealListApiToUI(api: DealListApiResponse): Deal {
       status,
       timeline: {
         offerAcceptedDate: api.createdAt,
-        expectedClosingDate: api.updatedAt,
+        expectedClosingDate: api.closingDate ?? api.updatedAt,
         stages: { offerAccepted: def, agreementSigning: def, documentation: def, paymentProcessing: def, handoverPrep: def, transferRegistration: def, finalHandover: def },
       },
     },

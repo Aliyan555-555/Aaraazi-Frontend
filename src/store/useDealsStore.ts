@@ -187,6 +187,7 @@ export const useDealsStore = create<DealsStore>((set, get) => ({
 
   progressStage: async (id, payload) => {
     const apiStage = payload.stage; // e.g. AGREEMENT_SIGNING
+    // Per prototype: COMPLETED is not a pipeline stage; map to final-handover if ever returned
     const API_STAGE_TO_UI: Record<string, Deal['lifecycle']['stage']> = {
       OFFER_ACCEPTED: 'offer-accepted',
       AGREEMENT_SIGNING: 'agreement-signing',
@@ -197,7 +198,7 @@ export const useDealsStore = create<DealsStore>((set, get) => ({
       TRANSFER_REGISTRATION: 'transfer-registration',
       TRANSFER: 'transfer-registration',
       FINAL_HANDOVER: 'final-handover',
-      COMPLETED: 'completed',
+      COMPLETED: 'final-handover',
     };
     const newStage = API_STAGE_TO_UI[String(apiStage).toUpperCase()] ?? 'offer-accepted';
 

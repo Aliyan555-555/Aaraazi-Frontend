@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { User } from '../types';
 import { Deal } from '../types/deals';
-import { PropertyAddressDisplay, useFormattedAddress } from './PropertyAddressDisplay';
+// import { PropertyAddressDisplay, useFormattedAddress } from './PropertyAddressDisplay';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+// import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 
 // DetailPageTemplate System
@@ -13,14 +13,14 @@ import {
   QuickActionsPanel,
   MetricCardsGroup,
   SummaryStatsPanel,
-  PaymentSummaryPanel,
+  // PaymentSummaryPanel,
   ActivityTimeline,
-  Activity,
+  // Activity,
   ContactCard,
-  NotesPanel as LayoutNotesPanel,
-  Note,
-  DocumentList as LayoutDocumentList,
-  Document,
+  // NotesPanel as LayoutNotesPanel,
+  // Note,
+  // DocumentList as LayoutDocumentList,
+  // Document,
 } from './layout';
 
 // Foundation Components
@@ -56,7 +56,6 @@ import { generatePaymentSchedulePDF } from '../lib/pdfExport';
 import {
   DollarSign,
   Home,
-  Users,
   CheckSquare,
   FileText,
   Clock,
@@ -68,8 +67,6 @@ import {
   User as UserIcon,
   TrendingUp,
   Phone,
-  Settings,
-  Plus,
   CheckCircle,
   Loader2,
 } from 'lucide-react';
@@ -223,6 +220,8 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
   };
 
   const getStageDisplay = (stage: string) => {
+    // Per prototype: completed deals display as Final Handover (stage is not a separate "Completed" step)
+    if (stage === 'completed') return 'Final Handover';
     return stage
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
