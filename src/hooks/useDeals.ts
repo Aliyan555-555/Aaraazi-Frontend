@@ -41,7 +41,7 @@ export function useDeal(id: string | undefined, enabled = true) {
     deal: entry.data,
     isLoading: entry.isLoading,
     error: entry.error,
-    refetch: () => (id ? useDealsStore.getState().fetchDetail(id) : Promise.resolve()),
+    refetch: () => (id ? useDealsStore.getState().fetchDetail(id, { silent: !!entry.data }) : Promise.resolve()),
   };
 }
 
@@ -52,6 +52,8 @@ export function useDeal(id: string | undefined, enabled = true) {
 export function useDealMutations() {
   const mutateLoading = useDealsStore((s) => s.mutateLoading);
   const mutateError = useDealsStore((s) => s.mutateError);
+  const progressStageLoading = useDealsStore((s) => s.progressStageLoading);
+  const recordPaymentLoading = useDealsStore((s) => s.recordPaymentLoading);
   return {
     updateDeal: useDealsStore.getState().updateDeal,
     progressStage: useDealsStore.getState().progressStage,
@@ -68,5 +70,7 @@ export function useDealMutations() {
     addInstallment: useDealsStore.getState().addInstallment,
     isLoading: mutateLoading,
     error: mutateError,
+    progressStageLoading,
+    recordPaymentLoading,
   };
 }

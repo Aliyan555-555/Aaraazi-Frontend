@@ -71,6 +71,7 @@ import {
   Settings,
   Plus,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
 
 // Business Logic
@@ -100,6 +101,7 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
 }) => {
   const {
     progressStage: progressStageMutation,
+    progressStageLoading,
     completeDeal: completeDealMutation,
     cancelDeal: cancelDealMutation,
     createNote: createNoteMutation,
@@ -262,6 +264,8 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     }
   };
 
+  const isProgressingStage = Boolean(progressStageLoading);
+
   // Complete deal handler — uses backend API
   const handleCompleteDeal = async () => {
     const isFinalHandover = deal.lifecycle.stage === 'final-handover';
@@ -408,7 +412,11 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     secondaryActions: deal.lifecycle.status === 'active'
       ? [
         ...(deal.lifecycle.stage !== 'final-handover'
-          ? [{ label: 'Progress Stage', onClick: handleProgressStage }]
+          ? [{
+            label: isProgressingStage ? 'Progressing...' : 'Progress Stage',
+            onClick: () => { if (!isProgressingStage) handleProgressStage(); },
+            icon: isProgressingStage ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined,
+          }]
           : []),
         { label: 'Cancel Deal', onClick: handleCancelDeal },
       ]
@@ -508,9 +516,17 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
             showMessage={false}
           >
             {deal.lifecycle.status === 'active' && deal.lifecycle.stage !== 'final-handover' && (
-              <Button onClick={handleProgressStage} className="w-full">
-                Progress to Next Stage
-                <ChevronRight className="h-4 w-4 ml-2" />
+              <Button
+                onClick={handleProgressStage}
+                className="w-full"
+                disabled={isProgressingStage}
+                aria-busy={isProgressingStage}
+              >
+                {isProgressingStage ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden />
+                ) : null}
+                {isProgressingStage ? 'Progressing...' : 'Progress to Next Stage'}
+                {!isProgressingStage && <ChevronRight className="h-4 w-4 ml-2" />}
               </Button>
             )}
           </PermissionGate>
@@ -762,9 +778,9 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           ...(deal.lifecycle.status === 'active' && deal.lifecycle.stage !== 'final-handover'
             ? [
               {
-                label: 'Progress Stage',
-                icon: <ChevronRight className="h-4 w-4" />,
-                onClick: handleProgressStage,
+                label: isProgressingStage ? 'Progressing...' : 'Progress Stage',
+                icon: isProgressingStage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />,
+                onClick: () => { if (!isProgressingStage) handleProgressStage(); },
               },
             ]
             : []),
@@ -1097,8 +1113,8 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
           currentUserId={user.id}
           currentUserName={user.name}
           selectedInstallment={selectedInstallment}
-          onSuccess={async () => {
-            await onUpdate?.();
+          onSuccess={() => {
+            onUpdate?.();
             setShowRecordPayment(false);
             setSelectedInstallment(null);
           }}

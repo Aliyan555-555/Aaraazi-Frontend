@@ -9,7 +9,7 @@ import { useDealMutations } from '@/hooks/useDeals';
 import { Deal, PaymentInstallment } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
-import { AlertCircle, DollarSign, Receipt } from 'lucide-react';
+import { AlertCircle, DollarSign, Loader2, Receipt } from 'lucide-react';
 
 interface RecordPaymentModalProps {
   open: boolean;
@@ -37,9 +37,9 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
   const [referenceNumber, setReferenceNumber] = useState<string>('');
   const [receiptNumber, setReceiptNumber] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [overpaymentWarning, setOverpaymentWarning] = useState<string | null>(null);
-  const { recordPayment } = useDealMutations();
+  const { recordPayment, recordPaymentLoading } = useDealMutations();
+  const isSubmitting = recordPaymentLoading;
 
   const isAdHoc = !selectedInstallment;
   const expectedAmount = selectedInstallment ? selectedInstallment.amount - (selectedInstallment.paidAmount ?? 0) : 0;
@@ -83,8 +83,6 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
       const paymentType = isAdHoc ? 'AD_HOC' : 'INSTALLMENT';
       const methodMap: Record<string, string> = {
@@ -118,14 +116,12 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
       onClose();
     } catch (error: any) {
       toast.error(error.message || 'Failed to record payment');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isAdHoc ? 'Record Ad-Hoc Payment' : 'Record Installment Payment'}
@@ -280,8 +276,15 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Recording...' : 'Record Payment'}
+          <Button onClick={handleSubmit} disabled={isSubmitting} aria-busy={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden />
+                Recording...
+              </>
+            ) : (
+              'Record Payment'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
