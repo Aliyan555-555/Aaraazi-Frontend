@@ -17,7 +17,7 @@ import { formatDistanceToNow, isToday, isTomorrow, isPast, format } from 'date-f
 import { toast } from 'sonner';
 
 // ===== STUBS for removed prototype functions =====
-const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllTasksV4 = (..._args: any[]): TaskV4[] => []; // stub - return empty so UI derives correctly
 const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
 // ===== END STUBS =====
 
@@ -205,8 +205,8 @@ export const UpcomingTasksWidget: React.FC<UpcomingTasksWidgetProps> = ({
   // Load tasks
   const tasks = useMemo(() => getAllTasksV4(user.id, user.role), [user.id, user.role, refreshKey]);
 
-  // Get upcoming tasks
-  const upcomingTasks = useMemo(() => getUpcomingTasks([]), []);
+  // Get upcoming tasks (derived from tasks so UI and refreshKey stay in sync)
+  const upcomingTasks = useMemo(() => getUpcomingTasks(tasks ?? []), [tasks]);
 
   // Handlers
   const handleViewAll = () => {

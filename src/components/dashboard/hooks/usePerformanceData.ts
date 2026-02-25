@@ -22,10 +22,11 @@ import { calculatePerformanceMetrics } from '../utils/calculatePerformanceMetric
 import { getAllAgents } from '../../../lib/auth';
 
 // ===== STUBS for removed prototype functions =====
-const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getLeadsV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getAllTasks = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getAllInteractions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// Return safe empty collections so downstream code (e.g. .length, iteration) does not break.
+const getProperties = (..._args: any[]): Property[] => [];
+const getLeadsV4 = (..._args: any[]): LeadV4[] => [];
+const getAllTasks = (..._args: any[]): CRMTask[] => [];
+const getAllInteractions = (..._args: any[]): CRMInteraction[] => [];
 // ===== END STUBS =====
 
 

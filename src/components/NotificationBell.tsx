@@ -8,12 +8,19 @@ import type { User as UIUser } from '../types';
 import { Notification } from '../types/notifications';
 import { NotificationItem } from './NotificationItem';
 
-const getNotifications = (..._args: any[]): any => { return []; };
-const getUnreadCount = (..._args: any[]): any => { return 0; };
-const markAsRead = (..._args: any[]): any => { };
-const markAllAsRead = (..._args: any[]): any => { };
-const archiveNotification = (..._args: any[]): any => { };
-const autoCleanupOldNotifications = (..._args: any[]): any => { };
+const notifyMissingIntegration = (): never => {
+  throw new Error(
+    'NotificationBell is being used but notification actions are not implemented. ' +
+      'Please wire up getNotifications/getUnreadCount/markAsRead/markAllAsRead/' +
+      'archiveNotification/autoCleanupOldNotifications to a real notification service.'
+  );
+};
+const getNotifications = (..._args: any[]): any => notifyMissingIntegration();
+const getUnreadCount = (..._args: any[]): any => notifyMissingIntegration();
+const markAsRead = (..._args: any[]): any => notifyMissingIntegration();
+const markAllAsRead = (..._args: any[]): any => notifyMissingIntegration();
+const archiveNotification = (..._args: any[]): any => notifyMissingIntegration();
+const autoCleanupOldNotifications = (..._args: any[]): any => notifyMissingIntegration();
 
 
 interface NotificationBellProps {

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 // ===== STUBS for removed prototype functions =====
-const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllTasksV4 = (..._args: any[]): TaskV4[] => []; // stub - return empty so stats derive correctly
 // ===== END STUBS =====
 
 
@@ -68,8 +68,8 @@ export const TasksSummaryWidget: React.FC<TasksSummaryWidgetProps> = ({
   // Load tasks
   const tasks = useMemo(() => getAllTasksV4(user.id, user.role), [user.id, user.role]);
   
-  // Calculate stats
-  const stats = useMemo(() => getTaskStats([]), []);
+  // Calculate stats (from tasks so counts/completion metrics reflect current data)
+  const stats = useMemo(() => getTaskStats(tasks ?? []), [tasks]);
 
   // Handle view all
   const handleViewAll = () => {

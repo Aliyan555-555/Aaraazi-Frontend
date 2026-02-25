@@ -74,13 +74,9 @@ export function DocumentCenter() {
     return out;
   }, [apiDocuments, localDocuments]);
 
+  // Load local documents on mount (client-only) to avoid SSR localStorage access
   useEffect(() => {
     setLocalDocuments(getGeneratedDocuments());
-  }, []);
-
-  // Load documents on mount (client-only) to avoid SSR localStorage access
-  useEffect(() => {
-    setDocuments(getGeneratedDocuments());
   }, []);
 
   const handleTemplateClick = (templateId: DocumentType) => {
@@ -420,7 +416,7 @@ export function DocumentCenter() {
                             {doc.documentName}
                           </td>
                           <td className="px-6 py-4 text-gray-600">
-                            {doc.documentType.replace(/_/g, ' ')}
+                            {doc.documentType.replace(/-|_/g, ' ')}
                           </td>
                           <td className="px-6 py-4">
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[doc.status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'}`}>
@@ -484,7 +480,7 @@ export function DocumentCenter() {
       </div>
 
       {/* Single Dialog in tree: open state and content change, no mount/unmount of Dialog */}
-      <Dialog open={!!selectedTemplate} onOpenChange={(open) => !open && handleCloseGenerator()}>
+      <Dialog open={showGenerator} onOpenChange={(open) => !open && handleCloseGenerator()}>
         <DialogContent className="!max-w-[85vw] w-[85vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
           {selectedTemplate && (
             <DocumentGeneratorModal
@@ -505,7 +501,7 @@ export function DocumentCenter() {
             <DialogHeader>
               <DialogTitle>{previewDocument.documentName}</DialogTitle>
               <DialogDescription>
-                Document preview - {previewDocument.documentType.replace(/_/g, ' ')}
+                Document preview - {previewDocument.documentType.replace(/-|_/g, ' ')}
               </DialogDescription>
             </DialogHeader>
             <div className="flex-1 overflow-hidden mt-4">
@@ -523,7 +519,7 @@ export function DocumentCenter() {
                     <div className="space-y-6">
                       <div className="text-center border-b-2 border-gray-900 pb-4">
                         <h1 className="text-2xl uppercase tracking-wide text-gray-900 font-bold">
-                          {(DOCUMENT_TEMPLATES.find(t => t.id === previewDocument.documentType))?.name?.toUpperCase() ?? previewDocument.documentType.replace(/_/g, ' ').toUpperCase()}
+                          {(DOCUMENT_TEMPLATES.find(t => t.id === previewDocument.documentType))?.name?.toUpperCase() ?? previewDocument.documentType.replace(/-|_/g, ' ').toUpperCase()}
                         </h1>
                       </div>
                       {previewDocument.clauses && previewDocument.clauses.length > 0 ? (
