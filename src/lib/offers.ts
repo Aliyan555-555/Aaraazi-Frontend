@@ -2,7 +2,7 @@ import { Offer, OfferStatusChange } from '../types';
 import { getProperties } from './data';
 import { getSellCyclesByProperty, createSellCycle, updateSellCycle } from './sellCycle';
 import { createDealFromOffer } from './deals';
-import { getUserById } from './auth';
+import { getUserById } from './users';
 import { createNotification } from './notifications';
 
 const OFFERS_KEY = 'crm_offers';

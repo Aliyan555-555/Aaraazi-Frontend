@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Building2, AlertCircle, ArrowRight, CircuitBoard } from 'lucide-react';
 import { useTenantLookup, useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/client';
-import { tenantLookupSchema } from '@/lib/validation';
+import { tenantLookupSchema } from '@/lib/validation/auth.schemas';
 import { useRouter } from 'next/navigation';
 
 /**
@@ -36,7 +36,7 @@ export default function AgencyCodeScreen() {
 
         const result = tenantLookupSchema.safeParse({ domain: domain.trim() });
         if (!result.success) {
-            setFieldError(result.error.errors[0]?.message ?? 'Invalid input');
+            setFieldError(result.error.issues[0]?.message ?? 'Invalid input');
             return;
         }
 

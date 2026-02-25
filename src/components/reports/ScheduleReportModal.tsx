@@ -49,7 +49,7 @@ import {
 } from '../../types/reports';
 import { toast } from 'sonner';
 import { createScheduledReport, updateScheduledReport } from '../../lib/reports';
-import { getCurrentUser } from '../../lib/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface ScheduleReportModalProps {
   open: boolean;
@@ -64,7 +64,7 @@ export default function ScheduleReportModal({
   template,
   existingSchedule
 }: ScheduleReportModalProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   // Form state
   const [frequency, setFrequency] = useState<ScheduleFrequency>(

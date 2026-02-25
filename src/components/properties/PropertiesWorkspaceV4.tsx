@@ -35,7 +35,7 @@ import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
 import { PropertyWorkspaceCard } from './PropertyWorkspaceCard';
 import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
 import { getProperties, deleteProperty, updateProperty } from '../../lib/data';
-import { getAllAgents } from '../../lib/auth';
+import { getAllAgents } from '@/lib/users';
 import { formatPropertyAddress } from '../../lib/utils';
 import { exportPropertiesToCSV } from '../../lib/exportUtils';
 import {
@@ -91,7 +91,7 @@ export const PropertiesWorkspaceV4: React.FC<PropertiesWorkspaceV4Props> = ({
 
   // Load agents for bulk assignment
   const availableAgents = useMemo(() => {
-    return getAllAgents().filter(u => u.role === 'agent' || u.role === 'admin');
+    return getAllAgents().filter(u => u && (u.role === 'AGENCY_AGENT' || u.role === 'AGENCY_MANAGER' || u.role === 'SAAS_ADMIN' || u.role === 'AGENCY_OWNER'));
   }, []);
 
   // Calculate stats

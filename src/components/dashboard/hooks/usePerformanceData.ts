@@ -19,7 +19,7 @@ import { calculatePerformanceMetrics } from '../utils/calculatePerformanceMetric
 import { getProperties } from '../../../lib/data';
 import { getLeadsV4 } from '../../../lib/leadsV4';
 import { getAllTasks, getAllInteractions } from '../../../lib/data';
-import { getAllAgents } from '../../../lib/auth';
+import { getAllAgents } from '@/lib/users';
 
 export interface PerformanceData {
   metrics: PerformanceMetric[];

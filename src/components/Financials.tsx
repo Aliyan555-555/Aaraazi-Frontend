@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { User, Property, Commission, Expense } from '../types';
 import { getProperties, getCommissions, getExpenses, addExpense } from '../lib/data';
-import { getAllAgents } from '../lib/auth';
+import { getAllAgents } from '@/lib/users';
 import {
   DollarSign,
   TrendingUp,

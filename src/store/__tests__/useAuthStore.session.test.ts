@@ -4,7 +4,7 @@
  */
 
 import { act, waitFor } from '@testing-library/react';
-import { useAuthStore } from '../useAuthStore';
+import { useAuthStore, selectBranding, selectTenant } from '../useAuthStore';
 
 const STORAGE_KEY = 'aaraazi-auth-storage';
 
@@ -207,5 +207,74 @@ describe('useAuthStore - Session Persistence', () => {
     expect(parsed.state.isAuthenticated).toBe(false);
     expect(parsed.state.user).toBeNull();
     expect(parsed.state.accessToken).toBeNull();
+  });
+
+  describe('agency white labeling – branding persistence', () => {
+    const fullWhiteLabelBranding = {
+      companyName: 'White Label Agency',
+      logoUrl: 'https://agency.example.com/logo.png',
+      iconUrl: 'https://agency.example.com/favicon.ico',
+      loginBannerUrl: 'https://agency.example.com/banner.png',
+      primaryColor: '#1a1a1a',
+      secondaryColor: '#f5f5f5',
+      accentColor: '#00aaff',
+      backgroundColor: '#ffffff',
+      portalTitle: 'Agency Portal',
+    };
+
+    it('setTenant with full branding persists branding to localStorage', async () => {
+      await act(async () => {
+        useAuthStore.getState().setTenant('tenant-1', fullWhiteLabelBranding, [mockAgency]);
+      });
+
+      const stored = localStorageMock[STORAGE_KEY];
+      expect(stored).toBeDefined();
+      const parsed = JSON.parse(stored!);
+      expect(parsed.state.branding).toEqual(fullWhiteLabelBranding);
+      expect(parsed.state.tenantId).toBe('tenant-1');
+      expect(parsed.state.agencies).toEqual([mockAgency]);
+    });
+
+    it('rehydration restores branding and selectBranding returns it', async () => {
+      const persistedState = {
+        state: {
+          user: null,
+          accessToken: null,
+          tenantId: 'tenant-1',
+          agencyId: null,
+          branding: fullWhiteLabelBranding,
+          agencies: [mockAgency],
+          currentModule: null,
+          isAuthenticated: false,
+        },
+        version: 0,
+      };
+
+      localStorageMock[STORAGE_KEY] = JSON.stringify(persistedState);
+
+      await act(async () => {
+        await useAuthStore.persist.rehydrate();
+      });
+
+      await waitFor(() => {
+        const branding = selectBranding(useAuthStore.getState());
+        expect(branding).toEqual(fullWhiteLabelBranding);
+        const tenantSelection = selectTenant(useAuthStore.getState());
+        expect(tenantSelection.branding).toEqual(fullWhiteLabelBranding);
+        expect(tenantSelection.tenantId).toBe('tenant-1');
+        expect(tenantSelection.agencies).toEqual([mockAgency]);
+      });
+    });
+
+    it('setTenant with branding clears error state', async () => {
+      useAuthStore.getState().setError({ message: 'Previous error', statusCode: 500 });
+
+      await act(async () => {
+        useAuthStore.getState().setTenant('tenant-1', fullWhiteLabelBranding, [mockAgency]);
+      });
+
+      expect(useAuthStore.getState().error).toBeNull();
+      expect(useAuthStore.getState().branding).toEqual(fullWhiteLabelBranding);
+    });
   });
 });

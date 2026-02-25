@@ -2,7 +2,7 @@ import { Property, Lead, Contact, User } from '../types';
 import { getProperties } from './data';
 import { getLeads } from './data';
 import { getContacts } from './data';
-import { getAllAgents } from './auth';
+import { getAllAgents } from './users';
 
 /**
  * Agent Performance Analytics Library

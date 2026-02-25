@@ -1,16 +1,3 @@
-/**
- * useInsightsData Hook
- *
- * Loads data and detects insights for the Intelligence Panel.
- *
- * FEATURES:
- * - Loads all required data
- * - Detects 8+ insight patterns
- * - Role-based filtering
- * - Returns loading state
- * - Handles dismissal
- */
-
 import { useState, useEffect, useCallback } from "react";
 import { User, Property } from "../../../types";
 import { LeadV4 } from "../../../types/leads";
@@ -20,7 +7,7 @@ import { detectInsights } from "../utils/detectInsights";
 import { getProperties } from "../../../lib/data";
 import { getLeadsV4 } from "../../../lib/leadsV4";
 import { getAllTasksV4 } from "../../../lib/tasks";
-import { getAllAgents } from "../../../lib/auth";
+import { getAllAgents } from '@/lib/users';
 
 export interface InsightsData {
   insights: Insight[];

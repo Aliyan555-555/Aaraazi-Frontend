@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { Building2, ArrowRight, AlertCircle, Loader2, Mail, Lock, Eye, EyeOff, A
 import { useAuthStore } from '@/store/useAuthStore';
 import { useLogin } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/client';
-import { loginFormSchema } from '@/lib/validation';
+import { loginFormSchema } from '@/lib/validation/auth.schemas';
 import type { LoginDto } from '@/types/auth.types';
 import Image from 'next/image';
 
@@ -60,7 +61,7 @@ export default function LoginPage() {
         });
 
         if (!formResult.success) {
-            setValidationError(formResult.error.errors[0]?.message ?? 'Invalid input');
+            setValidationError(formResult.error.issues[0]?.message ?? 'Invalid input');
             return;
         }
 
@@ -199,13 +200,13 @@ export default function LoginPage() {
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <Label htmlFor="password">Password</Label>
-                                        <a
-                                            href="#"
+                                        <Link
+                                            href="/auth/forgot-password"
                                             className="text-sm text-muted-foreground hover:underline"
                                             style={{ color: branding.primaryColor }}
                                         >
                                             Forgot?
-                                        </a>
+                                        </Link>
                                     </div>
                                     <div className="relative">
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />

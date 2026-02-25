@@ -58,7 +58,7 @@ import {
 } from '../../types/reports';
 import { getReportTemplates, getReportHistory } from '../../lib/reports';
 import { formatDate } from '../../lib/validation';
-import { getCurrentUser } from '../../lib/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 import ScheduleReportModal from './ScheduleReportModal';
 import ShareReportModal from './ShareReportModal';
 
@@ -67,7 +67,7 @@ interface ReportsWorkspaceProps {
 }
 
 export default function ReportsWorkspace({ onNavigate }: ReportsWorkspaceProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [searchQuery, setSearchQuery] = useState('');

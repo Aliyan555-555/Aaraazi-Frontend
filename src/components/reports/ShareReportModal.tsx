@@ -45,7 +45,7 @@ import { Avatar } from '../ui/avatar';
 import { ReportTemplate } from '../../types/reports';
 import { toast } from 'sonner';
 import { saveReportTemplate } from '../../lib/reports';
-import { getCurrentUser } from '../../lib/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 import { getContacts } from '../../lib/data';
 
 interface ShareReportModalProps {
@@ -68,7 +68,7 @@ export default function ShareReportModal({
   template,
   onTemplateUpdate
 }: ShareReportModalProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   // State
   const [searchQuery, setSearchQuery] = useState('');

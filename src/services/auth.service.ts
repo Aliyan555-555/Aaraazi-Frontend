@@ -7,10 +7,10 @@ import { apiClient } from '@/lib/api/client';
 import type {
   LoginDto,
   LoginResponse,
+  RegisterDto,
   TenantLookupQuery,
   TenantLookupResponse,
   SessionResponse,
-  User,
 } from '@/types/auth.types';
 
 // ============================================================================
@@ -29,6 +29,22 @@ class AuthService {
       return response.data;
     } catch (error) {
       console.error('Tenant lookup failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Register new user (API only - no frontend page)
+   */
+  async register(data: RegisterDto): Promise<LoginResponse> {
+    try {
+      const response = await apiClient.post<LoginResponse>(
+        '/auth/register',
+        data,
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Register failed:', error);
       throw error;
     }
   }
@@ -88,7 +104,23 @@ class AuthService {
   }
 
   /**
-   * Refresh session (update last activity)
+   * Refresh tokens using refresh token
+   */
+  async refreshToken(refreshToken: string): Promise<LoginResponse> {
+    try {
+      const response = await apiClient.post<LoginResponse>(
+        '/auth/refresh-token',
+        { refreshToken },
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Refresh token failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Refresh session - uses refresh token when available, else GET /auth/me
    */
   async refreshSession(): Promise<SessionResponse> {
     try {

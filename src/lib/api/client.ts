@@ -66,6 +66,23 @@ apiClient.interceptors.request.use(
 // Response Interceptor
 // ============================================================================
 
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+function processQueue(error: unknown, token: string | null = null) {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+}
+
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log successful responses in development
@@ -78,7 +95,71 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError<ApiError>) => {
-    // Enhanced error handling
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
+    // Handle 401 with silent refresh
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      if (originalRequest.url?.includes('/auth/refresh-token')) {
+        // Refresh failed - clear auth and redirect
+        localStorage.removeItem('aaraazi-auth-storage');
+        document.cookie = 'aaraazi-auth=; path=/; max-age=0';
+        const currentPath = window.location.pathname;
+        if (!currentPath.startsWith('/auth')) {
+          window.location.href = '/auth/agency-code';
+        }
+        return Promise.reject(error);
+      }
+
+      try {
+        const authStorage = localStorage.getItem('aaraazi-auth-storage');
+        const parsed = authStorage ? JSON.parse(authStorage) : null;
+        const refreshToken = parsed?.state?.refreshToken;
+
+        if (!refreshToken) {
+          throw new Error('No refresh token');
+        }
+
+        if (isRefreshing) {
+          // Queue this request and wait for refresh to complete
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          }).then(() => apiClient(originalRequest));
+        }
+
+        isRefreshing = true;
+
+        const response = await axios.post<{ accessToken: string; refreshToken?: string }>(
+          `${API_URL}/auth/refresh-token`,
+          { refreshToken },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        const newState = { ...parsed?.state, accessToken, refreshToken: newRefreshToken ?? refreshToken };
+        localStorage.setItem('aaraazi-auth-storage', JSON.stringify({ state: newState, version: 1 }));
+        setAuthToken(accessToken);
+
+        processQueue(null, accessToken);
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        localStorage.removeItem('aaraazi-auth-storage');
+        document.cookie = 'aaraazi-auth=; path=/; max-age=0';
+        const currentPath = window.location.pathname;
+        if (!currentPath.startsWith('/auth')) {
+          window.location.href = '/auth/agency-code';
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    // Enhanced error handling for other status codes
     if (error.response) {
       const { status, data } = error.response;
 
@@ -90,15 +171,10 @@ apiClient.interceptors.response.use(
         });
       }
 
-      // Handle specific status codes
       switch (status) {
         case 401:
-          // Unauthorized - clear auth and redirect to login
           if (typeof window !== 'undefined') {
-            // Clear auth storage
             localStorage.removeItem('aaraazi-auth-storage');
-            
-            // Only redirect if not already on auth pages
             const currentPath = window.location.pathname;
             if (!currentPath.startsWith('/auth')) {
               window.location.href = '/auth/agency-code';

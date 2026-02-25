@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { initializeData } from '@/lib/data';
-import { initializeUsers } from '@/lib/auth';
 import { initializeInvestorData } from '@/lib/investors';
 import { saveSystemTemplates } from '@/lib/reportTemplates';
 import { initializeMasterScheduler } from '@/lib/clientScheduler';
@@ -10,8 +9,6 @@ import { initializeMasterScheduler } from '@/lib/clientScheduler';
 export function ClientInit() {
     useEffect(() => {
         try {
-            initializeUsers();
-
             // Initialize Core Data
             initializeData();
 
