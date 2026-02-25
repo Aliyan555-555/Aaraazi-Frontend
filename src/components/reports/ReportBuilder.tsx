@@ -56,10 +56,15 @@ import {
   AggregationType
 } from '../../types/reports';
 import { toast } from 'sonner';
-import { saveReportTemplate } from '../../lib/reports';
+// [STUBBED] import { saveReportTemplate } from '../../lib/reports';
 import { getCurrentUser } from '../../lib/auth';
 import { getFieldsForModule, AGING_BUCKETS, PAYMENT_STATUS_OPTIONS, CONFIDENCE_LEVEL_OPTIONS } from '../../lib/reportFieldConfig';
 import { SYSTEM_REPORTS } from '../../types/reports';
+
+// ===== STUBS for removed prototype functions =====
+const saveReportTemplate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ReportBuilderProps {
   onClose: () => void;

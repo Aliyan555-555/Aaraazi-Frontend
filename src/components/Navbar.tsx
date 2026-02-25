@@ -3,12 +3,13 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Building2, LogOut, User, Settings, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { LogOut, User, Settings, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { AuthUser } from '@/types/auth.types';
 import type { User as UserType } from '../types';
 import { NotificationBell } from './NotificationBell';
 import Image from 'next/image';
+import { AARAAZI_BRAND } from '@/lib/brand';
 
 interface NavbarProps {
   user?: UserType;
@@ -82,16 +83,18 @@ export const Navbar: React.FC<NavbarProps> = React.memo(({
           )}
 
           <div className="flex items-center gap-2">
-            {branding?.logoUrl ? (
-              <Image src={branding.logoUrl} alt={branding.companyName} className="w-10 h-10 object-contain" width={100} height={100} />
-            ) : (
-              <>
-                <Building2 className="h-6 w-6 text-primary" />
-                <span className="text-xl font-bold text-gray-900 truncate max-w-[200px]">
-                  {branding?.companyName || 'aaraazi'}
-                </span>
-              </>
-            )}
+            {(branding?.logoUrl || AARAAZI_BRAND.icon) ? (
+              <Image
+                src={branding?.logoUrl ?? AARAAZI_BRAND.icon}
+                alt={branding?.companyName ?? AARAAZI_BRAND.displayName}
+                className="w-10 h-10 object-contain"
+                width={100}
+                height={100}
+              />
+            ) : null}
+            <span className="text-xl font-bold text-gray-900 truncate max-w-[200px]">
+              {branding?.companyName ?? AARAAZI_BRAND.displayName}
+            </span>
           </div>
 
           {/* Module and Role indicators */}

@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ContactDetailsV4 } from '@/components/contacts/ContactDetailsV4';
+import { ContactDetails } from '@/components/contacts/ContactDetails';
 import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
 
@@ -45,7 +45,7 @@ export default function ContactDetailPage() {
   };
 
   return (
-    <ContactDetailsV4
+    <ContactDetails
       contactId={id}
       user={user}
       onBack={() => router.push('/dashboard/contacts')}

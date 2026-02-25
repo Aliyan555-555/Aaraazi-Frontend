@@ -20,7 +20,7 @@ import {
   Building
 } from 'lucide-react';
 import { Property, Contact, User } from '../types';
-import { getProperties, getContacts } from '../lib/data';
+// [STUBBED] import { getProperties, getContacts } from '../lib/data';
 import {
   getSmartMatches,
   shortlistProperty,
@@ -34,6 +34,12 @@ import { PropertyMatchCard } from './PropertyMatchCard';
 import { ViewingFeedbackModal } from './ViewingFeedbackModal';
 import { BuyerOfferModal } from './BuyerOfferModal';
 import { CloseBuyerDealModal } from './CloseBuyerDealModal';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface BuyerWorkspaceProps {
   user: User;

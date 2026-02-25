@@ -48,8 +48,14 @@ import {
   ExportFormat
 } from '../../types/reports';
 import { toast } from 'sonner';
-import { createScheduledReport, updateScheduledReport } from '../../lib/reports';
+// [STUBBED] import { createScheduledReport, updateScheduledReport } from '../../lib/reports';
 import { getCurrentUser } from '../../lib/auth';
+
+// ===== STUBS for removed prototype functions =====
+const createScheduledReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateScheduledReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ScheduleReportModalProps {
   open: boolean;

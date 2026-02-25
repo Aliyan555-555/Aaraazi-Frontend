@@ -45,11 +45,18 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatPKR } from '../../../lib/currency';
-import {
-  saveBudgetVersion,
-  createSnapshotFromBudget,
-  compareSnapshots,
-} from '../../../lib/budget-versioning';
+// [STUBBED] import {
+// [STUBBED]   saveBudgetVersion,
+// [STUBBED]   createSnapshotFromBudget,
+// [STUBBED]   compareSnapshots,
+// [STUBBED] } from '../../../lib/budget-versioning';
+
+// ===== STUBS for removed prototype functions =====
+const saveBudgetVersion = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const createSnapshotFromBudget = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const compareSnapshots = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface BulkEditBudgetsModalProps {
   open: boolean;

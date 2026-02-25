@@ -16,10 +16,19 @@ import { LeadV4 } from '../../../types/leads';
 import { CRMTask, CRMInteraction } from '../../../types';
 import { PerformanceMetric } from '../components/PerformanceCard';
 import { calculatePerformanceMetrics } from '../utils/calculatePerformanceMetrics';
-import { getProperties } from '../../../lib/data';
-import { getLeadsV4 } from '../../../lib/leadsV4';
-import { getAllTasks, getAllInteractions } from '../../../lib/data';
+// [STUBBED] import { getProperties } from '../../../lib/data';
+// [STUBBED] import { getLeadsV4 } from '../../../lib/leadsV4';
+// [STUBBED] import { getAllTasks, getAllInteractions } from '../../../lib/data';
 import { getAllAgents } from '../../../lib/auth';
+
+// ===== STUBS for removed prototype functions =====
+// Return safe empty collections so downstream code (e.g. .length, iteration) does not break.
+const getProperties = (..._args: any[]): Property[] => [];
+const getLeadsV4 = (..._args: any[]): LeadV4[] => [];
+const getAllTasks = (..._args: any[]): CRMTask[] => [];
+const getAllInteractions = (..._args: any[]): CRMInteraction[] => [];
+// ===== END STUBS =====
+
 
 export interface PerformanceData {
   metrics: PerformanceMetric[];

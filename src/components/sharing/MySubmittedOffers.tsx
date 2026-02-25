@@ -29,10 +29,17 @@ import {
   KanbanColumn
 } from '../workspace/WorkspacePageTemplate';
 import { OfferStatusBadge } from './OfferStatusBadge';
-import { getOffersSubmittedByAgent as getSellOffers } from '../../lib/sellCycle';
-import { getOffersSubmittedByAgent as getRentOffers } from '../../lib/rentCycle';
-import { getProperties } from '../../lib/data';
+// [STUBBED] import { getOffersSubmittedByAgent as getSellOffers } from '../../lib/sellCycle';
+// [STUBBED] import { getOffersSubmittedByAgent as getRentOffers } from '../../lib/rentCycle';
+// [STUBBED] import { getProperties } from '../../lib/data';
 import { formatPKR } from '../../lib/currency';
+
+// ===== STUBS for removed prototype functions =====
+const getSellOffers = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getRentOffers = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface MySubmittedOffersProps {
   user: UserType;

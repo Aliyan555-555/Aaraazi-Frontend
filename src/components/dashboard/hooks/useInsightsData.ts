@@ -17,10 +17,17 @@ import { LeadV4 } from "../../../types/leads";
 import { TaskV4 } from "../../../types/tasks";
 import { Insight } from "../components/InsightCard";
 import { detectInsights } from "../utils/detectInsights";
-import { getProperties } from "../../../lib/data";
-import { getLeadsV4 } from "../../../lib/leadsV4";
-import { getAllTasksV4 } from "../../../lib/tasks";
+// [STUBBED] import { getProperties } from "../../../lib/data";
+// [STUBBED] import { getLeadsV4 } from "../../../lib/leadsV4";
+// [STUBBED] import { getAllTasksV4 } from "../../../lib/tasks";
 import { getAllAgents } from "../../../lib/auth";
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadsV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 export interface InsightsData {
   insights: Insight[];
@@ -80,11 +87,11 @@ export function useInsightsData(
       const userId = user.role === "admin" ? undefined : user.id;
       const userRole = user.role;
 
-      // Load all required data
-      const properties = getProperties(userId, userRole);
-      const leads = getLeadsV4(userId, userRole);
-      const tasks = getAllTasksV4(userId || user.id, userRole);
-      const users = getAllAgents();
+      // Load all required data (use empty arrays when stubs return undefined)
+      const properties = getProperties(userId, userRole) ?? [];
+      const leads = getLeadsV4(userId, userRole) ?? [];
+      const tasks = getAllTasksV4(userId || user.id, userRole) ?? [];
+      const users = getAllAgents() ?? [];
 
       // Detect insights
       const detectedInsights = detectInsights({

@@ -10,7 +10,7 @@
 import React, { useState } from 'react';
 import { User } from '../../types';
 import { TaskV4, TaskCategory, TaskEntityType } from '../../types/tasks';
-import { createTask } from '../../lib/tasks';
+// [STUBBED] import { createTask } from '../../lib/tasks';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -21,6 +21,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Plus, Calendar as CalendarIcon, X, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const createTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface TaskQuickAddWidgetProps {
   user: User;

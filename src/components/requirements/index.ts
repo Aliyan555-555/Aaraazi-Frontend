@@ -4,8 +4,8 @@
  * Centralized exports for all requirements workspace components
  */
 
-export { BuyerRequirementsWorkspaceV4 } from './BuyerRequirementsWorkspaceV4';
+export { BuyerRequirementsWorkspace } from './BuyerRequirementsWorkspace';
 export { BuyerRequirementWorkspaceCard } from './BuyerRequirementWorkspaceCard';
 
-export type { BuyerRequirementsWorkspaceV4Props } from './BuyerRequirementsWorkspaceV4';
+export type { BuyerRequirementsWorkspaceProps } from './BuyerRequirementsWorkspace';
 export type { BuyerRequirementWorkspaceCardProps } from './BuyerRequirementWorkspaceCard';

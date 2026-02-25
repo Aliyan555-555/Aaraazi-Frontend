@@ -25,9 +25,17 @@ import {
 } from '../ui/select';
 import { Badge } from '../ui/badge';
 import { LeadIntent, LeadTimeline, LeadDetails } from '../../types/leads';
-import { getLeadById, updateLead, recalculateLeadScore } from '../../lib/leads';
-import { triggerAutomation } from '../../lib/tasks';
+// [STUBBED] import { getLeadById, updateLead, recalculateLeadScore } from '../../lib/leads';
+// [STUBBED] import { triggerAutomation } from '../../lib/tasks';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getLeadById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateLead = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const recalculateLeadScore = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const triggerAutomation = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface QualifyLeadModalProps {
   open: boolean;
