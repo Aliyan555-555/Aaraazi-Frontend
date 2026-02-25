@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PropertyDetails } from '@/components/PropertyDetails';
 import { mapAuthUserToUIUser } from '@/types';
@@ -15,6 +15,9 @@ export default function PropertyDetailPage() {
     const { id } = useParams();
     const { user: saasUser } = useAuthStore();
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const tabFromUrl = searchParams.get('tab') ?? undefined;
 
     const { property, sellCycles, purchaseCycles, rentCycles, isLoading, error } = usePropertyWithCycles(id as string | undefined);
     const { remove } = usePropertyMutations();
@@ -56,6 +59,10 @@ export default function PropertyDetailPage() {
         );
     }
 
+    const handleTabChange = (tabId: string) => {
+        router.push(`${pathname}?tab=${encodeURIComponent(tabId)}`);
+    };
+
     return (
         <PropertyDetails
             property={property}
@@ -92,6 +99,8 @@ export default function PropertyDetailPage() {
             onViewCycle={(cycleId, type) => {
                 router.push(`/dashboard/${type}-cycles/${cycleId}`);
             }}
+            activeTab={tabFromUrl}
+            onTabChange={handleTabChange}
         />
     );
 }

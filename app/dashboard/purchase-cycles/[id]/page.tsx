@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PurchaseCycleDetails } from '@/components/PurchaseCycleDetails';
 import { mapAuthUserToUIUser } from '@/types';
@@ -95,6 +95,9 @@ export default function PurchaseCycleDetailPage() {
   const { id } = useParams();
   const { user: saasUser } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') ?? undefined;
   const { cycle: cycleApi, isLoading, error, refetch } = usePurchaseCycle(id as string | undefined);
   const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
 
@@ -156,6 +159,10 @@ export default function PurchaseCycleDetailPage() {
     );
   }
 
+  const handleTabChange = (tabId: string) => {
+    router.push(`${pathname}?tab=${encodeURIComponent(tabId)}`);
+  };
+
   return (
     <PurchaseCycleDetails
       cycle={cycle}
@@ -164,6 +171,8 @@ export default function PurchaseCycleDetailPage() {
       onBack={() => router.push('/dashboard/purchase-cycles')}
       onUpdate={() => refetch()}
       onNavigate={handleNavigate}
+      activeTab={tabFromUrl}
+      onTabChange={handleTabChange}
     />
   );
 }

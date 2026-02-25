@@ -116,6 +116,8 @@ interface RentCycleDetailsProps {
   onBack: () => void;
   onUpdate: () => void;
   onNavigate?: (page: string, id: string) => void;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 export function RentCycleDetails({
@@ -125,6 +127,8 @@ export function RentCycleDetails({
   onBack,
   onUpdate,
   onNavigate,
+  activeTab: tabFromUrl,
+  onTabChange,
 }: RentCycleDetailsProps) {
   const [signingLeaseForId, setSigningLeaseForId] = useState<string | null>(null);
   const [leaseStartDate, setLeaseStartDate] = useState('');
@@ -1180,6 +1184,9 @@ export function RentCycleDetails({
     },
   ];
 
+  const validTab =
+    tabFromUrl && tabs.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'overview';
+
   // ==================== RENDER ====================
   return (
     <>
@@ -1200,6 +1207,8 @@ export function RentCycleDetails({
         connectedEntities={connectedEntities}
         tabs={tabs}
         defaultTab="overview"
+        activeTab={onTabChange ? validTab : undefined}
+        onTabChange={onTabChange}
       />
 
       {/* Add Application Modal */}

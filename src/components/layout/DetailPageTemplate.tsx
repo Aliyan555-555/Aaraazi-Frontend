@@ -59,6 +59,10 @@ export interface DetailPageTemplateProps {
   connectedEntities?: ConnectedEntity[];
   tabs: DetailPageTab[];
   defaultTab?: string;
+  /** When provided with onTabChange, tab is URL-driven and persists on reload */
+  activeTab?: string;
+  /** Called when user switches tab; use with router.push(pathname + '?tab=' + tab) for URL persistence */
+  onTabChange?: (tabId: string) => void;
   className?: string;
 }
 
@@ -67,9 +71,17 @@ export function DetailPageTemplate({
   connectedEntities = [],
   tabs,
   defaultTab,
+  activeTab: controlledTab,
+  onTabChange,
   className = '',
 }: DetailPageTemplateProps) {
-  const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id || '');
+  const firstTabId = tabs[0]?.id || '';
+  const fallbackTab = defaultTab || firstTabId;
+  const [internalTab, setInternalTab] = useState(fallbackTab);
+
+  const isControlled = controlledTab !== undefined && onTabChange !== undefined;
+  const activeTab = isControlled ? controlledTab : internalTab;
+  const setActiveTab = isControlled ? onTabChange : setInternalTab;
 
   // Get current tab configuration
   const currentTab = tabs.find(tab => tab.id === activeTab);

@@ -78,6 +78,8 @@ interface SellCycleDetailsProps {
   onBack: () => void;
   onUpdate: () => void;
   onNavigate?: (page: string, id: string) => void;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 export function SellCycleDetails({
@@ -87,6 +89,8 @@ export function SellCycleDetails({
   onBack,
   onUpdate,
   onNavigate,
+  activeTab: tabFromUrl,
+  onTabChange,
 }: SellCycleDetailsProps) {
   const [cycle, setCycle] = useState<SellCycle>(initialCycle);
   const [showAddOfferModal, setShowAddOfferModal] = useState(false);
@@ -968,6 +972,9 @@ export function SellCycleDetails({
     },
   ];
 
+  const validTab =
+    tabFromUrl && tabs.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'overview';
+
   // ==================== RENDER ====================
   return (
     <>
@@ -988,6 +995,8 @@ export function SellCycleDetails({
         connectedEntities={connectedEntities}
         tabs={tabs}
         defaultTab="overview"
+        activeTab={onTabChange ? validTab : undefined}
+        onTabChange={onTabChange}
       />
 
       {/* Phase 4B: Share Toggle - Floating Action */}

@@ -70,6 +70,9 @@ interface PropertyDetailsProps {
   onStartRentCycle: () => void;
   onDelete: () => void;
   onViewCycle: (cycleId: string, type: 'sell' | 'purchase' | 'rent') => void;
+  /** Tab from URL (?tab=...); when provided with onTabChange, tab persists on reload */
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 export function PropertyDetails({
@@ -78,6 +81,8 @@ export function PropertyDetails({
   purchaseCycles,
   rentCycles,
   user,
+  activeTab: tabFromUrl,
+  onTabChange,
   onBack,
   onEdit,
   onStartSellCycle,
@@ -1022,6 +1027,9 @@ export function PropertyDetails({
     },
   ];
 
+  const validTab =
+    tabFromUrl && tabs.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'overview';
+
   // ==================== RENDER ====================
   return (
     <DetailPageTemplate
@@ -1029,6 +1037,8 @@ export function PropertyDetails({
       connectedEntities={connectedEntities}
       tabs={tabs}
       defaultTab="overview"
+      activeTab={onTabChange ? validTab : undefined}
+      onTabChange={onTabChange}
     />
   );
 }

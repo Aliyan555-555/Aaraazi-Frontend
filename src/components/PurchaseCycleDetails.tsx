@@ -100,6 +100,8 @@ interface PurchaseCycleDetailsProps {
   onBack: () => void;
   onUpdate: () => void;
   onNavigate?: (page: string, id: string) => void;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 export function PurchaseCycleDetails({
@@ -109,6 +111,8 @@ export function PurchaseCycleDetails({
   onBack,
   onUpdate,
   onNavigate,
+  activeTab: tabFromUrl,
+  onTabChange,
 }: PurchaseCycleDetailsProps) {
   const [cycle, setCycle] = useState<PurchaseCycle>(initialCycle);
   const [editingNegotiatedPrice, setEditingNegotiatedPrice] = useState(false);
@@ -1225,6 +1229,9 @@ export function PurchaseCycleDetails({
     },
   ];
 
+  const validTab =
+    tabFromUrl && tabs.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'overview';
+
   // ==================== RENDER ====================
   return (
     <>
@@ -1233,6 +1240,8 @@ export function PurchaseCycleDetails({
         connectedEntities={connectedEntities}
         tabs={tabs}
         defaultTab="overview"
+        activeTab={onTabChange ? validTab : undefined}
+        onTabChange={onTabChange}
       />
 
       {/* Send Offer Modal */}

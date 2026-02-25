@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { DealDetails } from '@/components/DealDetails';
 import { mapAuthUserToUIUser } from '@/types';
@@ -14,6 +14,9 @@ export default function DealDetailPage() {
     const { id } = useParams();
     const { user: saasUser } = useAuthStore();
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const tabFromUrl = searchParams.get('tab') ?? undefined;
     const { deal, isLoading, error, refetch } = useDeal(id as string | undefined);
     const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
 
@@ -66,6 +69,11 @@ export default function DealDetailPage() {
         router.push(`/dashboard/${page}/${navigateId}`);
     };
 
+    const handleTabChange = (tabId: string) => {
+        const url = `${pathname}?tab=${encodeURIComponent(tabId)}`;
+        router.push(url);
+    };
+
     return (
         <DealDetails
             deal={deal}
@@ -73,6 +81,8 @@ export default function DealDetailPage() {
             onBack={() => router.push('/dashboard/deals')}
             onUpdate={refetch}
             onNavigate={handleNavigate}
+            activeTab={tabFromUrl}
+            onTabChange={handleTabChange}
         />
     );
 }

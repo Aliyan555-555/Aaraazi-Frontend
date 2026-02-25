@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { SellCycleDetails } from '@/components/SellCycleDetails';
 import { mapAuthUserToUIUser } from '@/types';
@@ -117,6 +117,9 @@ export default function SellCycleDetailPage() {
   const { id } = useParams();
   const { user: saasUser } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') ?? undefined;
 
   const { cycle: cycleApi, isLoading: cycleLoading, error: cycleError, refetch } = useSellCycle(
     id as string | undefined
@@ -206,6 +209,10 @@ export default function SellCycleDetailPage() {
     );
   }
 
+  const handleTabChange = (tabId: string) => {
+    router.push(`${pathname}?tab=${encodeURIComponent(tabId)}`);
+  };
+
   return (
     <SellCycleDetails
       cycle={cycle}
@@ -214,6 +221,8 @@ export default function SellCycleDetailPage() {
       onBack={() => router.push(`/dashboard/properties/${cycle.propertyId}`)}
       onUpdate={() => refetch()}
       onNavigate={handleNavigate}
+      activeTab={tabFromUrl}
+      onTabChange={handleTabChange}
     />
   );
 }

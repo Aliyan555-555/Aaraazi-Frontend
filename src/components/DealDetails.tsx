@@ -87,6 +87,9 @@ interface DealDetailsProps {
   onBack: () => void;
   onUpdate?: () => void;
   onNavigate?: (page: string, id: string) => void;
+  /** Tab from URL (?tab=payments); when provided with onTabChange, tab persists on reload */
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 export const DealDetails: React.FC<DealDetailsProps> = ({
@@ -95,6 +98,8 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
   onBack,
   onUpdate,
   onNavigate,
+  activeTab: tabFromUrl,
+  onTabChange,
 }) => {
   const {
     progressStage: progressStageMutation,
@@ -1062,6 +1067,9 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
     },
   ];
 
+  const validTab =
+    tabFromUrl && tabs.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'overview';
+
   // ==================== RENDER ====================
   return (
     <>
@@ -1070,6 +1078,8 @@ export const DealDetails: React.FC<DealDetailsProps> = ({
         connectedEntities={connectedEntities}
         tabs={tabs}
         defaultTab="overview"
+        activeTab={onTabChange ? validTab : undefined}
+        onTabChange={onTabChange}
       />
 
       {/* Payment Modals */}
