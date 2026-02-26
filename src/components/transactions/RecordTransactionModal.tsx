@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Property, User, InvestorTransactionType } from '../../types';
-import { recordInvestorTransaction } from '../../lib/investorTransactions';
+// [STUBBED] import { recordInvestorTransaction } from '../../lib/investorTransactions';
 import { formatPKR } from '../../lib/currency';
 import { 
   DollarSign, 
@@ -27,6 +27,11 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const recordInvestorTransaction = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RecordTransactionModalProps {
   isOpen: boolean;

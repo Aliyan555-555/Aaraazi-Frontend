@@ -22,6 +22,7 @@
  */
 
 import React from 'react';
+import { useConfirmStore } from '@/store/useConfirmStore';
 import { X, MoreHorizontal } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -120,10 +121,13 @@ export const BulkActionBar = React.memo<BulkActionBarProps>(({
                 size="default"
                 onClick={() => {
                   if (action.requireConfirm) {
-                    // Show confirmation dialog (future enhancement)
-                    if (window.confirm(`Are you sure you want to ${action.label.toLowerCase()} ${selectedCount} ${entityName}?`)) {
-                      action.onClick(selectedIds);
-                    }
+                    useConfirmStore.getState().ask({
+                      title: `Confirm ${action.label}`,
+                      description: `Are you sure you want to ${action.label.toLowerCase()} ${selectedCount} ${entityName}?`,
+                      confirmText: action.label,
+                      variant: action.variant === 'destructive' ? 'destructive' : 'default',
+                      onConfirm: () => action.onClick(selectedIds),
+                    });
                   } else {
                     action.onClick(selectedIds);
                   }
@@ -158,9 +162,13 @@ export const BulkActionBar = React.memo<BulkActionBarProps>(({
                       <DropdownMenuItem
                         onClick={() => {
                           if (action.requireConfirm) {
-                            if (window.confirm(`Are you sure you want to ${action.label.toLowerCase()} ${selectedCount} ${entityName}?`)) {
-                              action.onClick(selectedIds);
-                            }
+                            useConfirmStore.getState().ask({
+                              title: `Confirm ${action.label}`,
+                              description: `Are you sure you want to ${action.label.toLowerCase()} ${selectedCount} ${entityName}?`,
+                              confirmText: action.label,
+                              variant: action.variant === 'destructive' ? 'destructive' : 'default',
+                              onConfirm: () => action.onClick(selectedIds),
+                            });
                           } else {
                             action.onClick(selectedIds);
                           }
@@ -226,7 +234,19 @@ export const CompactBulkActionBar = React.memo<CompactBulkActionBarProps>(({
               key={action.id}
               variant={action.variant === 'destructive' ? 'destructive' : 'default'}
               size="sm"
-              onClick={() => action.onClick(selectedIds)}
+              onClick={() => {
+                if (action.requireConfirm) {
+                  useConfirmStore.getState().ask({
+                    title: `Confirm ${action.label}`,
+                    description: `Are you sure you want to ${action.label.toLowerCase()} ${selectedCount} items?`,
+                    confirmText: action.label,
+                    variant: action.variant === 'destructive' ? 'destructive' : 'default',
+                    onConfirm: () => action.onClick(selectedIds),
+                  });
+                } else {
+                  action.onClick(selectedIds);
+                }
+              }}
               disabled={action.disabled}
             >
               {action.icon}
@@ -243,7 +263,19 @@ export const CompactBulkActionBar = React.memo<CompactBulkActionBarProps>(({
                 {actions.slice(2).map((action) => (
                   <DropdownMenuItem
                     key={action.id}
-                    onClick={() => action.onClick(selectedIds)}
+                    onClick={() => {
+                      if (action.requireConfirm) {
+                        useConfirmStore.getState().ask({
+                          title: `Confirm ${action.label}`,
+                          description: `Are you sure you want to ${action.label.toLowerCase()} ${selectedCount} items?`,
+                          confirmText: action.label,
+                          variant: action.variant === 'destructive' ? 'destructive' : 'default',
+                          onConfirm: () => action.onClick(selectedIds),
+                        });
+                      } else {
+                        action.onClick(selectedIds);
+                      }
+                    }}
                     disabled={action.disabled}
                   >
                     {action.icon && <span className="mr-2">{action.icon}</span>}

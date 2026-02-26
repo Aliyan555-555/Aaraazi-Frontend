@@ -44,9 +44,18 @@ import { Switch } from '../ui/switch';
 import { Avatar } from '../ui/avatar';
 import { ReportTemplate } from '../../types/reports';
 import { toast } from 'sonner';
-import { saveReportTemplate } from '../../lib/reports';
+// import { saveReportTemplate } from '../../lib/reports';
 import { useAuthStore } from '@/store/useAuthStore';
-import { getContacts } from '../../lib/data';
+// import { getContacts } from '../../lib/data';
+// [STUBBED] import { saveReportTemplate } from '../../lib/reports';
+import { getCurrentUser } from '../../lib/auth';
+// [STUBBED] import { getContacts } from '../../lib/data';
+
+// ===== STUBS for removed prototype functions =====
+const saveReportTemplate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ShareReportModalProps {
   open: boolean;

@@ -30,14 +30,25 @@ import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Badge } from '../ui/badge';
 import { Lead, LeadInteraction } from '../../types/leads';
-import { getLeadById, updateLead } from '../../lib/leads';
-import { getLeadSLAStatus } from '../../lib/leadUtils';
-import { previewLeadConversion } from '../../lib/leadConversion';
-import { getTasksByEntity, updateTask, TaskV4 } from '../../lib/tasks';
+// [STUBBED] import { getLeadById, updateLead } from '../../lib/leads';
+// [STUBBED] import { getLeadSLAStatus } from '../../lib/leadUtils';
+// [STUBBED] import { previewLeadConversion } from '../../lib/leadConversion';
+// [STUBBED] import { getTasksByEntity, updateTask, TaskV4 } from '../../lib/tasks';
 import { TaskQuickAddWidget } from '../tasks/TaskQuickAddWidget';
 import { TaskListView } from '../tasks/TaskListView';
 import { formatDistanceToNow, format } from 'date-fns';
 import { toast } from 'react-toastify';
+
+// ===== STUBS for removed prototype functions =====
+const getLeadById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateLead = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadSLAStatus = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const previewLeadConversion = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTasksByEntity = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type TaskV4 = any;
+// ===== END STUBS =====
+
 
 interface LeadDetailsV4Props {
   leadId: string;

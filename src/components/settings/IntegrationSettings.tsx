@@ -1,26 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import type { User } from '../../types';
-import { Card } from '../ui/card';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Input } from '../ui/input';
-import { getUserSettings, updateUserSettings } from '../../lib/userSettings';
+'use client';
+
+import React, { useState } from 'react';
+import type { User } from '@/types';
+import type { UserSettings } from '@/types/settings.types';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Zap, Key, Copy, Eye, EyeOff, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface IntegrationSettingsProps {
   user: User;
+  settings: UserSettings;
+  onSettingsChange: React.Dispatch<React.SetStateAction<UserSettings>>;
 }
 
-export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ user }) => {
-  const [settings, setSettings] = useState<any>(null);
+export function IntegrationSettings({ settings, onSettingsChange }: IntegrationSettingsProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
 
-  useEffect(() => {
-    const userSettings = getUserSettings(user.id);
-    setSettings(userSettings);
-  }, [user.id]);
+  const updateIntegration = (key: keyof UserSettings['integrations'], value: unknown) => {
+    onSettingsChange((prev) => ({
+      ...prev,
+      integrations: { ...prev.integrations, [key]: value },
+    }));
+    setHasChanges(true);
+  };
 
   const generateApiKey = () => {
     const key = `sk_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
@@ -29,79 +36,69 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ user }
   };
 
   const copyApiKey = () => {
-    if (settings?.integrations.apiKey) {
+    if (settings.integrations.apiKey) {
       navigator.clipboard.writeText(settings.integrations.apiKey);
       toast.success('API key copied to clipboard');
     }
   };
 
   const handleSave = () => {
-    if (!settings) return;
-    updateUserSettings(user.id, settings);
     setHasChanges(false);
     toast.success('Integration settings saved');
   };
 
-  const updateIntegration = (key: string, value: any) => {
-    if (!settings) return;
-    setSettings({
-      ...settings,
-      integrations: { ...settings.integrations, [key]: value },
-    });
-    setHasChanges(true);
-  };
-
-  if (!settings) return <div className="p-12 text-center">Loading...</div>;
-
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Key className="h-5 w-5 text-gray-700" />
-          <h2 className="text-xl text-gray-900">API Access</h2>
+        <div className="mb-4 flex items-center gap-2">
+          <Key className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">API Access</h2>
         </div>
-        <p className="text-gray-600 mb-6">Generate and manage your API credentials</p>
-
+        <p className="mb-6 text-muted-foreground">Generate and manage your API credentials.</p>
         <div className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label>API Key</Label>
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2">
               <div className="relative flex-1">
                 <Input
                   type={showApiKey ? 'text' : 'password'}
-                  value={settings.integrations.apiKey || 'No API key generated'}
+                  value={settings.integrations.apiKey ?? 'No API key generated'}
                   readOnly
                   className="pr-10"
                 />
                 <button
+                  type="button"
                   onClick={() => setShowApiKey(!showApiKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
-                  {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showApiKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               {settings.integrations.apiKey && (
-                <Button variant="outline" onClick={copyApiKey}>
+                <Button variant="outline" size="icon" onClick={copyApiKey} title="Copy">
                   <Copy className="h-4 w-4" />
                 </Button>
               )}
-              <Button variant="outline" onClick={generateApiKey}>
+              <Button variant="outline" size="icon" onClick={generateApiKey} title="Generate">
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground">
               Keep your API key secure. Do not share it publicly.
             </p>
           </div>
-
-          <div>
+          <div className="space-y-2">
             <Label>Webhook URL</Label>
             <Input
-              value={settings.integrations.webhookUrl || ''}
+              value={settings.integrations.webhookUrl ?? ''}
               onChange={(e) => updateIntegration('webhookUrl', e.target.value)}
               placeholder="https://your-domain.com/webhook"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground">
               Receive real-time notifications at this URL
             </p>
           </div>
@@ -109,57 +106,56 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ user }
       </Card>
 
       <Card className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="h-5 w-5 text-gray-700" />
-          <h2 className="text-xl text-gray-900">Third-Party Integrations</h2>
+        <div className="mb-4 flex items-center gap-2">
+          <Zap className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Third-Party Integrations</h2>
         </div>
-
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <Label className="mb-0">Calendar Sync</Label>
-              <p className="text-xs text-gray-500">Sync with Google Calendar</p>
+              <Label className="font-normal">Calendar Sync</Label>
+              <p className="text-xs text-muted-foreground">Sync with Google Calendar</p>
             </div>
-            <input
-              type="checkbox"
+            <Checkbox
               checked={settings.integrations.calendarSync}
-              onChange={(e) => updateIntegration('calendarSync', e.target.checked)}
-              className="h-4 w-4 text-blue-600 rounded"
+              onCheckedChange={(checked) =>
+                updateIntegration('calendarSync', checked === true)
+              }
             />
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <Label className="mb-0">Google Drive</Label>
-              <p className="text-xs text-gray-500">Backup to Google Drive</p>
+              <Label className="font-normal">Google Drive</Label>
+              <p className="text-xs text-muted-foreground">Backup to Google Drive</p>
             </div>
-            <input
-              type="checkbox"
+            <Checkbox
               checked={settings.integrations.googleDriveSync}
-              onChange={(e) => updateIntegration('googleDriveSync', e.target.checked)}
-              className="h-4 w-4 text-blue-600 rounded"
+              onCheckedChange={(checked) =>
+                updateIntegration('googleDriveSync', checked === true)
+              }
             />
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <Label className="mb-0">Dropbox</Label>
-              <p className="text-xs text-gray-500">Sync files with Dropbox</p>
+              <Label className="font-normal">Dropbox</Label>
+              <p className="text-xs text-muted-foreground">Sync files with Dropbox</p>
             </div>
-            <input
-              type="checkbox"
+            <Checkbox
               checked={settings.integrations.dropboxSync}
-              onChange={(e) => updateIntegration('dropboxSync', e.target.checked)}
-              className="h-4 w-4 text-blue-600 rounded"
+              onCheckedChange={(checked) =>
+                updateIntegration('dropboxSync', checked === true)
+              }
             />
           </div>
         </div>
       </Card>
 
       {hasChanges && (
-        <div className="sticky bottom-6 bg-white border rounded-lg shadow-lg p-4">
+        <div className="sticky bottom-6 rounded-lg border bg-card p-4 shadow-lg">
           <div className="flex items-center justify-between">
             <p className="font-medium">Unsaved Changes</p>
             <Button onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
+              <Save className="mr-2 h-4 w-4" />
               Save Changes
             </Button>
           </div>
@@ -167,4 +163,4 @@ export const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({ user }
       )}
     </div>
   );
-};
+}

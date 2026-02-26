@@ -1,18 +1,3 @@
-/**
- * Calculate Performance Metrics
- *
- * Calculates performance metrics for the Performance Pulse section.
- *
- * METRICS:
- * 1. Weekly Activity - Daily activity trend
- * 2. Conversion Rate - Lead to deal conversion
- * 3. Average Response Time - Time to first response
- * 4. Active Deals - Deals in pipeline
- * 5. Revenue This Month - Total revenue
- * 6. Lead Velocity - Leads per day
- * 7. Top Performer - Best agent
- * 8. Deal Cycle Time - Average days to close
- */
 
 import { Property, User } from "../../../types";
 import { LeadV4 } from "../../../types/leads";
@@ -45,13 +30,18 @@ function calculateDailyActivity(
     return date;
   });
 
+  const safeProperties = Array.isArray(properties) ? properties : [];
+  const safeLeads = Array.isArray(leads) ? leads : [];
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+  const safeInteractions = Array.isArray(interactions) ? interactions : [];
+
   return last7Days.map((date) => {
     const dateStr = date.toISOString().split("T")[0];
     const count =
-      properties.filter((p) => p.createdAt === dateStr).length +
-      leads.filter((l) => l.createdAt.startsWith(dateStr)).length +
-      tasks.filter((t) => t.createdAt === dateStr).length +
-      interactions.filter((i) => i.date === dateStr).length;
+      safeProperties.filter((p) => p.createdAt === dateStr).length +
+      safeLeads.filter((l) => l.createdAt?.startsWith(dateStr)).length +
+      safeTasks.filter((t) => t.createdAt === dateStr).length +
+      safeInteractions.filter((i) => i.date === dateStr).length;
 
     return {
       value: count,
@@ -362,13 +352,17 @@ function calculateDealCycleTime(leads: LeadV4[]): {
  * Main function: Calculate all performance metrics
  */
 export function calculatePerformanceMetrics(data: {
-  properties: Property[];
-  leads: LeadV4[];
-  tasks: CRMTask[];
-  interactions: CRMInteraction[];
-  users: User[];
+  properties?: Property[];
+  leads?: LeadV4[];
+  tasks?: CRMTask[];
+  interactions?: CRMInteraction[];
+  users?: User[];
 }): PerformanceMetric[] {
-  const { properties, leads, tasks, interactions, users } = data;
+  const properties = data.properties ?? [];
+  const leads = data.leads ?? [];
+  const tasks = data.tasks ?? [];
+  const interactions = data.interactions ?? [];
+  const users = data.users ?? [];
 
   // 1. Weekly Activity
   const activityData = calculateDailyActivity(

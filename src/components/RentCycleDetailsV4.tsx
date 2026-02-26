@@ -85,17 +85,17 @@ import {
 } from 'lucide-react';
 
 // Business Logic
-import {
-  approveTenantApplication,
-  rejectTenantApplication,
-  signLease,
-  recordRentPayment,
-  endLease,
-  renewLease,
-  closeRentCycle,
-  toggleRentCycleSharing,
-  addTenantApplication,
-} from '../lib/rentCycle';
+// [STUBBED] import {
+// [STUBBED]   approveTenantApplication,
+// [STUBBED]   rejectTenantApplication,
+// [STUBBED]   signLease,
+// [STUBBED]   recordRentPayment,
+// [STUBBED]   endLease,
+// [STUBBED]   renewLease,
+// [STUBBED]   closeRentCycle,
+// [STUBBED]   toggleRentCycleSharing,
+// [STUBBED]   addTenantApplication,
+// [STUBBED] } from '../lib/rentCycle';
 import { AddApplicationModal } from './AddApplicationModal';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
@@ -106,6 +106,19 @@ import {
   createDealFromCrossAgentOffer,
   getCrossAgentOffersByCycleId,
 } from '../lib/crossAgentDeals';
+
+// ===== STUBS for removed prototype functions =====
+const approveTenantApplication = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const rejectTenantApplication = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const signLease = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const recordRentPayment = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const endLease = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const renewLease = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const closeRentCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const toggleRentCycleSharing = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addTenantApplication = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 // Phase 4C: Sharing operations (removed - toggleRentCycleSharing is in rentCycle.ts)
 

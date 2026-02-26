@@ -45,17 +45,27 @@ import {
 } from '../ui/dropdown-menu';
 import { Alert, AlertDescription } from '../ui/alert';
 import { formatPKR } from '../../lib/currency';
-import { formatDate } from '../../lib/validation';
-import {
-  getInvestorById,
-  getInvestorInvestments,
-  calculateInvestorROI,
-  calculateInvestorPortfolioValue
-} from '../../lib/investors';
-import { getProperties } from '../../lib/data';
+// [STUBBED] import { formatDate } from '../../lib/validation';
+// [STUBBED] import {
+// [STUBBED]   getInvestorById,
+// [STUBBED]   getInvestorInvestments,
+// [STUBBED]   calculateInvestorROI,
+// [STUBBED]   calculateInvestorPortfolioValue
+// [STUBBED] } from '../../lib/investors';
+// [STUBBED] import { getProperties } from '../../lib/data';
 import { Investor, InvestorInvestment } from '../../types';
 import InvestorPerformanceCharts from './InvestorPerformanceCharts';
 import CreateInvestorModal from '../CreateInvestorModal';
+
+// ===== STUBS for removed prototype functions =====
+const formatDate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorROI = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorPortfolioValue = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorDetailViewProps {
   investorId: string;

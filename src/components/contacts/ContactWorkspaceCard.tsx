@@ -53,15 +53,15 @@ export const ContactWorkspaceCard: React.FC<ContactWorkspaceCardProps> = ({
   // Get contact type badge
   const getTypeBadge = (): { label: string; variant: 'default' | 'success' | 'warning' | 'info' | 'secondary' } => {
     switch (contact.type) {
-      case ContactType.CLIENT:
+      case 'client':
         return { label: 'Client', variant: 'success' };
-      case ContactType.PROSPECT:
+      case 'prospect':
         return { label: 'Prospect', variant: 'info' };
-      case ContactType.INVESTOR:
+      case 'investor':
         return { label: 'Investor', variant: 'warning' };
-      case ContactType.VENDOR:
+      case 'vendor':
         return { label: 'Vendor', variant: 'secondary' };
-      case ContactType.PARTNER:
+      case 'partner':
         return { label: 'Partner', variant: 'secondary' };
       default:
         return { label: contact.type, variant: 'default' };
@@ -71,13 +71,13 @@ export const ContactWorkspaceCard: React.FC<ContactWorkspaceCardProps> = ({
   // Get status badge
   const getStatusBadge = (): { label: string; variant: 'default' | 'success' | 'warning' | 'info' | 'secondary' } => {
     switch (contact.status) {
-      case ContactStatus.ACTIVE:
+      case 'active':
         return { label: 'Active', variant: 'success' };
-      case ContactStatus.INACTIVE:
+      case 'inactive':
         return { label: 'Inactive', variant: 'secondary' };
-      case ContactStatus.ARCHIVED:
+      case 'archived':
         return { label: 'Archived', variant: 'warning' };
-      case ContactStatus.BLOCKED:
+      case 'blocked':
         return { label: 'Blocked', variant: 'warning' };
       default:
         return { label: contact.status, variant: 'default' };

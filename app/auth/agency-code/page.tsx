@@ -10,6 +10,8 @@ import { useTenantLookup, useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/client';
 import { tenantLookupSchema } from '@/lib/validation/auth.schemas';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { AARAAZI_BRAND } from '@/lib/brand';
 
 /**
  * Professional Agency Code Lookup Page
@@ -54,10 +56,14 @@ export default function AgencyCodeScreen() {
                 {/* Header */}
                 <div className="text-center mb-8 transition-all duration-300">
                     <div className="flex items-center justify-center gap-3 mb-4">
-                        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                            <Building2 className="w-6 h-6 text-white" />
-                        </div>
-                        <h1 className="text-3xl font-semibold text-gray-900">Aaraazi</h1>
+                        <Image
+                            src={AARAAZI_BRAND.fullLogo}
+                            alt={AARAAZI_BRAND.displayName}
+                            className="h-14 w-auto max-w-[200px] object-contain"
+                            width={200}
+                            height={50}
+                            priority
+                        />
                     </div>
                     <p className="text-lg text-gray-600">
                         Real Estate & Development Management Platform

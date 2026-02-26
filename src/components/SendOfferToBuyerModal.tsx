@@ -11,12 +11,19 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { BuyerRequirement, User } from '../types';
-import { PropertyMatch } from '../lib/propertyMatching';
+// [STUBBED] import { PropertyMatch } from '../lib/propertyMatching';
 import { toast } from 'sonner';
-import { addOffer } from '../lib/sellCycle';
+// [STUBBED] import { addOffer } from '../lib/sellCycle';
 import { DollarSign, User as UserIcon, FileText, Info } from 'lucide-react';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
+import { logger } from "../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+type PropertyMatch = any;
+const addOffer = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 interface SendOfferToBuyerModalProps {
   match: PropertyMatch;
   buyerRequirement: BuyerRequirement;
@@ -36,7 +43,7 @@ export function SendOfferToBuyerModal({
   const sellCycleId = match.sellCycleId;
   const askingPrice = match.askingPrice;
 
-  console.log('🔵 SendOfferToBuyerModal rendered with:', {
+  logger.log('🔵 SendOfferToBuyerModal rendered with:', {
     user: user?.name,
     property: property?.id,
     sellCycleId,
@@ -46,22 +53,22 @@ export function SendOfferToBuyerModal({
 
   // Safety check - property and sell cycle required
   if (!user) {
-    console.error('❌ No user - returning null');
+    logger.error('❌ No user - returning null');
     return null;
   }
 
   if (!property) {
-    console.error('❌ No property - returning null');
+    logger.error('❌ No property - returning null');
     // We can't call onClose in render, but we return null and parent manages it
     return null;
   }
 
   if (!sellCycleId) {
-    console.error('❌ No sellCycleId - returning null');
+    logger.error('❌ No sellCycleId - returning null');
     return null;
   }
 
-  console.log('✅ All validations passed in modal');
+  logger.log('✅ All validations passed in modal');
 
   // V3.0: Use asking price from sell cycle, fallback to property price
   const effectiveAskingPrice = askingPrice || property.price || 0;
@@ -121,7 +128,7 @@ export function SendOfferToBuyerModal({
       onSuccess();
       handleClose();
     } catch (error) {
-      console.error('Error sending offer:', error);
+      logger.error('Error sending offer:', error);
       toast.error('Failed to send offer');
     } finally {
       setIsSubmitting(false);

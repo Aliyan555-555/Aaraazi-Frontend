@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { TaskAutomationRule } from '../../types/tasks';
-import { getAutomationRules, saveAutomationRules } from '../../lib/tasks';
+// [STUBBED] import { getAutomationRules, saveAutomationRules } from '../../lib/tasks';
 import {
     Dialog,
     DialogContent,
@@ -21,6 +21,12 @@ import {
     Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getAutomationRules = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const saveAutomationRules = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface TaskAutomationDashboardProps {
     user: User;

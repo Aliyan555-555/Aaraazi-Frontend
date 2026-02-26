@@ -19,15 +19,15 @@ import {
   RECHARTS_CONFIG,
 } from '../lib/chartColors';
 
-import {
-  calculateDaysOnMarket,
-  getDaysOnMarketStatus,
-  getPropertyPerformanceScore,
-  getPropertyEngagement,
-  getTopPerformingProperties,
-  getPropertiesNeedingAttention
-} from '../lib/propertyAnalytics';
-import { getProperties } from '../lib/data';
+// [STUBBED] import {
+// [STUBBED]   calculateDaysOnMarket,
+// [STUBBED]   getDaysOnMarketStatus,
+// [STUBBED]   getPropertyPerformanceScore,
+// [STUBBED]   getPropertyEngagement,
+// [STUBBED]   getTopPerformingProperties,
+// [STUBBED]   getPropertiesNeedingAttention
+// [STUBBED] } from '../lib/propertyAnalytics';
+// [STUBBED] import { getProperties } from '../lib/data';
 import { MarketTrendsChart } from './MarketTrendsChart';
 import { AgentPerformanceDashboard } from './AgentPerformanceDashboard';
 import {
@@ -59,6 +59,17 @@ import {
   Activity,
   ArrowLeft
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const calculateDaysOnMarket = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getDaysOnMarketStatus = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyPerformanceScore = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyEngagement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTopPerformingProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertiesNeedingAttention = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AgencyAnalyticsDashboardProps {
   user: User;

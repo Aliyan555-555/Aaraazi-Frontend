@@ -41,13 +41,22 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Alert, AlertDescription } from '../ui/alert';
 import { formatPKR } from '../../lib/currency';
-import { formatDate } from '../../lib/validation';
-import { getAgencyAcquisitionPayments, getUpcomingAgencyPayments } from '../../lib/portfolio';
-import { getPaymentScheduleInstalments } from '../../lib/paymentSchedule';
-import { getProperties } from '../../lib/data';
+// [STUBBED] import { formatDate } from '../../lib/validation';
+// [STUBBED] import { getAgencyAcquisitionPayments, getUpcomingAgencyPayments } from '../../lib/portfolio';
+// [STUBBED] import { getPaymentScheduleInstalments } from '../../lib/paymentSchedule';
+// [STUBBED] import { getProperties } from '../../lib/data';
 import { PaymentSchedule, Instalment } from '../../types/paymentSchedule';
 import PaymentScheduleRecordingModal from '../PaymentScheduleRecordingModal';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const formatDate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgencyAcquisitionPayments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getUpcomingAgencyPayments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPaymentScheduleInstalments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AgencyPaymentTrackingProps {
   onNavigate: (view: string, data?: any) => void;

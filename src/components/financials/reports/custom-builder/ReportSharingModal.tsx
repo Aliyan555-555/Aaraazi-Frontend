@@ -24,7 +24,7 @@ import {
   ReportShare,
   SharePermission,
 } from '../../../../lib/report-sharing';
-import { getContacts } from '../../../../lib/data';
+// [STUBBED] import { getContacts } from '../../../../lib/data';
 import {
   Dialog,
   DialogContent,
@@ -57,6 +57,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+// ===== STUBS for removed prototype functions =====
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
+
 interface ReportSharingModalProps {
   open: boolean;
   onClose: () => void;
@@ -80,7 +85,7 @@ export const ReportSharingModal: React.FC<ReportSharingModalProps> = ({
   // Load contacts and shares
   const contacts = useMemo(() => {
     return getContacts().filter(contact =>
-      contact.type === 'AGENT' && contact.id !== user.id
+      contact.type === 'agent' && contact.id !== user.id
     );
   }, [user.id]);
 

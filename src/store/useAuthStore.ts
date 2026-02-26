@@ -54,6 +54,8 @@ export interface AuthStore {
   agencyId: string | null;
   branding: Branding | null;
   agencies: Agency[];
+  /** Agency users/agents (populated from API or set by app). Single source for getAllAgents/getUserById. */
+  agents: User[];
   currentModule: string | null;
   
   // Loading & Error States
@@ -67,6 +69,7 @@ export interface AuthStore {
   // Actions
   setTenant: (tenantId: string, branding: Branding, agencies: Agency[]) => void;
   setAgency: (agencyId: string) => void;
+  setAgents: (agents: User[]) => void;
   setCurrentModule: (moduleId: string) => void;
   
   // Auth Actions
@@ -95,6 +98,7 @@ const initialState = {
   agencyId: null,
   branding: null,
   agencies: [],
+  agents: [],
   currentModule: null,
   isLoading: false,
   isInitialized: false,
@@ -126,6 +130,10 @@ export const useAuthStore = create<AuthStore>()(
 
       setAgency: (agencyId) => {
         set({ agencyId, error: null });
+      },
+
+      setAgents: (agents) => {
+        set({ agents, error: null });
       },
 
       setCurrentModule: (moduleId) => {
@@ -330,7 +338,7 @@ export const useAuthStore = create<AuthStore>()(
       name: 'aaraazi-auth-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        // Only persist essential data
+        // Only persist essential data (Zustand persist is the single storage for auth)
         user: state.user,
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
@@ -338,6 +346,7 @@ export const useAuthStore = create<AuthStore>()(
         agencyId: state.agencyId,
         branding: state.branding,
         agencies: state.agencies,
+        agents: state.agents,
         currentModule: state.currentModule,
         isAuthenticated: state.isAuthenticated,
       }),

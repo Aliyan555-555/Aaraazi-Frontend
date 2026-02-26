@@ -10,11 +10,11 @@ import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Separator } from '../ui/separator';
 import { User, Property, InvestorInvestment, InvestorDistribution } from '../../types';
-import { getProperties } from '../../lib/data';
-import { getInvestorById } from '../../lib/investors';
-import { getAllInvestorInvestments } from '../../lib/investors';
-import { getAllInvestorDistributions } from '../../lib/saleDistribution';
-import { getPropertyInvestorTransactions } from '../../lib/investorTransactions';
+// [STUBBED] import { getProperties } from '../../lib/data';
+// [STUBBED] import { getInvestorById } from '../../lib/investors';
+// [STUBBED] import { getAllInvestorInvestments } from '../../lib/investors';
+// [STUBBED] import { getAllInvestorDistributions } from '../../lib/saleDistribution';
+// [STUBBED] import { getPropertyInvestorTransactions } from '../../lib/investorTransactions';
 import { formatPKR } from '../../lib/currency';
 import {
   Building2,
@@ -33,6 +33,15 @@ import {
   Eye,
   FileText,
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllInvestorDistributions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyInvestorTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorPropertiesAnalyticsProps {
   user: User;

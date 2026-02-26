@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { StatusBadge } from './StatusBadge';
 import { MetricCard } from './MetricCard';
 import { ConnectedEntitiesBar, ConnectedEntity } from './ConnectedEntitiesBar';
+import { logger } from "../../lib/logger";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -160,7 +161,7 @@ export function PageHeader({
                 key={index}
                 variant={action.variant || 'default'}
                 onClick={(e) => {
-                  console.log('PageHeader Button Clicked:', {
+                  logger.log('PageHeader Button Clicked:', {
                     label: action.label,
                     hasOnClick: !!action.onClick,
                     onClickType: typeof action.onClick,
@@ -171,12 +172,12 @@ export function PageHeader({
                   if (action.onClick) {
                     try {
                       action.onClick();
-                      console.log('✅ onClick executed successfully for:', action.label);
+                      logger.log('✅ onClick executed successfully for:', action.label);
                     } catch (error) {
-                      console.error('❌ Error executing onClick for:', action.label, error);
+                      logger.error('❌ Error executing onClick for:', action.label, error);
                     }
                   } else {
-                    console.error('❌ No onClick handler for:', action.label);
+                    logger.error('❌ No onClick handler for:', action.label);
                   }
                 }}
                 className="min-w-[100px]"

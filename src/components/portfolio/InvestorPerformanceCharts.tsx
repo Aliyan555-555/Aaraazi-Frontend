@@ -37,9 +37,17 @@ import {
   TooltipProps
 } from 'recharts';
 import { formatPKR } from '../../lib/currency';
-import { getInvestors, getInvestorInvestments, calculateInvestorROI } from '../../lib/investors';
-import { getProperties } from '../../lib/data';
+// [STUBBED] import { getInvestors, getInvestorInvestments, calculateInvestorROI } from '../../lib/investors';
+// [STUBBED] import { getProperties } from '../../lib/data';
 import { InvestorInvestment } from '../../types';
+
+// ===== STUBS for removed prototype functions =====
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorROI = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorPerformanceChartsProps {
   investorId?: string; // If provided, show individual investor performance
@@ -67,9 +75,9 @@ const CHART_COLORS = [
   '#f97316'  // Deep Orange
 ];
 
-export default function InvestorPerformanceCharts({ 
+export default function InvestorPerformanceCharts({
   investorId,
-  dateRange = 'all' 
+  dateRange = 'all'
 }: InvestorPerformanceChartsProps) {
   const investors = getInvestors();
   const properties = getProperties();
@@ -79,7 +87,7 @@ export default function InvestorPerformanceCharts({
     if (investorId) {
       const investor = investors.find(inv => inv.id === investorId);
       if (!investor) return [];
-      
+
       const investments = getInvestorInvestments(investorId);
       return investments.map(inv => ({
         ...inv,
@@ -89,7 +97,7 @@ export default function InvestorPerformanceCharts({
     } else {
       // All investors
       const allInvestments: Array<InvestorInvestment & { investorName: string; propertyTitle: string }> = [];
-      
+
       investors.forEach(investor => {
         const investments = getInvestorInvestments(investor.id);
         investments.forEach(inv => {
@@ -100,7 +108,7 @@ export default function InvestorPerformanceCharts({
           });
         });
       });
-      
+
       return allInvestments;
     }
   }, [investorId, investors, properties]);
@@ -108,15 +116,15 @@ export default function InvestorPerformanceCharts({
   // Portfolio composition by property type
   const propertyTypeData = useMemo(() => {
     const typeMap = new Map<string, number>();
-    
+
     investmentData.forEach(inv => {
       const property = properties.find(p => p.id === inv.propertyId);
       if (property) {
-        const type = property.type;
+        const type = property.propertyType || (property as any).type || 'unknown';
         typeMap.set(type, (typeMap.get(type) || 0) + inv.investmentAmount);
       }
     });
-    
+
     return Array.from(typeMap.entries()).map(([name, value]) => ({
       name,
       value
@@ -126,7 +134,7 @@ export default function InvestorPerformanceCharts({
   // Investment status distribution
   const statusData = useMemo(() => {
     const statusMap = new Map<string, { count: number; value: number }>();
-    
+
     investmentData.forEach(inv => {
       const current = statusMap.get(inv.status) || { count: 0, value: 0 };
       statusMap.set(inv.status, {
@@ -134,7 +142,7 @@ export default function InvestorPerformanceCharts({
         value: current.value + inv.currentValue
       });
     });
-    
+
     return Array.from(statusMap.entries()).map(([name, data]) => ({
       name: name.charAt(0).toUpperCase() + name.slice(1),
       count: data.count,
@@ -145,12 +153,12 @@ export default function InvestorPerformanceCharts({
   // ROI performance by investor
   const investorROIData = useMemo(() => {
     if (investorId) return [];
-    
+
     return investors.map(investor => {
       const roi = calculateInvestorROI(investor.id);
       const investments = getInvestorInvestments(investor.id);
       const totalInvested = investments.reduce((sum, inv) => sum + inv.investmentAmount, 0);
-      
+
       return {
         name: investor.name,
         roi,
@@ -162,14 +170,14 @@ export default function InvestorPerformanceCharts({
   // Monthly investment timeline
   const timelineData = useMemo(() => {
     const monthlyData = new Map<string, { invested: number; realized: number }>();
-    
+
     investmentData.forEach(inv => {
       const date = new Date(inv.investmentDate);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
+
       const current = monthlyData.get(monthKey) || { invested: 0, realized: 0 };
       current.invested += inv.investmentAmount;
-      
+
       if (inv.status === 'sold' && inv.exitDate) {
         const exitDate = new Date(inv.exitDate);
         const exitMonthKey = `${exitDate.getFullYear()}-${String(exitDate.getMonth() + 1).padStart(2, '0')}`;
@@ -177,10 +185,10 @@ export default function InvestorPerformanceCharts({
         exitCurrent.realized += inv.realizedProfit || 0;
         monthlyData.set(exitMonthKey, exitCurrent);
       }
-      
+
       monthlyData.set(monthKey, current);
     });
-    
+
     return Array.from(monthlyData.entries())
       .map(([month, data]) => ({
         month,
@@ -212,10 +220,10 @@ export default function InvestorPerformanceCharts({
     const totalRealizedProfit = investmentData
       .filter(inv => inv.status === 'sold')
       .reduce((sum, inv) => sum + (inv.realizedProfit || 0), 0);
-    const avgROI = totalInvested > 0 
-      ? ((totalCurrentValue - totalInvested) / totalInvested) * 100 
+    const avgROI = totalInvested > 0
+      ? ((totalCurrentValue - totalInvested) / totalInvested) * 100
       : 0;
-    
+
     return {
       totalInvested,
       totalCurrentValue,
@@ -227,12 +235,12 @@ export default function InvestorPerformanceCharts({
   }, [investmentData]);
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <Card className="p-3 shadow-lg">
           <p className="font-medium mb-2">{label}</p>
-          {payload.map((entry, index) => (
+          {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {typeof entry.value === 'number' ? formatPKR(entry.value) : entry.value}
             </p>
@@ -335,7 +343,7 @@ export default function InvestorPerformanceCharts({
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                         outerRadius={100}
                         fill="#8884d8"
                         dataKey="value"
@@ -392,12 +400,12 @@ export default function InvestorPerformanceCharts({
                   <AreaChart data={timelineData}>
                     <defs>
                       <linearGradient id="colorInvested" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0}/>
+                        <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8} />
+                        <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorRealized" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={COLORS.success} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={COLORS.success} stopOpacity={0}/>
+                        <stop offset="5%" stopColor={COLORS.success} stopOpacity={0.8} />
+                        <stop offset="95%" stopColor={COLORS.success} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -405,20 +413,20 @@ export default function InvestorPerformanceCharts({
                     <YAxis tickFormatter={(value) => formatPKR(value)} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="invested" 
-                      stroke={COLORS.primary} 
-                      fillOpacity={1} 
-                      fill="url(#colorInvested)" 
+                    <Area
+                      type="monotone"
+                      dataKey="invested"
+                      stroke={COLORS.primary}
+                      fillOpacity={1}
+                      fill="url(#colorInvested)"
                       name="Invested"
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="realized" 
-                      stroke={COLORS.success} 
-                      fillOpacity={1} 
-                      fill="url(#colorRealized)" 
+                    <Area
+                      type="monotone"
+                      dataKey="realized"
+                      stroke={COLORS.success}
+                      fillOpacity={1}
+                      fill="url(#colorRealized)"
                       name="Realized Profit"
                     />
                   </AreaChart>
@@ -446,7 +454,7 @@ export default function InvestorPerformanceCharts({
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis type="number" tickFormatter={(value) => `${value.toFixed(1)}%`} />
                       <YAxis type="category" dataKey="name" width={150} />
-                      <Tooltip 
+                      <Tooltip
                         content={({ active, payload }) => {
                           if (active && payload && payload.length) {
                             return (
@@ -493,7 +501,7 @@ export default function InvestorPerformanceCharts({
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, count }) => `${name} (${count})`}
+                        label={({ name, payload }: any) => `${name} (${payload.count})`}
                         outerRadius={100}
                         fill="#8884d8"
                         dataKey="count"

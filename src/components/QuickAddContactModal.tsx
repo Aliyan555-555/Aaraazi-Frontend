@@ -6,9 +6,14 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { Contact, User } from '../types';
-import { addContact } from '../lib/data';
+// [STUBBED] import { addContact } from '../lib/data';
 import { toast } from 'sonner';
 import { Phone, Mail, User as UserIcon } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const addContact = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface QuickAddContactModalProps {
   user: User;
@@ -36,7 +41,7 @@ export const QuickAddContactModal: React.FC<QuickAddContactModalProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | Contact['type'] | Contact['category']) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

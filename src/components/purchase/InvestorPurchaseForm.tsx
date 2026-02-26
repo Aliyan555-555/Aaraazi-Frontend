@@ -13,12 +13,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
-import { createPurchaseCycle } from '../../lib/purchaseCycle';
+// [STUBBED] import { createPurchaseCycle } from '../../lib/purchaseCycle';
 import { createInvestorInvestmentsFromPurchase, transferPropertyToInvestors, validateInvestorShares } from '../../lib/multiInvestorPurchase';
 import { Users, AlertCircle, DollarSign, Edit, X } from 'lucide-react';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { InvestorSelectionModal } from './InvestorSelectionModal';
+
+import { logger } from "../../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const createPurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface InvestorPurchaseFormProps {
   property: Property;
@@ -76,7 +82,7 @@ export function InvestorPurchaseForm({
   }, [totalPrice]);
 
   const handleInvestorsSelected = (investors: InvestorShare[]) => {
-    console.log('✅ Investors selected:', {
+    logger.log('✅ Investors selected:', {
       count: investors.length,
       investors: investors.map(inv => ({
         name: inv.investorName,
@@ -104,8 +110,8 @@ export function InvestorPurchaseForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🚀 Investor Purchase Form - Starting submission');
-    console.log('📊 Form Data:', {
+    logger.log('🚀 Investor Purchase Form - Starting submission');
+    logger.log('📊 Form Data:', {
       selectedInvestors: selectedInvestors.length,
       sellerName: formData.sellerName,
       askingPrice: formData.askingPrice,
@@ -114,7 +120,7 @@ export function InvestorPurchaseForm({
     
     // Validation
     if (selectedInvestors.length === 0) {
-      console.error('❌ Validation failed: No investors selected');
+      logger.error('❌ Validation failed: No investors selected');
       toast.error('Please select at least one investor');
       handleOpenInvestorModal();
       return;
@@ -123,40 +129,40 @@ export function InvestorPurchaseForm({
     // Validate investor shares
     const validation = validateInvestorShares(selectedInvestors);
     if (!validation.valid) {
-      console.error('❌ Validation failed: Invalid investor shares', validation.error);
+      logger.error('❌ Validation failed: Invalid investor shares', validation.error);
       toast.error(validation.error || 'Invalid investor selection');
       return;
     }
     
     if (!formData.sellerName.trim()) {
-      console.error('❌ Validation failed: No seller name');
+      logger.error('❌ Validation failed: No seller name');
       toast.error('Please enter seller name');
       return;
     }
     if (!formData.sellerContact.trim()) {
-      console.error('❌ Validation failed: No seller contact');
+      logger.error('❌ Validation failed: No seller contact');
       toast.error('Please enter seller contact');
       return;
     }
     if (!formData.askingPrice || parseFloat(formData.askingPrice) <= 0) {
-      console.error('❌ Validation failed: Invalid asking price');
+      logger.error('❌ Validation failed: Invalid asking price');
       toast.error('Please enter valid asking price');
       return;
     }
     if (!formData.offerAmount || parseFloat(formData.offerAmount) <= 0) {
-      console.error('❌ Validation failed: Invalid offer amount');
+      logger.error('❌ Validation failed: Invalid offer amount');
       toast.error('Please enter valid offer amount');
       return;
     }
 
-    console.log('✅ All validations passed');
+    logger.log('✅ All validations passed');
     setIsSubmitting(true);
 
     try {
       // Build investor names for display
       const investorNames = selectedInvestors.map(inv => inv.investorName).join(', ');
       
-      console.log('📝 Creating purchase cycle with data:', {
+      logger.log('📝 Creating purchase cycle with data:', {
         propertyId: property.id,
         purchaserType: 'investor',
         investorCount: selectedInvestors.length,
@@ -202,11 +208,11 @@ export function InvestorPurchaseForm({
         notes: formData.notes || undefined,
       });
 
-      console.log('✅ Purchase cycle created:', purchaseCycle.id);
-      console.log('💾 Investors saved in cycle:', purchaseCycle.investors?.length || 0);
+      logger.log('✅ Purchase cycle created:', purchaseCycle.id);
+      logger.log('💾 Investors saved in cycle:', purchaseCycle.investors?.length || 0);
 
       // CRITICAL: Create InvestorInvestment records and transfer property ownership
-      console.log('📋 Creating investor investment records...');
+      logger.log('📋 Creating investor investment records...');
       createInvestorInvestmentsFromPurchase(
         purchaseCycle.id,
         property.id,
@@ -214,18 +220,18 @@ export function InvestorPurchaseForm({
         purchaseCycle
       );
       
-      console.log('🏠 Transferring property ownership to investors...');
+      logger.log('🏠 Transferring property ownership to investors...');
       transferPropertyToInvestors(
         property.id,
         selectedInvestors,
         purchaseCycle
       );
 
-      console.log('🎉 Investor purchase completed successfully!');
+      logger.log('🎉 Investor purchase completed successfully!');
       toast.success(`Multi-investor purchase cycle created with ${selectedInvestors.length} investor${selectedInvestors.length !== 1 ? 's' : ''}!`);
       onSuccess();
     } catch (error) {
-      console.error('❌ Error creating purchase cycle:', error);
+      logger.error('❌ Error creating purchase cycle:', error);
       toast.error('Failed to create purchase cycle');
     } finally {
       setIsSubmitting(false);

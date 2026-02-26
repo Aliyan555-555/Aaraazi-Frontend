@@ -37,7 +37,7 @@ import {
   TaskStats,
   TaskEntityType,
 } from '../../types/tasks';
-import { getAllTasksV4, updateTask, deleteTask } from '../../lib/tasks';
+// [STUBBED] import { getAllTasksV4, updateTask, deleteTask } from '../../lib/tasks';
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader';
 import { WorkspaceSearchBar } from '../workspace/WorkspaceSearchBar';
 import { WorkspaceEmptyState } from '../workspace/WorkspaceEmptyState';
@@ -73,6 +73,14 @@ import { Card } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
+
+import { logger } from "../../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface TasksWorkspaceV4Props {
   user: User;
@@ -545,7 +553,7 @@ export const TasksWorkspaceV4: React.FC<TasksWorkspaceV4Props> = ({
 
   const handleBulkAssign = () => {
     // TODO: Open bulk assign modal
-    console.log('Bulk assign:', selectedTasks);
+    logger.log('Bulk assign:', selectedTasks);
   };
 
   const handleBulkEdit = () => {
@@ -605,7 +613,7 @@ export const TasksWorkspaceV4: React.FC<TasksWorkspaceV4Props> = ({
             {
               label: 'Templates',
               icon: <FileText className="h-4 w-4" />,
-              onClick: () => console.log('Templates'),
+              onClick: () => logger.log('Templates'),
             },
             {
               label: 'Automation',
@@ -669,12 +677,12 @@ export const TasksWorkspaceV4: React.FC<TasksWorkspaceV4Props> = ({
           {
             label: 'Import',
             icon: <Upload className="h-4 w-4" />,
-            onClick: () => console.log('Import'),
+            onClick: () => logger.log('Import'),
           },
           {
             label: 'Export',
             icon: <Download className="h-4 w-4" />,
-            onClick: () => console.log('Export'),
+            onClick: () => logger.log('Export'),
           },
         ]}
         viewMode={viewMode === 'list' ? 'table' : viewMode === 'board' ? 'kanban' : 'grid'}

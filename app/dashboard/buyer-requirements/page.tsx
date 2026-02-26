@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { BuyerRequirementsWorkspaceV4 } from '@/components/requirements/BuyerRequirementsWorkspaceV4';
+import { BuyerRequirementsWorkspace } from '@/components/requirements/BuyerRequirementsWorkspace';
 import { User, mapAuthUserToUIUser } from '@/types';
 
 export default function BuyerRequirementsPage() {
@@ -27,7 +27,7 @@ export default function BuyerRequirementsPage() {
     }
 
     return (
-        <BuyerRequirementsWorkspaceV4
+        <BuyerRequirementsWorkspace
             user={user}
             onNavigate={handleNavigate}
             onAddNew={() => console.log("Add new requirement")}
