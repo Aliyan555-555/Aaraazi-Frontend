@@ -1,4 +1,5 @@
 <<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
+<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
 /**
  * ContactsWorkspaceEnhanced Component
  * Workspace: Enhanced with full functionality ✅
@@ -27,6 +28,9 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 ========
 import React, { useState, useMemo } from 'react';
 >>>>>>>> aaraazi/documents:src/components/contacts/ContactsWorkspace.tsx
+========
+import React, { useState, useMemo } from 'react';
+>>>>>>>> aaraazi/authentication:src/components/contacts/ContactsWorkspace.tsx
 import {
   Plus,
   Download,
@@ -74,6 +78,7 @@ interface WorkspaceUser {
 }
 
 <<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
+<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
 export interface ContactsWorkspaceEnhancedProps {
   user: User;
   onNavigate: (section: string, id?: string) => void;
@@ -81,11 +86,16 @@ export interface ContactsWorkspaceEnhancedProps {
 export interface ContactsWorkspaceProps {
   user: WorkspaceUser;
 >>>>>>>> aaraazi/documents:src/components/contacts/ContactsWorkspace.tsx
+========
+export interface ContactsWorkspaceProps {
+  user: WorkspaceUser;
+>>>>>>>> aaraazi/authentication:src/components/contacts/ContactsWorkspace.tsx
   onAddContact?: () => void;
   onEditContact?: (contact: Contact) => void;
 }
 
 /**
+<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
 <<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
  * ContactsWorkspaceEnhanced - Complete workspace with all functionality
  */
@@ -95,6 +105,11 @@ export const ContactsWorkspaceEnhanced: React.FC<ContactsWorkspaceEnhancedProps>
  */
 export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
 >>>>>>>> aaraazi/documents:src/components/contacts/ContactsWorkspace.tsx
+========
+ * ContactsWorkspace - Contact list and management
+ */
+export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
+>>>>>>>> aaraazi/authentication:src/components/contacts/ContactsWorkspace.tsx
   user,
   onAddContact,
   onEditContact,
@@ -773,6 +788,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     </>
   );
 <<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
+<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
 };
 
 // Explicit default export for lazy loading compatibility
@@ -780,3 +796,6 @@ export default ContactsWorkspaceEnhanced;
 ========
 };
 >>>>>>>> aaraazi/documents:src/components/contacts/ContactsWorkspace.tsx
+========
+};
+>>>>>>>> aaraazi/authentication:src/components/contacts/ContactsWorkspace.tsx

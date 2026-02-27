@@ -67,8 +67,18 @@ export interface LoginDto {
   password: string;
 }
 
+export interface RegisterDto {
+  name: string;
+  email: string;
+  password: string;
+  tenantId: string;
+  agencyId?: string;
+  role?: string;
+}
+
 export interface LoginResponse {
   accessToken: string;
+  refreshToken?: string;
   expiresAt: string;
   user: User;
 }

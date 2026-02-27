@@ -16,6 +16,7 @@ import type {
 } from '@/types/auth.types';
 import { authService } from '@/services/auth.service';
 import { setAuthToken, clearAuthToken } from '@/lib/api/client';
+import { setAuthCookie, clearAuthCookie, AUTH_STORAGE_KEY } from '@/lib/auth-storage';
 
 // ============================================================================
 // Auth Store State Interface
@@ -25,6 +26,7 @@ export interface AuthStore {
   // State
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
   session: UserSession | null;
   tenantId: string | null;
   agencyId: string | null;
@@ -68,6 +70,7 @@ export interface AuthStore {
 const initialState = {
   user: null,
   accessToken: null,
+  refreshToken: null,
   session: null,
   tenantId: null,
   agencyId: null,
@@ -140,12 +143,23 @@ export const useAuthStore = create<AuthStore>()(
           // Set auth token for future requests
           setAuthToken(response.accessToken);
 
+          const agencyId = (credentials.agencyId ?? response.user?.agencyId) ?? null;
+
+          // Set cookie for middleware (edge-readable)
+          setAuthCookie(
+            response.accessToken,
+            response.user,
+            credentials.tenantId,
+            agencyId,
+          );
+
           // Update store with auth data
           set({
             user: response.user,
             accessToken: response.accessToken,
+            refreshToken: response.refreshToken ?? null,
             tenantId: credentials.tenantId,
-            agencyId: credentials.agencyId || response.user.agencyId,
+            agencyId,
             isAuthenticated: true,
             isLoading: false,
             isInitialized: true,
@@ -184,8 +198,9 @@ export const useAuthStore = create<AuthStore>()(
           console.error('Logout API failed:', error);
           // Continue with local cleanup even if API fails
         } finally {
-          // Clear auth token
+          // Clear auth token and cookie
           clearAuthToken();
+          clearAuthCookie();
 
           // Reset store to initial state
           set({
@@ -200,15 +215,37 @@ export const useAuthStore = create<AuthStore>()(
       // ========================================================================
 
       refreshSession: async () => {
-        const { accessToken } = get();
+        const { accessToken, refreshToken } = get();
 
-        if (!accessToken) {
-          throw new Error('No access token available');
+        if (!accessToken && !refreshToken) {
+          throw new Error('No token available');
         }
 
         try {
           set({ isLoading: true, error: null });
 
+          // Prefer refresh token API when available
+          if (refreshToken) {
+            const response = await authService.refreshToken(refreshToken);
+            setAuthToken(response.accessToken);
+            setAuthCookie(
+              response.accessToken,
+              response.user,
+              get().tenantId,
+              get().agencyId,
+            );
+            set({
+              user: response.user,
+              accessToken: response.accessToken,
+              refreshToken: response.refreshToken ?? get().refreshToken,
+              isLoading: false,
+              error: null,
+            });
+            // Session may be returned by refresh-token endpoint in future; skip for now
+            return;
+          }
+
+          // Fallback to getSession for backward compatibility
           const response = await authService.refreshSession();
 
           set({
@@ -266,6 +303,7 @@ export const useAuthStore = create<AuthStore>()(
 
       reset: () => {
         clearAuthToken();
+        clearAuthCookie();
         set({
           ...initialState,
           isInitialized: true,
@@ -273,12 +311,13 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'aaraazi-auth-storage',
+      name: AUTH_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Only persist essential data (Zustand persist is the single storage for auth)
         user: state.user,
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         tenantId: state.tenantId,
         agencyId: state.agencyId,
         branding: state.branding,
@@ -292,7 +331,15 @@ export const useAuthStore = create<AuthStore>()(
         if (state?.accessToken) {
           setAuthToken(state.accessToken);
         }
-        
+        // Restore cookie for middleware
+        if (state?.accessToken && state?.user) {
+          setAuthCookie(
+            state.accessToken,
+            state.user,
+            state.tenantId,
+            state.agencyId,
+          );
+        }
         // Mark as initialized
         if (state) {
           state.isInitialized = true;
