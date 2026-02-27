@@ -5,6 +5,11 @@
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import type { ApiError } from '@/types/auth.types';
+import {
+  AUTH_STORAGE_KEY,
+  AUTH_STORAGE_VERSION,
+  clearAuthStorage,
+} from '@/lib/auth-storage';
 
 // ============================================================================
 // Configuration
@@ -35,7 +40,7 @@ apiClient.interceptors.request.use(
     // Get token from localStorage (Zustand persist storage)
     if (typeof window !== 'undefined') {
       try {
-        const authStorage = localStorage.getItem('aaraazi-auth-storage');
+        const authStorage = localStorage.getItem(AUTH_STORAGE_KEY);
         if (authStorage) {
           const { state } = JSON.parse(authStorage);
           const token = state?.accessToken;
@@ -103,8 +108,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== 'undefined') {
       if (originalRequest.url?.includes('/auth/refresh-token')) {
         // Refresh failed - clear auth and redirect
-        localStorage.removeItem('aaraazi-auth-storage');
-        document.cookie = 'aaraazi-auth=; path=/; max-age=0';
+        clearAuthStorage();
         const currentPath = window.location.pathname;
         if (!currentPath.startsWith('/auth')) {
           window.location.href = '/auth/agency-code';
@@ -113,7 +117,7 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        const authStorage = localStorage.getItem('aaraazi-auth-storage');
+        const authStorage = localStorage.getItem(AUTH_STORAGE_KEY);
         const parsed = authStorage ? JSON.parse(authStorage) : null;
         const refreshToken = parsed?.state?.refreshToken;
 
@@ -138,7 +142,7 @@ apiClient.interceptors.response.use(
 
         const { accessToken, refreshToken: newRefreshToken } = response.data;
         const newState = { ...parsed?.state, accessToken, refreshToken: newRefreshToken ?? refreshToken };
-        localStorage.setItem('aaraazi-auth-storage', JSON.stringify({ state: newState, version: 1 }));
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ state: newState, version: AUTH_STORAGE_VERSION }));
         setAuthToken(accessToken);
 
         processQueue(null, accessToken);
@@ -147,8 +151,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        localStorage.removeItem('aaraazi-auth-storage');
-        document.cookie = 'aaraazi-auth=; path=/; max-age=0';
+        clearAuthStorage();
         const currentPath = window.location.pathname;
         if (!currentPath.startsWith('/auth')) {
           window.location.href = '/auth/agency-code';
@@ -174,7 +177,7 @@ apiClient.interceptors.response.use(
       switch (status) {
         case 401:
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('aaraazi-auth-storage');
+            clearAuthStorage();
             const currentPath = window.location.pathname;
             if (!currentPath.startsWith('/auth')) {
               window.location.href = '/auth/agency-code';

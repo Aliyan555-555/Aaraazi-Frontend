@@ -5,11 +5,12 @@
 
 import { act, waitFor } from '@testing-library/react';
 import { useAuthStore, selectBranding, selectTenant } from '../useAuthStore';
-
-const STORAGE_KEY = 'aaraazi-auth-storage';
+import { AUTH_STORAGE_KEY } from '@/lib/auth-storage';
 
 const mockSetAuthToken = jest.fn();
 const mockClearAuthToken = jest.fn();
+const mockSetAuthCookie = jest.fn();
+const mockClearAuthCookie = jest.fn();
 
 jest.mock('@/services/auth.service', () => ({
   authService: {
@@ -23,6 +24,12 @@ jest.mock('@/services/auth.service', () => ({
 jest.mock('@/lib/api/client', () => ({
   setAuthToken: (...args: unknown[]) => mockSetAuthToken(...args),
   clearAuthToken: (...args: unknown[]) => mockClearAuthToken(...args),
+}));
+
+jest.mock('@/lib/auth-storage', () => ({
+  AUTH_STORAGE_KEY: 'aaraazi-auth-storage',
+  setAuthCookie: (...args: unknown[]) => mockSetAuthCookie(...args),
+  clearAuthCookie: (...args: unknown[]) => mockClearAuthCookie(...args),
 }));
 
 describe('useAuthStore - Session Persistence', () => {
@@ -60,6 +67,8 @@ describe('useAuthStore - Session Persistence', () => {
     localStorageMock = {};
     mockSetAuthToken.mockClear();
     mockClearAuthToken.mockClear();
+    mockSetAuthCookie.mockClear();
+    mockClearAuthCookie.mockClear();
     jest.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => {
       return localStorageMock[key] ?? null;
     });
@@ -105,7 +114,7 @@ describe('useAuthStore - Session Persistence', () => {
       });
     });
 
-    const stored = localStorageMock[STORAGE_KEY];
+    const stored = localStorageMock[AUTH_STORAGE_KEY];
     expect(stored).toBeDefined();
 
     const parsed = JSON.parse(stored!);
@@ -114,6 +123,50 @@ describe('useAuthStore - Session Persistence', () => {
     expect(parsed.state.accessToken).toBe(mockAccessToken);
     expect(parsed.state.tenantId).toBe('tenant-1');
     expect(parsed.state.isAuthenticated).toBe(true);
+
+    expect(mockSetAuthCookie).toHaveBeenCalledWith(
+      mockAccessToken,
+      mockUser,
+      'tenant-1',
+      'agency-1'
+    );
+  });
+
+  it('calls clearAuthCookie on logout', async () => {
+    const { authService } = require('@/services/auth.service');
+    authService.login.mockResolvedValue({
+      accessToken: 'logout-test-token',
+      expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      user: mockUser,
+    });
+    authService.getSession.mockRejectedValue(new Error('skip'));
+    authService.logout.mockResolvedValue(undefined);
+
+    await act(async () => {
+      useAuthStore.getState().setTenant('tenant-1', mockBranding, [mockAgency]);
+    });
+    await act(async () => {
+      await useAuthStore.getState().login({
+        tenantId: 'tenant-1',
+        email: 'test@example.com',
+        password: 'password123',
+      });
+    });
+
+    expect(mockSetAuthCookie).toHaveBeenCalled();
+
+    await act(async () => {
+      await useAuthStore.getState().logout();
+    });
+
+    expect(mockClearAuthCookie).toHaveBeenCalled();
+  });
+
+  it('calls clearAuthCookie on reset', () => {
+    act(() => {
+      useAuthStore.getState().reset();
+    });
+    expect(mockClearAuthCookie).toHaveBeenCalled();
   });
 
   it('rehydrates persisted state from localStorage on rehydrate', async () => {
@@ -131,7 +184,7 @@ describe('useAuthStore - Session Persistence', () => {
       version: 0,
     };
 
-    localStorageMock[STORAGE_KEY] = JSON.stringify(persistedState);
+    localStorageMock[AUTH_STORAGE_KEY] = JSON.stringify(persistedState);
 
     await act(async () => {
       await useAuthStore.persist.rehydrate();
@@ -163,7 +216,7 @@ describe('useAuthStore - Session Persistence', () => {
       version: 0,
     };
 
-    localStorageMock[STORAGE_KEY] = JSON.stringify(persistedState);
+    localStorageMock[AUTH_STORAGE_KEY] = JSON.stringify(persistedState);
 
     await act(async () => {
       await useAuthStore.persist.rehydrate();
@@ -201,7 +254,7 @@ describe('useAuthStore - Session Persistence', () => {
       await useAuthStore.getState().logout();
     });
 
-    const stored = localStorageMock[STORAGE_KEY];
+    const stored = localStorageMock[AUTH_STORAGE_KEY];
     expect(stored).toBeDefined();
     const parsed = JSON.parse(stored!);
     expect(parsed.state.isAuthenticated).toBe(false);
@@ -227,7 +280,7 @@ describe('useAuthStore - Session Persistence', () => {
         useAuthStore.getState().setTenant('tenant-1', fullWhiteLabelBranding, [mockAgency]);
       });
 
-      const stored = localStorageMock[STORAGE_KEY];
+      const stored = localStorageMock[AUTH_STORAGE_KEY];
       expect(stored).toBeDefined();
       const parsed = JSON.parse(stored!);
       expect(parsed.state.branding).toEqual(fullWhiteLabelBranding);
@@ -250,7 +303,7 @@ describe('useAuthStore - Session Persistence', () => {
         version: 0,
       };
 
-      localStorageMock[STORAGE_KEY] = JSON.stringify(persistedState);
+      localStorageMock[AUTH_STORAGE_KEY] = JSON.stringify(persistedState);
 
       await act(async () => {
         await useAuthStore.persist.rehydrate();

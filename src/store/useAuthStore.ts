@@ -16,33 +16,11 @@ import type {
 } from '@/types/auth.types';
 import { authService } from '@/services/auth.service';
 import { setAuthToken, clearAuthToken } from '@/lib/api/client';
+import { setAuthCookie, clearAuthCookie, AUTH_STORAGE_KEY } from '@/lib/auth-storage';
 
 // ============================================================================
 // Auth Store State Interface
 // ============================================================================
-
-const COOKIE_NAME = 'aaraazi-auth';
-const COOKIE_MAX_AGE = 15 * 60; // 15 minutes (matches JWT access token)
-
-function setAuthCookie(accessToken: string, user: User, tenantId: string | null, agencyId: string | null) {
-  if (typeof document === 'undefined') return;
-  const payload = JSON.stringify({
-    accessToken,
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      tenantId,
-      agencyId,
-    },
-  });
-  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(payload)}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Strict`;
-}
-
-function clearAuthCookie() {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0`;
-}
 
 export interface AuthStore {
   // State
@@ -335,7 +313,7 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'aaraazi-auth-storage',
+      name: AUTH_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Only persist essential data (Zustand persist is the single storage for auth)
