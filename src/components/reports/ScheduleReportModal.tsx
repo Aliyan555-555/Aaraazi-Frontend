@@ -48,8 +48,10 @@ import {
   ExportFormat
 } from '../../types/reports';
 import { toast } from 'sonner';
+// import { createScheduledReport, updateScheduledReport } from '../../lib/reports';
+import { useAuthStore } from '@/store/useAuthStore';
 // [STUBBED] import { createScheduledReport, updateScheduledReport } from '../../lib/reports';
-import { getCurrentUser } from '../../lib/auth';
+// import { getCurrentUser } from '../../lib/auth';
 
 // ===== STUBS for removed prototype functions =====
 const createScheduledReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
@@ -70,7 +72,7 @@ export default function ScheduleReportModal({
   template,
   existingSchedule
 }: ScheduleReportModalProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   // Form state
   const [frequency, setFrequency] = useState<ScheduleFrequency>(

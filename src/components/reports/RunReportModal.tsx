@@ -20,8 +20,8 @@ import {
   SelectValue,
 } from '../ui/select';
 import { ReportTemplate, DateRangePreset, GeneratedReport } from '../../types/reports';
-// [STUBBED] import { generateReport } from '../../lib/reports';
-import { getCurrentUser } from '../../lib/auth';
+// import { generateReport } from '../../lib/reports';
+import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
 import ReportViewer from './ReportViewer';
 
@@ -37,7 +37,7 @@ interface RunReportModalProps {
 }
 
 export default function RunReportModal({ template, onClose, onNavigate }: RunReportModalProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   const [dateRange, setDateRange] = useState<DateRangePreset>(
     template.config.dateRange.preset || 'this-month'

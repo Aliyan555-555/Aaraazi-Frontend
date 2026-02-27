@@ -44,9 +44,8 @@ import { Switch } from '../ui/switch';
 import { Avatar } from '../ui/avatar';
 import { ReportTemplate } from '../../types/reports';
 import { toast } from 'sonner';
-// [STUBBED] import { saveReportTemplate } from '../../lib/reports';
-import { getCurrentUser } from '../../lib/auth';
-// [STUBBED] import { getContacts } from '../../lib/data';
+// import { saveReportTemplate } from '../../lib/reports';
+import { useAuthStore } from '@/store/useAuthStore';
 
 // ===== STUBS for removed prototype functions =====
 const saveReportTemplate = (..._args: any[]): any => { /* stub - prototype function removed */ };
@@ -74,7 +73,7 @@ export default function ShareReportModal({
   template,
   onTemplateUpdate
 }: ShareReportModalProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,23 +86,17 @@ export default function ShareReportModal({
     const contacts = getContacts();
 
     // Convert contacts to share recipients
-    const recipients: ShareRecipient[] = contacts
-      .filter(c => c.email) // Only contacts with email
-      .map(c => ({
+    const recipients: ShareRecipient[] = (contacts ?? [])
+      .filter((c: { email?: string }) => c.email)
+      .map((c: { id: string; name: string; email: string; type?: string }) => ({
         id: c.id,
         name: c.name,
         email: c.email,
-        role: c.type || 'Contact'
+        role: c.type || 'Contact',
       }));
 
-    // Add current user's team members if in SaaS mode
-    if (saasUser?.organizationId) {
-      // TODO: Fetch team members from organization
-      // For now, we'll just use contacts
-    }
-
     return recipients;
-  }, [saasUser]);
+  }, []);
 
   // Filter users based on search
   const filteredUsers = useMemo(() => {

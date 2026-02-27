@@ -16,10 +16,10 @@ import { LeadV4 } from '../../../types/leads';
 import { CRMTask, CRMInteraction } from '../../../types';
 import { PerformanceMetric } from '../components/PerformanceCard';
 import { calculatePerformanceMetrics } from '../utils/calculatePerformanceMetrics';
-// [STUBBED] import { getProperties } from '../../../lib/data';
-// [STUBBED] import { getLeadsV4 } from '../../../lib/leadsV4';
-// [STUBBED] import { getAllTasks, getAllInteractions } from '../../../lib/data';
-import { getAllAgents } from '../../../lib/auth';
+// import { getProperties } from '../../../lib/data';
+// import { getLeadsV4 } from '../../../lib/leadsV4';
+// import { getAllTasks, getAllInteractions } from '../../../lib/data';
+import { getAllAgents } from '@/lib/users';
 
 // ===== STUBS for removed prototype functions =====
 // Return safe empty collections so downstream code (e.g. .length, iteration) does not break.
