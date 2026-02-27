@@ -241,9 +241,7 @@ export const useAuthStore = create<AuthStore>()(
               isLoading: false,
               error: null,
             });
-            if (response.session) {
-              set({ session: response.session });
-            }
+            // Session may be returned by refresh-token endpoint in future; skip for now
             return;
           }
 

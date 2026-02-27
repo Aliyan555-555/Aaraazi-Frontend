@@ -34,7 +34,7 @@ export function calculateActivePipeline(sellCycles: SellCycle[]): number {
     // Use highest offer if exists, otherwise asking price
     const highestOffer =
       cycle.offers && cycle.offers.length > 0
-        ? Math.max(...cycle.offers.map((o) => o.amount ?? 0))
+        ? Math.max(...cycle.offers.map((o) => o.offerAmount ?? o.amount ?? 0))
         : cycle.askingPrice;
 
     return sum + highestOffer;

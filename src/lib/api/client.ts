@@ -106,6 +106,12 @@ apiClient.interceptors.response.use(
 
     // Handle 401 with silent refresh
     if (error.response?.status === 401 && typeof window !== 'undefined') {
+      // Prevent infinite retry loops for a single request
+      if (originalRequest._retry) {
+        return Promise.reject(error);
+      }
+      originalRequest._retry = true;
+
       if (originalRequest.url?.includes('/auth/refresh-token')) {
         // Refresh failed - clear auth and redirect
         clearAuthStorage();
