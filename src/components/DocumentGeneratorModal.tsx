@@ -13,7 +13,7 @@ import { Progress } from './ui/progress';
 import { FileText, Download, X, ChevronLeft, ChevronRight, Check, Plus, GripVertical, Trash2, Printer } from 'lucide-react';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
-import { getContacts } from '../lib/data';
+// [STUBBED] import { getContacts } from '../lib/data';
 import {
   getDefaultClauses,
   saveGeneratedDocument,
@@ -58,6 +58,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+// ===== STUBS for removed prototype functions =====
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 /** Payment method options aligned with backend Prisma enum PaymentMethod */
 const DOCUMENT_PAYMENT_METHODS: { value: string; label: string }[] = [

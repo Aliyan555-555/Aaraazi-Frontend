@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ClientInit } from "@/components/ClientInit";
 import { WhiteLabelProvider } from "@/components/WhiteLabelProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
+import { GlobalConfirmDialog } from "@/components/ui/global-confirm-dialog";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -58,8 +58,8 @@ export default function RootLayout({
             <body className={`${inter.className} antialiased min-h-screen bg-background text-foreground`} suppressHydrationWarning>
                 <AuthProvider>
                     <WhiteLabelProvider>
-                        <ClientInit />
                         {children}
+                        <GlobalConfirmDialog />
                     </WhiteLabelProvider>
                 </AuthProvider>
             </body>

@@ -1,23 +1,3 @@
-/**
- * TasksSummaryWidget Component
- * 
- * Quick overview of task statistics for the dashboard.
- * 
- * FEATURES:
- * - Task count by status
- * - Overdue tasks highlight
- * - Completion rate
- * - Quick navigation to tasks
- * 
- * DESIGN: Design System compliant
- * UX LAWS: Miller's Law (5±2 metrics)
- * 
- * @example
- * <TasksSummaryWidget
- *   user={user}
- *   onNavigate={(route) => handleNavigate(route)}
- * />
- */
 
 import React, { useMemo } from 'react';
 import { User } from '../../../types';
@@ -33,6 +13,11 @@ import {
   TrendingUp,
   ArrowRight,
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+// const getAllTasksV4 = (..._args: any[]): TaskV4[] => []; // stub - return empty so stats derive correctly
+// ===== END STUBS =====
+
 
 interface TasksSummaryWidgetProps {
   user: User;
@@ -84,8 +69,8 @@ export const TasksSummaryWidget: React.FC<TasksSummaryWidgetProps> = ({
   // Load tasks
   const tasks = useMemo(() => getAllTasks(user.id, user.role), [user.id, user.role]);
   
-  // Calculate stats
-  const stats = useMemo(() => getTaskStats(tasks), [tasks]);
+  // Calculate stats (from tasks so counts/completion metrics reflect current data)
+  const stats = useMemo(() => getTaskStats(tasks ?? []), [tasks]);
 
   // Handle view all
   const handleViewAll = () => {

@@ -10,6 +10,12 @@ import { formatPropertyAddress } from '../../lib/utils';
 import { InvestorPurchaseFormContent } from './InvestorPurchaseForm.old';
 import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
 
+import { logger } from "../../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const createPurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 interface InvestorPurchaseFormProps {
   property: Property;
   user: User;

@@ -28,7 +28,7 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
 
   // Helper function to export deals to CSV
   const exportDealsToCSV = (deals: Deal[]) => {
-    console.log('Exporting deals to CSV:', deals);
+    logger.log('Exporting deals to CSV:', deals);
     // TODO: Implement actual CSV export
   };
 
@@ -299,11 +299,17 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
       label: 'Delete',
       icon: <Trash2 className="h-4 w-4" />,
       onClick: (ids: string[]) => {
-        if (window.confirm(`Are you sure you want to delete ${ids.length} deals?`)) {
-          toast.success(`Deleted ${ids.length} deals`);
-          // TODO: Implement delete functionality
-          window.location.reload();
-        }
+        useConfirmStore.getState().ask({
+          title: 'Delete Deals',
+          description: `Are you sure you want to delete ${ids.length} deals?`,
+          confirmText: 'Delete',
+          variant: 'destructive',
+          onConfirm: () => {
+            toast.success(`Deleted ${ids.length} deals`);
+            // TODO: Implement delete functionality
+            window.location.reload();
+          },
+        });
       },
       variant: 'destructive' as const,
       requireConfirm: true,

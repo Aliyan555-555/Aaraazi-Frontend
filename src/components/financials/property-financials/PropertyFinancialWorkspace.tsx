@@ -7,12 +7,18 @@ import { PropertyFinancialMetrics } from './PropertyFinancialMetrics';
 import { PropertyFinancialList, PropertyFinancialSummary } from './PropertyFinancialList';
 import { PropertyProfitLossModal } from './PropertyProfitLossModal';
 import { Button } from '../../ui/button';
-import { getProperties } from '../../../lib/data';
-import { getAllAgencyTransactions } from '../../../lib/agencyTransactions';
+// [STUBBED] import { getProperties } from '../../../lib/data';
+// [STUBBED] import { getAllAgencyTransactions } from '../../../lib/agencyTransactions';
 import { formatPKR } from '../../../lib/currency';
 import { formatPropertyAddressShort } from '../../../lib/utils';
 import { toast } from 'sonner';
 import { Download, FileText } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllAgencyTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PropertyFinancialWorkspaceProps {
   user: User;

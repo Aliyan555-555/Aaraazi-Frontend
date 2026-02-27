@@ -11,10 +11,11 @@ import { BankReconciliationWorkspace } from './bank-reconciliation/BankReconcili
 import { FinancialReportsWorkspace } from './reports/FinancialReportsWorkspace';
 import { BudgetingWorkspace } from './budgeting/BudgetingWorkspace';
 import { formatPKR, formatCurrencyShort } from '../../lib/currency';
-import { getDeals } from '../../lib/deals';
-import { getExpenses, getProperties, getJournalEntries } from '../../lib/data';
-import { getAllAgencyTransactions } from '../../lib/agencyTransactions';
-import { getAllInvestorInvestments } from '../../lib/investors';
+// [STUBBED] import { getDeals } from '../../lib/deals';
+// [STUBBED] import { getExpenses, getProperties, getJournalEntries } from '../../lib/data';
+// [STUBBED] import { getAllAgencyTransactions } from '../../lib/agencyTransactions';
+// [STUBBED] import { getAllInvestorInvestments } from '../../lib/investors';
+import { logger } from "../../lib/logger";
 import {
   DollarSign,
   Receipt,
@@ -29,7 +30,17 @@ import {
   Target,
 } from 'lucide-react';
 
-interface FinancialsHubProps {
+// ===== STUBS for removed prototype functions =====
+const getDeals = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getExpenses = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getJournalEntries = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllAgencyTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
+
+interface FinancialsHubV4Props {
   user: User;
   onNavigate?: (module: string) => void;
   onViewDeal?: (dealId: string) => void;
@@ -76,7 +87,7 @@ interface FinancialsHubProps {
  * @example
  * <FinancialsHub 
  *   user={user} 
- *   onNavigate={(module) => console.log('Navigate to:', module)}
+ *   onNavigate={(module) => logger.log('Navigate to:', module)}
  * />
  */
 export const FinancialsHub: React.FC<FinancialsHubProps> = ({ user, onNavigate, onViewDeal, onViewProperty, defaultModule }) => {
@@ -411,7 +422,7 @@ export const FinancialsHub: React.FC<FinancialsHubProps> = ({ user, onNavigate, 
   ];
 
   const handleModuleClick = (moduleId: string) => {
-    console.log('📊 Navigating to module:', moduleId);
+    logger.log('📊 Navigating to module:', moduleId);
     setActiveModule(moduleId);
     if (onNavigate) {
       onNavigate(moduleId);

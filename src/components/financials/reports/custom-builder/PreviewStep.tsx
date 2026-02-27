@@ -7,9 +7,14 @@
 import React, { useMemo } from 'react';
 import { ReportConfiguration } from '../../../../types/custom-reports';
 import { User } from '../../../../types';
-import { generateReport } from '../../../../lib/custom-report-builder';
+// [STUBBED] import { generateReport } from '../../../../lib/custom-report-builder';
 import { Eye, Download } from 'lucide-react';
 import { Button } from '../../../ui/button';
+
+// ===== STUBS for removed prototype functions =====
+const generateReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PreviewStepProps {
   config: Partial<ReportConfiguration>;

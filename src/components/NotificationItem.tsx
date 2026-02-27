@@ -7,11 +7,11 @@ import React from 'react';
 import { Notification } from '../types/notifications';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import {
-  getRelativeTime,
-  getPriorityColor,
-  getTypeIcon
-} from '../lib/notifications';
+// [STUBBED] import {
+// [STUBBED]   getRelativeTime,
+// [STUBBED]   getPriorityColor,
+// [STUBBED]   getTypeIcon
+// [STUBBED] } from '../lib/notifications';
 import {
   DollarSign,
   CheckCircle,
@@ -43,6 +43,13 @@ import {
   Archive,
   Eye,
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getRelativeTime = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPriorityColor = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTypeIcon = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface NotificationItemProps {
   notification: Notification;

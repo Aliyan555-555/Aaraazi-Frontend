@@ -173,7 +173,7 @@ function getAuthFromRequest(request: NextRequest): AuthData {
       isAuthenticated: false,
     };
   } catch (error) {
-    console.error("Error parsing auth data:", error);
+    logger.error('Error parsing auth data:', error);
     return {
       user: null,
       accessToken: null,
@@ -231,7 +231,7 @@ function logRequest(request: NextRequest, status: string): void {
     const timestamp = new Date().toISOString();
     const method = request.method;
     const url = request.url;
-    console.log(`[Middleware] ${timestamp} ${method} ${url} - ${status}`);
+    logger.log(`[Middleware] ${timestamp} ${method} ${url} - ${status}`);
   }
 }
 

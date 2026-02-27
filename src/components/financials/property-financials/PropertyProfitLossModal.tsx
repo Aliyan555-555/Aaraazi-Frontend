@@ -6,6 +6,7 @@ import { formatPKR } from '../../../lib/currency';
 import { PropertyFinancialSummary } from './PropertyFinancialList';
 import { Download, TrendingUp, TrendingDown, Calendar, DollarSign } from 'lucide-react';
 
+import { logger } from "../../../lib/logger";
 interface PropertyProfitLossModalProps {
   open: boolean;
   onClose: () => void;
@@ -71,7 +72,7 @@ export const PropertyProfitLossModal: React.FC<PropertyProfitLossModalProps> = (
 
   const handleExport = () => {
     // Placeholder for PDF export
-    console.log('Export P&L Report to PDF');
+    logger.log('Export P&L Report to PDF');
   };
 
   return (

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { DealsWorkspace } from '@/components/deals/DealsWorkspace';
 import { mapAuthUserToUIUser } from '@/types';
 
+
 export default function DealsPage() {
     const { user: saasUser } = useAuthStore();
     const router = useRouter();

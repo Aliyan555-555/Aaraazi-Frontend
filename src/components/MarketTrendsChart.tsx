@@ -5,14 +5,14 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { formatCurrency } from '../lib/currency';
-import {
-  getPriceTrends,
-  getMarketStatistics,
-  getMarketVelocity,
-  getPriceDistribution,
-  getMarketTrendDirection,
-  getAveragePricePerUnit
-} from '../lib/marketTrends';
+// [STUBBED] import {
+// [STUBBED]   getPriceTrends,
+// [STUBBED]   getMarketStatistics,
+// [STUBBED]   getMarketVelocity,
+// [STUBBED]   getPriceDistribution,
+// [STUBBED]   getMarketTrendDirection,
+// [STUBBED]   getAveragePricePerUnit
+// [STUBBED] } from '../lib/marketTrends';
 import {
   LineChart,
   Line,
@@ -41,6 +41,16 @@ import {
   Activity,
   BarChart3
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getPriceTrends = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getMarketStatistics = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getMarketVelocity = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPriceDistribution = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getMarketTrendDirection = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAveragePricePerUnit = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface MarketTrendsChartProps {
   selectedPropertyType?: 'house' | 'apartment' | 'commercial' | 'land';

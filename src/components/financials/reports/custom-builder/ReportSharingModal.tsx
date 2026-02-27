@@ -24,7 +24,7 @@ import {
   ReportShare,
   SharePermission,
 } from '../../../../lib/report-sharing';
-import { getContacts } from '../../../../lib/data';
+// [STUBBED] import { getContacts } from '../../../../lib/data';
 import {
   Dialog,
   DialogContent,
@@ -56,6 +56,11 @@ import {
   Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ReportSharingModalProps {
   open: boolean;

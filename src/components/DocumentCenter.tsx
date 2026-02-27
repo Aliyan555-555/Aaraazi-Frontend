@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { DocumentGeneratorModal } from './DocumentGeneratorModal';
 import { getGeneratedDocuments, deleteGeneratedDocument, replacePlaceholders } from '../lib/documents';
 import { DOCUMENT_TEMPLATES, DocumentType, GeneratedDocument } from '../types/documents';
-import { useDocumentsApi } from '@/modules/documents';
+import { useDocuments, useDeleteDocument, useUploadDocument, useDownloadPdf } from '@/hooks/useDocuments';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
 
@@ -35,9 +35,6 @@ export function DocumentCenter() {
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentType | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<GeneratedDocument | null>(null);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -52,7 +49,11 @@ export function DocumentCenter() {
     [agencyId, tenantId]
   );
 
-  const { documents: apiDocuments, downloadPdf, remove: removeApi, refetch, upload } = useDocumentsApi(queryParams);
+  // Use professional Zustand hooks
+  const { documents: apiDocuments, refetch } = useDocuments(queryParams);
+  const { deleteDocument } = useDeleteDocument();
+  const { uploadDocument, isLoading: uploadingFile } = useUploadDocument();
+  const { downloadPdf, downloadingId } = useDownloadPdf();
 
   const apiIds = useMemo(() => new Set(apiDocuments.map((d) => d.id)), [apiDocuments]);
 
@@ -73,6 +74,7 @@ export function DocumentCenter() {
     return out;
   }, [apiDocuments, localDocuments]);
 
+  // Load local documents on mount (client-only) to avoid SSR localStorage access
   useEffect(() => {
     setLocalDocuments(getGeneratedDocuments());
   }, []);
@@ -97,9 +99,12 @@ export function DocumentCenter() {
   const handleDelete = async (documentId: string) => {
     if (!confirm('Are you sure you want to delete this document?')) return;
     if (apiIds.has(documentId)) {
-      const ok = await removeApi(documentId);
-        if (ok) toast.success('Document deleted');
-        else toast.error('Failed to delete document');
+      try {
+        await deleteDocument(documentId);
+      } catch (error) {
+        // Error already handled in hook
+        console.error('Delete failed:', error);
+      }
       return;
     }
     try {
@@ -113,16 +118,11 @@ export function DocumentCenter() {
 
   const handleDownload = async (document: GeneratedDocument) => {
     if (apiIds.has(document.id)) {
-      setDownloadingId(document.id);
       try {
-        const ok = await downloadPdf(document.id, `${document.documentName.replace(/\s+/g, '-')}.pdf`);
-        if (ok) toast.success('PDF downloaded');
-        else toast.error('Download failed');
-      } catch (e) {
-        const message = e instanceof Error ? e.message : 'PDF download failed';
-        toast.error(message);
-      } finally {
-        setDownloadingId(null);
+        await downloadPdf(document.id, `${document.documentName.replace(/\s+/g, '-')}.pdf`);
+      } catch (error) {
+        // Error already handled in hook
+        console.error('Download failed:', error);
       }
       return;
     }
@@ -138,7 +138,6 @@ export function DocumentCenter() {
     const file = event.target.files?.[0];
     if (!file || !tenantId || !agencyId) return;
 
-    setUploadingFile(true);
     try {
       await upload(file, {
         documentName: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
@@ -146,13 +145,11 @@ export function DocumentCenter() {
         agencyId,
         tenantId,
       });
-      toast.success('Document uploaded successfully');
       refetch();
     } catch (error) {
+      // Error already handled in hook
       console.error('Upload failed:', error);
-      toast.error('Failed to upload document');
     } finally {
-      setUploadingFile(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -184,7 +181,7 @@ export function DocumentCenter() {
 
   const handleBulkDelete = async () => {
     if (selectedDocuments.size === 0) return;
-    
+
     if (!confirm(`Are you sure you want to delete ${selectedDocuments.size} document(s)?`)) return;
 
     setBulkDeleting(true);
@@ -194,7 +191,7 @@ export function DocumentCenter() {
     for (const docId of selectedDocuments) {
       try {
         if (apiIds.has(docId)) {
-          await removeApi(docId);
+          await deleteDocument(docId);
         } else {
           deleteGeneratedDocument(docId);
           setLocalDocuments(getGeneratedDocuments());
@@ -268,7 +265,7 @@ export function DocumentCenter() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {DOCUMENT_TEMPLATES.map((template) => {
               const Icon = iconMap[template.icon as keyof typeof iconMap];
-              
+
               return (
                 <Card
                   key={template.id}
@@ -335,12 +332,12 @@ export function DocumentCenter() {
               <div className="p-12 text-center">
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">
-                  {statusFilter === 'all' 
+                  {statusFilter === 'all'
                     ? 'Your generated documents will appear here.'
                     : `No documents with status "${statusFilter}"`}
                 </p>
                 <p className="text-gray-500 text-sm mt-2">
-                  {statusFilter === 'all' 
+                  {statusFilter === 'all'
                     ? 'Get started by selecting a template above or uploading a document.'
                     : 'Try selecting a different status filter.'}
                 </p>
@@ -387,23 +384,23 @@ export function DocumentCenter() {
                         <th className="px-6 py-3 text-left text-gray-900">
                           Document Name
                         </th>
-                      <th className="px-6 py-3 text-left text-gray-900">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-gray-900">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-gray-900">
-                        Property
-                      </th>
-                      <th className="px-6 py-3 text-left text-gray-900">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-right text-gray-900">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
+                        <th className="px-6 py-3 text-left text-gray-900">
+                          Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-gray-900">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-gray-900">
+                          Property
+                        </th>
+                        <th className="px-6 py-3 text-left text-gray-900">
+                          Created
+                        </th>
+                        <th className="px-6 py-3 text-right text-gray-900">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
                     <tbody className="divide-y divide-gray-200">
                       {filteredDocuments.map((doc) => (
                         <tr key={doc.id} className="hover:bg-gray-50">
@@ -418,52 +415,61 @@ export function DocumentCenter() {
                           <td className="px-6 py-4 text-gray-900 font-medium">
                             {doc.documentName}
                           </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {doc.documentType.replace(/_/g, ' ')}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[doc.status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'}`}>
-                            {doc.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {doc.propertyTitle || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {new Date(doc.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handlePreview(doc)}
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              Preview
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDownload(doc)}
-                              disabled={downloadingId === doc.id}
-                            >
-                              <Download className="w-4 h-4 mr-1" />
-                              {downloadingId === doc.id ? 'Generating…' : 'Download PDF'}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => handleDelete(doc.id)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          <td className="px-6 py-4 text-gray-600">
+                            {doc.documentType.replace(/-|_/g, ' ')}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[doc.status as keyof typeof STATUS_COLORS] || 'bg-gray-100 text-gray-800'}`}>
+                              {doc.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-600">
+                            {doc.propertyTitle || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 text-gray-600">
+                            {new Date(doc.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handlePreview(doc)}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                Preview
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownload(doc)}
+                                disabled={!!downloadingId}
+                              >
+                                {downloadingId === doc.id ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Generating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="w-4 h-4 mr-1" />
+                                    Download PDF
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => handleDelete(doc.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -474,7 +480,7 @@ export function DocumentCenter() {
       </div>
 
       {/* Single Dialog in tree: open state and content change, no mount/unmount of Dialog */}
-      <Dialog open={!!selectedTemplate} onOpenChange={(open) => !open && handleCloseGenerator()}>
+      <Dialog open={showGenerator} onOpenChange={(open) => !open && handleCloseGenerator()}>
         <DialogContent className="!max-w-[85vw] w-[85vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
           {selectedTemplate && (
             <DocumentGeneratorModal
@@ -495,7 +501,7 @@ export function DocumentCenter() {
             <DialogHeader>
               <DialogTitle>{previewDocument.documentName}</DialogTitle>
               <DialogDescription>
-                Document preview - {previewDocument.documentType.replace(/_/g, ' ')}
+                Document preview - {previewDocument.documentType.replace(/-|_/g, ' ')}
               </DialogDescription>
             </DialogHeader>
             <div className="flex-1 overflow-hidden mt-4">
@@ -513,7 +519,7 @@ export function DocumentCenter() {
                     <div className="space-y-6">
                       <div className="text-center border-b-2 border-gray-900 pb-4">
                         <h1 className="text-2xl uppercase tracking-wide text-gray-900 font-bold">
-                          {(DOCUMENT_TEMPLATES.find(t => t.id === previewDocument.documentType))?.name?.toUpperCase() ?? previewDocument.documentType.replace(/_/g, ' ').toUpperCase()}
+                          {(DOCUMENT_TEMPLATES.find(t => t.id === previewDocument.documentType))?.name?.toUpperCase() ?? previewDocument.documentType.replace(/-|_/g, ' ').toUpperCase()}
                         </h1>
                       </div>
                       {previewDocument.clauses && previewDocument.clauses.length > 0 ? (
@@ -574,9 +580,9 @@ export function DocumentCenter() {
               )}
             </div>
             <div className="flex gap-2 mt-4">
-              <Button 
+              <Button
                 onClick={() => handleDownload(previewDocument)}
-                disabled={downloadingId === previewDocument.id}
+                disabled={!!downloadingId}
               >
                 {downloadingId === previewDocument.id ? (
                   <>

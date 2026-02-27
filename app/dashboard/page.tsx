@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
     const { user: authUser, currentModule, setCurrentModule, logout } = useAuthStore();
+ 
     const router = useRouter();
     const { isChecking } = useRequireAuth();
 

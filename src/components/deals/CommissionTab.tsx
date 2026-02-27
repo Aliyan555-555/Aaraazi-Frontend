@@ -1,29 +1,3 @@
-/**
- * CommissionTab - Redesigned Simple & Intuitive Commission Management
- * 
- * REDESIGN GOALS:
- * - Single unified view (no confusing tabs)
- * - Inline editing (no edit mode toggle)
- * - Amount AND percentage support (toggle between input types)
- * - Real-time validation and visual feedback
- * - Support for manual adjustments to match real-world scenarios
- * 
- * FEATURES:
- * - Multi-agent support (internal + external)
- * - Agency split configuration
- * - Dual input mode: PKR amount ⇄ Percentage
- * - Visual allocation progress bar
- * - Inline status management (admin)
- * - Real-time calculation and validation
- * 
- * STRUCTURE:
- * 1. Header Card - Total commission configuration
- * 2. Allocation Progress - Visual breakdown
- * 3. Agent Rows - Inline editable agents
- * 4. Agency Row - Inline editable agency split
- * 5. Validation Footer - Real-time feedback
- */
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { User } from '../../types';
 import { Deal, CommissionAgent } from '../../types/deals';

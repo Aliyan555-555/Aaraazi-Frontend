@@ -31,11 +31,19 @@ import { Button } from '../ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Property, User } from '../../types';
-import { getProperties } from '../../lib/data';
-import { calculatePropertyFinancials } from '../../lib/agencyFinancials';
-import { getTransactionsByProperty } from '../../lib/agencyTransactions';
+// [STUBBED] import { getProperties } from '../../lib/data';
+// [STUBBED] import { calculatePropertyFinancials } from '../../lib/agencyFinancials';
+// [STUBBED] import { getTransactionsByProperty } from '../../lib/agencyTransactions';
 import { formatPKR } from '../../lib/currency';
-import { getAgencyPortfolioSummary } from '../../lib/portfolio';
+// [STUBBED] import { getAgencyPortfolioSummary } from '../../lib/portfolio';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculatePropertyFinancials = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTransactionsByProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgencyPortfolioSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AgencyPortfolioAnalyticsProps {
   user: User;

@@ -17,14 +17,15 @@
  * <TaskTemplateManager
  *   user={user}
  *   onClose={handleClose}
- *   onSelectTemplate={(templateId) => console.log(templateId)}
+ *   onSelectTemplate={(templateId) => logger.log(templateId)}
  * />
  */
 
 import React, { useState, useMemo } from 'react';
 import { User } from '../../types';
 import { TaskTemplate, TaskPriority, TaskCategory } from '../../types/tasks';
-import { getTaskTemplates } from '../../lib/tasks';
+// Stubbed function (prototype lib removed)
+const getTaskTemplates = (): TaskTemplate[] => [];
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -51,6 +52,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { logger } from "../../lib/logger";
 // ==================== INTERFACES ====================
 
 interface TaskTemplateManagerProps {
@@ -401,9 +403,9 @@ const TemplateForm: React.FC<TemplateFormProps> = ({ template, onSubmit, onCance
           id="template-time"
           type="number"
           value={formData.estimatedMinutes || ''}
-          onChange={(e) => setFormData(prev => ({ 
-            ...prev, 
-            estimatedMinutes: e.target.value ? parseInt(e.target.value) : undefined 
+          onChange={(e) => setFormData(prev => ({
+            ...prev,
+            estimatedMinutes: e.target.value ? parseInt(e.target.value) : undefined
           }))}
           placeholder="e.g., 30"
           min="1"
@@ -522,7 +524,7 @@ export const TaskTemplateManager: React.FC<TaskTemplateManagerProps> = ({
 }) => {
   // Load templates
   const allTemplates = getTaskTemplates();
-  
+
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'system' | 'custom'>('all');
@@ -561,28 +563,28 @@ export const TaskTemplateManager: React.FC<TaskTemplateManagerProps> = ({
   // Handlers
   const handleCreateTemplate = (data: TemplateFormData) => {
     // In real app, save to localStorage
-    console.log('Create template:', data);
+    logger.log('Create template:', data);
     toast.success('Template created successfully');
     setShowCreateForm(false);
   };
 
   const handleUpdateTemplate = (data: TemplateFormData) => {
     // In real app, update in localStorage
-    console.log('Update template:', data);
+    logger.log('Update template:', data);
     toast.success('Template updated successfully');
     setEditingTemplate(null);
   };
 
   const handleDuplicateTemplate = (template: TaskTemplate) => {
     // In real app, create duplicate in localStorage
-    console.log('Duplicate template:', template);
+    logger.log('Duplicate template:', template);
     toast.success('Template duplicated successfully');
   };
 
   const handleDeleteTemplate = (templateId: string) => {
     if (confirm('Are you sure you want to delete this template?')) {
       // In real app, delete from localStorage
-      console.log('Delete template:', templateId);
+      logger.log('Delete template:', templateId);
       toast.success('Template deleted successfully');
     }
   };

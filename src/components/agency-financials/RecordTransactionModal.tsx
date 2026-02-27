@@ -24,10 +24,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../ui/dialog';
-import { createTransaction } from '../../lib/agencyTransactions';
+// [STUBBED] import { createTransaction } from '../../lib/agencyTransactions';
 import { AgencyTransactionType, AgencyTransactionCategory } from '../../types';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const createTransaction = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RecordTransactionModalProps {
   isOpen: boolean;

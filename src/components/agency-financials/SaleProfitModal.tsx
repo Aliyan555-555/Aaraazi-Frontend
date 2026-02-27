@@ -17,6 +17,13 @@ import {
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 
+// ===== STUBS for removed prototype functions =====
+const createMultipleTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculatePropertyFinancials = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const generatePropertyProfitLoss = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
+
 interface SaleProfitModalProps {
   isOpen: boolean;
   onClose: () => void;

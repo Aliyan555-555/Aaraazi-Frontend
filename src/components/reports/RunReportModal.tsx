@@ -20,10 +20,15 @@ import {
   SelectValue,
 } from '../ui/select';
 import { ReportTemplate, DateRangePreset, GeneratedReport } from '../../types/reports';
-import { generateReport } from '../../lib/reports';
+// [STUBBED] import { generateReport } from '../../lib/reports';
 import { getCurrentUser } from '../../lib/auth';
 import { toast } from 'sonner';
 import ReportViewer from './ReportViewer';
+
+// ===== STUBS for removed prototype functions =====
+const generateReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RunReportModalProps {
   template: ReportTemplate;

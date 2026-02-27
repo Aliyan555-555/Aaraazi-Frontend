@@ -37,14 +37,24 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatPKR } from '../../../lib/currency';
-import {
-  getBudgetVersions,
-  restoreBudgetVersion,
-  exportVersionHistory,
-  getVersionSummary,
-  BudgetVersion,
-  getBudgetVersionStats,
-} from '../../../lib/budget-versioning';
+// [STUBBED] import {
+// [STUBBED]   getBudgetVersions,
+// [STUBBED]   restoreBudgetVersion,
+// [STUBBED]   exportVersionHistory,
+// [STUBBED]   getVersionSummary,
+// [STUBBED]   BudgetVersion,
+// [STUBBED]   getBudgetVersionStats,
+// [STUBBED] } from '../../../lib/budget-versioning';
+
+// ===== STUBS for removed prototype functions =====
+const getBudgetVersions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const restoreBudgetVersion = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const exportVersionHistory = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getVersionSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type BudgetVersion = any;
+const getBudgetVersionStats = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface BudgetHistoryModalProps {
   open: boolean;

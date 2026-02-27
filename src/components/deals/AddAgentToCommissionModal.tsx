@@ -119,7 +119,7 @@ export function AddAgentToCommissionModal({
         notes: notes || undefined,
       };
 
-      console.log('🔧 Adding agent to commission:', newAgent);
+      logger.log('🔧 Adding agent to commission:', newAgent);
 
       // Call the onAdd callback - this will handle the actual addition
       onAdd(newAgent);
@@ -131,7 +131,7 @@ export function AddAgentToCommissionModal({
       setNotes('');
 
     } catch (error: any) {
-      console.error('❌ Error adding agent:', error);
+      logger.error('❌ Error adding agent:', error);
       toast.error(error.message || 'Failed to add agent');
     }
   };

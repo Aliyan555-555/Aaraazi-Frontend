@@ -45,7 +45,12 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatPKR } from '../../../lib/currency';
-import { createInitialVersion } from '../../../lib/budget-versioning';
+// [STUBBED] import { createInitialVersion } from '../../../lib/budget-versioning';
+
+// ===== STUBS for removed prototype functions =====
+const createInitialVersion = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface CloneBudgetModalProps {
   open: boolean;

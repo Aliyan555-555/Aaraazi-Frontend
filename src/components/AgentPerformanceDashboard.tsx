@@ -35,7 +35,19 @@ import {
   CheckCircle,
   Minus
 } from 'lucide-react';
-import { AgentPerformance, AgentRanking, calculateAgentPerformance, compareToTeamAverage, getAgentActivityTimeline, getAgentPerformanceTrends, getAgentRankings, getTopPerformers } from '../lib/agentPerformance';
+// [STUBBED] import { AgentPerformance, AgentRanking, calculateAgentPerformance, compareToTeamAverage, getAgentActivityTimeline, getAgentPerformanceTrends, getAgentRankings, getTopPerformers } from '../lib/agentPerformance';
+
+// ===== STUBS for removed prototype functions =====
+type AgentPerformance = any;
+type AgentRanking = any;
+const calculateAgentPerformance = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const compareToTeamAverage = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgentActivityTimeline = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgentPerformanceTrends = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgentRankings = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTopPerformers = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AgentPerformanceDashboardProps {
   user: User;

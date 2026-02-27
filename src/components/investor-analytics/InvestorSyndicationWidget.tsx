@@ -8,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { User } from '../../types';
-import { getProperties } from '../../lib/data';
-import { getAllInvestorInvestments, getInvestors } from '../../lib/investors';
-import { getAllInvestorDistributions } from '../../lib/saleDistribution';
+// [STUBBED] import { getProperties } from '../../lib/data';
+// [STUBBED] import { getAllInvestorInvestments, getInvestors } from '../../lib/investors';
+// [STUBBED] import { getAllInvestorDistributions } from '../../lib/saleDistribution';
 import { formatPKR } from '../../lib/currency';
 import {
   Users,
@@ -22,6 +22,14 @@ import {
   Activity,
   FileText,
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllInvestorDistributions = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorSyndicationWidgetProps {
   user: User;

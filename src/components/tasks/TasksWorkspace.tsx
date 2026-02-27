@@ -518,7 +518,7 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({
 
   const handleBulkAssign = () => {
     // TODO: Open bulk assign modal
-    console.log('Bulk assign:', selectedTasks);
+    logger.log('Bulk assign:', selectedTasks);
   };
 
   const handleBulkEdit = () => {
@@ -578,7 +578,7 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({
             {
               label: 'Templates',
               icon: <FileText className="h-4 w-4" />,
-              onClick: () => console.log('Templates'),
+              onClick: () => logger.log('Templates'),
             },
             {
               label: 'Automation',
@@ -642,12 +642,12 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({
           {
             label: 'Import',
             icon: <Upload className="h-4 w-4" />,
-            onClick: () => console.log('Import'),
+            onClick: () => logger.log('Import'),
           },
           {
             label: 'Export',
             icon: <Download className="h-4 w-4" />,
-            onClick: () => console.log('Export'),
+            onClick: () => logger.log('Export'),
           },
         ]}
         viewMode={viewMode === 'list' ? 'table' : viewMode === 'board' ? 'kanban' : 'grid'}

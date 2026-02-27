@@ -1,15 +1,7 @@
-/**
- * Contact Form Modal - Clean Implementation with Form Design Standards ✅
- * 
- * Modal form for quick contact addition with:
- * - Dialog component for modal display
- * - FormSection + FormField for consistency
- * - Complete validation
- * - Quick add workflow
- * - Context-aware contact types
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -17,39 +9,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from './ui/form';
 import { FormSection } from './ui/form-section';
-import { FormField } from './ui/form-field';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Button } from './ui/button';
-import { updateContact } from '../lib/data';
 import {
-  required,
-  email,
-  pakistanPhone,
-  maxLength,
-  validateForm,
-  hasErrors,
-  type FormErrors,
-} from '../lib/formValidation';
-import { addContact } from '../lib/data';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { Loader2, UserPlus } from 'lucide-react';
-import { ContactType, ContactCategory } from '@/types/schema';
-import type { Contact } from '@/types/contacts';
+import { Contact, ContactType, ContactCategory, ContactStatus } from '@/types/schema';
+import { useCreateContact, useUpdateContact } from '@/hooks/useContacts';
+import { useAuthStore } from '@/store/useAuthStore';
+import type { CreateContactDto, UpdateContactDto } from '@/services/contacts.service';
 
-// ==================== TYPE DEFINITIONS ====================
+import { ContactFormValues, contactFormSchema } from '@/validations';
 
-interface ContactFormData {
-  name: string;
-  phone: string;
-  email: string;
-  type: 'buyer' | 'seller' | 'tenant' | 'landlord' | 'investor' | 'vendor' | 'external-broker' | '';
-  company: string;
-  address: string;
-  notes: string;
-}
+// ==================== PROPS ====================
 
 interface ContactFormModalProps {
   isOpen: boolean;
@@ -59,18 +47,6 @@ interface ContactFormModalProps {
   defaultType?: 'buyer' | 'seller' | 'tenant' | 'landlord' | 'investor' | 'vendor' | 'external-broker';
   editingContact?: Contact | null;
 }
-
-const LEAD_SOURCES = [
-  'Website',
-  'Facebook',
-  'Instagram',
-  'WhatsApp',
-  'Phone Call',
-  'Walk-in',
-  'Referral',
-  'Property Portal',
-  'Other',
-];
 
 // ==================== MAIN COMPONENT ====================
 
@@ -82,215 +58,223 @@ export function ContactFormModal({
   defaultType,
   editingContact,
 }: ContactFormModalProps) {
-  const [formData, setFormData] = useState<ContactFormData>({
-    name: editingContact?.name || '',
-    phone: editingContact?.phone || '',
-    email: editingContact?.email || '',
-    type: (editingContact?.type ?? defaultType ?? '') as ContactFormData['type'],
-    company: editingContact?.company || '',
-    address: editingContact?.address || '',
-    notes: editingContact?.notes || '',
+  // Store & Hooks
+  const { tenantId, agencyId } = useAuthStore();
+  const createContactMutation = useCreateContact();
+  const updateContactMutation = useUpdateContact();
+
+  // Helper to map backend enum to UI type string
+  const getInitialType = (): ContactFormValues['type'] => {
+    if (editingContact) {
+      const { category, type } = editingContact;
+      if (category === ContactCategory.BUYER) return 'buyer';
+      if (category === ContactCategory.SELLER) return 'seller';
+      if (category === ContactCategory.TENANT) return 'tenant';
+      if (category === ContactCategory.LANDLORD) return 'landlord';
+      if (category === ContactCategory.EXTERNAL_BROKER) return 'external-broker';
+      if (type === ContactType.INVESTOR) return 'investor';
+      if (type === ContactType.VENDOR) return 'vendor';
+    }
+    return defaultType || 'buyer'; // Start with a valid default to avoid validation error initially if user doesn't touch it
+  };
+
+  // Helper to safely parse preferences
+  const getInitialPreferences = () => {
+    if (!editingContact) return { notes: '', company: '' };
+    try {
+      const prefs = typeof editingContact.preferences === 'string'
+        ? JSON.parse(editingContact.preferences)
+        : (editingContact.preferences as any) || {};
+      return {
+        notes: prefs.notes || '',
+        company: prefs.company || '',
+      };
+    } catch {
+      return { notes: '', company: '' };
+    }
+  };
+
+  // Form definition
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: '',
+      phone: '',
+      email: '',
+      type: defaultType || 'buyer',
+      company: '',
+      address: '',
+      notes: '',
+    },
   });
 
-  const [errors, setErrors] = useState<FormErrors<ContactFormData>>({});
-  const [touched, setTouched] = useState<Set<keyof ContactFormData>>(new Set());
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Sync form when modal opens or editingContact changes
+  // Reset/Populate form when modal opens or editingContact changes
   useEffect(() => {
     if (isOpen) {
-      const categoryAsType = editingContact?.category as ContactFormData['type'];
-      setFormData({
+      const prefs = getInitialPreferences();
+      form.reset({
         name: editingContact?.name || '',
         phone: editingContact?.phone || '',
         email: editingContact?.email || '',
-        type: categoryAsType || defaultType || '',
-        company: editingContact?.company || '',
+        type: getInitialType(),
+        company: prefs.company,
         address: editingContact?.address || '',
-        notes: editingContact?.notes || '',
+        notes: prefs.notes,
       });
-      setErrors({});
-      setTouched(new Set());
+    } else {
+      form.reset(); // Clear on close
     }
-  }, [isOpen, editingContact?.id, defaultType]);
+  }, [isOpen, editingContact, defaultType, form]);
 
-  // Handle field change
-  const handleChange = (field: keyof ContactFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-    // Clear error
-    if (errors[field]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  // Handle field blur
-  const handleBlur = (field: keyof ContactFormData) => {
-    setTouched((prev) => new Set([...prev, field]));
-
-    // Validate this field
-    const validator = validationRules[field];
-    if (validator) {
-      const error = validator(formData[field]);
-      if (error) {
-        setErrors((prev) => ({ ...prev, [field]: error }));
-      }
+  // Map UI type to Backend Enum
+  const mapTypeToEnums = (uiType: string): { type: ContactType; category: ContactCategory } => {
+    switch (uiType) {
+      case 'buyer': return { type: ContactType.CLIENT, category: ContactCategory.BUYER };
+      case 'seller': return { type: ContactType.CLIENT, category: ContactCategory.SELLER };
+      case 'tenant': return { type: ContactType.CLIENT, category: ContactCategory.TENANT };
+      case 'landlord': return { type: ContactType.CLIENT, category: ContactCategory.LANDLORD };
+      case 'investor': return { type: ContactType.INVESTOR, category: ContactCategory.BOTH };
+      case 'vendor': return { type: ContactType.VENDOR, category: ContactCategory.BOTH };
+      case 'external-broker': return { type: ContactType.CLIENT, category: ContactCategory.EXTERNAL_BROKER };
+      default: return { type: ContactType.CLIENT, category: ContactCategory.BOTH };
     }
   };
 
-  // Validation rules
-  const validationRules = {
-    name: (value: string) => required(value, 'Name'),
-    phone: (value: string) => required(value, 'Phone') || pakistanPhone(value),
-    email: (value: string) => (value ? email(value) : undefined),
-    type: (value: string) => required(value, 'Contact type'),
-    company: (value: string) => undefined,
-    address: (value: string) => undefined,
-    notes: (value: string) => (value ? maxLength(value, 500, 'Notes') : undefined),
-  };
-
-  // Handle form submit
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validate all fields
-    const validationErrors = validateForm(formData, validationRules);
-
-    if (hasErrors(validationErrors)) {
-      setErrors(validationErrors);
-      toast.error('Please fix the errors in the form');
-      setTouched(new Set(Object.keys(formData) as Array<keyof ContactFormData>));
+  const onSubmit = async (data: ContactFormValues) => {
+    if (!tenantId || !agencyId) {
+      toast.error('Session error: Missing tenant/agency context');
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
+      const { type: formType, company, notes, ...restFormData } = data;
+      const { type, category } = mapTypeToEnums(formType);
+
+      // Store extended fields in preferences JSON
+      const preferences = JSON.stringify({ notes, company });
+
+      // Clean email: if empty string, send undefined to avoid backend validation error
+      const cleanedEmail = restFormData.email === '' ? undefined : restFormData.email;
+
       if (editingContact) {
-        // Update existing contact: form "type" is category (buyer/seller/...); map to schema enums
-        const { type: formType, ...restFormData } = formData;
-        const categoryMap: Record<string, ContactCategory> = {
-          buyer: ContactCategory.BUYER,
-          seller: ContactCategory.SELLER,
-          tenant: ContactCategory.TENANT,
-          landlord: ContactCategory.LANDLORD,
-          investor: ContactCategory.BOTH,
-          vendor: ContactCategory.BOTH,
-          'external-broker': ContactCategory.EXTERNAL_BROKER,
+        // Update Payload
+        const payload: UpdateContactDto = {
+          name: restFormData.name,
+          phone: restFormData.phone,
+          email: cleanedEmail, // Using cleaned email
+          address: restFormData.address,
+          type,
+          category,
+          preferences,
         };
-        const typeMap: Record<string, ContactType> = {
-          investor: ContactType.INVESTOR,
-          vendor: ContactType.VENDOR,
-          buyer: ContactType.CLIENT,
-          seller: ContactType.CLIENT,
-          tenant: ContactType.CLIENT,
-          landlord: ContactType.CLIENT,
-          'external-broker': ContactType.CLIENT,
-        };
-        const payload: Record<string, unknown> = {
-          ...restFormData,
-          updatedAt: new Date().toISOString(),
-        };
-        if (String(formType ?? '').trim() !== '') {
-          payload.category = categoryMap[formType as keyof typeof categoryMap] ?? ContactCategory.BOTH;
-          payload.type = typeMap[formType as keyof typeof typeMap] ?? ContactType.CLIENT;
-        }
-        updateContact(editingContact.id, payload as Parameters<typeof updateContact>[1]);
-        toast.success('Contact updated successfully!');
 
-        if (onSuccess) {
-          onSuccess({ ...editingContact, ...payload });
-        }
+        const updated = await updateContactMutation.mutateAsync({
+          id: editingContact.id,
+          data: payload
+        });
+
+        if (onSuccess) onSuccess(updated as any);
+        toast.success("Contact updated successfully");
+        onClose();
       } else {
-        // Add new contact: map form type to category + type enums
-        const { type: formType, ...restFormData } = formData;
-        const categoryMap: Record<string, ContactCategory> = {
-          buyer: ContactCategory.BUYER,
-          seller: ContactCategory.SELLER,
-          tenant: ContactCategory.TENANT,
-          landlord: ContactCategory.LANDLORD,
-          investor: ContactCategory.BOTH,
-          vendor: ContactCategory.BOTH,
-          'external-broker': ContactCategory.EXTERNAL_BROKER,
+        // Create Payload
+        const payload: CreateContactDto = {
+          name: restFormData.name,
+          phone: restFormData.phone,
+          email: cleanedEmail, // Using cleaned email
+          address: restFormData.address,
+          type,
+          category,
+          tenantId,
+          agencyId,
+          agentId: agentId || undefined,
+          status: ContactStatus.ACTIVE,
+          preferences,
+          isShared: false
         };
-        const typeMap: Record<string, ContactType> = {
-          investor: ContactType.INVESTOR,
-          vendor: ContactType.VENDOR,
-          buyer: ContactType.CLIENT,
-          seller: ContactType.CLIENT,
-          tenant: ContactType.CLIENT,
-          landlord: ContactType.CLIENT,
-          'external-broker': ContactType.CLIENT,
-        };
-        const now = new Date().toISOString();
-        const payload: Record<string, unknown> = {
-          ...restFormData,
-          id: `contact_${Date.now()}`,
-          agentId,
-          createdBy: agentId,
-          source: 'Direct Entry',
-          createdAt: now,
-          updatedAt: now,
-          status: 'active',
-        };
-        if (String(formType ?? '').trim() !== '') {
-          payload.category = categoryMap[formType as keyof typeof categoryMap] ?? ContactCategory.BOTH;
-          payload.type = typeMap[formType as keyof typeof typeMap] ?? ContactType.CLIENT;
-        }
-        const newContact = addContact(payload as unknown as Parameters<typeof addContact>[0]);
-        toast.success('Contact added successfully!');
 
-        if (onSuccess) {
-          onSuccess(newContact);
+        const created = await createContactMutation.mutateAsync(payload);
+
+        if (onSuccess) onSuccess(created as any);
+        toast.success("Contact added successfully");
+        onClose();
+      }
+
+    } catch (error: any) {
+      console.error('Error saving contact:', error);
+
+      // Advanced Error Validation & Handling
+      // The apiClient interceptor returns the error data directly, stripping axios response wrapper
+      // Structure: { message, statusCode, error, ... }
+      if (error && (error.message || error.statusCode)) {
+        const { message, statusCode, error: errorType } = error;
+        let handled = false;
+
+        // 1. Handle Array of validation messages (e.g. from Class-validator 400 Bad Request)
+        if (Array.isArray(message)) {
+          message.forEach((msg: string) => {
+            const lowerMsg = msg.toLowerCase();
+            if (lowerMsg.includes('email')) {
+              form.setError('email', { type: 'manual', message: msg });
+              handled = true;
+            }
+            if (lowerMsg.includes('phone')) {
+              form.setError('phone', { type: 'manual', message: msg });
+              handled = true;
+            }
+            if (lowerMsg.includes('name')) {
+              form.setError('name', { type: 'manual', message: msg });
+              handled = true;
+            }
+          });
+
+          if (!handled) {
+            toast.error("Validation failed. Please check the form for errors.");
+          }
+          return;
+        }
+
+        // 2. Handle String messages (e.g. Custom Exceptions, 409 Conflict)
+        if (typeof message === 'string') {
+          const lowerMsg = message.toLowerCase();
+
+          // Conflict checks (Duplicate Phone/Email)
+          if (statusCode === 409 || lowerMsg.includes('exists') || lowerMsg.includes('duplicate')) {
+            if (lowerMsg.includes('phone')) {
+              form.setError('phone', { type: 'manual', message: "This phone number is already registered." });
+              return;
+            }
+            if (lowerMsg.includes('email')) {
+              form.setError('email', { type: 'manual', message: "This email address is already registered." });
+              return;
+            }
+          }
+
+          // Other field-specific errors
+          if (lowerMsg.includes('phone')) {
+            form.setError('phone', { type: 'manual', message: message });
+            return;
+          }
+          if (lowerMsg.includes('email')) {
+            form.setError('email', { type: 'manual', message: message });
+            return;
+          }
+
+          // Generic error fallback
+          toast.error(message || "An error occurred while saving the contact.");
+          return;
         }
       }
 
-      // Reset form
-      setFormData({
-        name: '',
-        phone: '',
-        email: '',
-        type: defaultType || '',
-        company: '',
-        address: '',
-        notes: '',
-      });
-      setErrors({});
-      setTouched(new Set());
-
-      onClose();
-    } catch (error) {
-      console.error('Error saving contact:', error);
-      toast.error(`Failed to ${editingContact ? 'update' : 'add'} contact. Please try again.`);
-    } finally {
-      setIsSubmitting(false);
+      // Fallback for network errors or unexpected formats
+      toast.error('Failed to save contact. Please try again.');
     }
   };
 
-  // Handle close
-  const handleClose = () => {
-    if (!isSubmitting) {
-      setFormData({
-        name: '',
-        phone: '',
-        email: '',
-        type: defaultType || '',
-        company: '',
-        address: '',
-        notes: '',
-      });
-      setErrors({});
-      setTouched(new Set());
-      onClose();
-    }
-  };
+  const isSubmitting = form.formState.isSubmitting || createContactMutation.isPending || updateContactMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={(val) => !isSubmitting && !val && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -302,137 +286,158 @@ export function ContactFormModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Contact Information */}
-          <FormSection title="Contact Information">
-            <FormField
-              label="Full Name"
-              required
-              error={touched.has('name') ? errors.name : undefined}
-            >
-              <Input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                onBlur={() => handleBlur('name')}
-                placeholder="John Doe"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+            <FormSection title="Contact Information">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </FormField>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                label="Phone Number"
-                required
-                error={touched.has('phone') ? errors.phone : undefined}
-              >
-                <Input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleChange('phone', e.target.value)}
-                  onBlur={() => handleBlur('phone')}
-                  placeholder="03001234567"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="03001234567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormField>
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        {/* Ensure value is string for input */}
+                        <Input placeholder="john@example.com" {...field} value={field.value || ''} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Type <span className="text-red-500">*</span></FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="buyer">Buyer</SelectItem>
+                          <SelectItem value="seller">Seller</SelectItem>
+                          <SelectItem value="tenant">Tenant</SelectItem>
+                          <SelectItem value="landlord">Landlord</SelectItem>
+                          <SelectItem value="investor">Investor</SelectItem>
+                          <SelectItem value="vendor">Vendor</SelectItem>
+                          <SelectItem value="external-broker">External Broker</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="company"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Company</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Company Name Ltd." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
-                label="Email"
-                error={touched.has('email') ? errors.email : undefined}
-                hint="Optional"
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Complete address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Additional notes about this contact..."
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </FormSection>
+
+            {/* Form Actions */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onClose()}
+                disabled={isSubmitting}
               >
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  onBlur={() => handleBlur('email')}
-                  placeholder="john@example.com"
-                />
-              </FormField>
+                Cancel
+              </Button>
+
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {editingContact ? 'Updating...' : 'Adding...'}
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    {editingContact ? 'Update Contact' : 'Add Contact'}
+                  </>
+                )}
+              </Button>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                label="Contact Type"
-                required
-                error={touched.has('type') ? errors.type : undefined}
-              >
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => handleChange('type', value)}
-                >
-                  <SelectTrigger onBlur={() => handleBlur('type')}>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="buyer">Buyer</SelectItem>
-                    <SelectItem value="seller">Seller</SelectItem>
-                    <SelectItem value="tenant">Tenant</SelectItem>
-                    <SelectItem value="landlord">Landlord</SelectItem>
-                    <SelectItem value="investor">Investor</SelectItem>
-                    <SelectItem value="vendor">Vendor</SelectItem>
-                    <SelectItem value="external-broker">External Broker</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormField>
-
-              <FormField label="Company" hint="Optional">
-                <Input
-                  value={formData.company}
-                  onChange={(e) => handleChange('company', e.target.value)}
-                  placeholder="Company Name Ltd."
-                />
-              </FormField>
-            </div>
-
-            <FormField label="Address" hint="Optional">
-              <Input
-                value={formData.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-                placeholder="Complete address"
-              />
-            </FormField>
-
-            <FormField
-              label="Notes"
-              error={touched.has('notes') ? errors.notes : undefined}
-              hint={`${formData.notes.length}/500 characters`}
-            >
-              <Textarea
-                value={formData.notes}
-                onChange={(e) => handleChange('notes', e.target.value)}
-                onBlur={() => handleBlur('notes')}
-                placeholder="Additional notes about this contact..."
-                rows={3}
-                maxLength={500}
-              />
-            </FormField>
-          </FormSection>
-
-          {/* Form Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {editingContact ? 'Updating...' : 'Adding...'}
-                </>
-              ) : (
-                <>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  {editingContact ? 'Update Contact' : 'Add Contact'}
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

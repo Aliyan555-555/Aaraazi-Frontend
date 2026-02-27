@@ -21,11 +21,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Badge } from '../ui/badge';
 import { SellCycle, Property } from '../../types';
 import { formatPKR } from '../../lib/currency';
-import { 
-  getTransactionsByProperty, 
-  getTransactionsByCategory,
-} from '../../lib/agencyTransactions';
-import { calculatePropertyFinancials } from '../../lib/agencyFinancials';
+// [STUBBED] import { 
+// [STUBBED]   getTransactionsByProperty, 
+// [STUBBED]   getTransactionsByCategory,
+// [STUBBED] } from '../../lib/agencyTransactions';
+// [STUBBED] import { calculatePropertyFinancials } from '../../lib/agencyFinancials';
+
+// ===== STUBS for removed prototype functions =====
+const getTransactionsByProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTransactionsByCategory = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculatePropertyFinancials = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface SellCycleFinancialSummaryProps {
   cycle: SellCycle;

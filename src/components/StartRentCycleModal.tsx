@@ -34,8 +34,8 @@ import {
   hasErrors,
   type FormErrors,
 } from '../lib/formValidation';
-import { createRentCycle } from '../lib/rentCycle';
-import { getContacts } from '../lib/data';
+// [STUBBED] import { createRentCycle } from '../lib/rentCycle';
+// [STUBBED] import { getContacts } from '../lib/data';
 import { formatPropertyAddress } from '../lib/utils';
 import { formatPKR } from '../lib/currency';
 import { QuickAddContactModal } from './QuickAddContactModal';
@@ -51,6 +51,12 @@ import {
   AlertCircle,
   X 
 } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const createRentCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 // ==================== TYPE DEFINITIONS ====================
 

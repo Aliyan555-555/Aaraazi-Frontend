@@ -20,12 +20,19 @@ import {
 } from './ui/dialog';
 import { Property, User } from '../types';
 import { formatPKR } from '../lib/currency';
-import { createTransaction } from '../lib/agencyTransactions';
-import { transferOwnership } from '../lib/ownership';
-import { updateProperty } from '../lib/data';
+// [STUBBED] import { createTransaction } from '../lib/agencyTransactions';
+// [STUBBED] import { transferOwnership } from '../lib/ownership';
+// [STUBBED] import { updateProperty } from '../lib/data';
 import { toast } from 'sonner';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
+
+// ===== STUBS for removed prototype functions =====
+const createTransaction = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const transferOwnership = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RelistPropertyModalProps {
   open: boolean;

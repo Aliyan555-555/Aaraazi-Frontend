@@ -57,7 +57,6 @@ import { DashboardTemplate } from '@/components/templates/DashboardTemplate';
 **Where Used**:
 - Main Dashboard (`/components/Dashboard.tsx`)
 - Agency Analytics Dashboard (`/components/AgencyAnalyticsDashboard.tsx`)
-- Agency Hub (`/components/AgencyHub.tsx`)
 - Sales Dashboard
 - Performance Dashboard
 

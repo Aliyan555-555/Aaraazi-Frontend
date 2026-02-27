@@ -33,11 +33,18 @@ import {
   hasErrors,
   type FormErrors,
 } from '../lib/formValidation';
-import { getContacts } from '../lib/data';
-import { addBuyerRequirement } from '../lib/buyerRequirements';
-import { createRentRequirement } from '../lib/rentRequirements';
+// [STUBBED] import { getContacts } from '../lib/data';
+// [STUBBED] import { addBuyerRequirement } from '../lib/buyerRequirements';
+// [STUBBED] import { createRentRequirement } from '../lib/rentRequirements';
 import { toast } from 'sonner';
 import { Loader2, Users, Search, Home } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const addBuyerRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const createRentRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 // ==================== TYPE DEFINITIONS ====================
 

@@ -4,10 +4,16 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { Property, User } from '../types';
-import { getRelistableProperties, getCurrentOwner } from '../lib/ownership';
+// [STUBBED] import { getRelistableProperties, getCurrentOwner } from '../lib/ownership';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
 import { ArrowLeft, User as UserIcon, Calendar, MapPin, DollarSign } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const getRelistableProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getCurrentOwner = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RelistablePropertiesWidgetProps {
   user: User;

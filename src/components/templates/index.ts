@@ -91,10 +91,10 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateRegistryEntry> = {
     path: '/components/forms/FormTemplate.tsx',
     useCase: 'Create and edit forms for entities',
     examples: [
-      'AddPropertyFormV2',
-      'EditPropertyFormV2',
-      'AddBuyerRequirementFormV2',
-      'EditBuyerRequirementFormV2',
+      'AddPropertyForm',
+      'EditPropertyForm',
+      'AddBuyerRequirementForm',
+      'EditBuyerRequirementForm',
     ],
     created: '2024-12',
     reason: 'Standard pattern for all forms',
@@ -124,7 +124,6 @@ export const TEMPLATE_REGISTRY: Record<string, TemplateRegistryEntry> = {
     examples: [
       'Dashboard (Main)',
       'AgencyAnalyticsDashboard',
-      'AgencyHub',
       'SalesDashboard',
     ],
     created: '2024-12-27',

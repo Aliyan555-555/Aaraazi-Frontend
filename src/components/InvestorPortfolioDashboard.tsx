@@ -28,16 +28,27 @@ import {
   SelectValue,
 } from './ui/select';
 import { formatPKR } from '../lib/currency';
-import { formatDate } from '../lib/validation';
+// [STUBBED] import { formatDate } from '../lib/validation';
 import { formatPropertyAddress } from '../lib/utils';
-import {
-  getInvestorInvestments,
-  calculateInvestorPortfolioValue,
-  calculateInvestorROI,
-  getInvestorPropertyDetails
-} from '../lib/investors';
-import { getProperties } from '../lib/data';
+// [STUBBED] import {
+// [STUBBED]   getInvestorInvestments,
+// [STUBBED]   calculateInvestorPortfolioValue,
+// [STUBBED]   calculateInvestorROI,
+// [STUBBED]   getInvestorPropertyDetails
+// [STUBBED] } from '../lib/investors';
+// [STUBBED] import { getProperties } from '../lib/data';
 import { Investor, InvestorInvestment } from '../types';
+
+import { logger } from "../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const formatDate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorPortfolioValue = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorROI = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorPropertyDetails = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface InvestorPortfolioDashboardProps {
   investor: Investor;
@@ -125,7 +136,7 @@ export default function InvestorPortfolioDashboard({
 
   const handleExportPortfolio = () => {
     // TODO: Implement portfolio export to PDF/Excel
-    console.log('Export portfolio for:', investor.name);
+    logger.log('Export portfolio for:', investor.name);
   };
 
   return (

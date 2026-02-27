@@ -1,41 +1,19 @@
-/**
- * Detect Insights
- *
- * Analyzes data and generates actionable insights using pattern detection.
- *
- * INSIGHT TYPES:
- * 1. Opportunity - Actions to take
- * 2. Warning - Issues needing attention
- * 3. Achievement - Celebrate wins
- * 4. Recommendation - Data-driven suggestions
- * 5. Alert - Urgent problems
- * 6. Info - Useful information
- *
- * PATTERNS DETECTED:
- * - Leads needing follow-up
- * - Response time degradation
- * - Revenue milestones
- * - Hot locations
- * - Low conversion areas
- * - Pipeline risks
- * - Activity patterns
- * - Price range opportunities
- */
-
 import { Property, User } from "../../../types";
 import { DashboardLead } from "../../../types/leads";
 import { Task } from "../../../types/tasks";
 import { Insight } from "../components/InsightCard";
 import { formatPKR } from "../../../lib/currency";
 
+import { logger } from "../../../lib/logger";
 /**
  * Detect leads needing follow-up (>3 days since last contact)
  */
-function detectStaledLeads(leads: DashboardLead[]): Insight | null {
+function detectStaledLeads(leads: LeadV4[]): Insight | null {
+  const safeLeads = Array.isArray(leads) ? leads : [];
   const now = new Date();
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
 
-  const staledLeads = leads.filter((lead) => {
+  const staledLeads = safeLeads.filter((lead) => {
     // Skip closed/lost leads
     if (["closed-won", "closed-lost", "disqualified"].includes(lead.stage)) {
       return false;
@@ -68,7 +46,7 @@ function detectStaledLeads(leads: DashboardLead[]): Insight | null {
       label: "View Leads",
       onClick: () => {
         // Navigation will be passed from parent
-        console.log("Navigate to leads");
+        logger.log("Navigate to leads");
       },
     },
     dismissible: false,
@@ -316,7 +294,7 @@ function detectPipelineRisks(leads: DashboardLead[]): Insight | null {
       action: {
         label: "Review Pipeline",
         onClick: () => {
-          console.log("Navigate to pipeline");
+          logger.log("Navigate to pipeline");
         },
       },
       dismissible: false,
@@ -448,7 +426,10 @@ export function detectInsights(data: {
   tasks: Task[];
   users: User[];
 }): Insight[] {
-  const { properties, leads, tasks, users } = data;
+  const properties = data.properties ?? [];
+  const leads = data.leads ?? [];
+  const tasks = data.tasks ?? [];
+  const users = data.users ?? [];
 
   const insights: (Insight | null)[] = [
     detectStaledLeads(leads),

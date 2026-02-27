@@ -1,22 +1,20 @@
 /**
  * Document Generation Library
- * Handles document creation, storage, and retrieval
+ * Handles document creation, storage, and retrieval (Zustand – useGeneratedDocumentsStore)
  */
 
 import { GeneratedDocument, DocumentType, DocumentDetails, DocumentClause, DEFAULT_CLAUSES } from '../types/documents';
 import { Property } from '../types';
 import { logger } from './logger';
-
-const DOCUMENTS_KEY = 'estate_generated_documents';
+import { useGeneratedDocumentsStore } from '@/store/useGeneratedDocumentsStore';
 
 /**
- * Get all generated documents (client-only; returns [] during SSR)
+ * Get all generated documents (from Zustand store; returns [] during SSR)
  */
 export function getGeneratedDocuments(): GeneratedDocument[] {
   if (typeof window === 'undefined') return [];
   try {
-    const data = localStorage.getItem(DOCUMENTS_KEY);
-    return data ? JSON.parse(data) : [];
+    return useGeneratedDocumentsStore.getState().documents ?? [];
   } catch (error) {
     logger.error('Error loading generated documents:', error);
     return [];
@@ -28,9 +26,7 @@ export function getGeneratedDocuments(): GeneratedDocument[] {
  */
 export function saveGeneratedDocument(document: GeneratedDocument): void {
   try {
-    const documents = getGeneratedDocuments();
-    documents.push(document);
-    localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(documents));
+    useGeneratedDocumentsStore.getState().addDocument(document);
   } catch (error) {
     logger.error('Error saving document:', error);
     throw error;
@@ -58,9 +54,7 @@ export function getDocumentsByTransaction(transactionId: string): GeneratedDocum
  */
 export function deleteGeneratedDocument(documentId: string): void {
   try {
-    const documents = getGeneratedDocuments();
-    const filtered = documents.filter(doc => doc.id !== documentId);
-    localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(filtered));
+    useGeneratedDocumentsStore.getState().removeDocument(documentId);
   } catch (error) {
     logger.error('Error deleting document:', error);
     throw error;

@@ -18,7 +18,9 @@ import { StatusBadge } from './layout/StatusBadge';
 import { Badge } from './ui/badge';
 import { RecordTransactionModal, PropertyTransactionHistory } from './transactions';
 import { SaleDistributionModal, InvestorDistributionHistory } from './sale-distribution';
-// import { getInvestorById } from '../lib/investors';
+// [STUBBED] import { getInvestorById } from '../lib/investors';
+
+// Temporary stub components until MultiInvestorPurchaseModal and InvestorSharesCard are implemented
 const InvestorSharesCard = ({ property, onNavigateToInvestor }: any) => {
   return (
     <div className="p-4 border rounded-lg bg-gray-50">

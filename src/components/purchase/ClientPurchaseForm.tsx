@@ -5,6 +5,12 @@ import { formatPropertyAddress } from '../../lib/utils';
 import { ClientPurchaseFormContent } from './ClientPurchaseForm.old';
 import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
 
+// ===== STUBS for removed prototype functions =====
+const createPurchaseCycle = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
+
 interface ClientPurchaseFormProps {
   property: Property;
   user: User;
