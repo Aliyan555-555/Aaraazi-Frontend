@@ -37,9 +37,17 @@ import {
   TooltipProps
 } from 'recharts';
 import { formatPKR } from '../../lib/currency';
-import { getInvestors, getInvestorInvestments, calculateInvestorROI } from '../../lib/investors';
-import { getProperties } from '../../lib/data';
+// [STUBBED] import { getInvestors, getInvestorInvestments, calculateInvestorROI } from '../../lib/investors';
+// [STUBBED] import { getProperties } from '../../lib/data';
 import { InvestorInvestment } from '../../types';
+
+// ===== STUBS for removed prototype functions =====
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorROI = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorPerformanceChartsProps {
   investorId?: string; // If provided, show individual investor performance

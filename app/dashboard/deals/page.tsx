@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { DealsWorkspaceV4 } from '@/components/deals/DealsWorkspaceV4';
+import { DealsWorkspace } from '@/components/deals/DealsWorkspace';
 import { User, mapAuthUserToUIUser } from '@/types';
 
 export default function DealsPage() {
@@ -40,7 +40,7 @@ export default function DealsPage() {
     }
 
     return (
-        <DealsWorkspaceV4
+        <DealsWorkspace
             user={user}
             onNavigate={handleNavigate}
             onAddDeal={() => console.log("Add deal clicked")}

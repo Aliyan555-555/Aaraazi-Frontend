@@ -33,17 +33,26 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader';
-import { getCurrentUser } from '../../lib/auth';
-import {
-  getScheduledReports,
-  deleteScheduledReport,
-  toggleScheduleActive,
-  executeScheduledReport
-} from '../../lib/reports';
+import { useAuthStore } from '@/store/useAuthStore';
+// import {
+//   getScheduledReports,
+//   deleteScheduledReport,
+//   toggleScheduleActive,
+//   executeScheduledReport
+// } from '../../lib/reports';
 import { ScheduledReport } from '../../types/reports';
 import { toast } from 'sonner';
-import { formatDate } from '../../lib/validation';
+// [STUBBED] import { formatDate } from '../../lib/validation';
 import ScheduleReportModal from './ScheduleReportModal';
+
+// ===== STUBS for removed prototype functions =====
+const getScheduledReports = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteScheduledReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const toggleScheduleActive = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const executeScheduledReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const formatDate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ScheduledReportsDashboardProps {
   onClose: () => void;
@@ -51,7 +60,7 @@ interface ScheduledReportsDashboardProps {
 }
 
 export default function ScheduledReportsDashboard({ onClose, onNavigate }: ScheduledReportsDashboardProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   // State
   const [editingSchedule, setEditingSchedule] = useState<ScheduledReport | null>(null);

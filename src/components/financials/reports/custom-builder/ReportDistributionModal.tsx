@@ -16,16 +16,16 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../../../types';
 import { CustomReportTemplate } from '../../../../types/custom-reports';
-import { ExportFormat } from '../../../../lib/report-export';
-import {
-  getDistributionLists,
-  createReportDistribution,
-  sendReport,
-  getAllRecipients,
-  isValidEmail,
-  DistributionList,
-  ReportDistribution,
-} from '../../../../lib/report-distribution';
+// [STUBBED] import { ExportFormat } from '../../../../lib/report-export';
+// [STUBBED] import {
+// [STUBBED]   getDistributionLists,
+// [STUBBED]   createReportDistribution,
+// [STUBBED]   sendReport,
+// [STUBBED]   getAllRecipients,
+// [STUBBED]   isValidEmail,
+// [STUBBED]   DistributionList,
+// [STUBBED]   ReportDistribution,
+// [STUBBED] } from '../../../../lib/report-distribution';
 import {
   Dialog,
   DialogContent,
@@ -57,6 +57,18 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+type ExportFormat = any;
+const getDistributionLists = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const createReportDistribution = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const sendReport = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAllRecipients = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const isValidEmail = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type DistributionList = any;
+type ReportDistribution = any;
+// ===== END STUBS =====
+
 
 interface ReportDistributionModalProps {
   open: boolean;

@@ -25,8 +25,14 @@ import {
 } from '../ui/select';
 import { Badge } from '../ui/badge';
 import { LeadInteractionType, LeadInteractionDirection } from '../../types/leads';
-import { addLeadInteraction, getLeadById } from '../../lib/leads';
+// [STUBBED] import { addLeadInteraction, getLeadById } from '../../lib/leads';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const addLeadInteraction = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getLeadById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface LeadInteractionModalProps {
   open: boolean;

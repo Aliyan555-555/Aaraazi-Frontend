@@ -5,7 +5,7 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { formatCurrency } from '../lib/currency';
-import { getAllAgents } from '../lib/auth';
+import { getAllAgents } from '@/lib/users';
 
 
 import {
@@ -35,7 +35,19 @@ import {
   CheckCircle,
   Minus
 } from 'lucide-react';
-import { AgentPerformance, AgentRanking, calculateAgentPerformance, compareToTeamAverage, getAgentActivityTimeline, getAgentPerformanceTrends, getAgentRankings, getTopPerformers } from '../lib/agentPerformance';
+// [STUBBED] import { AgentPerformance, AgentRanking, calculateAgentPerformance, compareToTeamAverage, getAgentActivityTimeline, getAgentPerformanceTrends, getAgentRankings, getTopPerformers } from '../lib/agentPerformance';
+
+// ===== STUBS for removed prototype functions =====
+type AgentPerformance = any;
+type AgentRanking = any;
+const calculateAgentPerformance = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const compareToTeamAverage = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgentActivityTimeline = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgentPerformanceTrends = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgentRankings = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTopPerformers = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AgentPerformanceDashboardProps {
   user: User;
@@ -64,7 +76,7 @@ export const AgentPerformanceDashboard: React.FC<AgentPerformanceDashboardProps>
   const selectedAgentData = useMemo(() => {
     if (selectedAgent === 'all') return null;
 
-    const agent = allAgents.find((a: User) => a.id === selectedAgent);
+    const agent = allAgents.find((a) => a.id === selectedAgent);
     if (!agent) return null;
 
     return calculateAgentPerformance(agent.id, agent.name, timeRange);
@@ -85,7 +97,7 @@ export const AgentPerformanceDashboard: React.FC<AgentPerformanceDashboardProps>
   // Performance trends
   const performanceTrends = useMemo(() => {
     if (selectedAgent === 'all') return [];
-    const agent = allAgents.find((a: User) => a.id === selectedAgent);
+    const agent = allAgents.find((a) => a.id === selectedAgent);
     if (!agent) return [];
     return getAgentPerformanceTrends(agent.id, agent.name, 6);
   }, [selectedAgent, allAgents]);
@@ -138,7 +150,7 @@ export const AgentPerformanceDashboard: React.FC<AgentPerformanceDashboardProps>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Agents (Leaderboard)</SelectItem>
-                    {allAgents.map((agent: User) => (
+                    {allAgents.map((agent) => (
                       <SelectItem key={agent.id} value={agent.id}>
                         {agent.name}
                       </SelectItem>

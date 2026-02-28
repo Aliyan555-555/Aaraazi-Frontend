@@ -23,14 +23,23 @@ import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
-import { 
-  getSLAAlerts, 
-  getSLAPerformance, 
-  getAgentWorkloads,
-  SLAAlert 
-} from '../../lib/leadUtils';
-import { getLeadById } from '../../lib/leads';
+// [STUBBED] import { 
+// [STUBBED]   getSLAAlerts, 
+// [STUBBED]   getSLAPerformance, 
+// [STUBBED]   getAgentWorkloads,
+// [STUBBED]   SLAAlert 
+// [STUBBED] } from '../../lib/leadUtils';
+// [STUBBED] import { getLeadById } from '../../lib/leads';
 import { formatDistanceToNow } from 'date-fns';
+
+// ===== STUBS for removed prototype functions =====
+const getSLAAlerts = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getSLAPerformance = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getAgentWorkloads = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type SLAAlert = any;
+const getLeadById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface SLADashboardProps {
   onViewLead?: (leadId: string) => void;

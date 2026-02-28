@@ -23,13 +23,21 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { formatPKR } from '../../lib/currency';
-import { calculatePropertyFinancials } from '../../lib/agencyFinancials';
-import {
-  getTransactionsByProperty,
-  getTransactionTypeLabel,
-  getCategoryLabel,
-} from '../../lib/agencyTransactions';
+// [STUBBED] import { calculatePropertyFinancials } from '../../lib/agencyFinancials';
+// [STUBBED] import {
+// [STUBBED]   getTransactionsByProperty,
+// [STUBBED]   getTransactionTypeLabel,
+// [STUBBED]   getCategoryLabel,
+// [STUBBED] } from '../../lib/agencyTransactions';
 import { AgencyTransaction } from '../../types';
+
+// ===== STUBS for removed prototype functions =====
+const calculatePropertyFinancials = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTransactionsByProperty = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getTransactionTypeLabel = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getCategoryLabel = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PropertyFinancialsTabProps {
   propertyId: string;

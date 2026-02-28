@@ -5,10 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, Search, AlertCircle, ArrowRight, CircuitBoard } from 'lucide-react';
+import { Building2, AlertCircle, ArrowRight, CircuitBoard } from 'lucide-react';
 import { useTenantLookup, useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/client';
+import { tenantLookupSchema } from '@/lib/validation/auth.schemas';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { AARAAZI_BRAND } from '@/lib/brand';
 
 /**
  * Professional Agency Code Lookup Page
@@ -17,6 +20,7 @@ import { useRouter } from 'next/navigation';
 export default function AgencyCodeScreen() {
     const router = useRouter();
     const [domain, setDomain] = useState('');
+    const [fieldError, setFieldError] = useState<string | null>(null);
     const { lookupTenant, isLoading, error, clearError } = useTenantLookup();
     const { isAuthenticated } = useAuth();
 
@@ -30,13 +34,16 @@ export default function AgencyCodeScreen() {
     const handleLookup = async (e: React.FormEvent) => {
         e.preventDefault();
         clearError();
+        setFieldError(null);
 
-        if (!domain.trim()) {
+        const result = tenantLookupSchema.safeParse({ domain: domain.trim() });
+        if (!result.success) {
+            setFieldError(result.error.issues[0]?.message ?? 'Invalid input');
             return;
         }
 
         try {
-            await lookupTenant({ domain: domain.trim() });
+            await lookupTenant({ domain: result.data.domain });
             // Hook automatically navigates to /auth/login on success
         } catch (err) {
             console.error('Tenant lookup failed:', err);
@@ -49,10 +56,14 @@ export default function AgencyCodeScreen() {
                 {/* Header */}
                 <div className="text-center mb-8 transition-all duration-300">
                     <div className="flex items-center justify-center gap-3 mb-4">
-                        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                            <Building2 className="w-6 h-6 text-white" />
-                        </div>
-                        <h1 className="text-3xl font-semibold text-gray-900">Aaraazi</h1>
+                        <Image
+                            src={AARAAZI_BRAND.fullLogo}
+                            alt={AARAAZI_BRAND.displayName}
+                            className="h-14 w-auto max-w-[200px] object-contain"
+                            width={200}
+                            height={50}
+                            priority
+                        />
                     </div>
                     <p className="text-lg text-gray-600">
                         Real Estate & Development Management Platform
@@ -90,10 +101,10 @@ export default function AgencyCodeScreen() {
                                     </p>
                                 </div>
 
-                                {error && (
+                                {(error || fieldError) && (
                                     <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
                                         <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                                        <span>{getErrorMessage(error)}</span>
+                                        <span>{fieldError ?? getErrorMessage(error)}</span>
                                     </div>
                                 )}
 

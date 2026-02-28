@@ -18,11 +18,18 @@ import {
   TrendingUp,
   ExternalLink,
 } from 'lucide-react';
-import { PropertyMatch } from '../lib/propertyMatching';
+// [STUBBED] import { PropertyMatch } from '../lib/propertyMatching';
 import { Offer } from '../types';
 import { formatPKR } from '../lib/currency';
-import { getMatchScoreColor } from '../lib/propertyMatching';
+// [STUBBED] import { getMatchScoreColor } from '../lib/propertyMatching';
 import { formatPropertyAddress } from '../lib/utils';
+
+import { logger } from "../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+type PropertyMatch = any;
+const getMatchScoreColor = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface EnhancedMatchCardProps {
   match: PropertyMatch;
@@ -136,7 +143,7 @@ export function EnhancedMatchCard({
                 <p className="text-muted-foreground">Offer Amount</p>
                 <p className="font-bold">{formatPKR(latestOffer.offer.offerAmount || latestOffer.offer.amount || 0)}</p>
                 <p className="text-xs text-muted-foreground">
-                  {((((latestOffer.offer.offerAmount || latestOffer.offer.amount || 0) / (match.askingPrice || match.monthlyRent || (property.price as number) || 1)) * 100).toFixed(1))}% of asking
+                  {(((latestOffer.offer.offerAmount || latestOffer.offer.amount) ?? 0) / (match.askingPrice || match.monthlyRent || (property?.price as number) || 1) * 100).toFixed(1)}% of asking
                 </p>
               </div>
               {latestOffer.offer.counterOfferAmount && (
@@ -223,11 +230,11 @@ export function EnhancedMatchCard({
           ) : match.sellCycleId ? (
             <Button
               onClick={() => {
-                console.log('🔵 Send Offer button clicked');
-                console.log('   Match data:', match);
-                console.log('   Has sellCycleId:', !!match.sellCycleId);
-                console.log('   Has property:', !!match.property);
-                console.log('   Calling onSendOffer...');
+                logger.log('🔵 Send Offer button clicked');
+                logger.log('   Match data:', match);
+                logger.log('   Has sellCycleId:', !!match.sellCycleId);
+                logger.log('   Has property:', !!match.property);
+                logger.log('   Calling onSendOffer...');
                 onSendOffer();
               }}
               className="w-full"

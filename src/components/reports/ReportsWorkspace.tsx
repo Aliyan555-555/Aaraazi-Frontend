@@ -56,18 +56,25 @@ import {
   ReportCategory,
   SYSTEM_REPORTS 
 } from '../../types/reports';
-import { getReportTemplates, getReportHistory } from '../../lib/reports';
+// import { getReportTemplates, getReportHistory } from '../../lib/reports';
 import { formatDate } from '../../lib/validation';
-import { getCurrentUser } from '../../lib/auth';
+import { useAuthStore } from '@/store/useAuthStore';
 import ScheduleReportModal from './ScheduleReportModal';
 import ShareReportModal from './ShareReportModal';
+
+// ===== STUBS for removed prototype functions =====
+const getReportTemplates = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getReportHistory = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const formatDate = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface ReportsWorkspaceProps {
   onNavigate: (page: string, params?: any) => void;
 }
 
 export default function ReportsWorkspace({ onNavigate }: ReportsWorkspaceProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [searchQuery, setSearchQuery] = useState('');

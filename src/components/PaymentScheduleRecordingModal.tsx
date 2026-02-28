@@ -37,8 +37,13 @@ import {
 } from 'lucide-react';
 import { formatPKR } from '../lib/currency';
 import { Instalment } from '../types/paymentSchedule';
-import { recordInstalmentPayment } from '../lib/paymentSchedule';
+// [STUBBED] import { recordInstalmentPayment } from '../lib/paymentSchedule';
 import { toast } from 'sonner';
+
+// ===== STUBS for removed prototype functions =====
+const recordInstalmentPayment = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface PaymentScheduleRecordingModalProps {
   isOpen: boolean;

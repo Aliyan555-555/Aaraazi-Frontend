@@ -11,8 +11,13 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { User } from '../types';
 import { toast } from 'sonner';
-import { addTenantApplication } from '../lib/rentCycle';
+// [STUBBED] import { addTenantApplication } from '../lib/rentCycle';
 import { User as UserIcon, Phone, Calendar, FileText } from 'lucide-react';
+
+// ===== STUBS for removed prototype functions =====
+const addTenantApplication = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface AddApplicationModalProps {
   isOpen: boolean;

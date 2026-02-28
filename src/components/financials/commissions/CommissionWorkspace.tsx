@@ -8,11 +8,20 @@ import { CommissionList, CommissionAgent } from './CommissionList';
 import { BulkCommissionActions } from './BulkCommissionActions';
 import { DealCommissionDetailModal } from './DealCommissionDetailModal';
 import { Button } from '../../ui/button';
-import { getDeals, getDealById, updateDeal } from '../../../lib/deals';
-import { getPropertyById } from '../../../lib/data';
+// [STUBBED] import { getDeals, getDealById, updateDeal } from '../../../lib/deals';
+// [STUBBED] import { getPropertyById } from '../../../lib/data';
 import { formatPKR } from '../../../lib/currency';
 import { toast } from 'sonner';
 import { ArrowLeft, Download, CheckCircle, XCircle, Wallet } from 'lucide-react';
+
+import { logger } from "../../../lib/logger";
+
+// ===== STUBS for removed prototype functions =====
+const getDeals = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getDealById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateDeal = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
 
 interface CommissionWorkspaceProps {
   user: User;
@@ -203,7 +212,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
 
   // Handle bulk actions
   const handleBulkAction = async (action: 'approve' | 'reject' | 'pay', reason?: string) => {
-    console.log('🔧 Bulk action:', action, 'Count:', selectedCommissionObjects.length);
+    logger.log('🔧 Bulk action:', action, 'Count:', selectedCommissionObjects.length);
 
     try {
       // Group by deal ID
@@ -260,7 +269,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       setBulkAction(null);
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Bulk action failed:', error);
+      logger.error('Bulk action failed:', error);
       toast.error('Failed to perform bulk action. Please try again.');
     }
   };
@@ -289,7 +298,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       toast.success(`Commission approved for ${commission.name}`);
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Approve failed:', error);
+      logger.error('Approve failed:', error);
       toast.error('Failed to approve commission');
     }
   };
@@ -317,7 +326,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       toast.success(`Commission rejected for ${commission.name}`);
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Reject failed:', error);
+      logger.error('Reject failed:', error);
       toast.error('Failed to reject commission');
     }
   };
@@ -345,7 +354,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       toast.success(`Commission marked as paid for ${commission.name}`);
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Mark paid failed:', error);
+      logger.error('Mark paid failed:', error);
       toast.error('Failed to mark commission as paid');
     }
   };
@@ -385,7 +394,7 @@ export const CommissionWorkspace: React.FC<CommissionWorkspaceProps> = ({
       toast.success(`Commission set to ${labels[status]} for ${commission.name}`);
       setRefreshKey(prev => prev + 1);
     } catch (error) {
-      console.error('Change status failed:', error);
+      logger.error('Change status failed:', error);
       toast.error('Failed to change commission status');
     }
   };

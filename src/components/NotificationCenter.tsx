@@ -29,18 +29,30 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react';
-import {
-  getNotifications,
-  filterNotifications,
-  getNotificationStats,
-  markAsRead,
-  markAllAsRead,
-  archiveNotification,
-  bulkArchive,
-  bulkDelete,
-} from '../lib/notifications';
+// [STUBBED] import {
+// [STUBBED]   getNotifications,
+// [STUBBED]   filterNotifications,
+// [STUBBED]   getNotificationStats,
+// [STUBBED]   markAsRead,
+// [STUBBED]   markAllAsRead,
+// [STUBBED]   archiveNotification,
+// [STUBBED]   bulkArchive,
+// [STUBBED]   bulkDelete,
+// [STUBBED] } from '../lib/notifications';
 import { NotificationItem } from './NotificationItem';
 import { NotificationPreferencesModal } from './NotificationPreferencesModal';
+
+// ===== STUBS for removed prototype functions =====
+const getNotifications = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const filterNotifications = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getNotificationStats = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const markAsRead = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const markAllAsRead = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const archiveNotification = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const bulkArchive = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const bulkDelete = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface NotificationCenterProps {
   user: User;

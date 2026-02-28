@@ -48,17 +48,26 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { formatPKR } from '../lib/currency';
-import {
-  getInvestors,
-  deleteInvestor,
-  getInvestorInvestments,
-  calculateInvestorPortfolioValue,
-  calculateInvestorROI
-} from '../lib/investors';
+// [STUBBED] import {
+// [STUBBED]   getInvestors,
+// [STUBBED]   deleteInvestor,
+// [STUBBED]   getInvestorInvestments,
+// [STUBBED]   calculateInvestorPortfolioValue,
+// [STUBBED]   calculateInvestorROI
+// [STUBBED] } from '../lib/investors';
 import { Investor } from '../types';
 import { toast } from 'sonner';
 import CreateInvestorModal from './CreateInvestorModal';
 import InvestorPortfolioDashboard from './InvestorPortfolioDashboard';
+
+// ===== STUBS for removed prototype functions =====
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteInvestor = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorInvestments = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorPortfolioValue = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const calculateInvestorROI = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface InvestorManagementViewProps {
   onNavigate: (view: string, data?: any) => void;

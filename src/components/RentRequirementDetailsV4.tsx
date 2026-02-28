@@ -75,28 +75,42 @@ import {
 } from 'lucide-react';
 
 // Business Logic
-import {
-  updateRentRequirement,
-  closeRentRequirement,
-  deleteRentRequirement,
-  getRentRequirement,
-} from '../lib/rentRequirements';
+// [STUBBED] import {
+// [STUBBED]   updateRentRequirement,
+// [STUBBED]   closeRentRequirement,
+// [STUBBED]   deleteRentRequirement,
+// [STUBBED]   getRentRequirement,
+// [STUBBED] } from '../lib/rentRequirements';
 import { formatPKR } from '../lib/currency';
 import { formatPropertyAddress } from '../lib/utils';
 import { toast } from 'sonner';
-import {
-  findMatchingPropertiesForRent,
-  getMatchScoreColor,
-  getMatchScoreLabel,
-  PropertyMatch,
-} from '../lib/propertyMatching';
+// [STUBBED] import {
+// [STUBBED]   findMatchingPropertiesForRent,
+// [STUBBED]   getMatchScoreColor,
+// [STUBBED]   getMatchScoreLabel,
+// [STUBBED]   PropertyMatch,
+// [STUBBED] } from '../lib/propertyMatching';
 
 // Phase 4D: Cross-agent matching functions
 import {
   findSharedMatchesForRentRequirement,
   submitCrossAgentRentApplicationFromMatch,
 } from '../lib/smartMatching';
-import { addTenantApplication, getRentCycleById } from '../lib/rentCycle';
+// [STUBBED] import { addTenantApplication, getRentCycleById } from '../lib/rentCycle';
+
+// ===== STUBS for removed prototype functions =====
+const updateRentRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const closeRentRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteRentRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getRentRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const findMatchingPropertiesForRent = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getMatchScoreColor = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getMatchScoreLabel = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type PropertyMatch = any;
+const addTenantApplication = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getRentCycleById = (..._args: any[]): any => { /* stub - prototype function removed */ };
+// ===== END STUBS =====
+
 
 interface RentRequirementDetailsV4Props {
   requirement: RentRequirement;

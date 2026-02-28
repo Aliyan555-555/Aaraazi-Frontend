@@ -22,11 +22,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { formatPKR } from '../../lib/currency';
-import { 
-  getAgencyPortfolioSummary,
-  getInvestorPortfolioSummary 
-} from '../../lib/portfolio';
-import { getInvestors } from '../../lib/investors';
+// [STUBBED] import { 
+// [STUBBED]   getAgencyPortfolioSummary,
+// [STUBBED]   getInvestorPortfolioSummary 
+// [STUBBED] } from '../../lib/portfolio';
+// [STUBBED] import { getInvestors } from '../../lib/investors';
 import AgencyOwnedPropertiesDashboard from '../AgencyOwnedPropertiesDashboard';
 import InvestorManagementView from '../InvestorManagementView';
 import InvestorPortfolioDashboard from '../InvestorPortfolioDashboard';
@@ -34,7 +34,15 @@ import AgencyPaymentTracking from './AgencyPaymentTracking';
 import InvestorPerformanceCharts from './InvestorPerformanceCharts';
 import { InvestorPropertiesAnalytics } from '../investor-analytics';
 import { AgencyPortfolioAnalytics } from './AgencyPortfolioAnalytics';
-import { OwnershipFixPanel } from '../OwnershipFixPanel';
+// [STUBBED] import { OwnershipFixPanel } from '../OwnershipFixPanel';
+
+// ===== STUBS for removed prototype functions =====
+const getAgencyPortfolioSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestorPortfolioSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getInvestors = (..._args: any[]): any => { /* stub - prototype function removed */ };
+type OwnershipFixPanel = any;
+// ===== END STUBS =====
+
 
 interface PortfolioHubProps {
   onNavigate: (view: string, data?: any) => void;
