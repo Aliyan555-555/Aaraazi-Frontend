@@ -6,12 +6,12 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
-import { 
-  getUserProfile, 
-  saveUserProfile, 
-  UserProfile as UserProfileType,
-  syncProfileFromUser 
-} from '../lib/userProfile';
+
+const getUserProfile = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const saveUserProfile = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const syncProfileFromUser = (..._args: any[]): any => { /* stub - prototype function removed */ };
+
+
 import { 
   User as UserIcon, 
   Mail, 

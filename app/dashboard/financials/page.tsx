@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { FinancialsHub } from '@/components/financials/FinancialsHub';
-import { User, mapAuthUserToUIUser } from '@/types';
+import { mapAuthUserToUIUser } from '@/types';
 
 export default function FinancialsPage() {
     const { user: saasUser } = useAuthStore();

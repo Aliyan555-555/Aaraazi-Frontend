@@ -1,16 +1,7 @@
-/**
- * TaskQuickAddWidget Component
- * 
- * Quick task addition widget for entity detail pages
- * Allows creating tasks directly from Property, Lead, Contact, Deal pages
- * 
- * DESIGN: Design System compliant
- */
-
 import React, { useState } from 'react';
 import { User } from '../../types';
-import { TaskV4, TaskCategory, TaskEntityType } from '../../types/tasks';
-// [STUBBED] import { createTask } from '../../lib/tasks';
+import { Task, TaskCategory, TaskEntityType } from '../../types/tasks';
+const createTask = (_payload: unknown, _user: User): Task => ({} as Task);
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -228,7 +219,7 @@ export const TaskQuickAddWidget: React.FC<TaskQuickAddWidgetProps> = ({
             <X className="h-4 w-4 mr-1" />
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSubmit}>
+          <Button size="sm" onClick={handleSubmit} disabled={isSubmitting}>
             <CheckSquare className="h-4 w-4 mr-1" />
             Create Task
           </Button>

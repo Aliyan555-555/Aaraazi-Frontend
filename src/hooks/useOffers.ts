@@ -1,12 +1,6 @@
-/**
- * Offers Hooks - Zustand-based
- * Mutations for creating, accepting, and rejecting offers
- */
-
 'use client';
 
 import { useOffersStore } from '@/store/useOffersStore';
-import type { CreateOfferPayload } from '@/services/offers.service';
 
 export function useCreateOffer() {
   const createLoading = useOffersStore((s) => s.createLoading);

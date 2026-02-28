@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PurchaseCyclesWorkspace } from '@/components/purchase-cycles/PurchaseCyclesWorkspace';
 import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
 import { mapAuthUserToUIUser } from '@/types';
-import type { User, PurchaseCycle } from '@/types';
+import type { PurchaseCycle } from '@/types';
 
 export default function PurchaseCyclesPage() {
     const { user: saasUser } = useAuthStore();

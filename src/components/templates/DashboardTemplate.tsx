@@ -149,7 +149,7 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   contentClassName = '',
 }) => {
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id || '');
-  const [showFilterPanel, setShowFilterPanel] = useState(showFilters);
+  const [_showFilterPanel, _setShowFilterPanel] = useState(showFilters);
 
   // Auto-refresh logic
   React.useEffect(() => {

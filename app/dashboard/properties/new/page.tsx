@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PropertyForm } from '@/components/PropertyForm';
 import { AcquisitionTypeSelector } from '@/components/AcquisitionTypeSelector';
-import { User, mapAuthUserToUIUser } from '@/types';
+import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
 
 export default function NewPropertyPage() {

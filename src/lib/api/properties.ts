@@ -1,20 +1,11 @@
-/**
- * Properties API Client
- * Handles all property-related API calls
- */
-
 import { apiClient } from "./client";
 import type {
-  PropertyListing,
   PropertyType,
   PropertyListingStatus,
   ListingType,
   AreaUnit,
 } from "@prisma/client";
 
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface CreatePropertyData {
   // Property Type
@@ -93,7 +84,7 @@ export interface PropertyQueryParams {
 }
 
 export interface PropertyListResponse {
-  data: any[];
+  data: unknown[];
   pagination: {
     page: number;
     limit: number;

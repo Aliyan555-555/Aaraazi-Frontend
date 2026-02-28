@@ -18,10 +18,10 @@ import { CommissionStatusBadge, CommissionStatus } from './CommissionStatusBadge
 import { ChangeCommissionStatusModal } from './ChangeCommissionStatusModal';
 import { AddAgentToCommissionModal } from './AddAgentToCommissionModal';
 import { formatPKR } from '../../lib/currency';
-import {
-  validateCommissionSplits,
-  migrateLegacyCommission,
-} from '../../lib/commissionAgents';
+// import {
+//   validateCommissionSplits,
+//   migrateLegacyCommission,
+// } from '../../lib/commissionAgents';
 import { useDealMutations } from '@/hooks/useDeals';
 import { toast } from 'sonner';
 import {
@@ -38,6 +38,10 @@ import {
   ArrowRightLeft,
   Home,
 } from 'lucide-react';
+
+const validateCommissionSplits = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const migrateLegacyCommission = (..._args: any[]): any => { /* stub - prototype function removed */ };
+
 
 interface CommissionTabProps {
   deal: Deal;

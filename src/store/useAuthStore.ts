@@ -9,7 +9,6 @@ import type {
   User,
   Branding,
   Agency,
-  Tenant,
   UserSession,
   LoginDto,
   ApiError,

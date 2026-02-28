@@ -18,14 +18,12 @@ import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
 import {
   CheckSquare,
-  Clock,
   User,
   Calendar,
   MoreVertical,
   Eye,
   Edit,
   Trash2,
-  AlertCircle,
 } from 'lucide-react';
 import {
   DropdownMenu,

@@ -34,11 +34,6 @@ const emptyListEntry = {
   error: null as string | null,
 };
 
-const emptyDetailEntry = {
-  data: null as Contact | null,
-  isLoading: false,
-  error: null as string | null,
-};
 
 // ============================================================================
 // Types
@@ -175,7 +170,7 @@ export const useContactsStore = create<ContactsStore>((set, get) => ({
     }));
     try {
       const data = await contactsService.getStatistics();
-      set((s) => ({
+      set(() => ({
         statistics: { data, isLoading: false, error: null },
       }));
     } catch (err) {
@@ -183,7 +178,7 @@ export const useContactsStore = create<ContactsStore>((set, get) => ({
         err && typeof err === 'object' && 'message' in err
           ? String((err as { message: string }).message)
           : 'Failed to load contact statistics';
-      set((s) => ({
+      set(() => ({
         statistics: { data: null, isLoading: false, error: msg },
       }));
     }

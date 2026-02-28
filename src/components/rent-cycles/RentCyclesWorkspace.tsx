@@ -25,9 +25,6 @@ export interface RentCyclesWorkspaceProps {
   onEditCycle?: (cycle: RentCycleApiResponse) => void;
 }
 
-/**
- * RentCyclesWorkspace - Complete workspace using template system
- */
 export const RentCyclesWorkspace: React.FC<
   RentCyclesWorkspaceProps
 > = ({ user, onNavigate, onStartNew, onEditCycle }) => {

@@ -1,30 +1,6 @@
-/**
- * BulkEditTasksModal Component
- * 
- * Comprehensive bulk editing modal for tasks with:
- * - Multi-field editing (status, priority, category, assignee, dates, tags)
- * - Smart change tracking (only update modified fields)
- * - Preview changes before applying
- * - Validation and error handling
- * - Partial update support (skip failed tasks)
- * 
- * DESIGN: Design System compliant
- * UX LAWS: Miller's Law (7±2 fields), Hick's Law (progressive disclosure)
- * 
- * @example
- * <BulkEditTasksModal
- *   open={true}
- *   onClose={handleClose}
- *   taskIds={selectedTaskIds}
- *   user={user}
- *   onTasksUpdated={handleRefresh}
- * />
- */
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { User } from '../../types';
 import { Task, TaskStatus, TaskPriority, TaskCategory } from '../../types/tasks';
-import { getTaskById, updateTask, getAllTasks } from '../../lib/tasks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -48,8 +24,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-
-// ==================== INTERFACES ====================
 
 interface BulkEditTasksModalProps {
   open: boolean;

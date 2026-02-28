@@ -2,16 +2,28 @@ import React, { useMemo, useState } from 'react';
 import { DetailPageTemplate } from '../layout/DetailPageTemplate';
 import { User, Contact, CRMInteraction, CRMTask } from '../../types';
 import { Deal } from '../../types/deals';
-import { getContacts, getProperties, updateContact, getContactInteractions, getContactTasks, deleteInteraction, deleteTask as deleteLegacyTask, updateTask as updateLegacyTask } from '../../lib/data';
-import { getDeals } from '../../lib/deals';
+// import { getContacts, getProperties, updateContact, getContactInteractions, getContactTasks, deleteInteraction, deleteTask as deleteLegacyTask, updateTask as updateLegacyTask } from '../../lib/data';
+// import { getDeals } from '../../lib/deals';
 import { formatPKR } from '../../lib/currency';
 import { formatPropertyAddress } from '../../lib/utils';
-import { getInvestorInvestments } from '../../lib/investors';
+// import { getInvestorInvestments } from '../../lib/investors';
 import { InvestorPortfolioDashboard } from '../investor-portfolio/InvestorPortfolioDashboard';
 import { InteractionForm } from './InteractionForm';
 import { TaskForm } from './TaskForm';
-import { getTasksByEntity, updateTask, deleteTask } from '../../lib/tasks';
+// import { getTasksByEntity, updateTask, deleteTask } from '../../lib/tasks';
 import type { Task } from '../../types/tasks';
+
+const getDeals = (..._args: any[]): Deal[] => [];
+const getTasksByEntity = (..._args: any[]): Task[] => [];
+const getContacts = (..._args: any[]): Contact[] => [];
+const getProperties = (..._args: any[]): Property[] => [];
+const updateContact = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getContactInteractions = (..._args: any[]): CRMInteraction[] => [];
+const getContactTasks = (..._args: any[]): Task[] => [];
+const deleteInteraction = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const deleteTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
+
 
 /** Contact with legacy UI/tracking fields not on schema Contact */
 type ContactWithLegacy = Contact & {

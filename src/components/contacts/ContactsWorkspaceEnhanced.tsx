@@ -1,36 +1,7 @@
-<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
-<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
-/**
- * ContactsWorkspaceEnhanced Component
- * Workspace: Enhanced with full functionality ✅
- * 
- * PURPOSE:
- * Complete contacts/CRM workspace with ALL functionality implemented.
- * 
- * FEATURES IMPLEMENTED:
- * ✅ Table view with all contact information
- * ✅ Grid view with contact cards
- * ✅ Advanced search and filtering
- * ✅ Multiple sort options
- * ✅ Working bulk actions (export, archive, delete, change status, assign tags)
- * ✅ Quick actions (call, email, view, edit, delete)
- * ✅ Row actions menu
- * ✅ Secondary actions (import, export templates, bulk edit)
- * ✅ Follow-up reminders filter
- * ✅ Commission tracking
- * ✅ Tag management
- * ✅ Advanced filters (date range, commission range, activity)
- * 
- * @module ContactsWorkspaceEnhanced
- */
+
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-========
-import React, { useState, useMemo } from 'react';
->>>>>>>> aaraazi/documents:src/components/contacts/ContactsWorkspace.tsx
-========
-import React, { useState, useMemo } from 'react';
->>>>>>>> aaraazi/authentication:src/components/contacts/ContactsWorkspace.tsx
+
 import {
   Plus,
   Download,
@@ -70,46 +41,24 @@ import {
 import { ContactFormModal } from '../ContactFormModal';
 import { useRouter } from 'next/navigation';
 
-// Define a flexible User interface for props to handle different User types across the app
+
 interface WorkspaceUser {
   id: string;
   role: UserRole | string;
   [key: string]: any;
 }
 
-<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
-<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
-export interface ContactsWorkspaceEnhancedProps {
-  user: User;
-  onNavigate: (section: string, id?: string) => void;
-========
+
 export interface ContactsWorkspaceProps {
   user: WorkspaceUser;
->>>>>>>> aaraazi/documents:src/components/contacts/ContactsWorkspace.tsx
-========
-export interface ContactsWorkspaceProps {
-  user: WorkspaceUser;
->>>>>>>> aaraazi/authentication:src/components/contacts/ContactsWorkspace.tsx
   onAddContact?: () => void;
   onEditContact?: (contact: Contact) => void;
 }
 
-/**
-<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
-<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
- * ContactsWorkspaceEnhanced - Complete workspace with all functionality
- */
-export const ContactsWorkspaceEnhanced: React.FC<ContactsWorkspaceEnhancedProps> = ({
-========
- * ContactsWorkspace - Contact list and management
- */
-export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
->>>>>>>> aaraazi/documents:src/components/contacts/ContactsWorkspace.tsx
-========
- * ContactsWorkspace - Contact list and management
- */
-export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
->>>>>>>> aaraazi/authentication:src/components/contacts/ContactsWorkspace.tsx
+/** Alias for barrel re-export */
+export type ContactsWorkspaceEnhancedProps = ContactsWorkspaceProps;
+
+export const ContactsWorkspaceEnhanced: React.FC<ContactsWorkspaceProps> = ({
   user,
   onAddContact,
   onEditContact,
@@ -163,15 +112,8 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
   const stats = useMemo(() => {
     const active = allContacts.filter(c => c.status === ContactStatus.ACTIVE).length;
     const clients = allContacts.filter(c => c.type === ContactType.CLIENT).length;
-
-    // Determine commission from preferences or legacy fields if supported, usually 0
-    // We assume commission is not available for now. 
     const totalCommission = 0;
-
     const needFollowUp = allContacts.filter(c => {
-      // Use preferences.nextFollowUp if contact.nextFollowUp is missing (frontend field precedence)
-      // Actually contact.nextFollowUp is "Frontend-only" field in model, but backend might not return it.
-      // So check both.
       const prefs = getPreferences(c);
       const followUpStr = c.nextFollowUp || prefs.nextFollowUp;
 
@@ -207,9 +149,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     if (contact.phone) {
       window.location.href = `tel:${contact.phone}`;
       toast.success(`Calling ${contact.name}...`);
-
-      // We can't update lastContactDate via API if backend doesn't support it strictly.
-      // But we can try or skip.
     }
   };
 
@@ -261,9 +200,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     }
   };
 
-  // ============================================================================
-  // Bulk Actions
-  // ============================================================================
 
   const handleBulkExport = (ids: string[]) => {
     const contactsToExport = allContacts.filter(c => ids.includes(c.id));
@@ -787,15 +723,8 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
       />
     </>
   );
-<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
-<<<<<<<< HEAD:src/components/contacts/ContactsWorkspaceEnhanced.tsx
+
 };
 
 // Explicit default export for lazy loading compatibility
-export default ContactsWorkspaceEnhanced;
-========
-};
->>>>>>>> aaraazi/documents:src/components/contacts/ContactsWorkspace.tsx
-========
-};
->>>>>>>> aaraazi/authentication:src/components/contacts/ContactsWorkspace.tsx
+// export default ContactsWorkspaceEnhanced;

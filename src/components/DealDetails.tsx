@@ -73,13 +73,16 @@ import {
 
 // Business Logic
 import { useDealMutations } from '@/hooks/useDeals';
-import { getUserRoleInDeal } from '../lib/dealPermissions';
+// import { getUserRoleInDeal } from '../lib/dealPermissions';
 import { formatPKR } from '../lib/currency';
 import { toast } from 'sonner';
-
-// Transaction System
-import { getTransactionGraph } from '@/lib/transaction-graph';
 import { useDealTimeline } from '@/hooks/useDealTimeline';
+
+const getUserRoleInDeal = (..._args: any[]): string => { /* stub - prototype function removed */ };
+const getTransactionGraph = (..._args: any[]): any => { /* stub - prototype function removed */ };
+
+
+
 
 interface DealDetailsProps {
   deal: Deal;

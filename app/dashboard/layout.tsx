@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Sidebar } from '../../src/components/Sidebar';
 import { Navbar } from '../../src/components/Navbar';
 import { useAuthStore } from '@/store/useAuthStore';

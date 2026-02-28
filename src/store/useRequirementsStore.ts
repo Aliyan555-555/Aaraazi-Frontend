@@ -17,7 +17,7 @@ export interface RequirementsStore {
   fetch: () => Promise<void>;
 }
 
-export const useRequirementsStore = create<RequirementsStore>((set, get) => ({
+export const useRequirementsStore = create<RequirementsStore>((set) => ({
   items: [],
   isLoading: false,
   error: null,

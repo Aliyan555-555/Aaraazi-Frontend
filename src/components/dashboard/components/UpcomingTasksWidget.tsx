@@ -1,28 +1,7 @@
-/**
- * UpcomingTasksWidget Component
- * 
- * Shows upcoming tasks for the next 7 days.
- * 
- * FEATURES:
- * - Next 5 upcoming tasks
- * - Task details (title, due date, priority, entity)
- * - Quick complete action
- * - Navigate to task details
- * 
- * DESIGN: Design System compliant
- * UX LAWS: Miller's Law (5±2 items), Fitts's Law (large targets)
- * 
- * @example
- * <UpcomingTasksWidget
- *   user={user}
- *   onNavigate={(route, id) => handleNavigate(route, id)}
- * />
- */
-
 import React, { useMemo, useState } from 'react';
 import { User } from '../../../types';
 import { Task } from '../../../types/tasks';
-import { getAllTasks, updateTask } from '../../../lib/tasks';
+
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -39,7 +18,7 @@ import { formatDistanceToNow, isToday, isTomorrow, isPast, format } from 'date-f
 import { toast } from 'sonner';
 
 // ===== STUBS for removed prototype functions =====
-const getAllTasksV4 = (..._args: any[]): TaskV4[] => []; // stub - return empty so UI derives correctly
+const getAllTasks = (..._args: any[]): TaskV4[] => []; // stub - return empty so UI derives correctly
 const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
 // ===== END STUBS =====
 

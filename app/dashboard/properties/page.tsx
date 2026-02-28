@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { PropertiesWorkspace } from '@/components/properties/PropertiesWorkspace';
 import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
 import { mapAuthUserToUIUser } from '@/types';
-import type { User, Property } from '@/types';
+import type { Property } from '@/types';
 
 export default function PropertiesPage() {
     const { user: saasUser } = useAuthStore();

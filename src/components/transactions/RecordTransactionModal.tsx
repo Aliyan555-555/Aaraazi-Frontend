@@ -21,16 +21,13 @@ import {
   TrendingDown, 
   Calendar, 
   FileText,
-  CreditCard,
   Receipt,
-  Users,
-  AlertCircle
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // ===== STUBS for removed prototype functions =====
-const recordInvestorTransaction = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
+const recordInvestorTransaction = (..._args: unknown[]): unknown => { /* stub - prototype function removed */ };
 
 
 interface RecordTransactionModalProps {
@@ -41,7 +38,7 @@ interface RecordTransactionModalProps {
   user: User;
 }
 
-const TRANSACTION_TYPES: { value: InvestorTransactionType; label: string; icon: any; color: string }[] = [
+const TRANSACTION_TYPES: { value: InvestorTransactionType; label: string; icon: React.ComponentType<{ className?: string }>; color: string }[] = [
   { value: 'rental-income', label: 'Rental Income', icon: TrendingUp, color: 'text-green-600' },
   { value: 'expense-maintenance', label: 'Maintenance Expense', icon: TrendingDown, color: 'text-red-600' },
   { value: 'expense-tax', label: 'Tax Expense', icon: TrendingDown, color: 'text-red-600' },
@@ -74,8 +71,8 @@ export function RecordTransactionModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isIncome = formData.transactionType === 'rental-income';
-  const isExpense = formData.transactionType.startsWith('expense-');
+  const _isIncome = formData.transactionType === 'rental-income';
+  const _isExpense = formData.transactionType.startsWith('expense-');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,9 +116,9 @@ export function RecordTransactionModal({
       
       onSuccess();
       handleClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error recording transaction:', error);
-      toast.error(error.message || 'Failed to record transaction');
+      toast.error(error instanceof Error ? error.message : 'Failed to record transaction');
     } finally {
       setIsSubmitting(false);
     }

@@ -18,7 +18,8 @@ import {
   Send,
   Eye
 } from 'lucide-react';
-import { getUserRoleInDeal } from '../../lib/dealPermissions';
+// import { getUserRoleInDeal } from '../../lib/dealPermissions';
+const getUserRoleInDeal = (..._args: any[]): string => { /* stub - prototype function removed */ };
 
 interface NotesPanelProps {
   deal: Deal;

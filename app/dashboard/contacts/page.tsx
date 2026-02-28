@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ContactsWorkspace } from '@/components/contacts/ContactsWorkspace';
-import { User, mapAuthUserToUIUser } from '@/types';
+import { mapAuthUserToUIUser } from '@/types';
 
 export default function ContactsPage() {
     const { user: saasUser } = useAuthStore();

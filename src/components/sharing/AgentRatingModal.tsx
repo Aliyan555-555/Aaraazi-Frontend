@@ -12,7 +12,9 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Star, MessageSquare, ShieldCheck, Clock, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { saveAgentRating } from '@/lib/agentRatings';
+// import { saveAgentRating } from '@/lib/agentRatings';
+
+const saveAgentRating = (..._args: any[]): any => { /* stub - prototype function removed */ };
 
 interface AgentRatingModalProps {
     isOpen: boolean;

@@ -1,19 +1,9 @@
-/**
- * TaskCalendarView Component
- * 
- * Calendar view for tasks showing:
- * - Monthly calendar
- * - Tasks grouped by date
- * - Color-coded by priority
- * - Quick task creation
- */
-
 import React, { useState, useMemo } from 'react';
 import { Task, TaskPriority } from '../../types/tasks';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { startOfMonth, endOfMonth, eachDayOfInterval, format, isSameDay, isSameMonth, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
 
 interface TaskCalendarViewProps {

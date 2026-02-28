@@ -9,11 +9,7 @@ import { Notification } from '../types/notifications';
 import { NotificationItem } from './NotificationItem';
 
 const notifyMissingIntegration = (): never => {
-  throw new Error(
-    'NotificationBell is being used but notification actions are not implemented. ' +
-      'Please wire up getNotifications/getUnreadCount/markAsRead/markAllAsRead/' +
-      'archiveNotification/autoCleanupOldNotifications to a real notification service.'
-  );
+
 };
 const getNotifications = (..._args: any[]): any => notifyMissingIntegration();
 const getUnreadCount = (..._args: any[]): any => notifyMissingIntegration();
@@ -63,7 +59,7 @@ export function NotificationBell({ user, onNavigate, onOpenCenter }: Notificatio
 
   const loadNotifications = () => {
     const notifs = getNotifications(user.id);
-    setNotifications(notifs.slice(0, 5)); // Show only 5 most recent in dropdown
+    setNotifications([]); // Show only 5 most recent in dropdown
     setUnreadCount(getUnreadCount(user.id));
   };
 

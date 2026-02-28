@@ -1,10 +1,3 @@
-/**
- * BuyerRequirementWorkspaceCard Component
- * Custom card for Buyer Requirements Workspace
- * 
- * Uses WorkspaceCard with buyer requirement-specific customization
- */
-
 import React from 'react';
 import { 
   Home, 

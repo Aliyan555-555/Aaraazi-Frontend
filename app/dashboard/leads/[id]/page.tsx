@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { LeadDetails } from '@/components/leads/LeadDetails';
@@ -42,11 +42,11 @@ export default function LeadDetailPage() {
             user={user}
             onBack={() => router.push('/dashboard/leads')}
             onNavigate={handleNavigate}
-            onAddInteraction={(id) => toast.info('Add interaction logic')}
-            onQualify={(id) => toast.info('Qualify logic')}
-            onConvert={(id) => toast.info('Convert logic')}
-            onMarkLost={(id) => toast.info('Mark lost logic')}
-            onEdit={(id) => router.push(`/dashboard/leads/${id}/edit`)}
+            onAddInteraction={(id: string) => toast.info(`Add interaction logic for lead ${id}`)}
+            onQualify={(id: string) => toast.info(`Qualify logic for lead ${id}`)}
+            onConvert={(id: string) => toast.info(`Convert logic for lead ${id}`)}
+            onMarkLost={(id: string) => toast.info(`Mark lost logic for lead ${id}`)}
+            onEdit={(id: string) => router.push(`/dashboard/leads/${id}/edit`)}
         />
     );
 }

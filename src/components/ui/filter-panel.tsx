@@ -1,25 +1,4 @@
-/**
- * FilterPanel - Advanced filtering component
- * 
- * Features:
- * - Multiple filter types (select, multi-select, date-range, number-range, text)
- * - Collapsible sections
- * - Active filter display
- * - Clear all button
- * - Apply/Reset actions
- * - Responsive
- * 
- * Usage:
- * <FilterPanel
- *   filters={filterDefinitions}
- *   values={filterValues}
- *   onChange={setFilterValues}
- *   onClear={clearFilters}
- * />
- */
-
-import React, { useState } from 'react';
-import { X, ChevronDown, ChevronUp } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from './button';
 import { Label } from './label';
 import { Input } from './input';
@@ -31,12 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from './select';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from './accordion';
 
 export type FilterType = 
   | 'select' 
@@ -64,7 +37,7 @@ export interface FilterDefinition {
 }
 
 export interface FilterValues {
-  [key: string]: any;
+  [key: string]: string | number | boolean | string[] | undefined;
 }
 
 export interface FilterPanelProps {
@@ -87,7 +60,7 @@ export function FilterPanel({
   className = '',
 }: FilterPanelProps) {
   // Update a single filter value
-  const updateFilter = (filterId: string, value: any) => {
+  const updateFilter = (filterId: string, value: string | number | boolean | string[]) => {
     onChange({
       ...values,
       [filterId]: value,
@@ -142,7 +115,7 @@ export function FilterPanel({
                   onCheckedChange={(checked) => {
                     const newValues = checked
                       ? [...selectedValues, option.value]
-                      : selectedValues.filter((v: any) => v !== option.value);
+                      : (selectedValues as (string | number)[]).filter((v) => v !== option.value);
                     updateFilter(filter.id, newValues);
                   }}
                 />

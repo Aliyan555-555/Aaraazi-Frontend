@@ -28,7 +28,7 @@ import {
   AlertCircle,
   Building2
 } from 'lucide-react';
-import { calculateCommissionAmount } from '@/lib/commissionAgents';
+// import { calculateCommissionAmount } from '@/lib/commissionAgents';
 import { useInternalAgents, useExternalBrokers } from '@/hooks/useCommissionAgents';
 import { formatPKR } from '@/lib/currency';
 import { CommissionAgent } from '@/types/deals';
@@ -42,6 +42,8 @@ interface AddAgentToCommissionModalProps {
   totalCommission: number;
   onAdd: (agent: Omit<CommissionAgent, 'amount' | 'status'>) => void;
 }
+
+const calculateCommissionAmount = (..._args: any[]): number => { /* stub - prototype function removed */ };
 
 export function AddAgentToCommissionModal({
   open,

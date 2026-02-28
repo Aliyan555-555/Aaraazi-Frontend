@@ -13,9 +13,7 @@ import {
   FileText, 
   Search,
   ArrowRight,
-  Calendar,
   User,
-  DollarSign,
   CheckCircle2,
   Clock,
   XCircle
@@ -192,7 +190,7 @@ export function ConnectedEntitiesCard({
                     </div>
                   </div>
                   <h4 className="text-[#030213] mt-0.5">
-                    {purchaseCycle.purchaserName}'s Purchase
+                    {purchaseCycle.purchaserName}&apos;s Purchase
                   </h4>
                 </div>
               </div>

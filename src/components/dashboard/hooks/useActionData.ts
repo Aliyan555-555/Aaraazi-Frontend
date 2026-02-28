@@ -2,10 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { User, SellCycle, Property } from "../../../types";
 import { DashboardLead } from "../../../types/leads";
 import { Task } from "../../../types/tasks";
-import { getAllTasks } from "../../../lib/tasks";
-// import { getDashboardLeads } from "../../../lib/leadsV4";
-// import { getProperties } from "../../../lib/data";
-// import { getSellCycles } from "../../../lib/sellCycle";
 
 export interface ActionData {
   tasks: Task[];

@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { User } from '../../../types';
 import { Task, TaskStatus } from '../../../types/tasks';
-import { getAllTasks } from '../../../lib/tasks';
+// import { getAllTasks } from '../../../lib/tasks';
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 // ===== STUBS for removed prototype functions =====
-// const getAllTasksV4 = (..._args: any[]): TaskV4[] => []; // stub - return empty so stats derive correctly
+const getAllTasks = (..._args: any[]): TaskV4[] => []; // stub - return empty so stats derive correctly
 // ===== END STUBS =====
 
 

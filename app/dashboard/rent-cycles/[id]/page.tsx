@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { mapAuthUserToUIUser } from '@/types';
 import { useRentCycle, useUpdateRentCycle } from '@/hooks/useRentCycles';
 import { GlobalLoadingScreen } from '@/components/ui/GlobalLoadingScreen';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { AddApplicationModal } from '@/components/rent-cycles/AddApplicationModal';
 import { ApproveApplicationModal } from '@/components/rent-cycles/ApproveApplicationModal';
@@ -23,10 +22,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Wrench,
   Zap,
   FileText,
-  ChevronRight,
   Building2,
 } from 'lucide-react';
 

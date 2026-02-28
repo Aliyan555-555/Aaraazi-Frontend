@@ -13,8 +13,9 @@ import {
   Eye,
   Printer
 } from 'lucide-react';
-import { viewReceipt } from '@/lib/receiptGeneration';
 import { toast } from 'sonner';
+
+const viewReceipt = (..._args: any[]): any => { /* stub - prototype function removed */ };
 
 interface PaymentHistoryProps {
   deal: Deal;

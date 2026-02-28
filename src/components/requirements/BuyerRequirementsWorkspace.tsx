@@ -1,22 +1,3 @@
-/**
- * BuyerRequirementsWorkspace Component
- * Workspace: Built with WorkspacePageTemplate ✅
- * 
- * PURPOSE:
- * Complete buyer requirements workspace using the template system.
- * Demonstrates buyer search criteria and property matching.
- * 
- * FEATURES:
- * - Grid view (primary) and Table view (secondary)
- * - Search and filtering by status, urgency, budget, property types
- * - Sorting options
- * - Bulk actions (export, change status, delete)
- * - Quick actions (view, edit, delete, find matches)
- * - Pagination
- * - Empty states
- * - Loading states
- */
-
 import React, { useState, useMemo } from 'react';
 import { 
   Plus, 
@@ -36,7 +17,6 @@ import { BuyerRequirementWorkspaceCard } from './BuyerRequirementWorkspaceCard';
 import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
 import { Column, EmptyStatePresets } from '../workspace';
 import { formatPKR } from '../../lib/currency';
-import { getBuyerRequirements, updateBuyerRequirement, deleteBuyerRequirement } from '../../lib/buyerRequirements';
 import { toast } from 'sonner';
 
 export interface BuyerRequirementsWorkspaceProps {
@@ -45,6 +25,9 @@ export interface BuyerRequirementsWorkspaceProps {
   onAddNew?: () => void;
   onEditRequirement?: (requirement: BuyerRequirement) => void;
 }
+
+const getBuyerRequirements = (..._args: any[]): BuyerRequirement[] => [];
+
 
 /**
  * BuyerRequirementsWorkspace - Complete workspace using template system

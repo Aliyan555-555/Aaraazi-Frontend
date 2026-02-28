@@ -6,7 +6,7 @@ import { Badge } from '../ui/badge';
 import { Calendar, CheckCircle2, Circle, DollarSign, Edit, Trash2, Plus, AlertCircle, Clock } from 'lucide-react';
 import { RecordPaymentModal } from './RecordPaymentModal';
 import { ModifyInstallmentModal } from './ModifyInstallmentModal';
-import { deleteInstallment } from '../../lib/dealPayments';
+// import { deleteInstallment } from '../../lib/dealPayments';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -18,6 +18,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '../ui/alert-dialog';
+
+const deleteInstallment = (..._args: any[]): any => { /* stub - prototype function removed */ };
 
 interface PaymentScheduleProps {
   deal: Deal;

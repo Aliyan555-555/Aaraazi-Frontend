@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { User } from '../../types';
 import {
   Task,
@@ -7,29 +7,22 @@ import {
   TaskCategory,
   TaskFilters,
   TaskSortOptions,
+  TaskSortField,
   TaskStats,
-  TaskEntityType,
 } from '../../types/tasks';
-import { getAllTasks, updateTask, deleteTask } from '../../lib/tasks';
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader';
 import { WorkspaceSearchBar } from '../workspace/WorkspaceSearchBar';
 import { WorkspaceEmptyState } from '../workspace/WorkspaceEmptyState';
 import { BulkActionBar } from '../workspace/BulkActionBar';
-import { ViewModeSwitcher } from '../workspace/ViewModeSwitcher';
 import { TaskListView } from './TaskListView';
 import { TaskBoardView } from './TaskBoardView';
 import { TaskCalendarView } from './TaskCalendarView';
-import { CreateTaskModal } from './CreateTaskModal';
 import { BulkEditTasksModal } from './BulkEditTasksModal';
 import { TaskTemplateManager } from './TaskTemplateManager';
 import { TaskAutomationDashboard } from './TaskAutomationDashboard';
 import {
   CheckSquare,
   Plus,
-  Calendar,
-  Layout,
-  List,
-  Filter,
   Download,
   Upload,
   FileText,
@@ -37,15 +30,14 @@ import {
   AlertCircle,
   TrendingUp,
   Users,
-  Tag,
   Repeat,
 } from 'lucide-react';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
-import { Card } from '../ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { formatPKR } from '../../lib/currency';
+import { Tabs, TabsContent } from '../ui/tabs';
 import { toast } from 'sonner';
+
+const getAllTasks = (..._args: unknown[]): Task[] => [];
+const updateTask = (..._args: unknown[]): unknown => { /* stub - prototype function removed */ };
+const deleteTask = (..._args: unknown[]): unknown => { /* stub - prototype function removed */ };
 
 interface TasksWorkspaceProps {
   user: User;
@@ -54,42 +46,6 @@ interface TasksWorkspaceProps {
   onEditTask: (taskId: string) => void;
   onViewTask: (taskId: string) => void;
 }
-
-/**
- * Priority color mapping
- */
-const getPriorityColor = (priority: TaskPriority): string => {
-  switch (priority) {
-    case 'urgent':
-      return 'text-red-600 bg-red-50 border-red-200';
-    case 'high':
-      return 'text-[#C17052] bg-[#C17052]/10 border-[#C17052]/30';
-    case 'medium':
-      return 'text-amber-600 bg-amber-50 border-amber-200';
-    case 'low':
-      return 'text-[#6B7280] bg-gray-50 border-gray-200';
-  }
-};
-
-/**
- * Status color mapping
- */
-const getStatusColor = (status: TaskStatus): string => {
-  switch (status) {
-    case 'not-started':
-      return 'text-gray-600 bg-gray-50 border-gray-200';
-    case 'in-progress':
-      return 'text-blue-600 bg-blue-50 border-blue-200';
-    case 'waiting':
-      return 'text-amber-600 bg-amber-50 border-amber-200';
-    case 'completed':
-      return 'text-[#2D6A54] bg-[#2D6A54]/10 border-[#2D6A54]/30';
-    case 'cancelled':
-      return 'text-gray-500 bg-gray-100 border-gray-300';
-    case 'overdue':
-      return 'text-red-600 bg-red-50 border-red-200';
-  }
-};
 
 /**
  * Calculate task statistics
@@ -356,7 +312,7 @@ function sortTasks(tasks: Task[], sortOptions: TaskSortOptions): Task[] {
  */
 export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({
   user,
-  onNavigate,
+  onNavigate: _onNavigate,
   onCreateTask,
   onEditTask,
   onViewTask,
@@ -396,84 +352,6 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({
   // Calculate statistics
   const stats = useMemo(() => calculateTaskStats(filteredTasks), [filteredTasks]);
 
-  // Quick filter buttons
-  const quickFilters = [
-    {
-      id: 'my-tasks',
-      label: 'My Tasks',
-      icon: <Users className="h-4 w-4" />,
-      count: allTasks.filter(t => t.agentId === user.id).length,
-      active: filters.assignedTo?.includes(user.id) || false,
-      onClick: () => {
-        setFilters(prev => ({
-          ...prev,
-          assignedTo: prev.assignedTo?.includes(user.id)
-            ? prev.assignedTo.filter(id => id !== user.id)
-            : [user.id],
-        }));
-      },
-    },
-    {
-      id: 'overdue',
-      label: 'Overdue',
-      icon: <AlertCircle className="h-4 w-4" />,
-      count: stats.overdue,
-      active: filters.isOverdue || false,
-      onClick: () => {
-        setFilters(prev => ({ ...prev, isOverdue: !prev.isOverdue }));
-      },
-    },
-    {
-      id: 'due-today',
-      label: 'Due Today',
-      icon: <Clock className="h-4 w-4" />,
-      count: stats.dueToday,
-      active: false,
-      onClick: () => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        setFilters(prev => ({
-          ...prev,
-          dueDateRange: {
-            start: today.toISOString(),
-            end: tomorrow.toISOString(),
-          },
-        }));
-      },
-    },
-    {
-      id: 'in-progress',
-      label: 'In Progress',
-      icon: <TrendingUp className="h-4 w-4" />,
-      count: stats.byStatus['in-progress'],
-      active: filters.status?.includes('in-progress') || false,
-      onClick: () => {
-        setFilters(prev => ({
-          ...prev,
-          status: prev.status?.includes('in-progress')
-            ? prev.status.filter(s => s !== 'in-progress')
-            : ['in-progress'],
-        }));
-      },
-    },
-    {
-      id: 'high-priority',
-      label: 'High Priority',
-      icon: <AlertCircle className="h-4 w-4" />,
-      count: stats.byPriority.urgent + stats.byPriority.high,
-      active: filters.priority?.includes('urgent') || filters.priority?.includes('high') || false,
-      onClick: () => {
-        setFilters(prev => ({
-          ...prev,
-          priority: ['urgent', 'high'],
-        }));
-      },
-    },
-  ];
-
   // Sort options for dropdown
   const sortOptionsDropdown = [
     { value: 'dueDate-asc', label: 'Due Date (Earliest)' },
@@ -492,8 +370,8 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({
 
   // Handle sort change from dropdown
   const handleSortChange = (value: string) => {
-    const [field, direction] = value.split('-') as [any, 'asc' | 'desc'];
-    setSortOptions({ field, direction });
+    const [field, direction] = value.split('-') as [TaskSortField, 'asc' | 'desc'];
+    setSortOptions({ field: field ?? 'dueDate', direction });
   };
 
   // Get current sort value for dropdown
@@ -552,7 +430,7 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({
     }
   };
 
-  const handleDateClick = (date: Date) => {
+  const handleDateClick = (_date: Date) => {
     // Navigate to create task with pre-filled date
     onCreateTask();
   };

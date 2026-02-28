@@ -1,13 +1,7 @@
-/**
- * Properties Hooks - Zustand-based
- * Thin wrappers over usePropertiesStore
- */
-
 'use client';
 
 import { useEffect } from 'react';
 import { usePropertiesStore } from '@/store/usePropertiesStore';
-import type { Property } from '@/types/properties';
 import type { PropertyQueryParams } from '@/services/properties.service';
 
 // ============================================================================

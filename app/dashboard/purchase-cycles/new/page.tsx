@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { mapAuthUserToUIUser } from "@/types";
@@ -25,7 +25,7 @@ export default function NewPurchaseCyclePage() {
   }, []);
 
   const { property, isLoading: loadingProperty, error: propertyError } = useProperty(propertyId ?? undefined);
-  const { createFromProperty, isLoading: creating } = useCreatePurchaseCycleFromProperty();
+  const { createFromProperty, isLoading: _creating } = useCreatePurchaseCycleFromProperty();
   const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
 
   const [lastCreatedCycleId, setLastCreatedCycleId] = useState<string | null>(null);

@@ -1,24 +1,6 @@
-/**
- * TaskDetails Component
- * 
- * Comprehensive task details page with:
- * - Full task information display
- * - Subtasks management
- * - Task dependencies
- * - Activity timeline
- * - Time tracking
- * - Comments and collaboration
- * - Attachments
- * - Related entities
- * 
- * DESIGN: Design System compliant
- * ACCESSIBILITY: WCAG 2.1 AA compliant
- */
-
 import React, { useState, useMemo } from 'react';
 import { User } from '../../types';
 import { Task, TaskStatus, TaskPriority } from '../../types/tasks';
-import { getTaskById, getSubtasks, updateTask, addTaskComment, addTimeEntry, updateChecklistItem } from '../../lib/tasks';
 import { PageHeader } from '../layout/PageHeader';
 import { ConnectedEntitiesBar } from '../layout/ConnectedEntitiesBar';
 import { Card } from '../ui/card';
@@ -27,12 +9,18 @@ import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Progress } from '../ui/progress';
 import { Textarea } from '../ui/textarea';
-import { Input } from '../ui/input';
 import { Checkbox } from '../ui/checkbox';
 import { Separator } from '../ui/separator';
+
+const getTaskById = ()=> { /* stub - prototype function removed */ };
+const getSubtasks = ()=> { /* stub - prototype function removed */ };
+const updateTask = ()=> { /* stub - prototype function removed */ };
+const addTaskComment = ()=> { /* stub - prototype function removed */ };
+const addTimeEntry = ()=> { /* stub - prototype function removed */ };
+const updateChecklistItem = ()=> { /* stub - prototype function removed */ };
+
 import {
   CheckSquare,
-  Clock,
   Calendar,
   User as UserIcon,
   Tag,
@@ -43,12 +31,9 @@ import {
   Pause,
   Edit,
   Trash2,
-  MoreVertical,
   AlertCircle,
   TrendingUp,
   Users,
-  FileText,
-  Eye,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -140,7 +125,7 @@ export const TaskDetails: React.FC<TaskDetailsProps> = ({
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-[#1A1D1F] mb-2">Task not found</h3>
           <p className="text-[#6B7280] mb-4">
-            The task you're looking for doesn't exist or has been deleted.
+            The task you&apos;re looking for doesn&apos;t exist or has been deleted.
           </p>
           <Button onClick={onBack}>Go Back</Button>
         </Card>

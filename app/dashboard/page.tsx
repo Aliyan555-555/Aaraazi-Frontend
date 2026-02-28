@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRequireAuth } from '@/hooks/useAuth';
@@ -9,7 +9,7 @@ import { mapAuthUserToUIUser } from '@/types';
 import { Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
-    const { user: authUser, currentModule, setCurrentModule, logout } = useAuthStore();
+    const { user: authUser, currentModule, setCurrentModule, logout: _logout } = useAuthStore();
  
     const router = useRouter();
     const { isChecking } = useRequireAuth();

@@ -4,11 +4,16 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { modifyInstallment, ModifyInstallmentInput } from '../../lib/dealPayments';
 import { Deal, PaymentInstallment } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { AlertCircle, Edit, History } from 'lucide-react';
+
+const modifyInstallment = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const ModifyInstallmentInput = (..._args: any[]): any => { /* stub - prototype function removed */ };
+
+
+
 
 interface ModifyInstallmentModalProps {
   open: boolean;
