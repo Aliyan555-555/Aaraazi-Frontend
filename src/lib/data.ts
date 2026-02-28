@@ -229,6 +229,32 @@ export const getContactInteractions = (contactId: string): CRMInteraction[] => {
   );
 };
 
+export const addInteraction = (
+  data: Omit<CRMInteraction, "id" | "createdAt"> & { propertyId?: string },
+): CRMInteraction => {
+  const interactions = getFromStorage<CRMInteraction[]>(INTERACTIONS_KEY, []);
+  const newInteraction: CRMInteraction = {
+    ...data,
+    id: `interaction_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+    createdAt: new Date().toISOString(),
+  };
+  interactions.push(newInteraction);
+  saveToStorage(INTERACTIONS_KEY, interactions);
+  return newInteraction;
+};
+
+export const updateInteraction = (
+  id: string,
+  updates: Partial<CRMInteraction> & { propertyId?: string },
+): boolean => {
+  const interactions = getFromStorage<CRMInteraction[]>(INTERACTIONS_KEY, []);
+  const index = interactions.findIndex((i) => i.id === id);
+  if (index === -1) return false;
+  interactions[index] = { ...interactions[index], ...updates };
+  saveToStorage(INTERACTIONS_KEY, interactions);
+  return true;
+};
+
 export const getContactTasks = (contactId: string): CRMTask[] => {
   return getFromStorage<CRMTask[]>(TASKS_KEY, []).filter(
     (t) => t.contactId === contactId,

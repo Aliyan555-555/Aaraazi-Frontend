@@ -32,7 +32,7 @@ import type {
   ListingVisibility,
   Priority,
   NotificationType,
-} from './enums';
+} from "./enums";
 
 // ============================================================================
 // Multi-Tenancy & Core
@@ -118,7 +118,7 @@ export interface User {
 }
 
 /** User without password for API responses and UI */
-export type SafeUser = Omit<User, 'password'> & { password?: never };
+export type SafeUser = Omit<User, "password"> & { password?: never };
 
 export interface UserSession {
   id: string;
@@ -187,6 +187,8 @@ export interface Contact {
   email: string | null;
   phone: string;
   alternatePhone: string | null;
+  /** Pakistani CNIC in format XXXXX-XXXXXXX-X */
+  cnic: string | null;
   address: string | null;
   preferences: Record<string, unknown> | null;
   tags: string;

@@ -1,236 +1,351 @@
 /**
- * TaskForm Component
- * Form for creating and editing tasks related to contacts
+ * TaskForm — Professional Grade
+ * React Hook Form + Zod validation + real API via useTasks hooks.
+ * Mirrors the prototype flow but backed by the live /tasks endpoint.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { CRMTask, User } from '../../types';
-// import { addTask, updateTask, getProperties } from '../../lib/data';
-import { getProperties } from '../../lib/data';
-import { formatPropertyAddress } from '../../lib/utils';
-import { Phone, Calendar, Users, FileText, Home } from 'lucide-react';
-import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import { Badge } from '../ui/badge';
+import {
+  Phone,
+  Calendar,
+  Users,
+  FileText,
+  Home,
+  Mail,
+  Eye,
+  ClipboardList,
+} from 'lucide-react';
+import {
+  TaskFormSchema,
+  TaskFormValues,
+  taskFormDefaultValues,
+  TASK_TYPE_LABELS,
+  TASK_PRIORITY_LABELS,
+  TASK_STATUS_LABELS,
+} from './task-form.schema';
+import { useCreateTask, useUpdateTask } from '@/hooks/useTasks';
+import type { Task } from '@/services/tasks.service';
+
+// ============================================================================
+// Props
+// ============================================================================
 
 interface TaskFormProps {
   contactId: string;
-  user: User;
-  task?: CRMTask;
+  tenantId: string;
+  agencyId: string;
+  /** Pass existing task for edit mode */
+  task?: Task;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
+// ============================================================================
+// Helpers
+// ============================================================================
+
+const TYPE_ICONS: Record<TaskFormValues['type'], React.ElementType> = {
+  FOLLOW_UP: Phone,
+  VIEWING: Home,
+  MEETING: Users,
+  DOCUMENT: FileText,
+  CALL: Phone,
+  EMAIL: Mail,
+  INSPECTION: Eye,
+  OTHER: Calendar,
+};
+
+const PRIORITY_COLORS: Record<TaskFormValues['priority'], string> = {
+  LOW: 'bg-gray-400',
+  MEDIUM: 'bg-yellow-400',
+  HIGH: 'bg-orange-400',
+  URGENT: 'bg-red-500',
+};
+
+function toFormValues(task: Task): TaskFormValues {
+  return {
+    title: task.title,
+    description: task.description ?? '',
+    type: task.type as TaskFormValues['type'],
+    priority: task.priority as TaskFormValues['priority'],
+    status: (task.status as TaskFormValues['status']) ?? 'PENDING',
+    dueDate:
+      typeof task.dueDate === 'string'
+        ? task.dueDate.split('T')[0]
+        : new Date(task.dueDate).toISOString().split('T')[0],
+    assignedToId: task.assignedToId ?? '',
+    propertyId: task.propertyListingId ?? '',
+  };
+}
+
+// ============================================================================
+// Component
+// ============================================================================
+
 export const TaskForm: React.FC<TaskFormProps> = ({
   contactId,
-  user,
+  tenantId,
+  agencyId,
   task,
   onSuccess,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState({
-    title: task?.title || '',
-    description: task?.description || '',
-    type: task?.type || 'follow-up' as CRMTask['type'],
-    priority: task?.priority || 'medium' as CRMTask['priority'],
-    status: task?.status || 'pending' as CRMTask['status'],
-    dueDate: task?.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString().split('T')[0]) : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    propertyId: task?.propertyId || '',
+  const isEditMode = !!task;
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<TaskFormValues>({
+    resolver: zodResolver(TaskFormSchema),
+    defaultValues: task ? toFormValues(task) : taskFormDefaultValues,
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
 
-  const properties = getProperties(user.id, user.role);
-
-  const taskTypes = [
-    { value: 'follow-up', label: 'Follow-up', icon: Phone },
-    { value: 'viewing', label: 'Property Viewing', icon: Home },
-    { value: 'meeting', label: 'Meeting', icon: Users },
-    { value: 'document', label: 'Document', icon: FileText },
-    { value: 'other', label: 'Other', icon: Calendar },
-  ];
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      if (task) {
-        // Update existing task
-        // TODO: Implement updateTask API call
-        const success = false; // updateTask(task.id, formData);
-        if (success) {
-          toast.success('Task updated successfully');
-          onSuccess();
-        } else {
-          toast.error('Failed to update task');
-        }
-      } else {
-        // Create new task
-        // TODO: Implement addTask API call
-        const newTask = null; // addTask({ ...formData, contactId, agentId: user.id });
-
-        if (newTask) {
-          toast.success('Task created successfully');
-          onSuccess();
-        } else {
-          toast.error('Failed to create task');
-        }
-      }
-    } catch (error) {
-      console.error('Error saving task:', error);
-      toast.error('An error occurred');
-    } finally {
-      setIsSubmitting(false);
+  const onSubmit = async (values: TaskFormValues) => {
+    if (isEditMode && task) {
+      await updateTask.mutateAsync({
+        id: task.id,
+        data: {
+          title: values.title,
+          description: values.description || undefined,
+          type: values.type,
+          priority: values.priority,
+          status: values.status,
+          dueDate: new Date(values.dueDate).toISOString(),
+          assignedToId: values.assignedToId || undefined,
+        },
+      });
+    } else {
+      await createTask.mutateAsync({
+        title: values.title,
+        description: values.description || undefined,
+        type: values.type,
+        priority: values.priority,
+        status: values.status,
+        dueDate: new Date(values.dueDate).toISOString(),
+        assignedToId: values.assignedToId || undefined,
+        contactId,
+        tenantId,
+        agencyId,
+      });
     }
+
+    onSuccess();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      {/* Title */}
       <div className="space-y-2">
-        <Label htmlFor="title">Task Title*</Label>
+        <Label htmlFor="title">
+          Task Title <span className="text-red-500">*</span>
+        </Label>
         <Input
           id="title"
-          value={formData.title}
-          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
           placeholder="What needs to be done?"
-          required
+          {...register('title')}
+          aria-invalid={!!errors.title}
         />
+        {errors.title && (
+          <p className="text-sm text-red-500">{errors.title.message}</p>
+        )}
       </div>
 
+      {/* Description */}
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
-          value={formData.description}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          placeholder="Additional details about this task..."
+          placeholder="Additional details about this task…"
           rows={3}
+          {...register('description')}
+          aria-invalid={!!errors.description}
         />
+        {errors.description && (
+          <p className="text-sm text-red-500">{errors.description.message}</p>
+        )}
       </div>
 
+      {/* Type + Priority */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="type">Task Type*</Label>
-          <Select
-            value={formData.type}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as CRMTask['type'] }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {taskTypes.map(type => {
-                const Icon = type.icon;
-                return (
-                  <SelectItem key={type.value} value={type.value}>
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4" />
-                      {type.label}
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="type">
+            Task Type <span className="text-red-500">*</span>
+          </Label>
+          <Controller
+            name="type"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger id="type" aria-invalid={!!errors.type}>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(
+                    Object.keys(TASK_TYPE_LABELS) as TaskFormValues['type'][]
+                  ).map((key) => {
+                    const Icon = TYPE_ICONS[key];
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          {TASK_TYPE_LABELS[key]}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.type && (
+            <p className="text-sm text-red-500">{errors.type.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="priority">Priority*</Label>
-          <Select
-            value={formData.priority}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as CRMTask['priority'] }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-gray-400" />
-                  Low
-                </div>
-              </SelectItem>
-              <SelectItem value="medium">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-yellow-400" />
-                  Medium
-                </div>
-              </SelectItem>
-              <SelectItem value="high">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-red-400" />
-                  High
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <Label htmlFor="priority">
+            Priority <span className="text-red-500">*</span>
+          </Label>
+          <Controller
+            name="priority"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger id="priority" aria-invalid={!!errors.priority}>
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(
+                    Object.keys(
+                      TASK_PRIORITY_LABELS,
+                    ) as TaskFormValues['priority'][]
+                  ).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`h-2 w-2 rounded-full ${PRIORITY_COLORS[key]}`}
+                        />
+                        {TASK_PRIORITY_LABELS[key]}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.priority && (
+            <p className="text-sm text-red-500">{errors.priority.message}</p>
+          )}
         </div>
       </div>
 
+      {/* Due Date + Status (status only shown in edit mode) */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="dueDate">Due Date*</Label>
+          <Label htmlFor="dueDate">
+            Due Date <span className="text-red-500">*</span>
+          </Label>
           <Input
             id="dueDate"
             type="date"
-            value={formData.dueDate}
-            onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-            required
+            {...register('dueDate')}
+            aria-invalid={!!errors.dueDate}
           />
+          {errors.dueDate && (
+            <p className="text-sm text-red-500">{errors.dueDate.message}</p>
+          )}
         </div>
 
-        {task && (
+        {isEditMode && (
           <div className="space-y-2">
-            <Label htmlFor="status">Status*</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as CRMTask['status'] }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="status">
+              Status <span className="text-red-500">*</span>
+            </Label>
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger id="status">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(TASK_STATUS_LABELS)
+                      .filter(([key]) => key !== 'OVERDUE')
+                      .map(([key, label]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
         )}
       </div>
 
+      {/* Assigned To (optional) */}
       <div className="space-y-2">
-        <Label htmlFor="propertyId">Related Property</Label>
-        <Select
-          value={formData.propertyId || 'none'}
-          onValueChange={(value) => setFormData(prev => ({ ...prev, propertyId: value === 'none' ? '' : value }))}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select property (optional)" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
-            {properties.map(property => (
-              <SelectItem key={property.id} value={property.id}>
-                {property.title || formatPropertyAddress(property.address) || 'Untitled Property'}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Label htmlFor="assignedToId" className="flex items-center gap-1">
+          <ClipboardList className="h-3.5 w-3.5" />
+          Assign To
+          <Badge variant="secondary" className="ml-1 text-xs font-normal">
+            optional
+          </Badge>
+        </Label>
+        <Input
+          id="assignedToId"
+          placeholder="Agent ID (leave blank to assign to yourself)"
+          {...register('assignedToId')}
+        />
       </div>
 
-      <div className="flex gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+      {/* Action Buttons */}
+      <div className="flex gap-2 pt-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="flex-1"
+          disabled={isSubmitting}
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting} className="flex-1">
-          {isSubmitting ? 'Saving...' : task ? 'Update Task' : 'Create Task'}
+        <Button type="submit" className="flex-1" disabled={isSubmitting}>
+          {isSubmitting
+            ? 'Saving…'
+            : isEditMode
+              ? 'Update Task'
+              : 'Create Task'}
         </Button>
       </div>
     </form>
   );
 };
+
+export default TaskForm;

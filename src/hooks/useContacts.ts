@@ -1,232 +1,156 @@
-/**
- * Professional React Query Hooks for Contacts
- * Provides optimized data fetching, caching, and mutations
- */
-
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { contactsService } from '@/services/contacts.service';
+/**
+ * Contact hooks powered by Zustand — replaces React Query
+ */
+
+import { useEffect } from 'react';
+import { useContactsStore } from '@/stores/contacts.store';
 import type {
   CreateContactDto,
   UpdateContactDto,
   QueryContactsDto,
 } from '@/services/contacts.service';
-import { toast } from 'sonner';
 
-// ============================================================================
-// Query Keys
-// ============================================================================
-
-export const contactsKeys = {
-  all: ['contacts'] as const,
-  lists: () => [...contactsKeys.all, 'list'] as const,
-  list: (filters: QueryContactsDto) =>
-    [...contactsKeys.lists(), filters] as const,
-  details: () => [...contactsKeys.all, 'detail'] as const,
-  detail: (id: string) => [...contactsKeys.details(), id] as const,
-  statistics: () => [...contactsKeys.all, 'statistics'] as const,
-};
+function queryKey(query: QueryContactsDto): string {
+  return JSON.stringify(query);
+}
 
 // ============================================================================
 // Fetch Hooks
 // ============================================================================
 
-/**
- * Fetch all contacts with pagination and filters
- */
 export function useContacts(query: QueryContactsDto = {}) {
-  return useQuery({
-    queryKey: contactsKeys.list(query),
-    queryFn: () => contactsService.findAll(query),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const key = queryKey(query);
+  const data = useContactsStore((s) => s.listCache[key]);
+  const isLoading = useContactsStore((s) => s.listLoading[key] ?? false);
+  const error = useContactsStore((s) => s.listError[key]);
+  const fetchContacts = useContactsStore((s) => s.fetchContacts);
+
+  useEffect(() => {
+    void fetchContacts(query);
+  }, [key, fetchContacts]);
+
+  return {
+    data: data?.data ?? [],
+    total: data?.total ?? 0,
+    page: data?.page ?? 1,
+    limit: data?.limit ?? 10,
+    pages: data?.pages ?? 0,
+    isLoading,
+    error,
+    refetch: () => fetchContacts(query),
+  };
 }
 
-/**
- * Fetch a single contact by ID
- */
-export function useContact(id: string, enabled: boolean = true) {
-  return useQuery({
-    queryKey: contactsKeys.detail(id),
-    queryFn: () => contactsService.findOne(id),
-    enabled: enabled && !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+export function useContact(id: string, enabled = true) {
+  const data = useContactsStore((s) => s.detailCache[id]);
+  const isLoading = useContactsStore((s) => s.detailLoading[id] ?? false);
+  const error = useContactsStore((s) => s.detailError[id]);
+  const fetchContact = useContactsStore((s) => s.fetchContact);
+
+  useEffect(() => {
+    if (enabled && id) void fetchContact(id);
+  }, [id, enabled, fetchContact]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: () => fetchContact(id),
+  };
 }
 
-/**
- * Fetch contact statistics
- */
 export function useContactStatistics() {
-  return useQuery({
-    queryKey: contactsKeys.statistics(),
-    queryFn: () => contactsService.getStatistics(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
-  });
+  const data = useContactsStore((s) => s.statistics);
+  const isLoading = useContactsStore((s) => s.statisticsLoading);
+  const error = useContactsStore((s) => s.statisticsError);
+  const fetchStatistics = useContactsStore((s) => s.fetchStatistics);
+
+  useEffect(() => {
+    void fetchStatistics();
+  }, [fetchStatistics]);
+
+  return {
+    data: data ?? undefined,
+    isLoading,
+    error,
+    refetch: fetchStatistics,
+  };
 }
 
 // ============================================================================
-// Mutation Hooks
+// Mutation Hooks (return { mutateAsync, isPending })
 // ============================================================================
 
-/**
- * Create a new contact
- */
 export function useCreateContact() {
-  const queryClient = useQueryClient();
+  const createContact = useContactsStore((s) => s.createContact);
+  const createLoading = useContactsStore((s) => s.createLoading);
 
-  return useMutation({
-    mutationFn: (data: CreateContactDto) => contactsService.create(data),
-    onSuccess: (newContact) => {
-      // Invalidate all contact lists to refetch
-      queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: contactsKeys.statistics() });
-
-      // Optimistically add to cache
-      queryClient.setQueryData(
-        contactsKeys.detail(newContact.id),
-        newContact,
-      );
-
-      toast.success('Contact created successfully');
-    },
-    onError: (error) => {
-      console.error('Failed to create contact:', error);
-      toast.error('Failed to create contact');
-    },
-  });
+  return {
+    mutateAsync: createContact,
+    isPending: createLoading,
+  };
 }
 
-/**
- * Update an existing contact
- */
 export function useUpdateContact() {
-  const queryClient = useQueryClient();
+  const updateContact = useContactsStore((s) => s.updateContact);
+  const updateLoading = useContactsStore((s) => s.updateLoading);
 
-  return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateContactDto;
-    }) => contactsService.update(id, data),
-    onSuccess: (updatedContact, variables) => {
-      // Update detail cache
-      queryClient.setQueryData(
-        contactsKeys.detail(variables.id),
-        updatedContact,
-      );
-
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: contactsKeys.statistics() });
-
-      toast.success('Contact updated successfully');
-    },
-    onError: (error) => {
-      console.error('Failed to update contact:', error);
-      toast.error('Failed to update contact');
-    },
-  });
+  return {
+    mutateAsync: ({ id, data }: { id: string; data: UpdateContactDto }) =>
+      updateContact(id, data),
+    isPending: updateLoading,
+  };
 }
 
-/**
- * Delete a contact
- */
 export function useDeleteContact() {
-  const queryClient = useQueryClient();
+  const deleteContact = useContactsStore((s) => s.deleteContact);
+  const deleteLoading = useContactsStore((s) => s.deleteLoading);
 
-  return useMutation({
-    mutationFn: (id: string) => contactsService.remove(id),
-    onSuccess: (_, deletedId) => {
-      // Remove from detail cache
-      queryClient.removeQueries({ queryKey: contactsKeys.detail(deletedId) });
-
-      // Invalidate lists to refetch
-      queryClient.invalidateQueries({ queryKey: contactsKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: contactsKeys.statistics() });
-
-      toast.success('Contact deleted successfully');
-    },
-    onError: (error) => {
-      console.error('Failed to delete contact:', error);
-      toast.error('Failed to delete contact');
-    },
-  });
+  return {
+    mutateAsync: deleteContact,
+    isPending: deleteLoading,
+  };
 }
 
-/**
- * Bulk update contacts
- */
 export function useBulkUpdateContacts() {
-  const queryClient = useQueryClient();
+  const bulkUpdate = useContactsStore((s) => s.bulkUpdate);
 
-  return useMutation({
-    mutationFn: ({
-      ids,
-      updates,
-    }: {
-      ids: string[];
-      updates: UpdateContactDto;
-    }) => contactsService.bulkUpdate(ids, updates),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: contactsKeys.all });
-      toast.success('Contacts updated successfully');
-    },
-    onError: (error) => {
-      console.error('Failed to bulk update contacts:', error);
-      toast.error('Failed to update contacts');
-    },
-  });
+  return {
+    mutateAsync: ({ ids, updates }: { ids: string[]; updates: UpdateContactDto }) =>
+      bulkUpdate(ids, updates),
+    isPending: false,
+  };
 }
 
-/**
- * Bulk delete contacts
- */
 export function useBulkDeleteContacts() {
-  const queryClient = useQueryClient();
+  const bulkDelete = useContactsStore((s) => s.bulkDelete);
 
-  return useMutation({
-    mutationFn: (ids: string[]) => contactsService.bulkDelete(ids),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: contactsKeys.all });
-      toast.success('Contacts deleted successfully');
-    },
-    onError: (error) => {
-      console.error('Failed to bulk delete contacts:', error);
-      toast.error('Failed to delete contacts');
-    },
-  });
+  return {
+    mutateAsync: bulkDelete,
+    isPending: false,
+  };
 }
 
 // ============================================================================
-// Utility Hooks
+// Utility (kept for compatibility)
 // ============================================================================
 
-/**
- * Prefetch contact details
- */
+export const contactsKeys = {
+  all: ['contacts'] as const,
+  lists: () => [...contactsKeys.all, 'list'] as const,
+  list: (filters: QueryContactsDto) => [...contactsKeys.lists(), filters] as const,
+  details: () => [...contactsKeys.all, 'detail'] as const,
+  detail: (id: string) => [...contactsKeys.details(), id] as const,
+  statistics: () => [...contactsKeys.all, 'statistics'] as const,
+};
+
 export function usePrefetchContact() {
-  const queryClient = useQueryClient();
-
-  return (id: string) => {
-    queryClient.prefetchQuery({
-      queryKey: contactsKeys.detail(id),
-      queryFn: () => contactsService.findOne(id),
-      staleTime: 5 * 60 * 1000,
-    });
-  };
+  const fetchContact = useContactsStore((s) => s.fetchContact);
+  return (id: string) => fetchContact(id);
 }
 
-/**
- * Invalidate all contact queries
- */
 export function useInvalidateContacts() {
-  const queryClient = useQueryClient();
-
-  return () => {
-    queryClient.invalidateQueries({ queryKey: contactsKeys.all });
-  };
+  return useContactsStore((s) => s.invalidateLists);
 }

@@ -1,277 +1,258 @@
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+/**
+ * QuickAddContactModal — Professional Grade
+ *
+ * Upgraded from the prototype localStorage version to:
+ *  ✅ React Hook Form + Zod strict validation
+ *  ✅ Real API via useCreateContact (POST /contacts)
+ *  ✅ Pakistani phone validation
+ */
+
+'use client';
+
+import React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
-import { Contact, User } from '../types';
-import { addContact } from '../lib/data';
-import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { Phone, Mail, User as UserIcon } from 'lucide-react';
+import {
+  ContactFormSchema,
+  contactFormDefaultValues,
+  type ContactFormValues,
+} from '@/validations/contacts';
+import { useCreateContact } from '@/hooks/useContacts';
+import { mapFormValuesToCreateDto } from './contacts/mappers/contact.mappers';
 
-interface QuickAddContactModalProps {
-  user: User;
+// ============================================================================
+// Props
+// ============================================================================
+
+export interface QuickAddContactModalProps {
+  isOpen: boolean;
   onClose: () => void;
-  onSuccess: (contact: Contact) => void;
-  defaultCategory?: Contact['category'];
+  onSuccess?: (contactId: string) => void;
+  tenantId: string;
+  agencyId: string;
+  agentId?: string;
+  defaultType?: ContactFormValues['type'];
 }
 
-export const QuickAddContactModal: React.FC<QuickAddContactModalProps> = ({
-  user,
+const CONTACT_TYPE_OPTIONS: { value: ContactFormValues['type']; label: string }[] = [
+  { value: 'buyer', label: 'Buyer' },
+  { value: 'seller', label: 'Seller' },
+  { value: 'tenant', label: 'Tenant' },
+  { value: 'landlord', label: 'Landlord' },
+  { value: 'investor', label: 'Investor' },
+  { value: 'vendor', label: 'Vendor' },
+  { value: 'external-broker', label: 'External Broker' },
+];
+
+// ============================================================================
+// Component
+// ============================================================================
+
+export function QuickAddContactModal({
+  isOpen,
   onClose,
   onSuccess,
-  defaultCategory = 'seller',
-}) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    type: 'client' as Contact['type'],
-    category: defaultCategory as Contact['category'],
-    address: '',
-    company: '',
-    notes: ''
+  tenantId,
+  agencyId,
+  agentId,
+  defaultType = 'buyer',
+}: QuickAddContactModalProps) {
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ContactFormValues>({
+    resolver: zodResolver(ContactFormSchema),
+    defaultValues: { ...contactFormDefaultValues, type: defaultType },
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createContact = useCreateContact();
 
-  const handleInputChange = (field: string, value: string | Contact['type'] | Contact['category']) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validation
-    if (!formData.name.trim()) {
-      toast.error('Contact name is required');
-      return;
-    }
-
-    if (!formData.phone.trim()) {
-      toast.error('Phone number is required');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const newContact = addContact({
-        name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        email: formData.email.trim() || undefined,
-        type: formData.type,
-        category: formData.category,
-        status: 'active',
-        source: 'direct-entry',
-        address: formData.address.trim() || undefined,
-        company: formData.company.trim() || undefined,
-        notes: formData.notes.trim(),
-        tags: [],
-        agentId: user.id,
-        interestedProperties: [],
-        totalTransactions: 0,
-        totalCommissionEarned: 0
-      });
-
-      toast.success(`Contact "${newContact.name}" added successfully`);
-      onSuccess(newContact);
-      
-      // Reset form
-      setFormData({
-        name: '',
-        phone: '',
-        email: '',
-        type: 'client',
-        category: defaultCategory,
-        address: '',
-        company: '',
-        notes: ''
-      });
-      
-      onClose();
-    } catch (error) {
-      console.error('Error adding contact:', error);
-      toast.error('Failed to add contact. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleCancel = () => {
-    // Reset form
-    setFormData({
-      name: '',
-      phone: '',
-      email: '',
-      type: 'client',
-      category: defaultCategory,
-      address: '',
-      company: '',
-      notes: ''
-    });
+  function handleClose() {
+    reset({ ...contactFormDefaultValues, type: defaultType });
     onClose();
+  }
+
+  const onSubmit = async (data: ContactFormValues) => {
+    const dto = mapFormValuesToCreateDto(data, tenantId, agencyId, agentId);
+    const result = await createContact.mutateAsync(dto);
+    onSuccess?.(result.id);
+    handleClose();
   };
 
   return (
-    <Dialog open={true} onOpenChange={(isOpen) => !isOpen && handleCancel()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserIcon className="h-5 w-5" />
             Quick Add Contact
           </DialogTitle>
           <DialogDescription>
-            Add a new contact to your CRM without leaving this form
+            Capture a new contact quickly. Full details can be added later.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="contactName">
-                Contact Name <span className="text-red-500">*</span>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4 mt-2"
+          noValidate
+        >
+          {/* Name */}
+          <div className="space-y-1.5">
+            <Label htmlFor="qa-name">
+              Full Name <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="qa-name"
+              placeholder="e.g. Ahmed Khan"
+              {...register('name')}
+              aria-invalid={!!errors.name}
+            />
+            {errors.name && (
+              <p className="text-sm text-red-500">{errors.name.message}</p>
+            )}
+          </div>
+
+          {/* Phone + Email */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="qa-phone">
+                Phone <span className="text-red-500">*</span>
               </Label>
-              <Input
-                id="contactName"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="e.g., Ahmed Khan"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contactPhone">
-                  Phone Number <span className="text-red-500">*</span>
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="contactPhone"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="e.g., 0300-1234567"
-                    className="pl-10"
-                    required
-                  />
-                </div>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="qa-phone"
+                  className="pl-9"
+                  placeholder="03XXXXXXXXX"
+                  {...register('phone')}
+                  aria-invalid={!!errors.phone}
+                />
               </div>
+              {errors.phone && (
+                <p className="text-sm text-red-500">{errors.phone.message}</p>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="contactEmail">Email (Optional)</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="contactEmail"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="e.g., ahmed@example.com"
-                    className="pl-10"
-                  />
-                </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="qa-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="qa-email"
+                  type="email"
+                  className="pl-9"
+                  placeholder="optional"
+                  {...register('email')}
+                  aria-invalid={!!errors.email}
+                />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contactType">Contact Type</Label>
-                <Select 
-                  value={formData.type} 
-                  onValueChange={(value) => handleInputChange('type', value)}
-                >
-                  <SelectTrigger id="contactType">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="client">Client</SelectItem>
-                    <SelectItem value="prospect">Prospect</SelectItem>
-                    <SelectItem value="agent">Agent</SelectItem>
-                    <SelectItem value="vendor">Vendor</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="contactCategory">Category</Label>
-                <Select 
-                  value={formData.category} 
-                  onValueChange={(value) => handleInputChange('category', value)}
-                >
-                  <SelectTrigger id="contactCategory">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="seller">Seller</SelectItem>
-                    <SelectItem value="buyer">Buyer</SelectItem>
-                    <SelectItem value="investor">Investor</SelectItem>
-                    <SelectItem value="renter">Renter</SelectItem>
-                    <SelectItem value="landlord">Landlord</SelectItem>
-                    <SelectItem value="tenant">Tenant</SelectItem>
-                    <SelectItem value="both">Both (Buyer & Seller)</SelectItem>
-                    <SelectItem value="contractor">Contractor</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contactAddress">Address (Optional)</Label>
-              <Input
-                id="contactAddress"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                placeholder="e.g., DHA Phase 5, Karachi"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contactCompany">Company (Optional)</Label>
-              <Input
-                id="contactCompany"
-                value={formData.company}
-                onChange={(e) => handleInputChange('company', e.target.value)}
-                placeholder="e.g., ABC Corporation"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contactNotes">Notes (Optional)</Label>
-              <Textarea
-                id="contactNotes"
-                value={formData.notes}
-                onChange={(e) => handleInputChange('notes', e.target.value)}
-                placeholder="Add any additional notes about this contact..."
-                rows={3}
-              />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          {/* Contact Type */}
+          <div className="space-y-1.5">
+            <Label htmlFor="qa-type">
+              Contact Type <span className="text-red-500">*</span>
+            </Label>
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="qa-type" aria-invalid={!!errors.type}>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONTACT_TYPE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.type && (
+              <p className="text-sm text-red-500">{errors.type.message}</p>
+            )}
+          </div>
+
+          {/* Address */}
+          <div className="space-y-1.5">
+            <Label htmlFor="qa-address">Address</Label>
+            <Input
+              id="qa-address"
+              placeholder="e.g. DHA Phase 5, Karachi"
+              {...register('address')}
+            />
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-1.5">
+            <Label htmlFor="qa-notes">Notes</Label>
+            <Textarea
+              id="qa-notes"
+              placeholder="Any important notes…"
+              rows={2}
+              {...register('notes')}
+              aria-invalid={!!errors.notes}
+            />
+            {errors.notes && (
+              <p className="text-sm text-red-500">{errors.notes.message}</p>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2 border-t">
             <Button
               type="button"
               variant="outline"
-              onClick={handleCancel}
+              onClick={handleClose}
               disabled={isSubmitting}
+              className="flex-1"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || !formData.name.trim() || !formData.phone.trim()}
+              disabled={isSubmitting}
+              className="flex-1"
             >
-              {isSubmitting ? 'Adding Contact...' : 'Add Contact'}
+              {isSubmitting ? 'Adding…' : 'Add Contact'}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
   );
-};
+}
+
+export default QuickAddContactModal;

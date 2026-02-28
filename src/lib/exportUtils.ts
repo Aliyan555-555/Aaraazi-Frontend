@@ -1,206 +1,176 @@
 /**
  * Export Utilities
- * Functions for exporting data to CSV and JSON formats
+ * Client-side CSV generation for contacts, mirroring the prototype's exportContactsToCSV.
  */
 
-import { Property, Deal, Contact } from '../types';
-import { formatPKR } from './currency';
-import { formatDate } from './validation';
+// ============================================================================
+// Types
+// ============================================================================
 
-/**
- * Convert data to CSV format
- */
-function convertToCSV(data: any[], headers: string[]): string {
-  const rows = [headers];
-  
-  data.forEach(item => {
-    const row = headers.map(header => {
-      const value = item[header];
-      
-      // Handle different types
-      if (value === null || value === undefined) {
-        return '';
-      }
-      
-      if (typeof value === 'object') {
-        return JSON.stringify(value);
-      }
-      
-      // Escape commas and quotes
-      const stringValue = String(value);
-      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-        return `"${stringValue.replace(/"/g, '""')}"`;
-      }
-      
-      return stringValue;
-    });
-    
-    rows.push(row);
-  });
-  
-  return rows.map(row => row.join(',')).join('\n');
+interface ExportableContact {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string | null;
+  cnic?: string | null;
+  type: string;
+  category?: string | null;
+  status: string;
+  address?: string | null;
+  tags?: string | null;
+  agentId?: string | null;
+  createdAt: string;
 }
 
+// ============================================================================
+// Helpers
+// ============================================================================
+
 /**
- * Download file
+ * Escapes a value for safe CSV inclusion.
+ * Wraps in double-quotes and escapes internal quotes.
  */
-function downloadFile(content: string, filename: string, mimeType: string) {
-  const blob = new Blob([content], { type: mimeType });
+function csvEscape(value: string | null | undefined): string {
+  if (value == null) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function buildRow(cells: (string | null | undefined)[]): string {
+  return cells.map(csvEscape).join(',');
+}
+
+// ============================================================================
+// Contacts CSV Export
+// ============================================================================
+
+const CONTACT_HEADERS = [
+  'ID',
+  'Name',
+  'Phone',
+  'Email',
+  'CNIC',
+  'Type',
+  'Category',
+  'Status',
+  'Address',
+  'Tags',
+  'Agent ID',
+  'Created At',
+];
+
+/**
+ * Converts an array of contacts into a CSV string and triggers a browser download.
+ *
+ * @param contacts - Array of contact objects
+ * @param filename - Optional filename (without .csv extension)
+ */
+export function exportContactsToCSV(
+  contacts: ExportableContact[],
+  filename = 'contacts',
+): void {
+  const rows = [
+    CONTACT_HEADERS.join(','),
+    ...contacts.map((c) =>
+      buildRow([
+        c.id,
+        c.name,
+        c.phone,
+        c.email,
+        c.cnic,
+        c.type,
+        c.category,
+        c.status,
+        c.address,
+        c.tags,
+        c.agentId,
+        c.createdAt,
+      ]),
+    ),
+  ];
+
+  const csv = rows.join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
+
   const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}_${formatDateForFilename(new Date())}.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
 
-/**
- * Generic export to CSV
- * Accepts an array of objects and exports to CSV
- */
-export function exportToCSV(data: any[], filename: string) {
-  if (!data || data.length === 0) {
-    console.warn('No data to export');
-    return;
-  }
-  
-  const headers = Object.keys(data[0]);
-  const csv = convertToCSV(data, headers);
-  const csvFilename = filename.endsWith('.csv') ? filename : `${filename}.csv`;
-  
-  downloadFile(csv, csvFilename, 'text/csv;charset=utf-8;');
+// ============================================================================
+// Interactions CSV Export
+// ============================================================================
+
+interface ExportableInteraction {
+  id: string;
+  type: string;
+  direction: string;
+  summary: string;
+  notes?: string | null;
+  date: string;
+  contactId?: string | null;
+  agentId?: string | null;
+  createdAt: string;
 }
 
-/**
- * Export properties to CSV
- */
-export function exportPropertiesToCSV(properties: Property[]) {
-  const data = properties.map(p => ({
-    ID: p.id,
-    Title: p.title || '',
-    Address: p.address,
-    Type: p.propertyType,
-    Status: p.status,
-    Price: p.price,
-    Area: p.area,
-    AreaUnit: p.areaUnit,
-    Bedrooms: p.bedrooms || '',
-    Bathrooms: p.bathrooms || '',
-    Owner: p.currentOwnerId || '',
-    OwnerType: p.currentOwnerType,
-    AgentID: p.agentId || '',
-    CreatedAt: formatDate(p.createdAt),
-    UpdatedAt: formatDate(p.updatedAt),
-  }));
-  
-  const headers = Object.keys(data[0] || {});
-  const csv = convertToCSV(data, headers);
-  const filename = `properties_export_${new Date().toISOString().split('T')[0]}.csv`;
-  
-  downloadFile(csv, filename, 'text/csv;charset=utf-8;');
+const INTERACTION_HEADERS = [
+  'ID',
+  'Type',
+  'Direction',
+  'Summary',
+  'Notes',
+  'Date',
+  'Contact ID',
+  'Agent ID',
+  'Created At',
+];
+
+export function exportInteractionsToCSV(
+  interactions: ExportableInteraction[],
+  filename = 'interactions',
+): void {
+  const rows = [
+    INTERACTION_HEADERS.join(','),
+    ...interactions.map((i) =>
+      buildRow([
+        i.id,
+        i.type,
+        i.direction,
+        i.summary,
+        i.notes,
+        i.date,
+        i.contactId,
+        i.agentId,
+        i.createdAt,
+      ]),
+    ),
+  ];
+
+  const csv = rows.join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}_${formatDateForFilename(new Date())}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
-/**
- * Export deals to CSV
- */
-export function exportDealsToCSV(deals: Deal[]) {
-  const data = deals.map(d => ({
-    ID: d.id,
-    PropertyID: d.propertyId,
-    DealType: d.dealType,
-    Stage: d.stage,
-    Status: d.status,
-    BuyerID: d.buyerId || '',
-    SellerID: d.sellerId || '',
-    AgentID: d.agentId || '',
-    DealValue: d.dealValue,
-    Commission: d.commission || '',
-    CommissionRate: d.commissionRate || '',
-    CreatedAt: formatDate(d.createdAt),
-    ExpectedClosingDate: d.expectedClosingDate ? formatDate(d.expectedClosingDate) : '',
-  }));
-  
-  const headers = Object.keys(data[0] || {});
-  const csv = convertToCSV(data, headers);
-  const filename = `deals_export_${new Date().toISOString().split('T')[0]}.csv`;
-  
-  downloadFile(csv, filename, 'text/csv;charset=utf-8;');
-}
+// ============================================================================
+// Shared helpers
+// ============================================================================
 
-/**
- * Export contacts to CSV
- */
-export function exportContactsToCSV(contacts: Contact[]) {
-  const data = contacts.map(c => ({
-    ID: c.id,
-    Name: c.name,
-    Email: c.email || '',
-    Phone: c.phone || '',
-    Type: c.type,
-    Role: c.role || '',
-    Status: c.status || '',
-    Source: c.source || '',
-    AssignedAgent: c.assignedAgent || '',
-    CreatedAt: formatDate(c.createdAt),
-    LastContactedAt: c.lastContactedAt ? formatDate(c.lastContactedAt) : '',
-  }));
-  
-  const headers = Object.keys(data[0] || {});
-  const csv = convertToCSV(data, headers);
-  const filename = `contacts_export_${new Date().toISOString().split('T')[0]}.csv`;
-  
-  downloadFile(csv, filename, 'text/csv;charset=utf-8;');
-}
-
-/**
- * Export data to JSON
- */
-export function exportToJSON(data: any, filename: string) {
-  const json = JSON.stringify(data, null, 2);
-  const jsonFilename = `${filename}_${new Date().toISOString().split('T')[0]}.json`;
-  
-  downloadFile(json, jsonFilename, 'application/json');
-}
-
-/**
- * Export properties with financials to CSV
- */
-export function exportPropertiesWithFinancialsToCSV(
-  propertiesWithFinancials: Array<{
-    property: Property;
-    totalIncome: number;
-    totalExpenses: number;
-    operatingProfit: number;
-    acquisitionCost: number;
-    roi: number;
-  }>
-) {
-  const data = propertiesWithFinancials.map(item => ({
-    ID: item.property.id,
-    Title: item.property.title || '',
-    Address: item.property.address,
-    Type: item.property.propertyType,
-    Price: formatPKR(item.property.price),
-    AcquisitionCost: formatPKR(item.acquisitionCost),
-    TotalIncome: formatPKR(item.totalIncome),
-    TotalExpenses: formatPKR(item.totalExpenses),
-    OperatingProfit: formatPKR(item.operatingProfit),
-    ROI: `${item.roi.toFixed(2)}%`,
-    Status: item.property.status,
-  }));
-  
-  const headers = Object.keys(data[0] || {});
-  const csv = convertToCSV(data, headers);
-  const filename = `properties_financial_report_${new Date().toISOString().split('T')[0]}.csv`;
-  
-  downloadFile(csv, filename, 'text/csv;charset=utf-8;');
-}
-
-/**
- * Print current page
- */
-export function printCurrentPage() {
-  window.print();
+function formatDateForFilename(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }
