@@ -33,13 +33,13 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader';
-import { getCurrentUser } from '../../lib/auth';
-// [STUBBED] import {
-// [STUBBED]   getScheduledReports,
-// [STUBBED]   deleteScheduledReport,
-// [STUBBED]   toggleScheduleActive,
-// [STUBBED]   executeScheduledReport
-// [STUBBED] } from '../../lib/reports';
+import { useAuthStore } from '@/store/useAuthStore';
+// import {
+//   getScheduledReports,
+//   deleteScheduledReport,
+//   toggleScheduleActive,
+//   executeScheduledReport
+// } from '../../lib/reports';
 import { ScheduledReport } from '../../types/reports';
 import { toast } from 'sonner';
 // [STUBBED] import { formatDate } from '../../lib/validation';
@@ -60,7 +60,7 @@ interface ScheduledReportsDashboardProps {
 }
 
 export default function ScheduledReportsDashboard({ onClose, onNavigate }: ScheduledReportsDashboardProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   // State
   const [editingSchedule, setEditingSchedule] = useState<ScheduledReport | null>(null);

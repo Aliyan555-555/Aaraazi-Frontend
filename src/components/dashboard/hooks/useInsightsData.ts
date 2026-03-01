@@ -1,26 +1,13 @@
-/**
- * useInsightsData Hook
- *
- * Loads data and detects insights for the Intelligence Panel.
- *
- * FEATURES:
- * - Loads all required data
- * - Detects 8+ insight patterns
- * - Role-based filtering
- * - Returns loading state
- * - Handles dismissal
- */
-
 import { useState, useEffect, useCallback } from "react";
 import { User, Property } from "../../../types";
 import { DashboardLead } from "../../../types/leads";
 import { Task } from "../../../types/tasks";
 import { Insight } from "../components/InsightCard";
 import { detectInsights } from "../utils/detectInsights";
-// [STUBBED] import { getProperties } from "../../../lib/data";
-// [STUBBED] import { getLeadsV4 } from "../../../lib/leadsV4";
-// [STUBBED] import { getAllTasksV4 } from "../../../lib/tasks";
-import { getAllAgents } from "../../../lib/auth";
+// import { getProperties } from "../../../lib/data";
+// import { getLeadsV4 } from "../../../lib/leadsV4";
+// import { getAllTasksV4 } from "../../../lib/tasks";
+import { getAllAgents } from '@/lib/users';
 
 // ===== STUBS for removed prototype functions =====
 const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };

@@ -56,8 +56,8 @@ import {
   AggregationType
 } from '../../types/reports';
 import { toast } from 'sonner';
-// [STUBBED] import { saveReportTemplate } from '../../lib/reports';
-import { getCurrentUser } from '../../lib/auth';
+// import { saveReportTemplate } from '../../lib/reports';
+import { useAuthStore } from '@/store/useAuthStore';
 import { getFieldsForModule, AGING_BUCKETS, PAYMENT_STATUS_OPTIONS, CONFIDENCE_LEVEL_OPTIONS } from '../../lib/reportFieldConfig';
 import { SYSTEM_REPORTS } from '../../types/reports';
 
@@ -72,7 +72,7 @@ interface ReportBuilderProps {
 }
 
 export default function ReportBuilder({ onClose, onSave }: ReportBuilderProps) {
-  const user = getCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [name, setName] = useState('');

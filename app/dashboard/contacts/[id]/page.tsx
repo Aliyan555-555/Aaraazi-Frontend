@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ContactDetails } from '@/components/contacts/ContactDetails';
+import { ContactDetailsV4 } from '@/components/contacts/ContactDetailsV4';
 import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
 
@@ -45,7 +45,7 @@ export default function ContactDetailPage() {
   };
 
   return (
-    <ContactDetails
+    <ContactDetailsV4
       contactId={id}
       user={user}
       onBack={() => router.push('/dashboard/contacts')}

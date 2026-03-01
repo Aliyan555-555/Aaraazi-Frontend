@@ -3,17 +3,9 @@
  * Type-safe API client for contact operations
  */
 
-import { apiClient } from '@/lib/api/client';
-import type { Contact } from '@/types/schema';
-import {
-  ContactType,
-  ContactCategory,
-  ContactStatus,
-} from '@/types/schema';
-
-// ============================================================================
-// DTOs (Data Transfer Objects)
-// ============================================================================
+import { apiClient } from "@/lib/api/client";
+import type { Contact as SchemaContact } from "@/types/schema";
+import { ContactType, ContactCategory, ContactStatus } from "@/types/schema";
 
 export interface CreateContactDto {
   name: string;
@@ -21,6 +13,8 @@ export interface CreateContactDto {
   email?: string;
   alternatePhone?: string;
   address?: string;
+  /** Pakistani CNIC in format XXXXX-XXXXXXX-X */
+  cnic?: string;
   type: ContactType;
   category: ContactCategory;
   status?: ContactStatus;
@@ -43,16 +37,19 @@ export interface QueryContactsDto {
   category?: ContactCategory;
   status?: ContactStatus;
   agentId?: string;
+  /** Global search across name, phone, cnic, email, contactNumber */
   search?: string;
+  /** Filter by CNIC (exact match via backend) */
+  cnic?: string;
   tags?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export interface ContactsListResponse {
-  data: Contact[];
+  data: SchemaContact[];
   total: number;
   page: number;
   limit: number;
@@ -72,17 +69,17 @@ export interface ContactStatistics {
 // ============================================================================
 
 class ContactsService {
-  private readonly baseUrl = '/contacts';
+  private readonly baseUrl = "/contacts";
 
   /**
    * Create a new contact
    */
-  async create(dto: CreateContactDto): Promise<Contact> {
+  async create(dto: CreateContactDto): Promise<SchemaContact> {
     try {
-      const response = await apiClient.post<Contact>(this.baseUrl, dto);
+      const response = await apiClient.post<SchemaContact>(this.baseUrl, dto);
       return response.data;
     } catch (error) {
-      console.error('Failed to create contact:', error);
+      console.error("Failed to create contact:", error);
       throw error;
     }
   }
@@ -92,13 +89,12 @@ class ContactsService {
    */
   async findAll(query: QueryContactsDto = {}): Promise<ContactsListResponse> {
     try {
-      const response = await apiClient.get<ContactsListResponse>(
-        this.baseUrl,
-        { params: query },
-      );
+      const response = await apiClient.get<ContactsListResponse>(this.baseUrl, {
+        params: query,
+      });
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch contacts:', error);
+      console.error("Failed to fetch contacts:", error);
       throw error;
     }
   }
@@ -106,9 +102,11 @@ class ContactsService {
   /**
    * Get a single contact by ID
    */
-  async findOne(id: string): Promise<Contact> {
+  async findOne(id: string): Promise<SchemaContact> {
     try {
-      const response = await apiClient.get<Contact>(`${this.baseUrl}/${id}`);
+      const response = await apiClient.get<SchemaContact>(
+        `${this.baseUrl}/${id}`,
+      );
       return response.data;
     } catch (error) {
       console.error(`Failed to fetch contact ${id}:`, error);
@@ -119,9 +117,9 @@ class ContactsService {
   /**
    * Update a contact
    */
-  async update(id: string, dto: UpdateContactDto): Promise<Contact> {
+  async update(id: string, dto: UpdateContactDto): Promise<SchemaContact> {
     try {
-      const response = await apiClient.put<Contact>(
+      const response = await apiClient.put<SchemaContact>(
         `${this.baseUrl}/${id}`,
         dto,
       );
@@ -157,7 +155,7 @@ class ContactsService {
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch contact statistics:', error);
+      console.error("Failed to fetch contact statistics:", error);
       throw error;
     }
   }
@@ -168,12 +166,12 @@ class ContactsService {
   async bulkUpdate(
     ids: string[],
     updates: UpdateContactDto,
-  ): Promise<Contact[]> {
+  ): Promise<SchemaContact[]> {
     try {
       const promises = ids.map((id) => this.update(id, updates));
       return await Promise.all(promises);
     } catch (error) {
-      console.error('Failed to bulk update contacts:', error);
+      console.error("Failed to bulk update contacts:", error);
       throw error;
     }
   }
@@ -183,7 +181,7 @@ class ContactsService {
       const promises = ids.map((id) => this.remove(id));
       await Promise.all(promises);
     } catch (error) {
-      console.error('Failed to bulk delete contacts:', error);
+      console.error("Failed to bulk delete contacts:", error);
       throw error;
     }
   }

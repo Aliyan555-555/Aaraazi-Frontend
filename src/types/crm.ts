@@ -34,12 +34,13 @@ export interface CRMInteraction {
   id: string;
   contactId: string;
   agentId: string;  // Who made the interaction
-  type: 'call' | 'email' | 'meeting' | 'note' | 'sms';
+  type: 'call' | 'email' | 'meeting' | 'note' | 'sms' | 'whatsapp' | 'viewing' | 'video_call';
   date: Date | string;
   subject?: string;
   notes?: string;
   outcome?: string;
   nextSteps?: string;
+  propertyId?: string;
   createdAt: Date | string;
   updatedAt?: Date | string;
 }

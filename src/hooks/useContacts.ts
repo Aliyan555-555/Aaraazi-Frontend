@@ -1,205 +1,156 @@
-/**
- * Contacts Hooks - Zustand-based
- * Thin wrappers over useContactsStore
- */
-
 'use client';
 
+/**
+ * Contact hooks powered by Zustand — replaces React Query
+ */
+
 import { useEffect } from 'react';
-import { useContactsStore } from '@/store/useContactsStore';
+import { useContactsStore } from '@/stores/contacts.store';
 import type {
   CreateContactDto,
   UpdateContactDto,
   QueryContactsDto,
 } from '@/services/contacts.service';
 
-// ============================================================================
-// Query key helper (exported for consumers that need cache keys)
-// ============================================================================
-
 function queryKey(query: QueryContactsDto): string {
-  const sorted = Object.keys(query)
-    .sort()
-    .reduce((acc, k) => ({ ...acc, [k]: (query as Record<string, unknown>)[k] }), {});
-  return JSON.stringify(sorted);
+  return JSON.stringify(query);
 }
-
-const EMPTY_CONTACTS_ENTRY = {
-  data: [] as unknown[],
-  pagination: { total: 0, page: 1, limit: 10, pages: 0 },
-  isLoading: true,
-  error: null as string | null,
-};
-const EMPTY_CONTACT_DETAIL = { data: null as unknown, isLoading: true, error: null as string | null };
-const EMPTY_CONTACT_DETAIL_DISABLED = { data: null, isLoading: false, error: null };
 
 // ============================================================================
 // Fetch Hooks
 // ============================================================================
 
-/**
- * Fetch all contacts with pagination and filters
- */
 export function useContacts(query: QueryContactsDto = {}) {
   const key = queryKey(query);
-  const entry = useContactsStore((s) => s.lists[key] ?? EMPTY_CONTACTS_ENTRY);
+  const data = useContactsStore((s) => s.listCache[key]);
+  const isLoading = useContactsStore((s) => s.listLoading[key] ?? false);
+  const error = useContactsStore((s) => s.listError[key]);
+  const fetchContacts = useContactsStore((s) => s.fetchContacts);
 
   useEffect(() => {
-    useContactsStore.getState().fetchList(query);
-  }, [key]);
+    void fetchContacts(query);
+  }, [key, fetchContacts]);
 
   return {
-    data: { data: entry.data, ...entry.pagination },
-    contacts: entry.data,
-    isLoading: entry.isLoading,
-    error: entry.error,
-    refetch: () => useContactsStore.getState().fetchList(query),
+    data: data?.data ?? [],
+    total: data?.total ?? 0,
+    page: data?.page ?? 1,
+    limit: data?.limit ?? 10,
+    pages: data?.pages ?? 0,
+    isLoading,
+    error,
+    refetch: () => fetchContacts(query),
   };
 }
 
-/**
- * Fetch a single contact by ID
- */
 export function useContact(id: string, enabled = true) {
-  const entry = useContactsStore((s) =>
-    id ? (s.details[id] ?? EMPTY_CONTACT_DETAIL) : EMPTY_CONTACT_DETAIL_DISABLED
-  );
+  const data = useContactsStore((s) => s.detailCache[id]);
+  const isLoading = useContactsStore((s) => s.detailLoading[id] ?? false);
+  const error = useContactsStore((s) => s.detailError[id]);
+  const fetchContact = useContactsStore((s) => s.fetchContact);
 
   useEffect(() => {
-    if (enabled && id) {
-      useContactsStore.getState().fetchDetail(id);
-    }
-  }, [id, enabled]);
+    if (enabled && id) void fetchContact(id);
+  }, [id, enabled, fetchContact]);
 
   return {
-    contact: entry.data,
-    data: entry.data,
-    isLoading: entry.isLoading,
-    error: entry.error,
-    refetch: () => (id ? useContactsStore.getState().fetchDetail(id) : Promise.resolve()),
+    data,
+    isLoading,
+    error,
+    refetch: () => fetchContact(id),
   };
 }
 
-/**
- * Fetch contact statistics
- */
 export function useContactStatistics() {
-  const statistics = useContactsStore((s) => s.statistics);
+  const data = useContactsStore((s) => s.statistics);
+  const isLoading = useContactsStore((s) => s.statisticsLoading);
+  const error = useContactsStore((s) => s.statisticsError);
+  const fetchStatistics = useContactsStore((s) => s.fetchStatistics);
 
   useEffect(() => {
-    useContactsStore.getState().fetchStatistics();
-  }, []);
+    void fetchStatistics();
+  }, [fetchStatistics]);
 
   return {
-    data: statistics.data,
-    isLoading: statistics.isLoading,
-    error: statistics.error,
-    refetch: () => useContactsStore.getState().fetchStatistics(),
+    data: data ?? undefined,
+    isLoading,
+    error,
+    refetch: fetchStatistics,
   };
 }
 
 // ============================================================================
-// Mutation Hooks
+// Mutation Hooks (return { mutateAsync, isPending })
 // ============================================================================
 
-/**
- * Create a new contact
- */
 export function useCreateContact() {
-  const create = useContactsStore((s) => s.create);
-  const mutateLoading = useContactsStore((s) => s.mutateLoading);
-  const mutateError = useContactsStore((s) => s.mutateError);
+  const createContact = useContactsStore((s) => s.createContact);
+  const createLoading = useContactsStore((s) => s.createLoading);
 
   return {
-    mutateAsync: create,
-    mutate: (data: CreateContactDto) => create(data),
-    isLoading: mutateLoading,
-    error: mutateError,
+    mutateAsync: createContact,
+    isPending: createLoading,
   };
 }
 
-/**
- * Update an existing contact
- */
 export function useUpdateContact() {
-  const update = useContactsStore((s) => s.update);
-  const mutateLoading = useContactsStore((s) => s.mutateLoading);
-  const mutateError = useContactsStore((s) => s.mutateError);
+  const updateContact = useContactsStore((s) => s.updateContact);
+  const updateLoading = useContactsStore((s) => s.updateLoading);
 
   return {
-    mutateAsync: ({ id, data }: { id: string; data: UpdateContactDto }) => update(id, data),
-    mutate: ({ id, data }: { id: string; data: UpdateContactDto }) => update(id, data),
-    isLoading: mutateLoading,
-    error: mutateError,
+    mutateAsync: ({ id, data }: { id: string; data: UpdateContactDto }) =>
+      updateContact(id, data),
+    isPending: updateLoading,
   };
 }
 
-/**
- * Delete a contact
- */
 export function useDeleteContact() {
-  const remove = useContactsStore((s) => s.remove);
-  const mutateLoading = useContactsStore((s) => s.mutateLoading);
-  const mutateError = useContactsStore((s) => s.mutateError);
+  const deleteContact = useContactsStore((s) => s.deleteContact);
+  const deleteLoading = useContactsStore((s) => s.deleteLoading);
 
   return {
-    mutateAsync: remove,
-    mutate: remove,
-    isLoading: mutateLoading,
-    error: mutateError,
+    mutateAsync: deleteContact,
+    isPending: deleteLoading,
   };
 }
 
-/**
- * Bulk update contacts
- */
 export function useBulkUpdateContacts() {
   const bulkUpdate = useContactsStore((s) => s.bulkUpdate);
-  const mutateLoading = useContactsStore((s) => s.mutateLoading);
-  const mutateError = useContactsStore((s) => s.mutateError);
 
   return {
     mutateAsync: ({ ids, updates }: { ids: string[]; updates: UpdateContactDto }) =>
       bulkUpdate(ids, updates),
-    mutate: ({ ids, updates }: { ids: string[]; updates: UpdateContactDto }) =>
-      bulkUpdate(ids, updates),
-    isLoading: mutateLoading,
-    error: mutateError,
+    isPending: false,
   };
 }
 
-/**
- * Bulk delete contacts
- */
 export function useBulkDeleteContacts() {
   const bulkDelete = useContactsStore((s) => s.bulkDelete);
-  const mutateLoading = useContactsStore((s) => s.mutateLoading);
-  const mutateError = useContactsStore((s) => s.mutateError);
 
   return {
     mutateAsync: bulkDelete,
-    mutate: bulkDelete,
-    isLoading: mutateLoading,
-    error: mutateError,
+    isPending: false,
   };
 }
 
 // ============================================================================
-// Utility Hooks
+// Utility (kept for compatibility)
 // ============================================================================
 
-/**
- * Prefetch contact details
- */
+export const contactsKeys = {
+  all: ['contacts'] as const,
+  lists: () => [...contactsKeys.all, 'list'] as const,
+  list: (filters: QueryContactsDto) => [...contactsKeys.lists(), filters] as const,
+  details: () => [...contactsKeys.all, 'detail'] as const,
+  detail: (id: string) => [...contactsKeys.details(), id] as const,
+  statistics: () => [...contactsKeys.all, 'statistics'] as const,
+};
+
 export function usePrefetchContact() {
-  const prefetchDetail = useContactsStore((s) => s.prefetchDetail);
-  return (id: string) => prefetchDetail(id);
+  const fetchContact = useContactsStore((s) => s.fetchContact);
+  return (id: string) => fetchContact(id);
 }
 
-/**
- * Invalidate all contact queries
- */
 export function useInvalidateContacts() {
-  const invalidateAll = useContactsStore((s) => s.invalidateAll);
-  return () => invalidateAll();
+  return useContactsStore((s) => s.invalidateLists);
 }
