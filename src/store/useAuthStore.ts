@@ -1,8 +1,3 @@
-/**
- * Professional-grade Auth Store with Zustand
- * Enhanced with proper typing, error handling, and state management
- */
-
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
@@ -16,7 +11,7 @@ import type {
 } from '@/types/auth.types';
 import { authService } from '@/services/auth.service';
 import { setAuthToken, clearAuthToken } from '@/lib/api/client';
-import { setAuthCookie, clearAuthCookie, AUTH_STORAGE_KEY } from '@/lib/auth-storage';
+import { setAuthCookie, clearAuthCookie, AUTH_STORAGE_KEY, AUTH_STORAGE_VERSION } from '@/lib/auth-storage';
 
 // ============================================================================
 // Auth Store State Interface
@@ -312,7 +307,30 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: AUTH_STORAGE_KEY,
+      version: AUTH_STORAGE_VERSION,
       storage: createJSONStorage(() => localStorage),
+      migrate: (persistedState, _fromVersion) => {
+        // Handle any old/corrupt/mismatched state shape; merge with defaults
+        const raw = persistedState as Record<string, unknown> | null | undefined;
+        const state =
+          raw && typeof raw === 'object' && 'state' in raw
+            ? (raw.state as Record<string, unknown>)
+            : raw && typeof raw === 'object'
+              ? raw
+              : {};
+        return {
+          user: state.user ?? null,
+          accessToken: state.accessToken ?? null,
+          refreshToken: state.refreshToken ?? null,
+          tenantId: state.tenantId ?? null,
+          agencyId: state.agencyId ?? null,
+          branding: state.branding ?? null,
+          agencies: Array.isArray(state.agencies) ? state.agencies : [],
+          agents: Array.isArray(state.agents) ? state.agents : [],
+          currentModule: state.currentModule ?? null,
+          isAuthenticated: Boolean(state.isAuthenticated),
+        };
+      },
       partialize: (state) => ({
         // Only persist essential data (Zustand persist is the single storage for auth)
         user: state.user,

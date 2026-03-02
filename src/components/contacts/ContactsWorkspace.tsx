@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Plus,
   Download,
@@ -18,16 +18,21 @@ import {
   Archive,
   FileDown,
 } from 'lucide-react';
-import { Contact, User, UserRole, ContactStatus, ContactType, ContactCategory } from '@/types/schema';
-import { useConfirmStore } from '@/store/useConfirmStore';
+import { User } from '../../types';
+import { ContactStatus, ContactType, ContactCategory } from '@/types/schema';
 import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
-import { StatusBadge } from '../layout/StatusBadge';
+import { ContactWorkspaceCard } from './ContactWorkspaceCard';
+import { ContactCard } from '../layout/ContactCard';
+import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
 import { Column, EmptyStatePresets } from '../workspace';
 import { formatPKR } from '../../lib/currency';
-import { exportContactsToCSV } from '@/lib/exportUtils';
-import { useContacts, useDeleteContact, useUpdateContact } from '@/hooks/useContacts';
+import { exportContactsToCSV } from '../../lib/exportUtils';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useContacts, useUpdateContact, useDeleteContact, useBulkUpdateContacts, useBulkDeleteContacts } from '../../hooks/useContacts';
+import { mapApiContactToUIContact, type UIContact } from './mappers/contact.mappers';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,92 +41,87 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { ContactFormModal } from '../ContactFormModal';
-import { useRouter } from 'next/navigation';
 
-// Define a flexible User interface for props to handle different User types across the app
-interface WorkspaceUser {
-  id: string;
-  role: UserRole | string;
-  [key: string]: any;
-}
+/** Contact with legacy UI/tracking fields for display */
+type ContactWithLegacy = UIContact & {
+  totalCommissionEarned?: number;
+  totalTransactions?: number;
+  interestedProperties?: string[];
+  notes?: string;
+};
 
-export interface ContactsWorkspaceProps {
-  user: WorkspaceUser;
+/** Alias for handlers - accepts UIContact (has id, etc.) */
+type ContactForHandlers = UIContact;
+
+export interface ContactsWorkspaceV4EnhancedProps {
+  user: User;
+  onNavigate: (section: string, id?: string) => void;
   onAddContact?: () => void;
-  onEditContact?: (contact: Contact) => void;
+  onEditContact?: (contact: ContactForHandlers) => void;
 }
 
 /**
- * ContactsWorkspace - Contact list and management
+ * ContactsWorkspaceV4Enhanced - Complete workspace with all functionality
  */
-export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
+export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
   user,
+  onNavigate,
   onAddContact,
   onEditContact,
 }) => {
-  const router = useRouter();
+  const { tenantId, agencyId } = useAuthStore();
+  const query = useMemo(() => ({
+    agentId: user.role === 'admin' ? undefined : user.id,
+    limit: 500,
+  }), [user.id, user.role]);
+  const { data: apiContacts, isLoading, refetch } = useContacts(query);
+  const updateContactMutation = useUpdateContact();
+  const deleteContactMutation = useDeleteContact();
+  const bulkUpdateMutation = useBulkUpdateContacts();
+  const bulkDeleteMutation = useBulkDeleteContacts();
+
+  const allContacts = useMemo(() => (apiContacts ?? []).map(mapApiContactToUIContact), [apiContacts]);
+
   const [showAddContactModal, setShowAddContactModal] = useState(false);
-  const [editingContact, setEditingContact] = useState<Contact | null>(null);
-
-  // Use professional Zustand hooks
-  const { contacts: allContacts, isLoading, refetch } = useContacts({
-    agentId: user.role === 'SAAS_ADMIN' ? undefined : user.id, // Fallback if enum is not used in user object at runtime, but for TS correctness:
-    // Actually, let's use the Enum if imported, or cast.
-    // If user.role is string at runtime, this comparison works for string enums.
-    // But for TS, if user.role is UserRole, we should use UserRole.SAAS_ADMIN.
-  });
-
-  // Hook returns the mutation object directly
-  const { mutateAsync: removeContact } = useDeleteContact();
-  const { mutateAsync: updateContactMutation } = useUpdateContact();
+  const [editingContact, setEditingContact] = useState<import('@/types/schema').Contact | null>(null);
 
   // Filter state
-  const [typeFilter, setTypeFilter] = useState<string[]>([]);
+  const [roleFilter, setRoleFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [followUpFilter, setFollowUpFilter] = useState<string[]>([]);
 
   // Helper functions to handle tags (can be string or array)
-  const getTagArray = (tags: string | undefined | null): string[] => {
-    if (!tags) return [];
-    if (typeof tags === 'string') {
-      return tags.split(',').map(t => t.trim()).filter(Boolean);
+  const getTagArray = (tags: string | string[] | undefined | null): string[] => {
+    if (Array.isArray(tags)) return tags;
+    if (typeof tags === 'string' && tags.trim() !== '') {
+      try {
+        const parsed = JSON.parse(tags) as unknown;
+        if (Array.isArray(parsed)) return parsed as string[];
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+      } catch {
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+      }
     }
     return [];
   };
 
-  const serializeTags = (tags: string[]): string => {
-    return tags.join(',');
-  };
-
-  // Safe preferences accessor
-  const getPreferences = (contact: Contact): Record<string, any> => {
-    try {
-      if (typeof contact.preferences === 'string') return JSON.parse(contact.preferences);
-      return (contact.preferences as Record<string, any>) || {};
-    } catch {
-      return {};
-    }
-  };
+  // UI Contact type (types/contacts) uses tags as string[]; pass-through for data layer.
+  const serializeTags = (tags: string[]): string[] => tags;
 
   // Calculate stats
   const stats = useMemo(() => {
-    const active = allContacts.filter(c => c.status === ContactStatus.ACTIVE).length;
-    const clients = allContacts.filter(c => c.type === ContactType.CLIENT).length;
+    const active = allContacts.filter((c) => c.status === ContactStatus.ACTIVE).length;
+    const clients = allContacts.filter((c) => c.type === ContactType.CLIENT).length;
+    const prospects = allContacts.filter((c) => c.type === ContactType.PROSPECT).length;
 
-    // Determine commission from preferences or legacy fields if supported, usually 0
-    // We assume commission is not available for now. 
-    const totalCommission = 0;
+    const totalCommission = allContacts
+      .filter(c => (c as ContactWithLegacy).totalCommissionEarned)
+      .reduce((sum, c) => sum + ((c as ContactWithLegacy).totalCommissionEarned || 0), 0);
 
+    // Contacts needing follow-up (next follow-up date is in the past or today)
     const needFollowUp = allContacts.filter(c => {
-      // Use preferences.nextFollowUp if contact.nextFollowUp is missing (frontend field precedence)
-      // Actually contact.nextFollowUp is "Frontend-only" field in model, but backend might not return it.
-      // So check both.
-      const prefs = getPreferences(c);
-      const followUpStr = c.nextFollowUp || prefs.nextFollowUp;
-
-      if (!followUpStr) return false;
-      const followUpDate = new Date(followUpStr);
+      if (!c.nextFollowUp) return false;
+      const followUpDate = new Date(c.nextFollowUp);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return followUpDate <= today;
@@ -148,17 +148,14 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
   // Action Handlers
   // ============================================================================
 
-  const handleCall = async (contact: Contact) => {
+  const handleCall = (contact: ContactForHandlers) => {
     if (contact.phone) {
       window.location.href = `tel:${contact.phone}`;
       toast.success(`Calling ${contact.name}...`);
-
-      // We can't update lastContactDate via API if backend doesn't support it strictly.
-      // But we can try or skip.
     }
   };
 
-  const handleEmail = async (contact: Contact) => {
+  const handleEmail = (contact: ContactForHandlers) => {
     if (contact.email) {
       window.location.href = `mailto:${contact.email}`;
       toast.success(`Opening email to ${contact.name}...`);
@@ -167,43 +164,31 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     }
   };
 
-  const handleView = (contact: Contact) => {
-    router.push(`/dashboard/contacts/${contact.id}`);
+  const handleView = (contact: ContactForHandlers) => {
+    onNavigate('contact-details', contact.id);
   };
 
-  const handleEdit = (contact: Contact) => {
-    setEditingContact(contact);
-    // Explicitly open modal
-    setShowAddContactModal(true);
+  const handleEdit = (contact: ContactForHandlers) => {
+    const apiContact = (apiContacts ?? []).find((c) => c.id === contact.id);
+    setEditingContact(apiContact ?? null);
     onEditContact?.(contact);
   };
 
-  const handleDelete = async (contact: Contact) => {
-    useConfirmStore.getState().ask({
-      title: 'Delete Contact',
-      description: `Are you sure you want to delete ${contact.name}? This action cannot be undone.`,
-      confirmText: 'Delete',
-      variant: 'destructive',
-      onConfirm: async () => {
-        try {
-          await removeContact(contact.id);
-        } catch (error) {
-          console.error('Delete failed:', error);
-        }
-      },
-    });
+  const handleDelete = async (contact: ContactForHandlers) => {
+    if (window.confirm(`Are you sure you want to delete ${contact.name}? This action cannot be undone.`)) {
+      try {
+        await deleteContactMutation.mutateAsync(contact.id);
+        refetch();
+      } catch { /* toast handled by store */ }
+    }
   };
 
-  const handleChangeStatus = async (contact: Contact, newStatus: ContactStatus) => {
+  const handleChangeStatus = async (contact: ContactForHandlers, newStatus: ContactStatus) => {
     try {
-      await updateContactMutation({
-        id: contact.id,
-        data: { status: newStatus }
-      });
+      await updateContactMutation.mutateAsync({ id: contact.id, data: { status: newStatus } });
       toast.success(`Contact status changed to ${newStatus}`);
-    } catch (error) {
-      console.error('Status change failed:', error);
-    }
+      refetch();
+    } catch { /* toast handled by store */ }
   };
 
   // ============================================================================
@@ -218,74 +203,57 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
 
   const handleBulkArchive = async (ids: string[]) => {
     try {
-      await Promise.all(ids.map(id =>
-        updateContactMutation({ id, data: { status: ContactStatus.ARCHIVED } })
-      ));
+      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.ARCHIVED } });
       toast.success(`Archived ${ids.length} contacts`);
-    } catch (error) {
-      console.error('Bulk archive failed:', error);
-    }
+      refetch();
+    } catch { /* toast handled by store */ }
   };
 
   const handleBulkDelete = async (ids: string[]) => {
-    useConfirmStore.getState().ask({
-      title: 'Delete Contacts',
-      description: `Are you sure you want to delete ${ids.length} contacts? This action cannot be undone.`,
-      confirmText: 'Delete',
-      variant: 'destructive',
-      onConfirm: async () => {
-        try {
-          await Promise.all(ids.map(id => removeContact(id)));
-        } catch (error) {
-          console.error('Bulk delete failed:', error);
-        }
-      },
-    });
+    if (window.confirm(`Are you sure you want to delete ${ids.length} contacts? This action cannot be undone.`)) {
+      try {
+        await bulkDeleteMutation.mutateAsync(ids);
+        toast.success(`Deleted ${ids.length} contacts`);
+        refetch();
+      } catch { /* toast handled by store */ }
+    }
   };
 
   const handleBulkActivate = async (ids: string[]) => {
     try {
-      await Promise.all(ids.map(id =>
-        updateContactMutation({ id, data: { status: ContactStatus.ACTIVE } })
-      ));
+      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.ACTIVE } });
       toast.success(`Activated ${ids.length} contacts`);
-    } catch (error) {
-      console.error('Bulk activate failed:', error);
-    }
+      refetch();
+    } catch { /* toast handled by store */ }
   };
 
   const handleBulkDeactivate = async (ids: string[]) => {
     try {
-      await Promise.all(ids.map(id =>
-        updateContactMutation({ id, data: { status: ContactStatus.INACTIVE } })
-      ));
+      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.INACTIVE } });
       toast.success(`Deactivated ${ids.length} contacts`);
-    } catch (error) {
-      console.error('Bulk deactivate failed:', error);
-    }
+      refetch();
+    } catch { /* toast handled by store */ }
   };
 
   const handleBulkAddTag = async (ids: string[]) => {
     const tag = prompt('Enter tag to add:');
     if (tag && tag.trim()) {
-      try {
-        await Promise.all(ids.map(async (id) => {
-          const contact = allContacts.find(c => c.id === id);
-          if (contact) {
-            const currentTags = getTagArray(contact.tags);
-            if (!currentTags.includes(tag.trim())) {
-              await updateContactMutation({
-                id,
-                data: {
-                  tags: serializeTags([...currentTags, tag.trim()])
-                }
-              });
-            }
+      const updates: { id: string; tags: string }[] = [];
+      for (const id of ids) {
+        const contact = allContacts.find(c => c.id === id);
+        if (contact) {
+          const currentTags = getTagArray(contact.tags);
+          if (!currentTags.includes(tag.trim())) {
+            updates.push({ id, tags: [...currentTags, tag.trim()].join(',') });
           }
-        }));
-        toast.success(`Added tag "${tag}" to ${ids.length} contacts`);
-      } catch (error) {
-        console.error('Bulk add tag failed:', error);
+        }
+      }
+      if (updates.length > 0) {
+        try {
+          await Promise.all(updates.map(({ id, tags }) => updateContactMutation.mutateAsync({ id, data: { tags } })));
+          toast.success(`Added tag "${tag}" to ${updates.length} contacts`);
+          refetch();
+        } catch { /* toast handled by store */ }
       }
     }
   };
@@ -294,7 +262,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
   // Table Columns with Row Actions
   // ============================================================================
 
-  const columns: Column<Contact>[] = [
+  const columns: Column<UIContact>[] = [
     {
       id: 'name',
       label: 'Name',
@@ -326,18 +294,17 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
       id: 'type',
       label: 'Type',
       accessor: (c) => {
-        // Enums mapping
-        const typeColors: Record<ContactType, string> = {
-          client: 'bg-green-100 text-green-800',
-          prospect: 'bg-blue-100 text-blue-800',
-          investor: 'bg-purple-100 text-purple-800',
-          vendor: 'bg-gray-100 text-gray-800',
-          partner: 'bg-gray-100 text-gray-800',
-          agent: 'bg-indigo-100 text-indigo-800',
+        const typeColors: Record<string, string> = {
+          [ContactType.CLIENT]: 'bg-green-100 text-green-800',
+          [ContactType.PROSPECT]: 'bg-blue-100 text-blue-800',
+          [ContactType.INVESTOR]: 'bg-purple-100 text-purple-800',
+          [ContactType.VENDOR]: 'bg-gray-100 text-gray-800',
+          [ContactType.PARTNER]: 'bg-gray-100 text-gray-800',
+          [ContactType.AGENT]: 'bg-indigo-100 text-indigo-800',
         };
         return (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[c.type]}`}>
-            {c.type.toString().charAt(0).toUpperCase() + c.type.toString().slice(1).toLowerCase()}
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[c.type] || 'bg-gray-100 text-gray-800'}`}>
+            {c.type.charAt(0).toUpperCase() + c.type.slice(1).toLowerCase()}
           </span>
         );
       },
@@ -352,22 +319,22 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
           return <span className="text-sm text-gray-500">—</span>;
         }
 
-        const categoryColors: Record<ContactCategory, string> = {
-          buyer: 'bg-green-100 text-green-800',
-          seller: 'bg-blue-100 text-blue-800',
-          tenant: 'bg-purple-100 text-purple-800',
-          landlord: 'bg-gray-100 text-gray-800',
-          'external-broker': 'bg-orange-100 text-orange-800',
-          both: 'bg-yellow-100 text-yellow-800',
+        const categoryColors: Record<string, string> = {
+          [ContactCategory.BUYER]: 'bg-green-100 text-green-800',
+          [ContactCategory.SELLER]: 'bg-blue-100 text-blue-800',
+          [ContactCategory.TENANT]: 'bg-purple-100 text-purple-800',
+          [ContactCategory.LANDLORD]: 'bg-gray-100 text-gray-800',
+          [ContactCategory.EXTERNAL_BROKER]: 'bg-orange-100 text-orange-800',
+          [ContactCategory.BOTH]: 'bg-yellow-100 text-yellow-800',
         };
 
-        const categoryLabels: Record<ContactCategory, string> = {
-          buyer: 'Buyer',
-          seller: 'Seller',
-          tenant: 'Tenant',
-          landlord: 'Landlord',
-          'external-broker': 'External Broker',
-          both: 'Both',
+        const categoryLabels: Record<string, string> = {
+          [ContactCategory.BUYER]: 'Buyer',
+          [ContactCategory.SELLER]: 'Seller',
+          [ContactCategory.TENANT]: 'Tenant',
+          [ContactCategory.LANDLORD]: 'Landlord',
+          [ContactCategory.EXTERNAL_BROKER]: 'External Broker',
+          [ContactCategory.BOTH]: 'Both',
         };
 
         return (
@@ -383,17 +350,41 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
       id: 'status',
       label: 'Status',
       accessor: (c) => {
-        const statusLabels: Record<ContactStatus, string> = {
-          active: 'Active',
-          inactive: 'Inactive',
-          archived: 'Archived',
-          blocked: 'Blocked',
+        const statusLabels: Record<string, string> = {
+          [ContactStatus.ACTIVE]: 'Active',
+          [ContactStatus.INACTIVE]: 'Inactive',
+          [ContactStatus.ARCHIVED]: 'Archived',
+          [ContactStatus.BLOCKED]: 'Blocked',
         };
 
         const statusLabel = statusLabels[c.status] || c.status;
+
+        // PHASE 5: Use StatusBadge component with auto-mapping
         return <StatusBadge status={statusLabel} size="sm" />;
       },
       width: '90px',
+      align: 'center',
+    },
+    {
+      id: 'properties',
+      label: 'Properties',
+      accessor: (c) => (
+        <div className="text-sm text-gray-900 text-center">
+          {(c as ContactWithLegacy).interestedProperties?.length || 0}
+        </div>
+      ),
+      width: '90px',
+      align: 'center',
+    },
+    {
+      id: 'transactions',
+      label: 'Deals',
+      accessor: (c) => (
+        <div className="text-sm text-gray-900 text-center">
+          {(c as ContactWithLegacy).totalTransactions || 0}
+        </div>
+      ),
+      width: '80px',
       align: 'center',
     },
     {
@@ -401,8 +392,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
       label: 'Commission',
       accessor: (c) => (
         <div className="text-sm font-medium text-gray-900">
-          {/* Placeholder for now */}
-          —
+          {(c as ContactWithLegacy).totalCommissionEarned ? formatPKR((c as ContactWithLegacy).totalCommissionEarned!) : '—'}
         </div>
       ),
       width: '130px',
@@ -432,6 +422,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
       label: 'Actions',
       accessor: (c) => (
         <div className="flex items-center gap-1">
+          {/* Quick Call Button */}
           <Button
             variant="ghost"
             size="sm"
@@ -445,6 +436,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
             <Phone className="h-4 w-4" />
           </Button>
 
+          {/* Quick Email Button */}
           <Button
             variant="ghost"
             size="sm"
@@ -459,9 +451,14 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
             <Mail className="h-4 w-4" />
           </Button>
 
+          {/* More Actions Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -475,15 +472,15 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
                 Edit Contact
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'active')} disabled={c.status === 'active'}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.ACTIVE)} disabled={c.status === ContactStatus.ACTIVE}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Mark Active
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'inactive')} disabled={c.status === 'inactive'}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.INACTIVE)} disabled={c.status === ContactStatus.INACTIVE}>
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Mark Inactive
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleChangeStatus(c, 'archived')} disabled={c.status === 'archived'}>
+              <DropdownMenuItem onClick={() => handleChangeStatus(c, ContactStatus.ARCHIVED)} disabled={c.status === ContactStatus.ARCHIVED}>
                 <Archive className="h-4 w-4 mr-2" />
                 Archive
               </DropdownMenuItem>
@@ -505,18 +502,29 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
   // Filters and Sort Options
   // ============================================================================
 
+  /**
+   * Consolidated Role filter.
+   *
+   * Maps the acceptance-criteria roles to their underlying fields:
+   *   buyer   -> category === 'buyer'
+   *   seller  -> category === 'seller'
+   *   investor -> type === 'investor'
+   *   agent   -> type === 'agent'
+   *   developer -> type === 'developer'
+   */
   const quickFilters = [
     {
-      id: 'type',
-      label: 'Type',
+      id: 'role',
+      label: 'Contact Type',
       options: [
-        { value: ContactType.CLIENT, label: 'Client' },
-        { value: ContactType.PROSPECT, label: 'Prospect' },
-        { value: ContactType.INVESTOR, label: 'Investor' },
-        { value: ContactType.VENDOR, label: 'Vendor' },
+        { value: 'buyer', label: 'Buyer' },
+        { value: 'seller', label: 'Seller' },
+        { value: 'investor', label: 'Investor' },
+        { value: 'agent', label: 'Agent' },
+        { value: 'developer', label: 'Developer' },
       ],
-      value: typeFilter,
-      onChange: setTypeFilter,
+      value: roleFilter,
+      onChange: setRoleFilter,
       multiple: true,
     },
     {
@@ -526,24 +534,10 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
         { value: ContactStatus.ACTIVE, label: 'Active' },
         { value: ContactStatus.INACTIVE, label: 'Inactive' },
         { value: ContactStatus.ARCHIVED, label: 'Archived' },
+        { value: ContactStatus.BLOCKED, label: 'Blocked' },
       ],
       value: statusFilter,
       onChange: setStatusFilter,
-      multiple: true,
-    },
-    {
-      id: 'category',
-      label: 'Category',
-      options: [
-        { value: ContactCategory.BUYER, label: 'Buyer' },
-        { value: ContactCategory.SELLER, label: 'Seller' },
-        { value: ContactCategory.TENANT, label: 'Tenant' },
-        { value: ContactCategory.LANDLORD, label: 'Landlord' },
-        { value: ContactCategory.EXTERNAL_BROKER, label: 'External Broker' },
-        { value: ContactCategory.BOTH, label: 'Both' },
-      ],
-      value: categoryFilter,
-      onChange: setCategoryFilter,
       multiple: true,
     },
     {
@@ -561,20 +555,20 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     },
   ];
 
-  // Sort options omitted for brevity, assuming existing ones fine or need enum tweaks?
-  // Existing are: 'name-asc', etc. Logic is handled by `useContacts` or sorting function.
-  // Assuming frontend sorting or backend sorting by string params. Backend DTO has sortBy: string.
-
   const sortOptions = [
     { value: 'name-asc', label: 'Name: A to Z' },
     { value: 'name-desc', label: 'Name: Z to A' },
     { value: 'newest', label: 'Newest First' },
     { value: 'oldest', label: 'Oldest First' },
+    { value: 'last-contact', label: 'Last Contact' },
+    { value: 'commission-high', label: 'Commission: High to Low' },
+    { value: 'commission-low', label: 'Commission: Low to High' },
   ];
 
   // ============================================================================
   // Bulk Actions
   // ============================================================================
+
   const bulkActions = [
     {
       id: 'export',
@@ -616,9 +610,22 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     },
   ];
 
+  // ============================================================================
+  // Secondary Actions
+  // ============================================================================
+
+  const handleImport = () => {
+    toast.info('Import functionality coming soon');
+  };
+
+  const handleExportAll = () => {
+    handleBulkExport(allContacts.map(c => c.id));
+  };
+
   const handleExportTemplate = () => {
     const headers = ['Name', 'Phone', 'Email', 'Type', 'Category', 'Status', 'Notes'];
     const csvContent = headers.join(',');
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -626,6 +633,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     a.download = 'contacts-import-template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+
     toast.success('Downloaded import template');
   };
 
@@ -633,12 +641,12 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     {
       label: 'Import Contacts',
       icon: <Upload className="h-4 w-4" />,
-      onClick: () => toast.info('Import functionality coming soon'),
+      onClick: handleImport,
     },
     {
       label: 'Export All',
       icon: <Download className="h-4 w-4" />,
-      onClick: () => handleBulkExport(allContacts.map(c => c.id)),
+      onClick: handleExportAll,
     },
     {
       label: 'Download Template',
@@ -647,12 +655,18 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
     },
   ];
 
+  // Render
+  // ============================================================================
+
   return (
     <>
       <WorkspacePageTemplate
+        // Header
         title="Contacts"
         description="Manage your contacts and client relationships"
         stats={stats}
+
+        // Primary Action
         primaryAction={{
           label: 'Add Contact',
           icon: <Plus className="h-4 w-4" />,
@@ -662,73 +676,186 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
             onAddContact?.();
           },
         }}
+
+        // Secondary Actions
         secondaryActions={secondaryActions}
+
+        // Data
         items={allContacts}
         getItemId={(c) => c.id}
         isLoading={isLoading}
+
+        // View Configuration — table on desktop, grid (ContactCard stacked) on mobile
         defaultView="table"
-        availableViews={['table']}
+        availableViews={['table', 'grid']}
+
+        // Table View
         columns={columns}
-        searchPlaceholder="Search contacts..."
+
+        // Grid / Mobile Card View — Task 1.3 AC
+        renderCard={(contact) => (
+          <ContactCard
+            name={contact.name}
+            role={contact.category ?? contact.type}
+            phone={contact.phone}
+            email={contact.email ?? undefined}
+            address={contact.address ?? undefined}
+            company={(contact as ContactWithLegacy & { company?: string }).company}
+            lastContact={contact.lastContactDate}
+            notes={(contact as ContactWithLegacy).notes}
+            tags={getTagArray(contact.tags)}
+            onCall={() => handleCall(contact)}
+            onEmail={() => handleEmail(contact)}
+            onEdit={() => handleEdit(contact)}
+            onClick={() => handleView(contact)}
+          />
+        )}
+
+        // Search & Filter
+        searchPlaceholder="Search by name, phone, CNIC, email, notes or tags..."
         quickFilters={quickFilters}
         sortOptions={sortOptions}
+        // Global search: Name, Phone, CNIC, Email, Notes, Tags — Task 1.2 AC
         onSearch={(contact, query) => {
           const q = query.toLowerCase();
-          const prefs = getPreferences(contact);
-          const notes = (prefs.notes || '').toLowerCase();
           return (
             contact.name.toLowerCase().includes(q) ||
             contact.phone.includes(q) ||
+            (contact.cnic?.toLowerCase().includes(q) ?? false) ||
             (contact.email?.toLowerCase().includes(q) ?? false) ||
-            notes.includes(q) ||
+            ((contact as ContactWithLegacy).notes?.toLowerCase().includes(q) ?? false) ||
             getTagArray(contact.tags).some((t: string) => t.toLowerCase().includes(q))
           );
         }}
+        // Filter: consolidated Role filter + Status + Follow-up — Task 1.4 AC
         onFilter={(contact, filters) => {
-          const types = filters.get('type');
-          if (types && types.length > 0 && !types.includes(contact.type)) return false;
+          // Role filter — maps buyer/seller to category, investor/agent/developer to type
+          const roles = filters.get('role');
+          if (roles && roles.length > 0) {
+            const categoryRoles = ['buyer', 'seller'] as string[];
+            const typeRoles = ['investor', 'agent', 'developer'] as string[];
 
+            const wantedCategories = roles.filter((r: string) => categoryRoles.includes(r));
+            const wantedTypes = roles.filter((r: string) => typeRoles.includes(r));
+
+            // Normalize contact category/type to lowercase so they can be compared
+            // against the lowercase UI role strings (buyer, seller, investor, etc.).
+            const contactCategoryLower = contact.category
+              ? String(contact.category).toLowerCase()
+              : undefined;
+            const contactTypeLower = contact.type
+              ? String(contact.type).toLowerCase()
+              : undefined;
+
+            let matchesRole = false;
+            if (wantedCategories.length > 0 && contactCategoryLower &&
+              wantedCategories.includes(contactCategoryLower)) {
+              matchesRole = true;
+            }
+            if (wantedTypes.length > 0 && contactTypeLower &&
+              wantedTypes.includes(contactTypeLower)) {
+              matchesRole = true;
+            }
+            if (!matchesRole) return false;
+          }
+
+          // Status filter — statusFilter uses ContactStatus enum values, contact.status matches
           const statuses = filters.get('status');
           if (statuses && statuses.length > 0 && !statuses.includes(contact.status)) return false;
 
-          const categories = filters.get('category');
-          if (categories && categories.length > 0 && !categories.includes(contact.category)) return false;
-
-          const followups = filters.get('followUp');
-          if (followups && followups.length > 0) {
-            const prefs = getPreferences(contact);
-            const followUpStr = contact.nextFollowUp || prefs.nextFollowUp;
-            if (followups.includes('none') && !followUpStr) return true;
-            if (!followUpStr) return false;
-
-            const fuDate = new Date(followUpStr);
+          // Follow-up filter
+          const followUps = filters.get('followUp');
+          if (followUps && followUps.length > 0) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            if (followups.includes('overdue') && fuDate < today) return true;
-            if (followups.includes('due') && fuDate.getTime() === today.getTime()) return true;
-            if (followups.includes('upcoming') && fuDate > today) return true;
-
-            return false;
+            let match = false;
+            if (followUps.includes('due')) {
+              if (contact.nextFollowUp) {
+                const followUpDate = new Date(contact.nextFollowUp);
+                followUpDate.setHours(0, 0, 0, 0);
+                if (followUpDate.getTime() === today.getTime()) match = true;
+              }
+            }
+            if (followUps.includes('overdue')) {
+              if (contact.nextFollowUp) {
+                const followUpDate = new Date(contact.nextFollowUp);
+                if (followUpDate < today) match = true;
+              }
+            }
+            if (followUps.includes('upcoming')) {
+              if (contact.nextFollowUp) {
+                const followUpDate = new Date(contact.nextFollowUp);
+                if (followUpDate > today) match = true;
+              }
+            }
+            if (followUps.includes('none')) {
+              if (!contact.nextFollowUp) match = true;
+            }
+            if (!match) return false;
           }
 
           return true;
         }}
+
+        // Bulk Actions
         bulkActions={bulkActions}
+
+        // Pagination
+        pagination={{
+          enabled: true,
+          pageSize: 50,
+          pageSizeOptions: [25, 50, 100, 200],
+        }}
+
+        // Empty State
+        emptyStatePreset={{
+          title: 'No contacts yet',
+          description: 'Add your first contact to start building relationships',
+          icon: <Users className="h-12 w-12 text-gray-400" />,
+          primaryAction: {
+            label: 'Add Contact',
+            onClick: () => {
+              setEditingContact(null);
+              setShowAddContactModal(true);
+              onAddContact?.();
+            },
+          },
+        }}
+
+        // Callbacks
+        onItemClick={(contact) => onNavigate('contact-details', contact.id)}
       />
 
+      {/* Add/Edit Contact Modal */}
       <ContactFormModal
-        isOpen={showAddContactModal}
+        isOpen={showAddContactModal || editingContact !== null}
         onClose={() => {
           setShowAddContactModal(false);
           setEditingContact(null);
         }}
-        agentId={user.id}
-        editingContact={editingContact}
         onSuccess={() => {
+          setShowAddContactModal(false);
+          setEditingContact(null);
           refetch();
-          toast.success(editingContact ? 'Contact updated successfully' : 'Contact added successfully');
         }}
+        agentId={user.id}
+        tenantId={tenantId ?? undefined}
+        agencyId={agencyId ?? undefined}
+        editingContact={editingContact}
+        defaultType={
+          !editingContact
+            ? undefined
+            : editingContact.type === ContactType.INVESTOR
+              ? 'investor'
+              : editingContact.type === ContactType.VENDOR
+                ? 'vendor'
+                : editingContact.category === ContactCategory.BOTH
+                  ? undefined
+                  : (editingContact.category === ContactCategory.EXTERNAL_BROKER
+                      ? 'external-broker'
+                      : editingContact.category?.toLowerCase()) as 'buyer' | 'seller' | 'tenant' | 'landlord' | 'investor' | 'vendor' | 'external-broker'
+        }
       />
     </>
   );
