@@ -116,7 +116,7 @@ export const useTasksStore = create<TasksState & TasksActions>((set, get) => ({
     try {
       const created = await tasksService.create(data);
       get().invalidateLists();
-      get().fetchOverdueCount();
+      void get().fetchOverdueCount().catch(() => {});
       set((s) => ({ detailCache: { ...s.detailCache, [created.id]: created }, createLoading: false }));
       toast.success('Task created successfully');
       return created;
@@ -133,7 +133,7 @@ export const useTasksStore = create<TasksState & TasksActions>((set, get) => ({
     try {
       const updated = await tasksService.update(id, data);
       get().invalidateLists();
-      get().fetchOverdueCount();
+      void get().fetchOverdueCount().catch(() => {});
       set((s) => ({ detailCache: { ...s.detailCache, [id]: updated }, updateLoading: false }));
       toast.success('Task updated successfully');
       return updated;
@@ -151,7 +151,7 @@ export const useTasksStore = create<TasksState & TasksActions>((set, get) => ({
       await tasksService.remove(id);
       get().removeDetail(id);
       get().invalidateLists();
-      get().fetchOverdueCount();
+      void get().fetchOverdueCount().catch(() => {});
       set({ deleteLoading: false });
       toast.success('Task cancelled');
     } catch (err) {

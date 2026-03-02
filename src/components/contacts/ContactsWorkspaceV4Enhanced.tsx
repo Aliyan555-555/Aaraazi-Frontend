@@ -227,7 +227,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   const handleBulkArchive = async (ids: string[]) => {
     try {
-      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: 'archived' } });
+      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.ARCHIVED } });
       toast.success(`Archived ${ids.length} contacts`);
       refetch();
     } catch { /* toast handled by store */ }
@@ -245,7 +245,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   const handleBulkActivate = async (ids: string[]) => {
     try {
-      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: 'active' } });
+      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.ACTIVE } });
       toast.success(`Activated ${ids.length} contacts`);
       refetch();
     } catch { /* toast handled by store */ }
@@ -253,7 +253,7 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
 
   const handleBulkDeactivate = async (ids: string[]) => {
     try {
-      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: 'inactive' } });
+      await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.INACTIVE } });
       toast.success(`Deactivated ${ids.length} contacts`);
       refetch();
     } catch { /* toast handled by store */ }
@@ -555,10 +555,10 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
       id: 'status',
       label: 'Status',
       options: [
-        { value: 'active', label: 'Active' },
-        { value: 'inactive', label: 'Inactive' },
-        { value: 'archived', label: 'Archived' },
-        { value: 'blocked', label: 'Blocked' },
+        { value: ContactStatus.ACTIVE, label: 'Active' },
+        { value: ContactStatus.INACTIVE, label: 'Inactive' },
+        { value: ContactStatus.ARCHIVED, label: 'Archived' },
+        { value: ContactStatus.BLOCKED, label: 'Blocked' },
       ],
       value: statusFilter,
       onChange: setStatusFilter,
@@ -762,18 +762,28 @@ export const ContactsWorkspaceV4Enhanced: React.FC<ContactsWorkspaceV4EnhancedPr
             const wantedCategories = roles.filter((r: string) => categoryRoles.includes(r));
             const wantedTypes = roles.filter((r: string) => typeRoles.includes(r));
 
+            // Normalize contact category/type to lowercase so they can be compared
+            // against the lowercase UI role strings (buyer, seller, investor, etc.).
+            const contactCategoryLower = contact.category
+              ? String(contact.category).toLowerCase()
+              : undefined;
+            const contactTypeLower = contact.type
+              ? String(contact.type).toLowerCase()
+              : undefined;
+
             let matchesRole = false;
-            if (wantedCategories.length > 0 && contact.category &&
-              wantedCategories.includes(contact.category)) {
+            if (wantedCategories.length > 0 && contactCategoryLower &&
+              wantedCategories.includes(contactCategoryLower)) {
               matchesRole = true;
             }
-            if (wantedTypes.length > 0 && wantedTypes.includes(contact.type)) {
+            if (wantedTypes.length > 0 && contactTypeLower &&
+              wantedTypes.includes(contactTypeLower)) {
               matchesRole = true;
             }
             if (!matchesRole) return false;
           }
 
-          // Status filter
+          // Status filter — statusFilter uses ContactStatus enum values, contact.status matches
           const statuses = filters.get('status');
           if (statuses && statuses.length > 0 && !statuses.includes(contact.status)) return false;
 
