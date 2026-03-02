@@ -8,12 +8,8 @@ import type { User as UIUser } from '../types';
 import { Notification } from '../types/notifications';
 import { NotificationItem } from './NotificationItem';
 
-const notifyMissingIntegration = (): never => {
-  throw new Error(
-    'NotificationBell is being used but notification actions are not implemented. ' +
-      'Please wire up getNotifications/getUnreadCount/markAsRead/markAllAsRead/' +
-      'archiveNotification/autoCleanupOldNotifications to a real notification service.'
-  );
+const notifyMissingIntegration = () => {
+return [];
 };
 const getNotifications = (..._args: any[]): any => notifyMissingIntegration();
 const getUnreadCount = (..._args: any[]): any => notifyMissingIntegration();
