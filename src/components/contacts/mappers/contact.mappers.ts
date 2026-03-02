@@ -4,7 +4,7 @@
 
 import type { Contact } from '@/types/schema';
 import type { ContactFormValues } from '@/validations/contacts';
-import type { ContactFormType } from '@/types/contacts';
+import type { ContactFormType } from '@/types/contacts/contact.types';
 import { ContactType, ContactCategory } from '@/types/schema';
 
 // ============================================================================
