@@ -1,6 +1,6 @@
 /**
  * SellCycleWorkspaceCard Component
- * Custom card for Sell Cycles Workspace V4
+ * Custom card for Sell Cycles Workspace
  * 
  * Uses WorkspaceCard with sell cycle-specific customization
  */

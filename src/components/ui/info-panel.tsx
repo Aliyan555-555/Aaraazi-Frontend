@@ -77,7 +77,7 @@ export function InfoPanel({
       setCopiedIndex(index);
       toast.success('Copied to clipboard');
       setTimeout(() => setCopiedIndex(null), 2000);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to copy');
     }
   };

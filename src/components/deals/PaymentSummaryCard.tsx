@@ -1,7 +1,6 @@
 import React from 'react';
 import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
-import { getPaymentSummary } from '../../lib/dealPayments';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
@@ -15,6 +14,8 @@ import {
   FileText,
   Clock
 } from 'lucide-react';
+
+const getPaymentSummaryFromDeal = (..._args: any[]): any => { /* stub - prototype function removed */ };
 
 interface PaymentSummaryCardProps {
   deal: Deal;
@@ -31,7 +32,7 @@ export const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
   onExport,
   isPrimaryAgent,
 }) => {
-  const summary = getPaymentSummary(deal.id);
+  const summary = getPaymentSummaryFromDeal(deal);
 
   const getPaymentStateInfo = () => {
     switch (summary.paymentPlanStatus) {

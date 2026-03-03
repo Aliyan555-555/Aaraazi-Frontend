@@ -1,6 +1,5 @@
 /**
- * Create/Edit Investor Modal - Multi-Step Form V2
- * Design System V4.1 Compliant - Wizard Style
+ * Create/Edit Investor Modal - Multi-Step Form * Design System Compliant - Wizard Style
  */
 
 import React, { useState, useEffect } from 'react';

@@ -1,6 +1,6 @@
 /**
  * PropertyWorkspaceCard Component
- * Custom card for Properties Workspace V4
+ * Custom card for Properties Workspace
  * 
  * Uses WorkspaceCard with property-specific customization
  */

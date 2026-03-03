@@ -5,11 +5,11 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
-import { recordAdHocPayment, recordInstallmentPayment, RecordAdHocPaymentInput, RecordInstallmentPaymentInput } from '../../lib/dealPayments';
+import { useDealMutations } from '@/hooks/useDeals';
 import { Deal, PaymentInstallment } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
-import { AlertCircle, DollarSign, Receipt } from 'lucide-react';
+import { AlertCircle, DollarSign, Loader2, Receipt } from 'lucide-react';
 
 interface RecordPaymentModalProps {
   open: boolean;
@@ -18,7 +18,8 @@ interface RecordPaymentModalProps {
   currentUserId: string;
   currentUserName: string;
   selectedInstallment?: PaymentInstallment; // If provided, record against this installment
-  onSuccess: (updatedDeal: Deal) => void;
+  /** Called after payment is recorded. Should trigger deal refetch. Awaited before closing. */
+  onSuccess: () => void | Promise<void>;
 }
 
 export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
@@ -36,8 +37,9 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
   const [referenceNumber, setReferenceNumber] = useState<string>('');
   const [receiptNumber, setReceiptNumber] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [overpaymentWarning, setOverpaymentWarning] = useState<string | null>(null);
+  const { recordPayment, recordPaymentLoading } = useDealMutations();
+  const isSubmitting = recordPaymentLoading;
 
   const isAdHoc = !selectedInstallment;
   const expectedAmount = selectedInstallment ? selectedInstallment.amount - (selectedInstallment.paidAmount ?? 0) : 0;
@@ -81,99 +83,45 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      let updatedDeal: Deal;
+      const paymentType = isAdHoc ? 'AD_HOC' : 'INSTALLMENT';
+      const methodMap: Record<string, string> = {
+        cash: 'CASH',
+        cheque: 'CHEQUE',
+        'bank-transfer': 'BANK_TRANSFER',
+        online: 'ONLINE',
+      };
+      const method = methodMap[paymentMethod] ?? 'BANK_TRANSFER';
+
+      await recordPayment(deal.id, {
+        amount: numAmount,
+        paymentType,
+        paidAt: paidDate,
+        notes: notes || undefined,
+        reference: referenceNumber || undefined,
+        method,
+        installmentId: selectedInstallment?.id,
+      });
 
       if (isAdHoc) {
-        // Record ad-hoc payment
-        const input: RecordAdHocPaymentInput = {
-          amount: numAmount,
-          paidDate,
-          paymentMethod,
-          referenceNumber: referenceNumber || undefined,
-          receiptNumber: receiptNumber || undefined,
-          notes: notes || undefined,
-        };
-
-        updatedDeal = recordAdHocPayment(
-          deal.id,
-          currentUserId,
-          currentUserName,
-          input
-        );
-
-        // Find the newly created payment to get receipt number
-        const newPayment = updatedDeal.financial.payments[updatedDeal.financial.payments.length - 1];
-
-        toast.success(
-          `Payment recorded successfully! Receipt ${newPayment.receiptNumber} generated.`,
-          { duration: 5000 }
-        );
+        toast.success('Payment recorded successfully!');
+      } else if (numAmount > expectedAmount) {
+        const excess = numAmount - expectedAmount;
+        toast.success(`Payment recorded. Overpayment of ${formatPKR(excess)} recorded.`);
       } else {
-        // Record installment payment
-        const input: RecordInstallmentPaymentInput = {
-          installmentId: selectedInstallment!.id,
-          amount: numAmount,
-          paidDate,
-          paymentMethod,
-          referenceNumber: referenceNumber || undefined,
-          receiptNumber: receiptNumber || undefined,
-          notes: notes || undefined,
-        };
-
-        updatedDeal = recordInstallmentPayment(
-          deal.id,
-          currentUserId,
-          currentUserName,
-          input
-        );
-
-        // Check for overpayment
-        if (numAmount > expectedAmount) {
-          const excess = numAmount - expectedAmount;
-
-          // Get updated installment
-          const updatedInstallment = updatedDeal.financial.paymentPlan?.installments.find(
-            i => i.id === selectedInstallment!.id
-          );
-
-          if (updatedInstallment) {
-            // Find next pending installment
-            const nextPending = updatedDeal.financial.paymentPlan?.installments.find(
-              i => (i.sequence ?? 0) > (updatedInstallment.sequence ?? 0) && (i.status === 'pending' || i.status === 'partial')
-            );
-
-            if (nextPending) {
-              toast.info(
-                `Overpayment of ${formatPKR(excess)} recorded. Next pending: ${nextPending.description}`,
-                { duration: 5000 }
-              );
-            } else {
-              toast.info(
-                `Overpayment of ${formatPKR(excess)} recorded. No pending installments to credit.`,
-                { duration: 5000 }
-              );
-            }
-          }
-        }
-
         toast.success('Payment recorded successfully');
       }
 
-      onSuccess(updatedDeal);
+      await onSuccess();
       onClose();
     } catch (error: any) {
       toast.error(error.message || 'Failed to record payment');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isAdHoc ? 'Record Ad-Hoc Payment' : 'Record Installment Payment'}
@@ -328,8 +276,15 @@ export const RecordPaymentModal: React.FC<RecordPaymentModalProps> = ({
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Recording...' : 'Record Payment'}
+          <Button onClick={handleSubmit} disabled={isSubmitting} aria-busy={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden />
+                Recording...
+              </>
+            ) : (
+              'Record Payment'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

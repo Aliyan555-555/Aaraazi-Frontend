@@ -6,7 +6,6 @@
 
 import React from 'react';
 import { Deal, DealPermissions } from '../../types/deals';
-import { checkPermission, getPermissionErrorMessage } from '../../lib/dealPermissions';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Lock } from 'lucide-react';
 

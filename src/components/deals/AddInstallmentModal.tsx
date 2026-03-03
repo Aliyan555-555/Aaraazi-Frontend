@@ -4,8 +4,8 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { addInstallment, AddInstallmentInput } from '../../lib/dealPayments';
 import { Deal } from '../../types/deals';
+import { useDealMutations } from '@/hooks/useDeals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
 import { Info, Plus } from 'lucide-react';
@@ -16,7 +16,7 @@ interface AddInstallmentModalProps {
   deal: Deal;
   currentUserId: string;
   currentUserName: string;
-  onSuccess: (updatedDeal: Deal) => void;
+  onSuccess: (updatedDeal?: Deal) => void;
 }
 
 export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({
@@ -27,6 +27,7 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({
   currentUserName,
   onSuccess,
 }) => {
+  const { addInstallment: addInstallmentMutation } = useDealMutations();
   const [amount, setAmount] = useState<string>('');
   const [dueDate, setDueDate] = useState<string>('');
   const [description, setDescription] = useState<string>('');
@@ -63,26 +64,24 @@ export const AddInstallmentModal: React.FC<AddInstallmentModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const input: AddInstallmentInput = {
+      const scheduleId = deal.financial.paymentPlan?.id;
+      if (!scheduleId) {
+        toast.error('No payment schedule found. Create a payment plan first.');
+        return;
+      }
+
+      await addInstallmentMutation(deal.id, scheduleId, {
         amount: numAmount,
         dueDate,
         description: description.trim(),
-        reason: reason.trim(),
-        // notes field removed as it is not supported by AddInstallmentInput
-      };
-
-      const updatedDeal = addInstallment(
-        deal.id,
-        currentUserId,
-        currentUserName,
-        input
-      );
+        type: 'INSTALLMENT',
+      });
 
       toast.success('Installment added successfully');
-      onSuccess(updatedDeal);
+      onSuccess();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add installment');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to add installment');
     } finally {
       setIsSubmitting(false);
     }

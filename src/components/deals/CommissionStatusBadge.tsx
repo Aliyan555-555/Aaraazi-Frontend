@@ -2,7 +2,7 @@
  * CommissionStatusBadge Component
  * 
  * Displays commission status with appropriate color coding
- * following Design System V4.1 guidelines
+ * following Design System guidelines
  */
 
 import React from 'react';

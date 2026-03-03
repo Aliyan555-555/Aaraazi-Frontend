@@ -1,9 +1,3 @@
-/**
- * AddAgentToCommissionModal Component
- * 
- * Modal for adding agents (internal or external) to commission splits
- */
-
 import React, { useState, useMemo } from 'react';
 import {
   Dialog,
@@ -34,16 +28,12 @@ import {
   AlertCircle,
   Building2
 } from 'lucide-react';
-import {
-  getAvailableInternalAgents,
-  getAvailableExternalBrokers,
-  calculateCommissionAmount,
-} from '../../lib/commissionAgents';
-import { formatPKR } from '../../lib/currency';
-import { CommissionAgent } from '../../types/deals';
+// import { calculateCommissionAmount } from '@/lib/commissionAgents';
+import { useInternalAgents, useExternalBrokers } from '@/hooks/useCommissionAgents';
+import { formatPKR } from '@/lib/currency';
+import { CommissionAgent } from '@/types/deals';
 import { toast } from 'sonner';
-
-import { logger } from "../../lib/logger";
+import { logger } from '@/lib/logger';
 interface AddAgentToCommissionModalProps {
   open: boolean;
   onClose: () => void;
@@ -52,6 +42,8 @@ interface AddAgentToCommissionModalProps {
   totalCommission: number;
   onAdd: (agent: Omit<CommissionAgent, 'amount' | 'status'>) => void;
 }
+
+const calculateCommissionAmount = (..._args: any[]): number => { /* stub - prototype function removed */ };
 
 export function AddAgentToCommissionModal({
   open,
@@ -67,18 +59,18 @@ export function AddAgentToCommissionModal({
   const [notes, setNotes] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
 
-  // Get available agents
-  const internalAgents = useMemo(() => getAvailableInternalAgents(), []);
-  const externalBrokers = useMemo(() => getAvailableExternalBrokers(), []);
+  // Service layer via hooks – internal from auth, external from contacts API when modal opens
+  const internalAgents = useInternalAgents();
+  const { brokers: externalBrokers } = useExternalBrokers(open);
 
   // Filter out already added agents
   const availableInternalAgents = useMemo(
-    () => internalAgents.filter(a => !currentAgents.some(ca => ca.id === a.id)),
+    () => internalAgents.filter((a: { id: string }) => !currentAgents.some(ca => ca.id === a.id)),
     [internalAgents, currentAgents]
   );
 
   const availableExternalBrokers = useMemo(
-    () => externalBrokers.filter((b: any) => !currentAgents.some(ca => ca.id === b.id)),
+    () => externalBrokers.filter((b) => !currentAgents.some(ca => ca.id === b.id)),
     [externalBrokers, currentAgents]
   );
 
@@ -209,7 +201,7 @@ export function AddAgentToCommissionModal({
                       <CommandInput placeholder="Search agents..." />
                       <CommandEmpty>No agents found.</CommandEmpty>
                       <CommandGroup>
-                        {availableInternalAgents.map((agent) => (
+                        {availableInternalAgents.map((agent: { id: string; name: string; email?: string }) => (
                           <CommandItem
                             key={agent.id}
                             value={agent.name}

@@ -34,7 +34,7 @@ interface GenerateReportModalProps {
  * 
  * Modal for configuring and generating financial reports.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Dialog, Input, Select components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

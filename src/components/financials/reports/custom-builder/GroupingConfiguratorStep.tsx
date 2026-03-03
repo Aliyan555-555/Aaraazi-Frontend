@@ -10,7 +10,7 @@
  * - Sort groups
  * - Preview grouping structure
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState } from 'react';

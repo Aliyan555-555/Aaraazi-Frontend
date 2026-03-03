@@ -98,10 +98,10 @@ export interface Notification {
   actionLabel?: string;
   actionType?: "navigate" | "accept" | "reject" | "approve" | "view";
   actionUrl?: string;
-  actionData?: Record<string, any>;
+  actionData?: Record<string, unknown>;
 
   // Additional context
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 
   // Grouping
   groupKey?: string; // For grouping similar notifications

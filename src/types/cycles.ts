@@ -230,7 +230,7 @@ export interface Offer extends Partial<OfferCrossAgentTracking> {
   id: string;
   amount?: number;
   offerAmount: number; // Required by V3.0
-  status: "pending" | "accepted" | "rejected" | "withdrawn" | "countered";
+  status: "pending" | "submitted" | "accepted" | "rejected" | "withdrawn" | "countered" | "drafted" | "expired";
   propertyId?: string;
   cycleId?: string;
   cycleType?: "sell" | "rent";

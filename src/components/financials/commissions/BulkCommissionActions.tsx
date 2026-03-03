@@ -21,7 +21,7 @@ interface BulkCommissionActionsProps {
  * Modal for bulk actions on selected commissions.
  * Supports: Bulk Approve, Bulk Reject, Bulk Mark as Paid.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Dialog components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

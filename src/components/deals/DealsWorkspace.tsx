@@ -1,44 +1,15 @@
-/**
- * DealsWorkspaceV4 Component
- * WORKSPACE V4: Built with WorkspacePageTemplate ✅
- * 
- * PURPOSE:
- * Complete deals workspace using the template system.
- * Most complex workspace with 3 view modes: Kanban, Table, Grid.
- * 
- * FEATURES:
- * - Kanban view (primary) - Deal pipeline stages
- * - Table view (secondary) - Data-dense view
- * - Grid view (tertiary) - Card-based view
- * - Search and filtering
- * - Sorting options
- * - Bulk actions (export, change stage, delete)
- * - Quick actions (view, change stage, edit)
- * - Stage-based organization
- * - Payment tracking
- * - Dual-agent support
- */
-
-import React, { useState, useMemo, useCallback } from 'react';
-import { useConfirmStore } from '@/store/useConfirmStore';
-import { Plus, Eye, Edit, Trash2, Download, Upload, FileText, CheckCircle2 } from 'lucide-react';
+import React, { useMemo, useCallback } from 'react';
+import { Plus,Trash2, Download, FileText, CheckCircle2 } from 'lucide-react';
 import { User } from '../../types';
 import { Deal } from '../../types/deals';
 import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
 import { DealWorkspaceCard } from './DealWorkspaceCard';
 import { DealKanbanCard } from './DealKanbanCard';
-import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
-import { Column, EmptyStatePresets, KanbanColumn } from '../workspace';
-// [STUBBED] import { getDeals, updateDeal } from '../../lib/deals';
+import { StatusBadge } from '../layout/StatusBadge';
+import { Column,KanbanColumn } from '../workspace';
+import { useDeals } from '../../hooks/useDeals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
-
-import { logger } from "../../lib/logger";
-
-// ===== STUBS for removed prototype functions =====
-const getDeals = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const updateDeal = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
 
 export interface DealsWorkspaceProps {
   user: User;
@@ -47,17 +18,13 @@ export interface DealsWorkspaceProps {
   onEditDeal?: (deal: Deal) => void;
 }
 
-/**
- * DealsWorkspaceV4 - Complete workspace using template system
- */
 export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
   user,
   onNavigate,
   onAddDeal,
   onEditDeal,
 }) => {
-  // State
-  const [isLoading, setIsLoading] = useState(false);
+  const { deals: allDeals, isLoading } = useDeals();
 
   // Helper function to export deals to CSV
   const exportDealsToCSV = (deals: Deal[]) => {
@@ -65,16 +32,11 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
     // TODO: Implement actual CSV export
   };
 
-  // Load deals based on user role
-  const allDeals = useMemo(() => {
-    return getDeals(user.role === 'admin' ? undefined : user.id, user.role);
-  }, [user.id, user.role]);
-
   // Calculate stats
   const stats = useMemo(() => {
     const active = allDeals.filter(d => d.lifecycle.status === 'active').length;
     const completed = allDeals.filter(d => d.lifecycle.status === 'completed').length;
-    const onHold = allDeals.filter(d => d.lifecycle.status === 'on-hold').length;
+    // const onHold = allDeals.filter(d => d.lifecycle.status === 'on-hold').length;
 
     const totalValue = allDeals
       .filter(d => d.lifecycle.status === 'active')
@@ -124,8 +86,9 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
     },
   ];
 
-  // Function to get kanban column for a deal
+  // Per prototype: completed deals stay in Final Handover column; no separate "Completed" column
   const getKanbanColumn = useCallback((deal: Deal) => {
+    if (deal.lifecycle.status === 'completed') return 'final-handover';
     return deal.lifecycle.stage;
   }, []);
 
@@ -202,7 +165,7 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
       id: 'stage',
       label: 'Stage',
       accessor: (d) => {
-        const stageLabels = {
+        const stageLabels: Record<string, string> = {
           'offer-accepted': 'Offer Accepted',
           'agreement-signing': 'Agreement',
           'documentation': 'Documentation',
@@ -210,11 +173,11 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
           'handover-prep': 'Handover Prep',
           'transfer-registration': 'Transfer',
           'final-handover': 'Final',
-          'completed': 'Completed',
+          'completed': 'Final Handover',
         };
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            {(stageLabels as any)[d.lifecycle.stage] || d.lifecycle.stage}
+            {stageLabels[d.lifecycle.stage] || d.lifecycle.stage}
           </span>
         );
       },
@@ -284,6 +247,10 @@ export const DealsWorkspace: React.FC<DealsWorkspaceProps> = ({
         { value: 'agreement-signing', label: 'Agreement Signing' },
         { value: 'documentation', label: 'Documentation' },
         { value: 'payment-processing', label: 'Payment Processing' },
+        { value: 'handover-prep', label: 'Handover Prep' },
+        { value: 'transfer-registration', label: 'Transfer Reg.' },
+        { value: 'final-handover', label: 'Final Handover' },
+        { value: 'completed', label: 'Completed' },
       ],
     },
     {

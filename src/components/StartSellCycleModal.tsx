@@ -1,7 +1,7 @@
 /**
- * Start Sell Cycle Modal V2 - Multi-Step Form
+ * Start Sell Cycle Modal - Multi-Step Form
  * 
- * DESIGN SYSTEM V4.1 COMPLIANT:
+ * Design System COMPLIANT:
  * - MultiStepForm component (4 steps)
  * - FormContainer + FormSection + FormField
  * - Complete validation per step

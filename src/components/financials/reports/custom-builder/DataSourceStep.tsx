@@ -4,7 +4,7 @@
  * Step 1 of custom report builder - Select data sources.
  * Allows users to choose one or more data sources for the report.
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React from 'react';

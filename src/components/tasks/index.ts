@@ -5,10 +5,10 @@
  */
 
 // Main workspace
-export { TasksWorkspaceV4 } from './TasksWorkspaceV4';
+export { TasksWorkspace } from './TasksWorkspace';
 
 // Detail page
-export { TaskDetailsV4 } from './TaskDetailsV4';
+export { TaskDetails } from './TaskDetails';
 
 // Views
 export { TaskListView } from './TaskListView';

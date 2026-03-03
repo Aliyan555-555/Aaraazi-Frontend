@@ -1,7 +1,7 @@
 /**
  * Agency Portfolio Analytics Component
  * Comprehensive analytics for agency-owned properties
- * Design System V4.1 Compliant
+ * Design System Compliant
  * 
  * Integrates into Portfolio Management > Analytics > Agency Analytics tab
  */

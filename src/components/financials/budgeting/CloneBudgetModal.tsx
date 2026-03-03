@@ -10,7 +10,7 @@
  * - Preview new budget
  * - Create cloned budget
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState, useEffect, useMemo } from 'react';

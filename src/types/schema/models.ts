@@ -1,8 +1,3 @@
-/**
- * Prisma-aligned model interfaces for Aaraazi frontend.
- * Matches Aaraazi-Backend/prisma/schema.prisma (JSON-safe: Date -> string, Decimal -> number).
- */
-
 import type {
   UserRole,
   UserStatus,

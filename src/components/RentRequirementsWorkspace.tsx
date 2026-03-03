@@ -1,8 +1,3 @@
-/**
- * Rent Requirements Workspace
- * PHASE 4: Updated with new workspace components ✅
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { RentRequirement, User } from '../types';
 import { Card, CardContent } from './ui/card';
@@ -51,15 +46,11 @@ export function RentRequirementsWorkspace({
   const [selectedType, setSelectedType] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('newest');
 
-  // Load data
-  useEffect(() => {
-    const allRequirements = getRentRequirements(user.id, user.role);
-    setRequirements(allRequirements);
-  }, [user.id, user.role]);
+
 
   // Filtered and sorted requirements
   const filteredRequirements = useMemo(() => {
-    let result = [...requirements];
+    let result = [];
 
     // Search filter
     if (searchQuery) {

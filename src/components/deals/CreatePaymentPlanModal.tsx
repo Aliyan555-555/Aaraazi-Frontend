@@ -4,7 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { createPaymentPlan, CreatePaymentPlanInput } from '../../lib/dealPayments';
+import { useDealMutations } from '@/hooks/useDeals';
 import { Deal } from '../../types/deals';
 import { formatPKR } from '../../lib/currency';
 import { toast } from 'sonner';
@@ -16,7 +16,8 @@ interface CreatePaymentPlanModalProps {
   deal: Deal;
   currentUserId: string;
   currentUserName: string;
-  onSuccess: (updatedDeal: Deal) => void;
+  /** Called after plan is created. Should trigger deal refetch. Awaited before closing. */
+  onSuccess: () => void | Promise<void>;
 }
 
 export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
@@ -33,6 +34,7 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
   const [frequency, setFrequency] = useState<'monthly' | 'quarterly'>('monthly');
   const [firstInstallmentDate, setFirstInstallmentDate] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { createPaymentSchedule } = useDealMutations();
 
   const totalAmount = deal.financial.agreedPrice;
   const downPaymentAmount = totalAmount * (downPaymentPercentage / 100);
@@ -64,23 +66,17 @@ export const CreatePaymentPlanModal: React.FC<CreatePaymentPlanModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const input: CreatePaymentPlanInput = {
-        downPaymentPercentage,
+      await createPaymentSchedule(deal.id, {
+        totalAmount,
+        downPaymentAmount,
         downPaymentDate,
         numberOfInstallments,
-        frequency,
+        frequency: frequency.toUpperCase() as 'MONTHLY' | 'QUARTERLY',
         firstInstallmentDate,
-      };
-
-      const updatedDeal = createPaymentPlan(
-        deal.id,
-        currentUserId,
-        currentUserName,
-        input
-      );
+      });
 
       toast.success('Payment plan created successfully');
-      onSuccess(updatedDeal);
+      await onSuccess();
       onClose();
     } catch (error: any) {
       toast.error(error.message || 'Failed to create payment plan');

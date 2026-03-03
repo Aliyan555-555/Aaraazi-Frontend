@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import LeadWorkspaceV4 from '@/components/leads/LeadWorkspaceV4';
-import { User, mapAuthUserToUIUser } from '@/types';
+import LeadWorkspace from '@/components/leads/LeadWorkspace';
+import { mapAuthUserToUIUser } from '@/types';
 
 export default function LeadsPage() {
     const { user: saasUser } = useAuthStore();
@@ -40,7 +40,7 @@ export default function LeadsPage() {
     }
 
     return (
-        <LeadWorkspaceV4
+        <LeadWorkspace
             user={user}
             onNavigate={handleNavigate}
             onCreateLead={() => console.log("Create lead clicked")}

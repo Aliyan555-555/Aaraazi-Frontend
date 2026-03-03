@@ -1,5 +1,5 @@
 /**
- * Purchase Cycles Workspace V4 - Barrel Export
+ * Purchase Cycles Workspace - Barrel Export
  * 
  * Centralized exports for all purchase cycles workspace components
  */

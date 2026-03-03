@@ -1,48 +1,18 @@
-/**
- * MultiStepForm Component - PHASE 3 Form Design Standards ✅
- * 
- * Multi-step form wizard with:
- * - Visual progress indicator
- * - Step validation
- * - Back/Next navigation
- * - Direct step navigation (for completed steps)
- * - Auto-save support
- * 
- * Usage:
- * <MultiStepForm
- *   steps={[
- *     { id: 'basic', title: 'Basic Info', component: <BasicInfo /> },
- *     { id: 'details', title: 'Details', component: <Details /> },
- *     { id: 'review', title: 'Review', component: <Review /> },
- *   ]}
- *   onComplete={handleComplete}
- *   onStepChange={handleStepChange}
- * />
- */
-
 import React, { useState } from 'react';
 import { Button } from './button';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 export interface Step {
-  /** Unique step ID */
   id: string;
-  /** Step title */
   title: string;
-  /** Step component */
   component: React.ReactNode;
-  /** Optional validation function */
   validate?: () => boolean | Promise<boolean>;
-  /** Optional description */
   description?: string;
 }
 
 export interface MultiStepFormProps {
-  /** Array of form steps */
   steps: Step[];
-  /** Callback when form is completed */
   onComplete: () => void;
-  /** Callback when step changes */
   onStepChange?: (stepIndex: number) => void;
   /** Allow navigation to any completed step */
   allowStepNavigation?: boolean;
@@ -55,7 +25,10 @@ export interface MultiStepFormProps {
   /** Custom back button text */
   backText?: string;
   /** Whether form is currently submitting */
+  /** Whether form is currently submitting */
   isSubmitting?: boolean;
+  /** Callback for cancel action (e.g. back on first step) */
+  onCancel?: () => void;
 }
 
 export function MultiStepForm({
@@ -68,6 +41,7 @@ export function MultiStepForm({
   nextText = 'Next',
   backText = 'Back',
   isSubmitting = false,
+  onCancel,
 }: MultiStepFormProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -115,7 +89,10 @@ export function MultiStepForm({
 
   // Handle previous step
   const handleBack = () => {
-    if (isFirstStep) return;
+    if (isFirstStep) {
+      onCancel?.();
+      return;
+    }
     const prevStep = currentStep - 1;
     setCurrentStep(prevStep);
     onStepChange?.(prevStep);
@@ -151,19 +128,17 @@ export function MultiStepForm({
                 type="button"
                 onClick={() => isAccessible && goToStep(index)}
                 disabled={!isAccessible}
-                className={`flex-1 flex flex-col items-center gap-2 transition-colors ${
-                  isAccessible ? 'cursor-pointer' : 'cursor-not-allowed'
-                }`}
+                className={`flex-1 flex flex-col items-center gap-2 transition-colors ${isAccessible ? 'cursor-pointer' : 'cursor-not-allowed'
+                  }`}
               >
                 {/* Step Circle */}
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                    isCompleted
-                      ? 'bg-green-600 text-white'
-                      : isCurrent
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${isCompleted
+                    ? 'bg-green-600 text-white'
+                    : isCurrent
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-200 text-gray-600'
-                  }`}
+                    }`}
                 >
                   {isCompleted ? (
                     <Check className="h-4 w-4" />
@@ -175,9 +150,8 @@ export function MultiStepForm({
                 {/* Step Title */}
                 <div className="text-center">
                   <p
-                    className={`text-xs font-medium hidden sm:block ${
-                      isCurrent ? 'text-blue-600' : 'text-gray-600'
-                    }`}
+                    className={`text-xs font-medium hidden sm:block ${isCurrent ? 'text-blue-600' : 'text-gray-600'
+                      }`}
                   >
                     {step.title}
                   </p>
@@ -216,7 +190,7 @@ export function MultiStepForm({
           type="button"
           variant="outline"
           onClick={handleBack}
-          disabled={isFirstStep}
+          disabled={isFirstStep && !onCancel}
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           {backText}

@@ -4,7 +4,7 @@
  * Renders charts for custom report data using Recharts.
  * Supports multiple chart types: bar, line, pie, area.
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useMemo } from 'react';

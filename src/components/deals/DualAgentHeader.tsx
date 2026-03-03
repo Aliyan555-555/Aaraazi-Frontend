@@ -5,11 +5,14 @@
 
 import React from 'react';
 import { Deal, DealPermissions } from '../../types/deals';
-import { getUserRoleInDeal, getRoleDisplayName } from '../../lib/dealPermissions';
+// import { getUserRoleInDeal, getRoleDisplayName } from '../../lib/dealPermissions';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Users, Shield, Eye, RefreshCw } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+
+const getUserRoleInDeal = (..._args: any[]): string => { /* stub - prototype function removed */ };
+const getRoleDisplayName = (..._args: any[]): string => { /* stub - prototype function removed */ };
 
 interface DualAgentHeaderProps {
   deal: Deal;

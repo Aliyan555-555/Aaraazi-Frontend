@@ -10,6 +10,7 @@ import type {
   CreateContactDto,
   UpdateContactDto,
   QueryContactsDto,
+  ContactDetailsResponse,
 } from '@/services/contacts.service';
 import type { Contact as SchemaContact } from '@/types/schema';
 import type { ContactStatistics, ContactsListResponse } from '@/services/contacts.service';
@@ -29,6 +30,11 @@ interface ContactsState {
   detailCache: Record<string, SchemaContact>;
   detailLoading: Record<string, boolean>;
   detailError: Record<string, string | null>;
+
+  // Full details (contact + tasks + interactions) by id
+  detailFullCache: Record<string, ContactDetailsResponse>;
+  detailFullLoading: Record<string, boolean>;
+  detailFullError: Record<string, string | null>;
 
   // Statistics
   statistics: ContactStatistics | null;
@@ -50,8 +56,9 @@ function queryKey(query: QueryContactsDto): string {
 }
 
 interface ContactsActions {
-  fetchContacts: (query?: QueryContactsDto) => Promise<ContactsListResponse>;
+  fetchContacts: (query?: QueryContactsDto, options?: { silent?: boolean }) => Promise<ContactsListResponse>;
   fetchContact: (id: string) => Promise<SchemaContact>;
+  fetchContactDetails: (id: string, options?: { silent?: boolean }) => Promise<ContactDetailsResponse>;
   fetchStatistics: () => Promise<ContactStatistics>;
 
   createContact: (data: CreateContactDto) => Promise<SchemaContact>;
@@ -75,6 +82,9 @@ export const useContactsStore = create<ContactsState & ContactsActions>((set, ge
   detailCache: {},
   detailLoading: {},
   detailError: {},
+  detailFullCache: {},
+  detailFullLoading: {},
+  detailFullError: {},
   statistics: null,
   statisticsLoading: false,
   statisticsError: null,
@@ -82,9 +92,12 @@ export const useContactsStore = create<ContactsState & ContactsActions>((set, ge
   updateLoading: false,
   deleteLoading: false,
 
-  fetchContacts: async (query: QueryContactsDto = {}) => {
+  fetchContacts: async (query: QueryContactsDto = {}, options?: { silent?: boolean }) => {
     const key = queryKey(query);
-    set((s) => ({ listLoading: { ...s.listLoading, [key]: true }, listError: { ...s.listError, [key]: null } }));
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      set((s) => ({ listLoading: { ...s.listLoading, [key]: true }, listError: { ...s.listError, [key]: null } }));
+    }
     try {
       const data = await contactsService.findAll(query);
       set((s) => ({ listCache: { ...s.listCache, [key]: data }, listLoading: { ...s.listLoading, [key]: false } }));
@@ -105,6 +118,32 @@ export const useContactsStore = create<ContactsState & ContactsActions>((set, ge
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch contact';
       set((s) => ({ detailError: { ...s.detailError, [id]: msg }, detailLoading: { ...s.detailLoading, [id]: false } }));
+      throw err;
+    }
+  },
+
+  fetchContactDetails: async (id: string, options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      set((s) => ({
+        detailFullLoading: { ...s.detailFullLoading, [id]: true },
+        detailFullError: { ...s.detailFullError, [id]: null },
+      }));
+    }
+    try {
+      const data = await contactsService.findDetails(id);
+      set((s) => ({
+        detailFullCache: { ...s.detailFullCache, [id]: data },
+        detailFullLoading: { ...s.detailFullLoading, [id]: false },
+        detailCache: { ...s.detailCache, [id]: data.contact },
+      }));
+      return data;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to fetch contact details';
+      set((s) => ({
+        detailFullError: { ...s.detailFullError, [id]: msg },
+        detailFullLoading: { ...s.detailFullLoading, [id]: false },
+      }));
       throw err;
     }
   },
@@ -142,8 +181,32 @@ export const useContactsStore = create<ContactsState & ContactsActions>((set, ge
     set({ updateLoading: true });
     try {
       const updated = await contactsService.update(id, data);
-      get().invalidateLists();
-      set((s) => ({ detailCache: { ...s.detailCache, [id]: updated }, updateLoading: false }));
+      set((s) => {
+        const next: Partial<typeof s> = {
+          detailCache: { ...s.detailCache, [id]: updated },
+          updateLoading: false,
+        };
+        // Merge into detailFullCache for instant ContactDetails UI update (no reload)
+        const full = s.detailFullCache[id];
+        if (full) {
+          next.detailFullCache = { ...s.detailFullCache, [id]: { ...full, contact: updated } };
+        }
+        // Merge into list caches for instant list UI update (no invalidate flash)
+        const updatedLists: Record<string, ContactsListResponse> = {};
+        for (const [key, list] of Object.entries(s.listCache)) {
+          if (!list?.data) continue;
+          const idx = list.data.findIndex((c) => c.id === id);
+          if (idx >= 0) {
+            const newData = [...list.data];
+            newData[idx] = updated;
+            updatedLists[key] = { ...list, data: newData };
+          }
+        }
+        if (Object.keys(updatedLists).length > 0) {
+          next.listCache = { ...s.listCache, ...updatedLists };
+        }
+        return next;
+      });
       toast.success('Contact updated successfully');
       return updated;
     } catch (err) {
@@ -159,8 +222,21 @@ export const useContactsStore = create<ContactsState & ContactsActions>((set, ge
     try {
       await contactsService.remove(id);
       get().removeDetail(id);
-      get().invalidateLists();
-      set({ deleteLoading: false });
+      set((s) => {
+        const idsToRemove = new Set([id]);
+        const updatedLists: Record<string, ContactsListResponse> = {};
+        for (const [key, list] of Object.entries(s.listCache)) {
+          if (!list?.data) continue;
+          const newData = list.data.filter((c) => !idsToRemove.has(c.id));
+          if (newData.length !== list.data.length) {
+            updatedLists[key] = { ...list, data: newData, total: Math.max(0, list.total - 1) };
+          }
+        }
+        return {
+          listCache: Object.keys(updatedLists).length ? { ...s.listCache, ...updatedLists } : s.listCache,
+          deleteLoading: false,
+        };
+      });
       toast.success('Contact deleted successfully');
     } catch (err) {
       set({ deleteLoading: false });
@@ -172,7 +248,24 @@ export const useContactsStore = create<ContactsState & ContactsActions>((set, ge
 
   bulkUpdate: async (ids: string[], updates: UpdateContactDto) => {
     const result = await contactsService.bulkUpdate(ids, updates);
-    get().invalidateLists();
+    const byId = new Map(result.map((c) => [c.id, c]));
+    set((s) => {
+      const updatedLists: Record<string, ContactsListResponse> = {};
+      for (const [key, list] of Object.entries(s.listCache)) {
+        if (!list?.data) continue;
+        let changed = false;
+        const newData = list.data.map((c) => {
+          const updated = byId.get(c.id);
+          if (updated) {
+            changed = true;
+            return updated;
+          }
+          return c;
+        });
+        if (changed) updatedLists[key] = { ...list, data: newData };
+      }
+      return { listCache: Object.keys(updatedLists).length ? { ...s.listCache, ...updatedLists } : s.listCache };
+    });
     toast.success('Contacts updated successfully');
     return result;
   },
@@ -180,7 +273,19 @@ export const useContactsStore = create<ContactsState & ContactsActions>((set, ge
   bulkDelete: async (ids: string[]) => {
     await contactsService.bulkDelete(ids);
     ids.forEach((id) => get().removeDetail(id));
-    get().invalidateLists();
+    const idsToRemove = new Set(ids);
+    set((s) => {
+      const updatedLists: Record<string, ContactsListResponse> = {};
+      for (const [key, list] of Object.entries(s.listCache)) {
+        if (!list?.data) continue;
+        const newData = list.data.filter((c) => !idsToRemove.has(c.id));
+        const removed = list.data.length - newData.length;
+        if (removed > 0) {
+          updatedLists[key] = { ...list, data: newData, total: Math.max(0, list.total - removed) };
+        }
+      }
+      return { listCache: Object.keys(updatedLists).length ? { ...s.listCache, ...updatedLists } : s.listCache };
+    });
     toast.success('Contacts deleted successfully');
   },
 
@@ -190,8 +295,9 @@ export const useContactsStore = create<ContactsState & ContactsActions>((set, ge
 
   removeDetail: (id: string) => {
     set((s) => {
-      const { [id]: _, ...rest } = s.detailCache;
-      return { detailCache: rest };
+      const { [id]: _, ...restDetail } = s.detailCache;
+      const { [id]: __, ...restFull } = s.detailFullCache;
+      return { detailCache: restDetail, detailFullCache: restFull };
     });
   },
 }));

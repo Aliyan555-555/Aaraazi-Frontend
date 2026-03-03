@@ -32,7 +32,7 @@ const BUDGET_CATEGORIES = [
  * 
  * Modal for creating new budget categories.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Dialog, Input, Select components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

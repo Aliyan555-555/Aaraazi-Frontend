@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AgencyAnalyticsDashboard } from '@/components/AgencyAnalyticsDashboard';
-import { User, mapAuthUserToUIUser } from '@/types';
+import { mapAuthUserToUIUser } from '@/types';
 
 export default function PerformancePage() {
     const { user: saasUser } = useAuthStore();

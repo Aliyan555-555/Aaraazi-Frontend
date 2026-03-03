@@ -1,30 +1,6 @@
-/**
- * Detect Insights
- *
- * Analyzes data and generates actionable insights using pattern detection.
- *
- * INSIGHT TYPES:
- * 1. Opportunity - Actions to take
- * 2. Warning - Issues needing attention
- * 3. Achievement - Celebrate wins
- * 4. Recommendation - Data-driven suggestions
- * 5. Alert - Urgent problems
- * 6. Info - Useful information
- *
- * PATTERNS DETECTED:
- * - Leads needing follow-up
- * - Response time degradation
- * - Revenue milestones
- * - Hot locations
- * - Low conversion areas
- * - Pipeline risks
- * - Activity patterns
- * - Price range opportunities
- */
-
 import { Property, User } from "../../../types";
-import { LeadV4 } from "../../../types/leads";
-import { TaskV4 } from "../../../types/tasks";
+import { DashboardLead } from "../../../types/leads";
+import { Task } from "../../../types/tasks";
 import { Insight } from "../components/InsightCard";
 import { formatPKR } from "../../../lib/currency";
 
@@ -80,7 +56,7 @@ function detectStaledLeads(leads: LeadV4[]): Insight | null {
 /**
  * Detect response time degradation (>20% increase)
  */
-function detectSlowResponseTime(leads: LeadV4[]): Insight | null {
+function detectSlowResponseTime(leads: DashboardLead[]): Insight | null {
   // Calculate average response time for this week
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -180,7 +156,7 @@ function detectRevenueMilestone(properties: Property[]): Insight | null {
  * Detect hot location (most inquiries)
  */
 function detectHotLocation(
-  leads: LeadV4[],
+  leads: DashboardLead[],
   properties: Property[],
 ): Insight | null {
   // Count leads by property location
@@ -229,7 +205,7 @@ function detectHotLocation(
  * Detect low conversion location
  */
 function detectLowConversionLocation(
-  leads: LeadV4[],
+  leads: DashboardLead[],
   properties: Property[],
 ): Insight | null {
   // Count leads and conversions by location
@@ -287,7 +263,7 @@ function detectLowConversionLocation(
 /**
  * Detect pipeline risks (deals stalling)
  */
-function detectPipelineRisks(leads: LeadV4[]): Insight | null {
+function detectPipelineRisks(leads: DashboardLead[]): Insight | null {
   const now = new Date();
   const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
@@ -333,8 +309,8 @@ function detectPipelineRisks(leads: LeadV4[]): Insight | null {
  */
 function detectBestPerformingDay(
   properties: Property[],
-  leads: LeadV4[],
-  tasks: TaskV4[],
+  leads: DashboardLead[],
+  tasks: Task[],
 ): Insight | null {
   // Count activity by day of week
   const dayCounts = new Map<string, number>();
@@ -387,7 +363,7 @@ function detectBestPerformingDay(
  * Detect price range opportunity
  */
 function detectPriceRangeOpportunity(
-  leads: LeadV4[],
+  leads: DashboardLead[],
   properties: Property[],
 ): Insight | null {
   // Count leads by price range
@@ -445,10 +421,10 @@ function detectPriceRangeOpportunity(
  * Main function: Detect all insights
  */
 export function detectInsights(data: {
-  properties?: Property[];
-  leads?: LeadV4[];
-  tasks?: TaskV4[];
-  users?: User[];
+  properties: Property[];
+  leads: DashboardLead[];
+  tasks: Task[];
+  users: User[];
 }): Insight[] {
   const properties = data.properties ?? [];
   const leads = data.leads ?? [];

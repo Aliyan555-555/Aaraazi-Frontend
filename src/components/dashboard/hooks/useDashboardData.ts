@@ -18,7 +18,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { User, SellCycle, Property, Contact } from '../../../types';
-import { LeadV4 } from '../../../types/leads';
+import { DashboardLead } from '../../../types/leads';
 import { DashboardMetrics } from '../types/dashboard.types';
 // [STUBBED] import { getSellCycles } from '../../../lib/sellCycle';
 // [STUBBED] import { getProperties, getContacts } from '../../../lib/data';
@@ -89,7 +89,7 @@ export function useDashboardData(user: User): DashboardData {
   // Load data from localStorage
   const [sellCycles, setSellCycles] = useState<SellCycle[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [leads, setLeads] = useState<LeadV4[]>([]);
+  const [leads, setLeads] = useState<DashboardLead[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
 
   useEffect(() => {
@@ -110,7 +110,7 @@ export function useDashboardData(user: User): DashboardData {
       setProperties(propertiesData);
 
       // Load leads
-      const leadsData = getLeadsV4(userId, userRole);
+      const leadsData = getDashboardLeads(userId, userRole);
       setLeads(leadsData);
 
       // Load contacts

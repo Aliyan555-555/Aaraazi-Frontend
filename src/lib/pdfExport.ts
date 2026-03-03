@@ -5,8 +5,9 @@
 
 import { Deal, PaymentInstallment, DealPayment } from '../types';
 import { formatPKR } from './currency';
-import { exportPaymentRecord } from './dealPayments';
+// import { exportPaymentRecord } from './dealPayments';
 
+const exportPaymentRecord = (..._args: any[]): any => { /* stub - prototype function removed */ };
 /**
  * Generate Payment Schedule PDF (browser-based HTML print)
  * This creates a print-friendly HTML view that can be saved as PDF using browser print

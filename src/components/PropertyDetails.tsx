@@ -1,31 +1,7 @@
-/**
- * Property Details - V4.0 with DetailPageTemplate ✅
- * 
- * COMPLETE REDESIGN using DetailPageTemplate system:
- * - DetailPageTemplate for consistent structure
- * - ContactCard for owner information
- * - QuickActionsPanel for sidebar actions
- * - MetricCardsGroup for statistics
- * - CyclesList for all property cycles
- * - OwnershipTimeline for ownership history
- * - All 5 UX Laws applied
- * - 8px grid system
- * - Responsive 2/3 + 1/3 layout
- * 
- * TABS:
- * 1. Overview - Summary + InfoPanels + Sidebar
- * 2. Cycles - Sell, Purchase, Rent cycles
- * 3. History - Ownership and transaction history
- * 4. Documents - Property documents
- * 5. Activity - Timeline of all activities
- */
-
 import { useMemo, useState } from 'react';
-import { Property, User, SellCycle, PurchaseCycle, RentCycle } from '../types';
+import { Property, User, SellCycle, PurchaseCycle, RentCycle, Task } from '../types';
 import { PropertyAddressDisplay, useFormattedAddress } from './PropertyAddressDisplay';
 import { Button } from './ui/button';
-
-// DetailPageTemplate System
 import {
   DetailPageTemplate,
   DetailPageTab,
@@ -36,16 +12,10 @@ import {
   Activity,
   ContactCard,
 } from './layout';
-
-// Foundation Components
 import { InfoPanel } from './ui/info-panel';
 import { StatusTimeline } from './ui/status-timeline';
 import { StatusBadge } from './layout/StatusBadge';
 import { Badge } from './ui/badge';
-
-// Investor Syndication Components
-// TODO: MultiInvestorPurchaseModal and InvestorSharesCard need to be implemented
-// import { MultiInvestorPurchaseModal, InvestorSharesCard } from './multi-investor-purchase';
 import { RecordTransactionModal, PropertyTransactionHistory } from './transactions';
 import { SaleDistributionModal, InvestorDistributionHistory } from './sale-distribution';
 // [STUBBED] import { getInvestorById } from '../lib/investors';
@@ -78,23 +48,16 @@ import {
   Plus,
   Key,
   Award,
+  X,
 } from 'lucide-react';
 
 // Business Logic
 import { formatPKR } from '../lib/currency';
 import { formatAreaDisplay } from '../lib/areaUnits';
 import { toast } from 'sonner';
-// [STUBBED] import { getTasksByEntity, updateTask, TaskV4 } from '../lib/tasks';
+// import { getTasksByEntity, updateTask, Task } from '../lib/tasks';
 import { TaskQuickAddWidget } from './tasks/TaskQuickAddWidget';
 import { TaskListView } from './tasks/TaskListView';
-
-// ===== STUBS for removed prototype functions =====
-const getInvestorById = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getTasksByEntity = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
-type TaskV4 = any;
-// ===== END STUBS =====
-
 
 interface PropertyDetailsProps {
   property: Property;
@@ -107,7 +70,11 @@ interface PropertyDetailsProps {
   onStartSellCycle: () => void;
   onStartPurchaseCycle: () => void;
   onStartRentCycle: () => void;
+  onDelete: () => void;
   onViewCycle: (cycleId: string, type: 'sell' | 'purchase' | 'rent') => void;
+  /** Tab from URL (?tab=...); when provided with onTabChange, tab persists on reload */
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
 }
 
 export function PropertyDetails({
@@ -116,51 +83,44 @@ export function PropertyDetails({
   purchaseCycles,
   rentCycles,
   user,
+  activeTab: tabFromUrl,
+  onTabChange,
   onBack,
   onEdit,
   onStartSellCycle,
   onStartPurchaseCycle,
   onStartRentCycle,
+  onDelete,
   onViewCycle,
 }: PropertyDetailsProps) {
-  // CRITICAL FIX: Use cycles from props, not from property object
-  // The property object stores activeSellCycleIds (just IDs), not the actual cycle objects
-  // App.tsx fetches the actual cycles and passes them as props
   const safeSellCycles = sellCycles || [];
   const safePurchaseCycles = purchaseCycles || [];
   const safeRentCycles = rentCycles || [];
-
-  // CRITICAL FIX: Get display price - prioritize active sell cycle's askingPrice
   const getDisplayPrice = () => {
-    // Find the first active (listed) sell cycle
     const activeSellCycle = safeSellCycles.find(
       cycle => cycle.status === 'listed' ||
         property.activeSellCycleIds?.includes(cycle.id)
     );
-
-    // Use sell cycle asking price if available, otherwise fall back to property price
     if (activeSellCycle?.askingPrice) {
       return activeSellCycle.askingPrice;
     }
-
     return property.price || 0;
   };
 
   const displayPrice = getDisplayPrice();
 
-  // ==================== INVESTOR SYNDICATION STATE ====================
-  // const [showMultiInvestorModal, setShowMultiInvestorModal] = useState(false);
+
   const [showRecordTransactionModal, setShowRecordTransactionModal] = useState(false);
   const [showDistributionModal, setShowDistributionModal] = useState(false);
 
   // ==================== TASKS STATE ====================
-  const [propertyTasks, setPropertyTasks] = useState<TaskV4[]>([]);
+  const [propertyTasks, setPropertyTasks] = useState<Task[]>([]);
 
   // Load tasks for this property
-  useMemo(() => {
-    const tasks = getTasksByEntity('property', property.id);
-    setPropertyTasks(tasks);
-  }, [property.id]);
+  // useMemo(() => {
+  //   const tasks = getTasksByEntity('property', property.id);
+  //   setPropertyTasks(tasks);
+  // }, [property.id]);
 
   // Check if property is investor-owned
   const isInvestorOwned = property.currentOwnerType === 'investor' &&
@@ -476,7 +436,7 @@ export function PropertyDetails({
       />
 
       {/* Investor Shares Card - Only show for investor-owned properties */}
-      {isInvestorOwned && (
+      {/* {isInvestorOwned && (
         <InvestorSharesCard
           property={property}
           onNavigateToInvestor={(investorId: string) => {
@@ -487,7 +447,7 @@ export function PropertyDetails({
             }
           }}
         />
-      )}
+      )} */}
     </>
   );
 
@@ -524,6 +484,12 @@ export function PropertyDetails({
             label: 'Edit Property',
             icon: <FileText className="h-4 w-4" />,
             onClick: onEdit,
+          },
+          {
+            label: 'Delete Property',
+            icon: <X className="h-4 w-4" />,
+            onClick: onDelete,
+            variant: 'destructive',
           },
         ]}
       />
@@ -962,7 +928,7 @@ export function PropertyDetails({
   const tasksContent = (
     <div className="space-y-6">
       {/* Quick Add Widget */}
-      <TaskQuickAddWidget
+      {/* <TaskQuickAddWidget
         user={user}
         entityType="property"
         entityId={property.id}
@@ -972,15 +938,15 @@ export function PropertyDetails({
           setPropertyTasks(updatedTasks);
           toast.success('Task created successfully');
         }}
-      />
+      /> */}
 
       {/* Tasks List */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      {/* <div className="bg-white border border-gray-200 rounded-lg p-6">
         <h3 className="text-base mb-4 flex items-center gap-2">
           <FileText className="h-5 w-5 text-gray-600" />
-          Property Tasks ({propertyTasks.length})
+          Property Tasks ({(propertyTasks || []).length})
         </h3>
-        {propertyTasks.length === 0 ? (
+        {(propertyTasks || []).length === 0 ? (
           <div className="text-center py-12">
             <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
             <p className="text-sm text-gray-500">No tasks for this property yet</p>
@@ -988,7 +954,7 @@ export function PropertyDetails({
           </div>
         ) : (
           <TaskListView
-            tasks={propertyTasks}
+            tasks={propertyTasks || []}
             showSelection={false}
             onViewTask={(taskId) => {
               toast.info(`View task ${taskId}`);
@@ -1002,7 +968,7 @@ export function PropertyDetails({
             }}
           />
         )}
-      </div>
+      </div> */}
     </div>
   );
 
@@ -1063,6 +1029,9 @@ export function PropertyDetails({
     },
   ];
 
+  const validTab =
+    tabFromUrl && tabs.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'overview';
+
   // ==================== RENDER ====================
   return (
     <DetailPageTemplate
@@ -1070,6 +1039,8 @@ export function PropertyDetails({
       connectedEntities={connectedEntities}
       tabs={tabs}
       defaultTab="overview"
+      activeTab={onTabChange ? validTab : undefined}
+      onTabChange={onTabChange}
     />
   );
 }

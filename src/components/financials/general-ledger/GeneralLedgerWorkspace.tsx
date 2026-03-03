@@ -29,7 +29,7 @@ const LEDGER_KEY = 'general_ledger_entries';
  * - Balance verification
  * - Export capabilities
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses WorkspaceHeader with stats
  * - Uses WorkspaceSearchBar with filters
  * - Uses MetricCard components

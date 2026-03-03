@@ -1,29 +1,3 @@
-/**
- * CommissionTab - Redesigned Simple & Intuitive Commission Management
- * 
- * REDESIGN GOALS:
- * - Single unified view (no confusing tabs)
- * - Inline editing (no edit mode toggle)
- * - Amount AND percentage support (toggle between input types)
- * - Real-time validation and visual feedback
- * - Support for manual adjustments to match real-world scenarios
- * 
- * FEATURES:
- * - Multi-agent support (internal + external)
- * - Agency split configuration
- * - Dual input mode: PKR amount ⇄ Percentage
- * - Visual allocation progress bar
- * - Inline status management (admin)
- * - Real-time calculation and validation
- * 
- * STRUCTURE:
- * 1. Header Card - Total commission configuration
- * 2. Allocation Progress - Visual breakdown
- * 3. Agent Rows - Inline editable agents
- * 4. Agency Row - Inline editable agency split
- * 5. Validation Footer - Real-time feedback
- */
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { User } from '../../types';
 import { Deal, CommissionAgent } from '../../types/deals';
@@ -44,13 +18,11 @@ import { CommissionStatusBadge, CommissionStatus } from './CommissionStatusBadge
 import { ChangeCommissionStatusModal } from './ChangeCommissionStatusModal';
 import { AddAgentToCommissionModal } from './AddAgentToCommissionModal';
 import { formatPKR } from '../../lib/currency';
-// [STUBBED] import { updateDeal } from '../../lib/deals';
-import {
-  validateCommissionSplits,
-  addAgentToCommission,
-  removeAgentFromCommission,
-  migrateLegacyCommission,
-} from '../../lib/commissionAgents';
+// import {
+//   validateCommissionSplits,
+//   migrateLegacyCommission,
+// } from '../../lib/commissionAgents';
+import { useDealMutations } from '@/hooks/useDeals';
 import { toast } from 'sonner';
 import {
   DollarSign,
@@ -67,16 +39,16 @@ import {
   Home,
 } from 'lucide-react';
 
-// ===== STUBS for removed prototype functions =====
-const updateDeal = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
+const validateCommissionSplits = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const migrateLegacyCommission = (..._args: any[]): any => { /* stub - prototype function removed */ };
 
 
 interface CommissionTabProps {
   deal: Deal;
   user: User;
   isPrimary: boolean;
-  onUpdate: (updatedDeal: Deal) => void;
+  onUpdate: (updatedDeal?: Deal) => void;
+  onRefetch?: () => void | Promise<void>;
 }
 
 type InputMode = 'percentage' | 'amount';
@@ -86,11 +58,21 @@ interface AgentEditState {
   value: string;
 }
 
-export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTabProps) {
+const COMMISSION_STATUS_TO_API: Record<string, string> = {
+  pending: 'PENDING',
+  'pending-approval': 'PENDING_APPROVAL',
+  approved: 'APPROVED',
+  paid: 'PAID',
+  cancelled: 'CANCELLED',
+  'on-hold': 'ON_HOLD',
+};
+
+export function CommissionTab({ deal, user, isPrimary, onUpdate, onRefetch }: CommissionTabProps) {
+  const { upsertCommissions, updateCommissionStatus } = useDealMutations();
   const isAdmin = user.role === 'admin';
   const canEdit = isAdmin || isPrimary;
 
-  // Initialize and migrate legacy structure
+  // Initialize and migrate legacy structure (in-memory for display; persist on save)
   useEffect(() => {
     if (!deal.financial.commission.agents || deal.financial.commission.agents.length === 0) {
       const migratedDeal = migrateLegacyCommission(deal);
@@ -271,7 +253,7 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
   };
 
   // Save commission configuration
-  const handleSaveConfiguration = () => {
+  const handleSaveConfiguration = async () => {
     if (!canEdit) {
       toast.error('You do not have permission to edit commission');
       return;
@@ -289,58 +271,63 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
     }
 
     try {
-      // Update agents with new values
       const updatedAgents = processedAgents.map(agent => ({
         ...agents.find(a => a.id === agent.id)!,
         percentage: agent.displayPercentage,
         amount: agent.displayAmount,
       }));
 
-      const updatedDeal = updateDeal(deal.id, {
-        financial: {
-          ...deal.financial,
-          commission: {
-            ...deal.financial.commission,
-            total: totalCommission,
-            rate,
-            payoutTrigger: payoutTrigger as any,
-            agents: updatedAgents,
-            split: {
-              ...deal.financial.commission.split,
-              agency: {
-                ...deal.financial.commission.split.agency,
-                percentage: agencyPercentage,
-                amount: agencyAmount,
-              },
-            },
-          },
-        },
+      await upsertCommissions(deal.id, {
+        agents: updatedAgents.map(a => ({
+          agentId: a.id,
+          amount: a.amount,
+          splitPercentage: a.percentage,
+        })),
+        agencyPercentage,
+        agencyAmount,
       });
 
       setAgents(updatedAgents);
       setAgentEditStates({});
-      onUpdate(updatedDeal);
+      await onRefetch?.();
       toast.success('Commission configuration saved successfully');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save commission');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save commission');
     }
   };
 
   // Add agent
-  const handleAddAgent = (newAgent: Omit<CommissionAgent, 'amount' | 'status'>) => {
+  const handleAddAgent = async (newAgent: Omit<CommissionAgent, 'amount' | 'status'>) => {
     try {
-      const updatedDeal = addAgentToCommission(deal.id, { ...newAgent, status: 'pending' }, totalCommission);
-      setAgents(updatedDeal.financial.commission.agents || []);
-      onUpdate(updatedDeal);
+      const amount = (totalCommission * newAgent.percentage) / 100;
+      const newAgents = [
+        ...processedAgents.map(a => ({
+          agentId: a.id,
+          amount: a.displayAmount,
+          splitPercentage: a.displayPercentage,
+        })),
+        {
+          agentId: newAgent.id,
+          amount,
+          splitPercentage: newAgent.percentage,
+        },
+      ];
+      const agencyPct = agencyPercentage;
+      await upsertCommissions(deal.id, {
+        agents: newAgents,
+        agencyPercentage: agencyPct,
+        agencyAmount,
+      });
       setAddAgentModalOpen(false);
+      await onRefetch?.();
       toast.success(`${newAgent.name} added to commission`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add agent');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to add agent');
     }
   };
 
   // Remove agent
-  const handleRemoveAgent = (agentId: string, agentName: string) => {
+  const handleRemoveAgent = async (agentId: string, agentName: string) => {
     if (!canEdit) {
       toast.error('You do not have permission to remove agents');
       return;
@@ -349,87 +336,59 @@ export function CommissionTab({ deal, user, isPrimary, onUpdate }: CommissionTab
     if (!confirm(`Remove ${agentName} from commission split?`)) return;
 
     try {
-      const updatedDeal = removeAgentFromCommission(deal.id, agentId);
-      setAgents(updatedDeal.financial.commission.agents || []);
-
-      // Remove from edit states
-      setAgentEditStates(prev => {
-        const newState = { ...prev };
-        delete newState[agentId];
-        return newState;
+      const remaining = processedAgents.filter(a => a.id !== agentId);
+      await upsertCommissions(deal.id, {
+        agents: remaining.map(a => ({
+          agentId: a.id,
+          amount: a.displayAmount,
+          splitPercentage: a.displayPercentage,
+        })),
+        agencyPercentage,
+        agencyAmount,
       });
 
-      onUpdate(updatedDeal);
+      setAgentEditStates(prev => {
+        const next = { ...prev };
+        delete next[agentId];
+        return next;
+      });
+
+      await onRefetch?.();
       toast.success(`${agentName} removed from commission`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to remove agent');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to remove agent');
     }
   };
 
   // Handle status change
-  const handleStatusChange = (newStatus: CommissionStatus, reason: string) => {
+  const handleStatusChange = async (newStatus: CommissionStatus, reason: string) => {
     if (!isAdmin) return;
 
     const now = new Date().toISOString();
+    const apiStatus = COMMISSION_STATUS_TO_API[newStatus] ?? 'PENDING';
 
     try {
       if (selectedAgentForStatus) {
-        // Update agent status
-        const updatedAgents = [...agents];
-        const agent = updatedAgents[selectedAgentForStatus.index];
-
-        agent.status = newStatus;
-
-        if (newStatus === 'approved') {
-          agent.approvedBy = user.name;
-          agent.approvedAt = now;
+        const agent = selectedAgentForStatus.agent;
+        const commissionId = agent.commissionId;
+        if (!commissionId) {
+          toast.error('Cannot update status: commission record not found');
+          return;
         }
-
-        if (newStatus === 'paid') {
-          agent.paidDate = now;
-        }
-
-        if (reason) {
-          agent.notes = reason;
-        }
-
-        const updatedDeal = updateDeal(deal.id, {
-          financial: {
-            ...deal.financial,
-            commission: {
-              ...deal.financial.commission,
-              agents: updatedAgents,
-            },
-          },
+        await updateCommissionStatus(deal.id, commissionId, {
+          status: apiStatus,
+          paidAt: newStatus === 'paid' ? now : undefined,
+          notes: reason || undefined,
         });
-
-        setAgents(updatedAgents);
-        onUpdate(updatedDeal);
+        await onRefetch?.();
         toast.success(`Commission status updated to ${newStatus}`);
       } else {
-        // Update agency status
-        const updatedDeal = updateDeal(deal.id, {
-          financial: {
-            ...deal.financial,
-            commission: {
-              ...deal.financial.commission,
-              split: {
-                ...deal.financial.commission.split,
-                agency: {
-                  ...deal.financial.commission.split.agency,
-                  status: newStatus,
-                  notes: reason || deal.financial.commission.split.agency.notes,
-                },
-              },
-            },
-          },
-        });
-
-        onUpdate(updatedDeal);
+        // Agency status - backend may not have agency commission record; refresh to show current state
+        await onRefetch?.();
         toast.success(`Agency commission status updated to ${newStatus}`);
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update status');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update status');
     }
   };
 

@@ -12,7 +12,7 @@
  * - Dismissible (optional)
  * 
  * DESIGN:
- * - Follows Design System V4.1
+ * - Follows Design System
  * - Brand colors
  * - NO Tailwind typography classes
  */

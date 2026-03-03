@@ -10,7 +10,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Separator } from '../ui/separator';
-import { Property, User, InvestorTransaction, InvestorTransactionType } from '../../types';
+import { Property, User, InvestorTransactionType } from '../../types';
 // [STUBBED] import { 
 // [STUBBED]   getPropertyInvestorTransactions, 
 // [STUBBED]   getPropertyTransactionSummary,
@@ -26,18 +26,16 @@ import {
   CreditCard,
   Receipt,
   Search,
-  Filter,
   Trash2,
-  AlertCircle,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 // ===== STUBS for removed prototype functions =====
-const getPropertyInvestorTransactions = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getPropertyTransactionSummary = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const deleteInvestorTransaction = (..._args: any[]): any => { /* stub - prototype function removed */ };
+const getPropertyInvestorTransactions = (..._args: unknown[]): unknown => { /* stub - prototype function removed */ };
+const getPropertyTransactionSummary = (..._args: unknown[]): unknown => { /* stub - prototype function removed */ };
+const deleteInvestorTransaction = (..._args: unknown[]): unknown => { /* stub - prototype function removed */ };
 // ===== END STUBS =====
 
 
@@ -49,7 +47,7 @@ interface PropertyTransactionHistoryProps {
 
 export function PropertyTransactionHistory({
   property,
-  user,
+  user: _user,
   onTransactionDeleted,
 }: PropertyTransactionHistoryProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -228,7 +226,7 @@ export function PropertyTransactionHistory({
             />
           </div>
 
-          <Select value={typeFilter} onValueChange={(value: any) => setTypeFilter(value)}>
+          <Select value={typeFilter} onValueChange={(value: 'all' | 'income' | 'expense') => setTypeFilter(value)}>
             <SelectTrigger className="w-full md:w-40">
               <SelectValue />
             </SelectTrigger>
@@ -239,7 +237,7 @@ export function PropertyTransactionHistory({
             </SelectContent>
           </Select>
 
-          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+          <Select value={sortBy} onValueChange={(value: 'date' | 'amount') => setSortBy(value)}>
             <SelectTrigger className="w-full md:w-40">
               <SelectValue />
             </SelectTrigger>

@@ -1,7 +1,8 @@
+
 import React, { useMemo } from 'react';
 import { User } from '../../../types';
-import { TaskV4, TaskStatus } from '../../../types/tasks';
-// [STUBBED] import { getAllTasksV4 } from '../../../lib/tasks';
+import { Task, TaskStatus } from '../../../types/tasks';
+// import { getAllTasks } from '../../../lib/tasks';
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -14,7 +15,7 @@ import {
 } from 'lucide-react';
 
 // ===== STUBS for removed prototype functions =====
-const getAllTasksV4 = (..._args: any[]): TaskV4[] => []; // stub - return empty so stats derive correctly
+const getAllTasks = (..._args: any[]): TaskV4[] => []; // stub - return empty so stats derive correctly
 // ===== END STUBS =====
 
 
@@ -26,7 +27,7 @@ interface TasksSummaryWidgetProps {
 /**
  * Calculate task statistics
  */
-function getTaskStats(tasks: TaskV4[]) {
+function getTaskStats(tasks: Task[]) {
   const total = tasks.length;
   const completed = tasks.filter(t => t.status === 'completed').length;
   const inProgress = tasks.filter(t => t.status === 'in-progress').length;
@@ -66,7 +67,7 @@ export const TasksSummaryWidget: React.FC<TasksSummaryWidgetProps> = ({
   onNavigate,
 }) => {
   // Load tasks
-  const tasks = useMemo(() => getAllTasksV4(user.id, user.role), [user.id, user.role]);
+  const tasks = useMemo(() => getAllTasks(user.id, user.role), [user.id, user.role]);
   
   // Calculate stats (from tasks so counts/completion metrics reflect current data)
   const stats = useMemo(() => getTaskStats(tasks ?? []), [tasks]);

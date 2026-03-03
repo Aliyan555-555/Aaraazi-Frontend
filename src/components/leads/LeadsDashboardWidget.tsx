@@ -4,7 +4,7 @@
  * Comprehensive dashboard widget for the main agency dashboard
  * Shows key lead metrics, SLA alerts, and quick actions
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  * Accessibility: WCAG 2.1 AA
  */
 

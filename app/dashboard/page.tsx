@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRequireAuth } from '@/hooks/useAuth';
-import { DashboardV4 } from '@/components/dashboard/DashboardV4';
+import { Dashboard } from '@/components/dashboard/Dashboard';
 import { mapAuthUserToUIUser } from '@/types';
 import { Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
-    const { user: authUser, currentModule, setCurrentModule, logout } = useAuthStore();
+    const { user: authUser, currentModule, setCurrentModule, logout: _logout } = useAuthStore();
  
     const router = useRouter();
     const { isChecking } = useRequireAuth();
@@ -52,7 +52,7 @@ export default function DashboardPage() {
     if (!user) return null;
 
     return (
-        <DashboardV4
+        <Dashboard
             user={user}
             onNavigate={handleNavigate}
             currentModule="agency"

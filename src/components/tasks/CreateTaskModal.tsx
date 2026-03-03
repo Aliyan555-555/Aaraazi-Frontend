@@ -9,13 +9,13 @@
  * - Checklist builder
  * - Time estimation
  * 
- * DESIGN: Design System V4.1 compliant
+ * DESIGN: Design System compliant
  */
 
 import React, { useState } from 'react';
 import { User } from '../../types';
-import { TaskV4, TaskTemplate, TaskPriority, TaskCategory, TaskEntityType, RecurrencePattern } from '../../types/tasks';
-// [STUBBED] import { createTask, createTaskFromTemplate, getTaskTemplates } from '../../lib/tasks';
+import { Task, TaskTemplate, TaskPriority, TaskCategory, TaskEntityType, RecurrencePattern } from '../../types/tasks';
+import { createTask, createTaskFromTemplate, getTaskTemplates } from '../../lib/tasks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -43,18 +43,11 @@ import {
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
-// ===== STUBS for removed prototype functions =====
-const createTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const createTaskFromTemplate = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getTaskTemplates = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
-
-
 interface CreateTaskModalProps {
   open: boolean;
   onClose: () => void;
   user: User;
-  onTaskCreated: (task: TaskV4) => void;
+  onTaskCreated: (task: Task) => void;
   
   // Pre-fill options
   entityType?: TaskEntityType;

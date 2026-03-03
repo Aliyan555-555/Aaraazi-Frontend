@@ -10,7 +10,7 @@
  * - Delete lists
  * - View usage statistics
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useState, useEffect } from 'react';

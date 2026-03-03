@@ -4,6 +4,7 @@
  */
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from './utils';
 
 const DropdownMenu = React.forwardRef<
@@ -11,6 +12,7 @@ const DropdownMenu = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & { open?: boolean; onOpenChange?: (open: boolean) => void }
 >(({ children, open, onOpenChange, ...props }, ref) => {
   const [isOpen, setIsOpen] = React.useState(open ?? false);
+  const triggerRef = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
     if (open !== undefined) {
@@ -25,28 +27,38 @@ const DropdownMenu = React.forwardRef<
   };
 
   return (
-    <div ref={ref} {...props}>
-      {React.Children.map(children, (child) => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child as any, {
-            isOpen,
-            onToggle: handleToggle,
-          });
-        }
-        return child;
-      })}
-    </div>
+      <div ref={ref} className="relative" {...props}>
+        {React.Children.map(children, (child) => {
+          if (React.isValidElement(child)) {
+            return React.cloneElement(child as any, {
+              isOpen,
+              onToggle: handleToggle,
+              triggerRef,
+            });
+          }
+          return child;
+        })}
+      </div>
   );
 });
 DropdownMenu.displayName = 'DropdownMenu';
 
 const DropdownMenuTrigger = React.forwardRef<
   HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean; isOpen?: boolean; onToggle?: () => void }
->(({ className, children, asChild = false, isOpen, onToggle, ...props }, ref) => {
+  React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean; isOpen?: boolean; onToggle?: () => void; triggerRef?: React.RefObject<HTMLElement | null> }
+>(({ className, children, asChild = false, isOpen, onToggle, triggerRef, ...props }, ref) => {
+  const setRef = React.useCallback(
+    (node: HTMLButtonElement | null) => {
+      if (triggerRef) (triggerRef as React.MutableRefObject<HTMLElement | null>).current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) (ref as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+    },
+    [ref, triggerRef]
+  );
+
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children as any, {
-      ref,
+      ref: setRef,
       onClick: (e: React.MouseEvent) => {
         e.stopPropagation();
         onToggle?.();
@@ -57,7 +69,7 @@ const DropdownMenuTrigger = React.forwardRef<
 
   return (
     <button
-      ref={ref}
+      ref={setRef}
       className={cn('inline-flex items-center justify-center', className)}
       onClick={(e) => {
         e.stopPropagation();
@@ -77,62 +89,79 @@ const DropdownMenuContent = React.forwardRef<
     align?: 'start' | 'center' | 'end';
     isOpen?: boolean;
     onToggle?: () => void;
+    triggerRef?: React.RefObject<HTMLElement | null>;
+    /** When true, render in a portal with fixed position — avoids scrollbar in overflow containers */
+    portal?: boolean;
   }
->(({ className, align = 'center', isOpen, children, onToggle, ...props }, ref) => {
+>(({ className, align = 'center', isOpen, children, onToggle, triggerRef, portal = true, ...props }, ref) => {
   const contentRef = React.useRef<HTMLDivElement>(null);
+  const [position, setPosition] = React.useState({ top: 0, left: 0 });
+
+  React.useLayoutEffect(() => {
+    if (isOpen && portal && triggerRef?.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 4,
+        left: align === 'end' ? rect.right : align === 'start' ? rect.left : rect.left + rect.width / 2,
+      });
+    }
+  }, [isOpen, portal, triggerRef, align]);
 
   React.useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (contentRef.current && !contentRef.current.contains(event.target as Node)) {
-        onToggle?.();
-      }
+      const target = event.target as Node;
+      const inContent = contentRef.current?.contains(target);
+      const inTrigger = triggerRef?.current?.contains(target) ?? false;
+      if (!inContent && !inTrigger) onToggle?.();
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onToggle?.();
-      }
+      if (event.key === 'Escape') onToggle?.();
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscape);
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen, onToggle]);
+  }, [isOpen, onToggle, triggerRef]);
 
   if (!isOpen) return null;
 
-  const alignmentClasses = {
-    start: 'left-0',
-    center: 'left-1/2 -translate-x-1/2',
-    end: 'right-0',
-  };
+  const usePortal = portal && triggerRef?.current;
 
-  return (
+  const content = (
     <div
       ref={(node) => {
         contentRef.current = node;
-        if (typeof ref === 'function') {
-          ref(node);
-        } else if (ref) {
-          ref.current = node;
-        }
+        if (typeof ref === 'function') ref(node);
+        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
       }}
       className={cn(
-        'absolute z-[100] mt-2 min-w-[8rem] overflow-hidden rounded-md border bg-white p-1 shadow-lg',
-        alignmentClasses[align],
+        'z-[100] min-w-[8rem] overflow-hidden rounded-md border bg-white p-1 shadow-lg',
+        usePortal ? '' : 'absolute mt-2',
+        !usePortal && (align === 'start' ? 'left-0' : align === 'end' ? 'right-0' : 'left-1/2 -translate-x-1/2'),
         className
       )}
+      style={usePortal ? { position: 'fixed' as const, top: position.top, left: position.left, transform: align === 'center' ? 'translateX(-50%)' : align === 'end' ? 'translateX(-100%)' : undefined } : undefined}
       {...props}
     >
-      {children}
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child) && (child.type as { displayName?: string })?.displayName === 'DropdownMenuItem') {
+          return React.cloneElement(child as React.ReactElement<{ onToggle?: () => void }>, { onToggle });
+        }
+        return child;
+      })}
     </div>
   );
+
+  if (usePortal && typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+  return content;
 });
 DropdownMenuContent.displayName = 'DropdownMenuContent';
 

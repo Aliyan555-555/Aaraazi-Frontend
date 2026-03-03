@@ -1,22 +1,3 @@
-/**
- * BuyerRequirementsWorkspaceV4 Component
- * WORKSPACE V4: Built with WorkspacePageTemplate ✅
- * 
- * PURPOSE:
- * Complete buyer requirements workspace using the template system.
- * Demonstrates buyer search criteria and property matching.
- * 
- * FEATURES:
- * - Grid view (primary) and Table view (secondary)
- * - Search and filtering by status, urgency, budget, property types
- * - Sorting options
- * - Bulk actions (export, change status, delete)
- * - Quick actions (view, edit, delete, find matches)
- * - Pagination
- * - Empty states
- * - Loading states
- */
-
 import React, { useState, useMemo } from 'react';
 import { 
   Plus, 
@@ -36,16 +17,7 @@ import { BuyerRequirementWorkspaceCard } from './BuyerRequirementWorkspaceCard';
 import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
 import { Column, EmptyStatePresets } from '../workspace';
 import { formatPKR } from '../../lib/currency';
-// [STUBBED] import { getBuyerRequirements, updateBuyerRequirement, deleteBuyerRequirement } from '../../lib/buyerRequirements';
 import { toast } from 'sonner';
-
-import { logger } from "../../lib/logger";
-
-// ===== STUBS for removed prototype functions =====
-const getBuyerRequirements = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const updateBuyerRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const deleteBuyerRequirement = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
 
 export interface BuyerRequirementsWorkspaceProps {
   user: UserType;
@@ -54,8 +26,11 @@ export interface BuyerRequirementsWorkspaceProps {
   onEditRequirement?: (requirement: BuyerRequirement) => void;
 }
 
+const getBuyerRequirements = (..._args: any[]): BuyerRequirement[] => [];
+
+
 /**
- * BuyerRequirementsWorkspaceV4 - Complete workspace using template system
+ * BuyerRequirementsWorkspace - Complete workspace using template system
  */
 export const BuyerRequirementsWorkspace: React.FC<BuyerRequirementsWorkspaceProps> = ({
   user,
@@ -281,7 +256,7 @@ export const BuyerRequirementsWorkspace: React.FC<BuyerRequirementsWorkspaceProp
       icon: <Download className="h-4 w-4" />,
       onClick: (ids: string[]) => {
         const selected = allRequirements.filter(r => ids.includes(r.id));
-        logger.log('Exporting requirements:', selected);
+        console.log('Exporting requirements:', selected);
         toast.success(`Exporting ${ids.length} requirement${ids.length > 1 ? 's' : ''}`);
       },
     },
@@ -290,7 +265,7 @@ export const BuyerRequirementsWorkspace: React.FC<BuyerRequirementsWorkspaceProp
       label: 'Delete Selected',
       icon: <Trash2 className="h-4 w-4" />,
       onClick: (ids: string[]) => {
-        logger.log('Delete requirements:', ids);
+        console.log('Delete requirements:', ids);
         toast.success(`${ids.length} requirement${ids.length > 1 ? 's' : ''} deleted`);
       },
       variant: 'destructive' as const,

@@ -18,7 +18,7 @@ interface SmartBreadcrumbsProps {
 
 export function SmartBreadcrumbs({ 
   currentPage, 
-  currentEntityId,
+  currentEntityId: _currentEntityId,
   graph,
   onNavigate 
 }: SmartBreadcrumbsProps) {

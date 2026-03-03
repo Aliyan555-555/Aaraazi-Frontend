@@ -71,13 +71,13 @@ export function FormContainer({
     full: 'max-w-full',
   };
 
-  const Wrapper = asDiv ? 'div' : 'form';
+  const WrapperComponent = asDiv ? 'div' : 'form';
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className={`mx-auto px-4 sm:px-6 lg:px-8 ${maxWidthClasses[maxWidth]} ${className}`}>
         {asDiv ? (
-          <div>
+          <WrapperComponent>
             {/* Header */}
             {(title || description || onBack || icon) && (
               <div className="mb-6">
@@ -124,7 +124,7 @@ export function FormContainer({
 
             {/* Body */}
             {children}
-          </div>
+          </WrapperComponent>
         ) : (
           <form onSubmit={onSubmit} noValidate>
             {/* Header */}

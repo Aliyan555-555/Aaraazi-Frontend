@@ -1,30 +1,6 @@
-/**
- * BulkEditTasksModal Component
- * 
- * Comprehensive bulk editing modal for tasks with:
- * - Multi-field editing (status, priority, category, assignee, dates, tags)
- * - Smart change tracking (only update modified fields)
- * - Preview changes before applying
- * - Validation and error handling
- * - Partial update support (skip failed tasks)
- * 
- * DESIGN: Design System V4.1 compliant
- * UX LAWS: Miller's Law (7±2 fields), Hick's Law (progressive disclosure)
- * 
- * @example
- * <BulkEditTasksModal
- *   open={true}
- *   onClose={handleClose}
- *   taskIds={selectedTaskIds}
- *   user={user}
- *   onTasksUpdated={handleRefresh}
- * />
- */
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { User } from '../../types';
-import { TaskV4, TaskStatus, TaskPriority, TaskCategory } from '../../types/tasks';
-// [STUBBED] import { getTaskById, updateTask, getAllTasksV4 } from '../../lib/tasks';
+import { Task, TaskStatus, TaskPriority, TaskCategory } from '../../types/tasks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
@@ -48,15 +24,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-
-// ===== STUBS for removed prototype functions =====
-const getTaskById = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getAllTasksV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
-
-
-// ==================== INTERFACES ====================
 
 interface BulkEditTasksModalProps {
   open: boolean;
@@ -158,7 +125,7 @@ export const BulkEditTasksModal: React.FC<BulkEditTasksModalProps> = ({
 
   // Load tasks to preview changes
   const tasks = useMemo(() => {
-    return taskIds.map(id => getTaskById(id)).filter(Boolean) as TaskV4[];
+    return taskIds.map(id => getTaskById(id)).filter(Boolean) as Task[];
   }, [taskIds]);
 
   // Reset form when modal opens/closes
@@ -266,7 +233,7 @@ export const BulkEditTasksModal: React.FC<BulkEditTasksModalProps> = ({
 
     try {
       // Build update object with only selected fields
-      const updates: Partial<TaskV4> = {};
+      const updates: Partial<Task> = {};
       
       if (fieldSelections.status && editedFields.status) {
         updates.status = editedFields.status;

@@ -36,7 +36,7 @@ interface BudgetCategoryCardProps {
  * 
  * Card displaying a budget category with budget vs actual comparison.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Progress component
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

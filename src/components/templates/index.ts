@@ -1,5 +1,5 @@
 /**
- * Template Registry - All available templates in aaraazi Design System V4.1
+ * Template Registry - All available templates in aaraazi Design System
  * 
  * PURPOSE:
  * Centralized registry of all page templates to avoid duplication and provide

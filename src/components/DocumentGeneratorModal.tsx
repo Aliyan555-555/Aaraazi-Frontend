@@ -31,7 +31,7 @@ import {
   type DocumentDetailsErrors,
 } from '@/lib/documentFormValidation';
 import { GeneratedDocument } from '../types/documents';
-import { createDocument } from '@/lib/api/documents';
+import { documentsService } from '@/modules/documents';
 import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
 import { logger } from '../lib/logger';
@@ -500,7 +500,7 @@ export function DocumentGeneratorModal({
 
       if (tenantId && agencyId) {
         try {
-          const created = await createDocument({
+          const created = await documentsService.create({
             documentType,
             documentName,
             details: normalizeDetailsForApi(details),

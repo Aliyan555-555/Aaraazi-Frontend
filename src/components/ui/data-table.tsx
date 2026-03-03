@@ -43,7 +43,7 @@ import {
 } from './select';
 
 // Column definition
-export interface DataTableColumn<T = any> {
+export interface DataTableColumn<T = Record<string, unknown>> {
   id: string;
   header: string | ((props: { table: DataTableState<T> }) => React.ReactNode);
   accessorKey?: keyof T;
@@ -62,7 +62,7 @@ export interface DataTableState<T> {
   getIsSomeRowsSelected: () => boolean;
 }
 
-export interface DataTableProps<T = any> {
+export interface DataTableProps<T = Record<string, unknown>> {
   columns: DataTableColumn<T>[];
   data: T[];
   selectable?: boolean;
@@ -80,7 +80,7 @@ export interface DataTableProps<T = any> {
   ariaLabel?: string;
 }
 
-export function DataTable<T = any>({
+export function DataTable<T = Record<string, unknown>>({
   columns,
   data,
   selectable = false,

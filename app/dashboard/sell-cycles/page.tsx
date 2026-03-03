@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { SellCyclesWorkspace } from '@/components/sell-cycles/SellCyclesWorkspace';
+import { SellCyclesWorkspace} from '@/components/sell-cycles/SellCyclesWorkspace';
 import { User, mapAuthUserToUIUser, SellCycle } from '@/types';
 
 export default function SellCyclesPage() {
@@ -11,6 +11,10 @@ export default function SellCyclesPage() {
     const router = useRouter();
 
     const handleNavigate = (section: string, id?: string) => {
+        if (section === 'sell-cycle-details' && id) {
+            router.push(`/dashboard/sell-cycles/${id}`);
+            return;
+        }
         if (id) {
             router.push(`/dashboard/${section}/${id}`);
         } else {
@@ -19,12 +23,11 @@ export default function SellCyclesPage() {
     };
 
     const handleStartNew = () => {
-        // TODO: Implement open modal or navigate to create page
-        console.log("Start new sell cycle");
+        router.push('/dashboard/sell-cycles/new');
     };
 
     const handleEditCycle = (cycle: SellCycle) => {
-        router.push(`/dashboard/sell-cycles/${cycle.id}/edit`);
+        router.push(`/dashboard/sell-cycles/${cycle.id}`);
     };
 
     const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);

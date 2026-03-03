@@ -1,5 +1,5 @@
 /**
- * Buyer Requirement Form V2 - Clean Implementation with Form Design Standards ✅
+ * Buyer Requirement Form - Clean Implementation with Form Design Standards ✅
  * 
  * Simple form for capturing buyer requirements with:
  * - FormContainer + FormSection + FormField
@@ -857,3 +857,4 @@ export function BuyerRequirementForm({
     </FormContainer>
   );
 }
+

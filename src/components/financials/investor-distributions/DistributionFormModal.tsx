@@ -22,7 +22,7 @@ interface DistributionFormModalProps {
  * 
  * Modal for scheduling new profit distributions to investors.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Dialog, Input, Select components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

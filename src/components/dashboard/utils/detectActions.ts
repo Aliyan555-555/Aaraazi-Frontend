@@ -1,6 +1,6 @@
 import { SellCycle, Property, Contact } from "../../../types";
-import { LeadV4 } from "../../../types/leads";
-import { TaskV4 } from "../../../types/tasks";
+import { DashboardLead } from "../../../types/leads";
+import { Task } from "../../../types/tasks";
 
 export type ActionPriority = "critical" | "high" | "medium" | "low";
 export type ActionType =
@@ -344,8 +344,8 @@ function getPriorityScore(priority: ActionPriority): number {
  * Detect all actions and return sorted by priority
  */
 export function detectAllActions(
-  tasks: TaskV4[],
-  leads: LeadV4[],
+  tasks: Task[],
+  leads: DashboardLead[],
   properties: Property[],
   sellCycles: SellCycle[],
 ): DashboardAction[] {

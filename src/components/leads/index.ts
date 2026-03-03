@@ -5,8 +5,8 @@
  */
 
 // Main Views
-export { LeadWorkspaceV4 } from './LeadWorkspaceV4';
-export { LeadDetailsV4 } from './LeadDetailsV4';
+export { LeadWorkspace } from './LeadWorkspace';
+export { LeadDetails } from './LeadDetails';
 
 // Modals
 export { CreateLeadModal } from './CreateLeadModal';

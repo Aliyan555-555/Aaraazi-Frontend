@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { PropertyFormV2 } from '@/components/PropertyFormV2';
+import { PropertyForm } from '@/components/PropertyForm';
 import { AcquisitionTypeSelector } from '@/components/AcquisitionTypeSelector';
-import { User, mapAuthUserToUIUser } from '@/types';
+import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
 
 export default function NewPropertyPage() {
@@ -36,7 +36,7 @@ export default function NewPropertyPage() {
 
     return (
         <div className="p-6">
-            <PropertyFormV2
+            <PropertyForm
                 user={user}
                 acquisitionType={acquisitionType}
                 onBack={() => setAcquisitionType(null)}

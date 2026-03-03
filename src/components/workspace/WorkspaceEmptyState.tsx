@@ -70,19 +70,19 @@ interface GuideItem {
 export interface WorkspaceEmptyStateProps {
   // Variant
   variant?: 'empty' | 'no-results' | 'error';
-  
+
   // Content
   icon?: React.ReactNode;
   title: string;
   description: string;
-  
+
   // Actions (Hick's Law: max 2)
   primaryAction?: Action;
   secondaryAction?: Action;
-  
+
   // Contextual guidance (Miller's Law: max 5)
   guideItems?: GuideItem[];
-  
+
   // Styling
   className?: string;
 }
@@ -100,9 +100,9 @@ export const WorkspaceEmptyState: React.FC<WorkspaceEmptyStateProps> = ({
   // Default icons based on variant
   const getDefaultIcon = () => {
     if (icon) return icon;
-    
+
     const iconClass = "w-16 h-16 text-gray-400";
-    
+
     switch (variant) {
       case 'no-results':
         return <SearchX className={iconClass} />;
@@ -196,6 +196,16 @@ export const WorkspaceEmptyState: React.FC<WorkspaceEmptyStateProps> = ({
     </div>
   );
 };
+
+// Export the type of a single preset
+export interface EmptyStatePreset {
+  variant?: 'empty' | 'no-results' | 'error';
+  title: string;
+  description: string;
+  primaryAction?: Action;
+  secondaryAction?: Action;
+  guideItems?: GuideItem[];
+}
 
 // Display name for debugging
 WorkspaceEmptyState.displayName = 'WorkspaceEmptyState';

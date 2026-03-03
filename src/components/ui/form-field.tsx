@@ -77,14 +77,13 @@ export function FormField({
         'aria-invalid': !!error,
         'aria-describedby': error ? errorId : hint ? hintId : undefined,
         className: error
-          ? `${(children.props as any)?.className || ''} border-red-500 focus:ring-red-200`.trim()
-          : (children.props as any)?.className || '',
-      } as any);
+          ? `${(children.props as { className?: string })?.className || ''} border-red-500 focus:ring-red-200`.trim()
+          : (children.props as { className?: string })?.className || '',
+      });
     } else {
       childWithProps = children;
     }
-  } catch (err) {
-    // If cloning fails, just render children as-is
+  } catch (_err) {
     childWithProps = children;
   }
 

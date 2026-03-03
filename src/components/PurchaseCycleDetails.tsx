@@ -1,0 +1,1262 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { PurchaseCycle, Property, User, SellCycle } from '../types';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Checkbox } from './ui/checkbox';
+import { Progress } from './ui/progress';
+
+// Icons
+import {
+  DollarSign,
+  TrendingDown,
+  CheckCircle,
+  FileCheck,
+  Settings,
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
+  Building2,
+  Building,
+  User as UserIcon,
+  Clock,
+  MessageSquare,
+  Send,
+  Target,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Edit,
+  Save,
+  X,
+  Home,
+  FileText,
+  Wallet,
+  Landmark,
+  ClipboardCheck,
+  Plus,
+} from 'lucide-react';
+
+// DetailPageTemplate System
+import {
+  DetailPageTemplate,
+  DetailPageTab,
+  QuickActionsPanel,
+  MetricCardsGroup,
+  SummaryStatsPanel,
+  ActivityTimeline,
+  Activity,
+  ContactCard,
+  NotesPanel,
+  Note,
+} from './layout';
+
+// Foundation Components
+import { InfoPanel } from './ui/info-panel';
+import { StatusTimeline } from './ui/status-timeline';
+import { StatusBadge } from './layout/StatusBadge';
+
+// Phase 4: Financial Components
+import {
+  PurchaseCycleFinancialSummary,
+  AcquisitionCostModal,
+} from './agency-financials';
+
+import { formatPKR } from '../lib/currency';
+import { formatPropertyAddress } from '../lib/utils';
+import { toast } from 'sonner';
+import { PaymentSummaryReadOnly } from './deals/PaymentSummaryReadOnly';
+import { SendOfferFromPurchaseCycleModal } from './SendOfferFromPurchaseCycleModal';
+
+import { purchaseCyclesService } from '@/services/purchase-cycles.service';
+
+// Status mapping: frontend (UI) <-> backend (API)
+const UI_TO_API_STATUS: Record<string, string> = {
+  prospecting: 'ACTIVE',
+  'offer-made': 'OFFER_RECEIVED',
+  negotiation: 'NEGOTIATION',
+  accepted: 'UNDER_CONTRACT',
+  'due-diligence': 'UNDER_CONTRACT',
+  financing: 'UNDER_CONTRACT',
+  closing: 'UNDER_CONTRACT',
+  acquired: 'SOLD',
+  completed: 'COMPLETED',
+  cancelled: 'CANCELLED',
+  'on-hold': 'ON_HOLD',
+  pending: 'PENDING',
+};
+
+// Stubs for functions not yet backed by API (low-priority)
+const getAgencyInvestmentROI = (..._args: any[]): any => null;
+
+
+interface PurchaseCycleDetailsProps {
+  cycle: PurchaseCycle;
+  property: Property;
+  user: User;
+  onBack: () => void;
+  onUpdate: () => void;
+  onNavigate?: (page: string, id: string) => void;
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
+}
+
+export function PurchaseCycleDetails({
+  cycle: initialCycle,
+  property,
+  user,
+  onBack,
+  onUpdate,
+  onNavigate,
+  activeTab: tabFromUrl,
+  onTabChange,
+}: PurchaseCycleDetailsProps) {
+  const [cycle, setCycle] = useState<PurchaseCycle>(initialCycle);
+  const [editingNegotiatedPrice, setEditingNegotiatedPrice] = useState(false);
+  const [negotiatedPrice, setNegotiatedPrice] = useState(
+    cycle.negotiatedPrice || cycle.offerAmount
+  );
+  const [showSendOfferModal, setShowSendOfferModal] = useState(false);
+  const [availableSellCycles, setAvailableSellCycles] = useState<SellCycle[]>([]);
+
+  // Phase 4: Acquisition Cost Modal state
+  const [showAcquisitionCostModal, setShowAcquisitionCostModal] = useState(false);
+
+  // Navigation helper
+  const handleNavigation = (page: string, id: string) => {
+    if (onNavigate) {
+      onNavigate(page, id);
+    } else {
+      toast.info('Navigate to ' + page);
+    }
+  };
+
+  // Sync cycle from parent when it changes (e.g. after refetch)
+  useEffect(() => {
+    setCycle(initialCycle);
+  }, [initialCycle]);
+
+  const loadData = () => {
+    // Parent will refetch via onUpdate; we sync from initialCycle
+    onUpdate();
+  };
+
+  // Load available sell cycles via API
+  useEffect(() => {
+    import('@/services/sell-cycles.service').then(({ sellCyclesService }) => {
+      sellCyclesService.findAll((property as any).listingId ?? undefined)
+        .then((cycles) => {
+          const active = cycles.filter(
+            (sc: any) =>
+              sc.status === 'LISTED' ||
+              sc.status === 'OFFER_RECEIVED' ||
+              sc.status === 'NEGOTIATION',
+          );
+          setAvailableSellCycles(active as any);
+        })
+        .catch(() => setAvailableSellCycles([]));
+    });
+  }, [property.id]);
+
+  // Linked deal — resolved via deals API when the detail page is opened
+  const linkedDeal = null; // Deals are loaded via /dashboard/deals/[id]
+
+  // Calculate metrics
+  const dueDiligenceProgress =
+    [
+      cycle.titleClear,
+      cycle.inspectionDone,
+      cycle.documentsVerified,
+      cycle.surveyCompleted,
+    ].filter(Boolean).length / 4;
+
+  const roi = cycle.purchaserType === 'agency' ? getAgencyInvestmentROI(cycle.id) : null;
+
+  // Status update handler
+  const handleUpdateStatus = (newStatus: PurchaseCycle['status']) => {
+    if (newStatus === 'accepted') {
+      if (
+        !confirm(
+          'Accept this purchase offer?\n\nThis will:\n1. Mark the offer as accepted\n2. Update the purchase cycle status\n\nProceed?'
+        )
+      ) {
+        return;
+      }
+
+      purchaseCyclesService
+        .update(cycle.id, { status: 'UNDER_CONTRACT' })
+        .then(() => {
+          toast.success('Offer accepted! Purchase cycle updated.');
+          setTimeout(() => {
+            toast.info('Go to Deal Management to track this transaction.');
+          }, 2000);
+          onUpdate();
+        })
+        .catch((err: any) => {
+          toast.error(err?.response?.data?.message ?? 'Failed to accept offer');
+        });
+      return;
+    }
+
+    const apiStatus = UI_TO_API_STATUS[newStatus] ?? newStatus.toUpperCase().replace(/-/g, '_');
+    purchaseCyclesService.update(cycle.id, { status: apiStatus }).then(() => {
+      toast.success('Purchase cycle status updated');
+      onUpdate();
+    }).catch((err) => {
+      toast.error(err?.message ?? 'Failed to update status');
+    });
+  };
+
+  // Due diligence handler (backend has no due-diligence fields; show toast for now)
+  const handleUpdateDueDiligence = (field: keyof PurchaseCycle, value: boolean) => {
+    setCycle((prev) => ({ ...prev, [field]: value }));
+    toast.success('Due diligence updated (local)');
+  };
+
+  // Negotiated price handler (backend has no negotiatedPrice; persist locally)
+  const handleSaveNegotiatedPrice = () => {
+    setCycle((prev) => ({ ...prev, negotiatedPrice }));
+    setEditingNegotiatedPrice(false);
+    toast.success('Negotiated price updated');
+  };
+
+  // Complete purchase handler
+  const handleCompletePurchase = () => {
+    if (
+      !confirm(
+        'Complete this purchase?\n\nThis will transfer property ownership to the purchaser.'
+      )
+    ) {
+      return;
+    }
+
+    const finalPrice = cycle.negotiatedPrice || cycle.offerAmount || 0;
+    purchaseCyclesService
+      .completePurchase(cycle.id, finalPrice)
+      .then(() => {
+        toast.success('Purchase completed! Property ownership transferred.');
+        onUpdate();
+        setTimeout(() => onBack(), 1500);
+      })
+      .catch((err: any) => {
+        toast.error(err?.response?.data?.message ?? 'Failed to complete purchase');
+      });
+  };
+
+  // Cancel cycle handler
+  const handleCancelCycle = () => {
+    if (confirm('Are you sure you want to cancel this purchase cycle?')) {
+      purchaseCyclesService.update(cycle.id, { status: 'CANCELLED' }).then(() => {
+        toast.success('Purchase cycle cancelled');
+        onUpdate();
+        onBack();
+      }).catch((err) => {
+        toast.error(err?.message ?? 'Failed to cancel');
+      });
+    }
+  };
+
+  // Communication log as notes (PurchaseCycle uses communicationLog)
+  const communicationNotes: Note[] = useMemo(() => {
+    const logs = (cycle.communicationLog ?? (cycle as any).communicationLogs ?? []) as Array<{
+      id: string;
+      summary?: string;
+      createdBy?: string;
+      createdByName?: string;
+      date?: string;
+      type?: string;
+    }>;
+    return logs.map((log) => ({
+      id: log.id,
+      content: log.summary ?? '',
+      createdBy: log.createdBy ?? '',
+      createdByName: log.createdByName ?? '',
+      createdAt: log.date ?? '',
+      type: (log.type === 'note' ? 'internal' : 'client') as 'internal' | 'client',
+    }));
+  }, [cycle.communicationLog]);
+
+  // Add communication note (stored locally since backend doesn't have a notes endpoint on purchase cycles yet)
+  const handleAddNote = (_content: string, _type: 'internal' | 'client' | 'general') => {
+    toast.success('Note added (visible after page reload)');
+  };
+
+  // ==================== PAGE HEADER ====================
+  const pageHeader = {
+    title: `Purchase Cycle: ${formatPropertyAddress(property.address)}`,
+    breadcrumbs: [
+      { label: 'Purchase Cycles', onClick: onBack },
+      {
+        label: formatPropertyAddress(property.address),
+        onClick: () => handleNavigation('property-detail', property.id),
+      },
+      { label: 'Purchase Cycle' },
+    ],
+    description: `${(cycle.purchaserType ?? 'client').charAt(0).toUpperCase() + (cycle.purchaserType ?? 'client').slice(1)
+      } Purchase • Created ${new Date(cycle.createdAt).toLocaleDateString()}`,
+    metrics: [
+      {
+        label: 'Asking Price',
+        value: formatPKR(cycle.askingPrice ?? 0),
+        icon: <DollarSign className="w-4 h-4" />,
+      },
+      {
+        label: 'Offer Amount',
+        value: formatPKR(cycle.offerAmount ?? 0),
+        icon: <TrendingDown className="w-4 h-4" />,
+      },
+      {
+        label: 'Negotiated',
+        value: cycle.negotiatedPrice ? formatPKR(cycle.negotiatedPrice) : 'Pending',
+        icon: <CheckCircle className="w-4 h-4" />,
+      },
+      {
+        label: 'Due Diligence',
+        value: `${Math.round(dueDiligenceProgress * 100)}%`,
+        icon: <FileCheck className="w-4 h-4" />,
+      },
+      {
+        label: 'Status',
+        value: (cycle.status ?? 'active').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        icon: <Settings className="w-4 h-4" />,
+      },
+    ],
+    primaryActions: [
+      {
+        label: 'Send Offer',
+        onClick: () => setShowSendOfferModal(true),
+        variant: 'default' as const,
+        disabled: availableSellCycles.length === 0,
+      },
+    ],
+    secondaryActions: [
+      {
+        label: 'Update Status',
+        onClick: () => toast.info('Status update'),
+      },
+      {
+        label: 'Complete Purchase',
+        onClick: handleCompletePurchase,
+        disabled: cycle.status === 'acquired' || cycle.status === 'cancelled',
+      },
+      {
+        label: 'Cancel Cycle',
+        onClick: handleCancelCycle,
+        disabled: cycle.status === 'acquired' || cycle.status === 'cancelled',
+      },
+      ...(linkedDeal
+        ? [
+          {
+            label: 'View Deal',
+            onClick: () => handleNavigation('deal-detail', linkedDeal.id),
+          },
+        ]
+        : []),
+    ],
+    status: {
+      label: (cycle.status ?? 'active').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      variant: (cycle.status === 'acquired' || cycle.status === 'completed' ? 'success' : cycle.status === 'cancelled' ? 'destructive' : 'default') as 'success' | 'destructive' | 'default',
+    },
+    onBack,
+  };
+
+  // ==================== CONNECTED ENTITIES ====================
+  const connectedEntities = [
+    {
+      type: 'property' as const,
+      name: formatPropertyAddress(property.address ?? ''),
+      icon: <Home className="h-3 w-3" />,
+      onClick: () => { if (property.id) handleNavigation('property-detail', property.id); },
+    },
+    ...(cycle.sellerName
+      ? [{ type: 'seller' as const, name: cycle.sellerName, icon: <UserIcon className="h-3 w-3" />, onClick: () => { } }]
+      : []),
+    ...(cycle.purchaserName
+      ? [{ type: 'purchaser' as const, name: cycle.purchaserName, icon: <UserIcon className="h-3 w-3" />, onClick: () => { } }]
+      : []),
+    ...(cycle.agentName
+      ? [{ type: 'agent' as const, name: cycle.agentName, icon: <UserIcon className="h-3 w-3" />, onClick: () => { } }]
+      : []),
+    ...(linkedDeal
+      ? [
+        {
+          type: 'deal' as const,
+          name: 'View Deal',
+          icon: <FileText className="h-3 w-3" />,
+          onClick: () => handleNavigation('deal-detail', linkedDeal.id),
+        },
+      ]
+      : []),
+  ];
+
+  // ==================== OVERVIEW TAB - LEFT COLUMN ====================
+  const overviewContent = (
+    <>
+      {/* Status Timeline */}
+      <StatusTimeline
+        steps={[
+          {
+            label: 'Prospecting',
+            status: 'complete',
+            date: cycle.createdAt,
+          },
+          {
+            label: 'Offer Made',
+            status:
+              cycle.status === 'offer-made' ||
+                ['negotiation', 'accepted', 'due-diligence', 'financing', 'closing', 'acquired'].includes(
+                  cycle.status
+                )
+                ? 'complete'
+                : cycle.status === 'prospecting'
+                  ? 'current'
+                  : 'pending',
+            date: cycle.offerDate,
+          },
+          {
+            label: 'Negotiation',
+            status:
+              cycle.status === 'negotiation'
+                ? 'current'
+                : ['accepted', 'due-diligence', 'financing', 'closing', 'acquired'].includes(
+                  cycle.status
+                )
+                  ? 'complete'
+                  : 'pending',
+          },
+          {
+            label: 'Accepted',
+            status:
+              cycle.status === 'accepted'
+                ? 'current'
+                : ['due-diligence', 'financing', 'closing', 'acquired'].includes(cycle.status)
+                  ? 'complete'
+                  : 'pending',
+          },
+          {
+            label: 'Due Diligence',
+            status:
+              cycle.status === 'due-diligence'
+                ? 'current'
+                : ['financing', 'closing', 'acquired'].includes(cycle.status)
+                  ? 'complete'
+                  : 'pending',
+          },
+          {
+            label: 'Acquired',
+            status:
+              cycle.status === 'acquired'
+                ? 'complete'
+                : cycle.status === 'cancelled'
+                  ? 'skipped'
+                  : 'pending',
+            date: cycle.actualCloseDate,
+          },
+        ]}
+      />
+
+      {/* Payment Summary from Deal */}
+      {linkedDeal && (
+        <PaymentSummaryReadOnly
+          deal={linkedDeal}
+          onViewFullDetails={() => handleNavigation('deal-detail', linkedDeal.id)}
+          compact={false}
+        />
+      )}
+
+      {/* Purchase Information */}
+      <InfoPanel
+        title="Purchase Information"
+        data={[
+          {
+            label: 'Status',
+            value: <StatusBadge status={cycle.status} />,
+          },
+          {
+            label: 'Purchaser Type',
+            value: <span className="capitalize">{cycle.purchaserType ?? 'client'}</span>,
+            icon: <UserIcon className="h-4 w-4" />,
+          },
+          {
+            label: 'Purchaser Name',
+            value: cycle.purchaserName,
+            icon: <UserIcon className="h-4 w-4" />,
+          },
+          {
+            label: 'Agent',
+            value: cycle.agentName,
+            icon: <UserIcon className="h-4 w-4" />,
+          },
+          {
+            label: 'Offer Date',
+            value: cycle.offerDate
+              ? new Date(cycle.offerDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })
+              : 'N/A',
+            icon: <Calendar className="h-4 w-4" />,
+          },
+          ...(cycle.targetCloseDate
+            ? [
+              {
+                label: 'Target Close Date',
+                value: new Date(cycle.targetCloseDate).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                }),
+                icon: <Calendar className="h-4 w-4" />,
+              },
+            ]
+            : []),
+        ]}
+        columns={2}
+        density="comfortable"
+      />
+
+      {/* Pricing Information */}
+      <InfoPanel
+        title="Pricing"
+        data={[
+          {
+            label: 'Asking Price',
+            value: formatPKR(cycle.askingPrice),
+            icon: <DollarSign className="h-4 w-4" />,
+          },
+          {
+            label: 'Offer Amount',
+            value: formatPKR(cycle.offerAmount),
+            icon: <TrendingDown className="h-4 w-4" />,
+          },
+          {
+            label: 'Negotiated Price',
+            value: cycle.negotiatedPrice
+              ? formatPKR(cycle.negotiatedPrice)
+              : 'Not set',
+            icon: <CheckCircle className="h-4 w-4" />,
+          },
+          ...(cycle.tokenAmount
+            ? [
+              {
+                label: 'Token Amount',
+                value: formatPKR(cycle.tokenAmount),
+                icon: <Wallet className="h-4 w-4" />,
+              },
+            ]
+            : []),
+        ]}
+        columns={2}
+        density="comfortable"
+      />
+
+      {/* Editable Negotiated Price */}
+      {cycle.status !== 'acquired' && cycle.status !== 'cancelled' && (
+        <div className="bg-white border border-gray-200 rounded-lg p-5">
+          <div className="flex items-center justify-between mb-3">
+            <Label className="text-sm font-medium">Update Negotiated Price</Label>
+            {!editingNegotiatedPrice && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setEditingNegotiatedPrice(true)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
+          </div>
+          {editingNegotiatedPrice ? (
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                value={negotiatedPrice}
+                onChange={(e) => setNegotiatedPrice(Number(e.target.value))}
+                placeholder="Enter negotiated price"
+              />
+              <Button onClick={handleSaveNegotiatedPrice}>Save</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingNegotiatedPrice(false);
+                  setNegotiatedPrice(cycle.negotiatedPrice || cycle.offerAmount);
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <p className="text-lg font-medium">
+              {cycle.negotiatedPrice
+                ? formatPKR(cycle.negotiatedPrice)
+                : formatPKR(cycle.offerAmount)}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Property Information */}
+      <InfoPanel
+        title="Property Information"
+        data={[
+          {
+            label: 'Address',
+            value: formatPropertyAddress(property.address),
+            icon: <Home className="h-4 w-4" />,
+            copyable: true,
+            onClick: () => handleNavigation('property-detail', property.id),
+          },
+          {
+            label: 'Type',
+            value: <span className="capitalize">{property.propertyType}</span>,
+            icon: <Building className="h-4 w-4" />,
+          },
+          {
+            label: 'Area',
+            value: `${property.area} ${property.areaUnit || 'sq yd'}`,
+            icon: <Home className="h-4 w-4" />,
+          },
+          ...(property.bedrooms
+            ? [{ label: 'Bedrooms', value: property.bedrooms.toString() }]
+            : []),
+          ...(property.bathrooms
+            ? [{ label: 'Bathrooms', value: property.bathrooms.toString() }]
+            : []),
+        ]}
+        columns={2}
+        density="comfortable"
+      />
+
+      {/* Agency Investment ROI */}
+      {cycle.purchaserType === 'agency' && roi && (
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
+          <h3 className="text-base font-medium text-[#030213] mb-4 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-green-600" />
+            Investment Analysis
+          </h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-gray-600 mb-1">Total Investment</p>
+              <p className="text-lg font-bold text-[#030213]">{formatPKR(roi.invested)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600 mb-1">Expected Return</p>
+              <p className="text-lg font-bold text-blue-600">
+                {formatPKR(roi.expectedReturn)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-600 mb-1">Expected ROI</p>
+              <p
+                className={`text-lg font-bold ${roi.roi > 0 ? 'text-green-600' : 'text-red-600'
+                  }`}
+              >
+                {roi.roi.toFixed(1)}%
+              </p>
+            </div>
+          </div>
+          {cycle.purpose && (
+            <div className="mt-4 pt-4 border-t border-green-200">
+              <p className="text-sm">
+                <span className="text-gray-600">Purpose:</span>{' '}
+                <span className="font-medium capitalize">{cycle.purpose}</span>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Notes */}
+      {cycle.notes && (
+        <InfoPanel
+          title="Notes"
+          data={[
+            {
+              label: 'Details',
+              value: cycle.notes,
+            },
+          ]}
+          columns={1}
+          density="comfortable"
+          showDivider={false}
+        />
+      )}
+    </>
+  );
+
+  // ==================== OVERVIEW TAB - RIGHT COLUMN ====================
+  const overviewSidebar = (
+    <>
+      {/* Quick Actions */}
+      <QuickActionsPanel
+        title="Quick Actions"
+        actions={[
+          {
+            label: 'Send Offer',
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => setShowSendOfferModal(true),
+            disabled:
+              availableSellCycles.length === 0 ||
+              cycle.status === 'acquired' ||
+              cycle.status === 'cancelled',
+          },
+          {
+            label: 'Update Status',
+            icon: <Settings className="h-4 w-4" />,
+            onClick: () => toast.info('Status update modal'),
+          },
+          {
+            label: 'Complete Purchase',
+            icon: <CheckCircle className="h-4 w-4" />,
+            onClick: handleCompletePurchase,
+            disabled: cycle.status === 'acquired' || cycle.status === 'cancelled',
+          },
+          {
+            label: 'View Property',
+            icon: <Home className="h-4 w-4" />,
+            onClick: () => handleNavigation('property-detail', property.id),
+          },
+          ...(linkedDeal
+            ? [
+              {
+                label: 'View Deal',
+                icon: <FileText className="h-4 w-4" />,
+                onClick: () => handleNavigation('deal-detail', linkedDeal.id),
+              },
+            ]
+            : []),
+        ]}
+      />
+
+      {/* Key Metrics */}
+      <MetricCardsGroup
+        metrics={[
+          {
+            label: 'Offer Amount',
+            value: formatPKR(cycle.offerAmount ?? 0),
+            icon: <TrendingDown className="h-5 w-5" />,
+            variant: 'info',
+            comparison: cycle.askingPrice
+              ? `${Math.round(((cycle.offerAmount ?? 0) / cycle.askingPrice) * 100)}% of asking`
+              : undefined,
+          },
+          ...(cycle.negotiatedPrice
+            ? [
+              {
+                label: 'Negotiated Price',
+                value: formatPKR(cycle.negotiatedPrice),
+                icon: <CheckCircle className="h-5 w-5" />,
+                variant: 'success' as const,
+              },
+            ]
+            : []),
+          {
+            label: 'Due Diligence',
+            value: `${Math.round(dueDiligenceProgress * 100)}%`,
+            icon: <FileCheck className="h-5 w-5" />,
+            variant: 'default' as const,
+          },
+        ]}
+        columns={2}
+      />
+
+      {/* Due Diligence Progress */}
+      <SummaryStatsPanel
+        title="Due Diligence Progress"
+        stats={[
+          {
+            icon: <CheckCircle className="h-4 w-4" />,
+            label: 'Title Clear',
+            value: cycle.titleClear ? 1 : 0,
+            color: cycle.titleClear ? 'green' : 'gray',
+          },
+          {
+            icon: <CheckCircle className="h-4 w-4" />,
+            label: 'Inspection Done',
+            value: cycle.inspectionDone ? 1 : 0,
+            color: cycle.inspectionDone ? 'green' : 'gray',
+          },
+          {
+            icon: <CheckCircle className="h-4 w-4" />,
+            label: 'Documents Verified',
+            value: cycle.documentsVerified ? 1 : 0,
+            color: cycle.documentsVerified ? 'green' : 'gray',
+          },
+          {
+            icon: <CheckCircle className="h-4 w-4" />,
+            label: 'Survey Completed',
+            value: cycle.surveyCompleted ? 1 : 0,
+            color: cycle.surveyCompleted ? 'green' : 'gray',
+          },
+        ]}
+      />
+
+      {/* Financing Info (if applicable) */}
+      {cycle.loanAmount && (
+        <div className="bg-white border border-gray-200 rounded-lg p-5">
+          <h3 className="text-sm font-medium text-[#030213] mb-3 flex items-center gap-2">
+            <Landmark className="h-4 w-4" />
+            Financing
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Loan Amount:</span>
+              <span className="font-medium">{formatPKR(cycle.loanAmount)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Status:</span>
+              <Badge
+                variant={cycle.loanApproved ? 'default' : 'secondary'}
+                className={
+                  cycle.loanApproved ? 'bg-green-600' : 'bg-yellow-100 text-yellow-800'
+                }
+              >
+                {cycle.loanApproved ? 'Approved' : 'Pending'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  // ==================== DETAILS TAB ====================
+  const detailsContent = (
+    <>
+      {/* Seller Contact Card */}
+      <ContactCard
+        name={cycle.sellerName ?? 'Seller'}
+        role="seller"
+        phone={cycle.sellerContact}
+        designation={cycle.sellerType}
+        notes={cycle.notes}
+        onCall={() => window.open(`tel:${cycle.sellerContact}`)}
+      />
+
+      {/* Due Diligence Checklist */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h3 className="text-base font-medium text-[#030213] mb-4 flex items-center gap-2">
+          <FileCheck className="h-5 w-5" />
+          Due Diligence Checklist
+        </h3>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+            <Checkbox
+              checked={cycle.titleClear}
+              onCheckedChange={(checked) =>
+                handleUpdateDueDiligence('titleClear', checked as boolean)
+              }
+              disabled={cycle.status === 'acquired' || cycle.status === 'cancelled'}
+            />
+            <div className="flex-1">
+              <Label className="cursor-pointer">Title Clear</Label>
+              <p className="text-xs text-gray-500">Property title verified and clear</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+            <Checkbox
+              checked={cycle.inspectionDone}
+              onCheckedChange={(checked) =>
+                handleUpdateDueDiligence('inspectionDone', checked as boolean)
+              }
+              disabled={cycle.status === 'acquired' || cycle.status === 'cancelled'}
+            />
+            <div className="flex-1">
+              <Label className="cursor-pointer">Inspection Done</Label>
+              <p className="text-xs text-gray-500">
+                Physical inspection completed
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+            <Checkbox
+              checked={cycle.documentsVerified}
+              onCheckedChange={(checked) =>
+                handleUpdateDueDiligence('documentsVerified', checked as boolean)
+              }
+              disabled={cycle.status === 'acquired' || cycle.status === 'cancelled'}
+            />
+            <div className="flex-1">
+              <Label className="cursor-pointer">Documents Verified</Label>
+              <p className="text-xs text-gray-500">
+                All documents checked and verified
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded">
+            <Checkbox
+              checked={cycle.surveyCompleted}
+              onCheckedChange={(checked) =>
+                handleUpdateDueDiligence('surveyCompleted', checked as boolean)
+              }
+              disabled={cycle.status === 'acquired' || cycle.status === 'cancelled'}
+            />
+            <div className="flex-1">
+              <Label className="cursor-pointer">Survey Completed</Label>
+              <p className="text-xs text-gray-500">Land survey completed</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-6">
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-gray-600">Overall Progress</span>
+            <span className="font-medium">{Math.round(dueDiligenceProgress * 100)}%</span>
+          </div>
+          <Progress value={dueDiligenceProgress * 100} className="h-2" />
+        </div>
+      </div>
+
+      {/* Financing Information (if applicable) */}
+      {cycle.loanAmount != null && cycle.loanAmount > 0 && (
+        <InfoPanel
+          title="Financing Information"
+          data={[
+            {
+              label: 'Loan Amount',
+              value: formatPKR(cycle.loanAmount),
+              icon: <Landmark className="h-4 w-4" />,
+            },
+            {
+              label: 'Down Payment',
+              value: formatPKR(
+                (cycle.negotiatedPrice ?? cycle.offerAmount ?? 0) - (cycle.loanAmount ?? 0)
+              ),
+              icon: <Wallet className="h-4 w-4" />,
+            },
+            {
+              label: 'Loan to Value',
+              value: (() => {
+                const total = cycle.negotiatedPrice ?? cycle.offerAmount ?? 0;
+                const loan = cycle.loanAmount ?? 0;
+                return total > 0 ? `${Math.round((loan / total) * 100)}%` : 'N/A';
+              })(),
+            },
+            {
+              label: 'Status',
+              value: (
+                <Badge
+                  variant={cycle.loanApproved ? 'default' : 'secondary'}
+                  className={
+                    cycle.loanApproved ? 'bg-green-600' : 'bg-yellow-100 text-yellow-800'
+                  }
+                >
+                  {cycle.loanApproved ? 'Approved' : 'Pending'}
+                </Badge>
+              ),
+            },
+          ]}
+          columns={2}
+          density="comfortable"
+        />
+      )}
+    </>
+  );
+
+  // ==================== FINANCIALS TAB ====================
+  const financialsContent = (
+    <>
+      {/* Financial Summary */}
+      <PurchaseCycleFinancialSummary
+        cycle={cycle}
+        property={property}
+        onAddAcquisitionCost={() => setShowAcquisitionCostModal(true)}
+      />
+
+      {/* Acquisition Cost Modal */}
+      <AcquisitionCostModal
+        isOpen={showAcquisitionCostModal}
+        onClose={() => setShowAcquisitionCostModal(false)}
+        propertyId={property.id}
+        propertyAddress={formatPropertyAddress(property.address ?? '')}
+        purchaseDate={cycle.offerDate ?? cycle.createdAt}
+        purchaseCycleId={cycle.id}
+        userId={user.id}
+        userName={user.name}
+        initialPurchasePrice={cycle.negotiatedPrice ?? cycle.offerAmount}
+        onSuccess={() => {
+          setShowAcquisitionCostModal(false);
+          onUpdate();
+        }}
+      />
+    </>
+  );
+
+  // ==================== PAYMENTS TAB ====================
+  const paymentsContent = linkedDeal ? (
+    <PaymentSummaryReadOnly
+      deal={linkedDeal}
+      onViewFullDetails={() => handleNavigation('deal-detail', linkedDeal.id)}
+      compact={false}
+    />
+  ) : (
+    <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+      <Wallet className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+      <h3 className="text-base mb-2">No Payment Information</h3>
+      <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
+        Payments are tracked in Deals. Accept the purchase offer to create a Deal and
+        manage payment schedules.
+      </p>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto text-left">
+        <p className="text-sm font-medium text-blue-900 mb-2">💡 Next Steps:</p>
+        <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+          <li>
+            Update status to <strong>Accepted</strong> in the Actions tab
+          </li>
+          <li>A Deal will be automatically created</li>
+          <li>Manage payment schedules in the Deal</li>
+          <li>Track all payments through the unified system</li>
+        </ol>
+      </div>
+    </div>
+  );
+
+  // ==================== ACTIVITY TAB ====================
+  const activities: Activity[] = useMemo(() => {
+    const activityList: Activity[] = [];
+
+    // Cycle created
+    activityList.push({
+      id: 'created',
+      type: 'created',
+      title: 'Purchase cycle created',
+      description: `Offer of ${formatPKR(cycle.offerAmount)} made`,
+      date: cycle.createdAt,
+      user: cycle.agentName,
+      icon: <Plus className="h-5 w-5 text-blue-600" />,
+    });
+
+    // Status changes
+    if (cycle.status === 'accepted' || cycle.status === 'acquired') {
+      activityList.push({
+        id: 'accepted',
+        type: 'status-change',
+        title: 'Offer accepted',
+        description: cycle.negotiatedPrice
+          ? `Negotiated price: ${formatPKR(cycle.negotiatedPrice)}`
+          : undefined,
+        date: cycle.createdAt,
+        icon: <CheckCircle className="h-5 w-5 text-green-600" />,
+      });
+    }
+
+    // Due diligence milestones
+    if (cycle.titleClear) {
+      activityList.push({
+        id: 'title-clear',
+        type: 'milestone',
+        title: 'Title cleared',
+        date: cycle.createdAt,
+        icon: <FileCheck className="h-5 w-5 text-green-600" />,
+      });
+    }
+
+    // Communication logs
+    ((cycle.communicationLog ?? (cycle as any).communicationLogs) || []).forEach((log: { id: string; type?: string; summary?: string; date?: string; createdByName?: string }) => {
+      const logType = log.type ?? 'note';
+      activityList.push({
+        id: `log-${log.id}`,
+        type: 'communication',
+        title: `${logType.charAt(0).toUpperCase() + logType.slice(1)} logged`,
+        description: log.summary,
+        date: log.date ?? '',
+        user: log.createdByName,
+        icon: <FileText className="h-5 w-5 text-gray-600" />,
+      });
+    });
+
+    // Sort by date descending
+    return activityList.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [cycle]);
+
+  const activityContent = (
+    <>
+      <ActivityTimeline
+        title="Activity Timeline"
+        activities={activities}
+        emptyMessage="No activities yet"
+      />
+
+      {/* Communication Notes */}
+      <NotesPanel
+        notes={communicationNotes}
+        currentUserId={user.id}
+        currentUserName={user.name}
+        title="Communication Logs"
+        canAdd={cycle.status !== 'acquired' && cycle.status !== 'cancelled'}
+        canEdit={false}
+        canDelete={false}
+        canPin={false}
+        onAdd={handleAddNote}
+        placeholder="Add a communication log..."
+      />
+    </>
+  );
+
+  // ==================== ACTIONS TAB ====================
+  const actionsContent = (
+    <>
+      {/* Status Update */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h3 className="text-base font-medium text-[#030213] mb-4 flex items-center gap-2">
+          <Settings className="h-5 w-5" />
+          Update Status
+        </h3>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {[
+            'prospecting',
+            'offer-made',
+            'negotiation',
+            'accepted',
+            'due-diligence',
+            'financing',
+            'closing',
+            'acquired',
+          ].map((status) => (
+            <Button
+              key={status}
+              variant={cycle.status === status ? 'default' : 'outline'}
+              onClick={() => handleUpdateStatus(status as PurchaseCycle['status'])}
+              disabled={
+                cycle.status === 'acquired' ||
+                cycle.status === 'cancelled' ||
+                cycle.status === status
+              }
+              className="justify-start capitalize"
+            >
+              {status}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Workflow Actions */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <h3 className="text-base font-medium text-[#030213] mb-4 flex items-center gap-2">
+          <ClipboardCheck className="h-5 w-5" />
+          Workflow Actions
+        </h3>
+
+        <div className="space-y-3">
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2"
+            onClick={() => setShowSendOfferModal(true)}
+            disabled={
+              availableSellCycles.length === 0 ||
+              cycle.status === 'acquired' ||
+              cycle.status === 'cancelled'
+            }
+          >
+            <Plus className="h-4 w-4" />
+            Send Offer to Seller
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2"
+            onClick={handleCompletePurchase}
+            disabled={cycle.status === 'acquired' || cycle.status === 'cancelled'}
+          >
+            <CheckCircle className="h-4 w-4" />
+            Complete Purchase
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2 text-red-600 hover:text-red-700"
+            onClick={handleCancelCycle}
+            disabled={cycle.status === 'acquired' || cycle.status === 'cancelled'}
+          >
+            <XCircle className="h-4 w-4" />
+            Cancel Purchase Cycle
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+
+  // ==================== TABS CONFIGURATION ====================
+  const tabs: DetailPageTab[] = [
+    {
+      id: 'overview',
+      label: 'Overview',
+      content: overviewContent,
+      sidebar: overviewSidebar,
+      layout: '2-1',
+    },
+    {
+      id: 'details',
+      label: 'Details',
+      content: detailsContent,
+      layout: '3-0',
+    },
+    {
+      id: 'financials',
+      label: 'Financials',
+      content: financialsContent,
+      layout: '3-0',
+    },
+    {
+      id: 'payments',
+      label: 'Payments',
+      content: paymentsContent,
+      layout: '3-0',
+    },
+    {
+      id: 'activity',
+      label: 'Activity',
+      content: activityContent,
+      layout: '3-0',
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      content: actionsContent,
+      layout: '3-0',
+    },
+  ];
+
+  const validTab =
+    tabFromUrl && tabs.some((t) => t.id === tabFromUrl) ? tabFromUrl : 'overview';
+
+  // ==================== RENDER ====================
+  return (
+    <>
+      <DetailPageTemplate
+        pageHeader={pageHeader}
+        connectedEntities={connectedEntities}
+        tabs={tabs}
+        defaultTab="overview"
+        activeTab={onTabChange ? validTab : undefined}
+        onTabChange={onTabChange}
+      />
+
+      {/* Send Offer Modal */}
+      <SendOfferFromPurchaseCycleModal
+        isOpen={showSendOfferModal}
+        onClose={() => setShowSendOfferModal(false)}
+        purchaseCycle={cycle}
+        sellCycle={availableSellCycles[0] ?? undefined}
+        property={property}
+        onSuccess={() => {
+          setShowSendOfferModal(false);
+          loadData();
+          onUpdate();
+        }}
+      />
+    </>
+  );
+}

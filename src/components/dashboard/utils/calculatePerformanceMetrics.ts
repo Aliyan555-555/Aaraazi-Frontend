@@ -1,6 +1,6 @@
 
 import { Property, User } from "../../../types";
-import { LeadV4 } from "../../../types/leads";
+import { DashboardLead } from "../../../types/leads";
 import { CRMTask, CRMInteraction } from "../../../types";
 import { PerformanceMetric } from "../components/PerformanceCard";
 import { formatPKR } from "../../../lib/currency";
@@ -20,7 +20,7 @@ import {
  */
 function calculateDailyActivity(
   properties: Property[],
-  leads: LeadV4[],
+  leads: DashboardLead[],
   tasks: CRMTask[],
   interactions: CRMInteraction[],
 ): Array<{ value: number; label: string }> {
@@ -54,7 +54,7 @@ function calculateDailyActivity(
  * Calculate conversion rate (leads to deals)
  */
 function calculateConversionRate(
-  leads: LeadV4[],
+  leads: DashboardLead[],
   properties: Property[],
 ): { rate: number; trend: number } {
   // Total qualified leads (not new, not lost)
@@ -78,7 +78,7 @@ function calculateConversionRate(
  * Calculate average response time (hours)
  */
 function calculateAverageResponseTime(
-  leads: LeadV4[],
+  leads: DashboardLead[],
   interactions: CRMInteraction[],
 ): { avgHours: number; trend: number } {
   let totalResponseTime = 0;
@@ -116,7 +116,7 @@ function calculateAverageResponseTime(
  * Calculate active deals
  */
 function calculateActiveDeals(
-  leads: LeadV4[],
+  leads: DashboardLead[],
   properties: Property[],
 ): { count: number; pipelineValue: number; trend: number } {
   // Active deals = leads in negotiation or proposal stage
@@ -208,7 +208,7 @@ function calculateMonthlyRevenue(properties: Property[]): {
 /**
  * Calculate lead velocity (leads per day)
  */
-function calculateLeadVelocity(leads: LeadV4[]): {
+function calculateLeadVelocity(leads: DashboardLead[]): {
   velocity: number;
   trend: number;
   chartData: Array<{ value: number }>;
@@ -252,7 +252,7 @@ function calculateLeadVelocity(leads: LeadV4[]): {
  * Find top performer (agent with most deals)
  */
 function findTopPerformer(
-  leads: LeadV4[],
+  leads: DashboardLead[],
   properties: Property[],
   users: User[],
 ): { agent: User | null; dealCount: number; revenue: number } {
@@ -296,7 +296,7 @@ function findTopPerformer(
 /**
  * Calculate average deal cycle time (days)
  */
-function calculateDealCycleTime(leads: LeadV4[]): {
+function calculateDealCycleTime(leads: DashboardLead[]): {
   avgDays: number;
   trend: number;
   chartData: Array<{ value: number }>;
@@ -352,11 +352,11 @@ function calculateDealCycleTime(leads: LeadV4[]): {
  * Main function: Calculate all performance metrics
  */
 export function calculatePerformanceMetrics(data: {
-  properties?: Property[];
-  leads?: LeadV4[];
-  tasks?: CRMTask[];
-  interactions?: CRMInteraction[];
-  users?: User[];
+  properties: Property[];
+  leads: DashboardLead[];
+  tasks: CRMTask[];
+  interactions: CRMInteraction[];
+  users: User[];
 }): PerformanceMetric[] {
   const properties = data.properties ?? [];
   const leads = data.leads ?? [];

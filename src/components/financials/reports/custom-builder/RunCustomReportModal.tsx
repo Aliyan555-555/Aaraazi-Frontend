@@ -4,7 +4,7 @@
  * Modal to run a saved custom report template and display results.
  * Allows export to CSV/PDF.
  * 
- * Design System V4.1 Compliant
+ * Design System Compliant
  */
 
 import React, { useMemo, useState } from 'react';

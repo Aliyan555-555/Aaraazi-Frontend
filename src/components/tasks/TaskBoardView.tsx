@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { TaskV4, TaskStatus, TaskPriority } from '../../types/tasks';
+import { Task, TaskStatus, TaskPriority } from '../../types/tasks';
 import { Card } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -36,7 +36,7 @@ import {
 } from '../ui/dropdown-menu';
 
 interface TaskBoardViewProps {
-  tasks: TaskV4[];
+  tasks: Task[];
   onViewTask: (taskId: string) => void;
   onEditTask: (taskId: string) => void;
   onStatusChange: (taskId: string, status: TaskStatus) => void;
@@ -72,7 +72,7 @@ function getPriorityColor(priority: TaskPriority): string {
  * Task Card Component
  */
 const TaskCard: React.FC<{
-  task: TaskV4;
+  task: Task;
   onView: () => void;
   onEdit: () => void;
   onStatusChange: (status: TaskStatus) => void;
@@ -234,7 +234,7 @@ export const TaskBoardView: React.FC<TaskBoardViewProps> = ({
       return t.status === column.status;
     });
     return acc;
-  }, {} as Record<TaskStatus, TaskV4[]>);
+  }, {} as Record<TaskStatus, Task[]>);
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { User } from '../../../types';
-import { TaskV4 } from '../../../types/tasks';
+import { Task } from '../../../types/tasks';
+
 import { Card } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
@@ -17,7 +18,7 @@ import { formatDistanceToNow, isToday, isTomorrow, isPast, format } from 'date-f
 import { toast } from 'sonner';
 
 // ===== STUBS for removed prototype functions =====
-const getAllTasksV4 = (..._args: any[]): TaskV4[] => []; // stub - return empty so UI derives correctly
+const getAllTasks = (..._args: any[]): TaskV4[] => []; // stub - return empty so UI derives correctly
 const updateTask = (..._args: any[]): any => { /* stub - prototype function removed */ };
 // ===== END STUBS =====
 
@@ -86,7 +87,7 @@ function formatDueDate(dueDate: string): { text: string; color: string; icon: Re
 /**
  * Get upcoming tasks (next 7 days, not completed)
  */
-function getUpcomingTasks(tasks: TaskV4[]): TaskV4[] {
+function getUpcomingTasks(tasks: Task[]): Task[] {
   const now = new Date();
   const sevenDaysFromNow = new Date();
   sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
@@ -115,7 +116,7 @@ function getUpcomingTasks(tasks: TaskV4[]): TaskV4[] {
  * Task Row Component
  */
 interface TaskRowProps {
-  task: TaskV4;
+  task: Task;
   user: User;
   onComplete: () => void;
   onView: () => void;
@@ -203,7 +204,7 @@ export const UpcomingTasksWidget: React.FC<UpcomingTasksWidgetProps> = ({
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Load tasks
-  const tasks = useMemo(() => getAllTasksV4(user.id, user.role), [user.id, user.role, refreshKey]);
+  const tasks = useMemo(() => getAllTasks(user.id, user.role), [user.id, user.role, refreshKey]);
 
   // Get upcoming tasks (derived from tasks so UI and refreshKey stay in sync)
   const upcomingTasks = useMemo(() => getUpcomingTasks(tasks ?? []), [tasks]);

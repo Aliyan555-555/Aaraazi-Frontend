@@ -25,7 +25,7 @@ interface ReportTemplateCardProps {
  * 
  * Card displaying a report template with quick actions.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Button components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

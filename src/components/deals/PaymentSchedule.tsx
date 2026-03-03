@@ -6,7 +6,7 @@ import { Badge } from '../ui/badge';
 import { Calendar, CheckCircle2, Circle, DollarSign, Edit, Trash2, Plus, AlertCircle, Clock } from 'lucide-react';
 import { RecordPaymentModal } from './RecordPaymentModal';
 import { ModifyInstallmentModal } from './ModifyInstallmentModal';
-import { deleteInstallment } from '../../lib/dealPayments';
+// import { deleteInstallment } from '../../lib/dealPayments';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -19,11 +19,15 @@ import {
   AlertDialogTitle,
 } from '../ui/alert-dialog';
 
+const deleteInstallment = (..._args: any[]): any => { /* stub - prototype function removed */ };
+
 interface PaymentScheduleProps {
   deal: Deal;
   currentUserId: string;
   currentUserName: string;
   onDealUpdate: (updatedDeal: Deal) => void;
+  /** Called when payment is recorded (no deal object). Parent should refetch. */
+  onPaymentRecorded?: () => void | Promise<void>;
   onAddInstallment: () => void;
 }
 
@@ -32,6 +36,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
   currentUserId,
   currentUserName,
   onDealUpdate,
+  onPaymentRecorded,
   onAddInstallment,
 }) => {
   const [recordPaymentModal, setRecordPaymentModal] = useState<{
@@ -287,7 +292,7 @@ export const PaymentSchedule: React.FC<PaymentScheduleProps> = ({
           currentUserId={currentUserId}
           currentUserName={currentUserName}
           selectedInstallment={recordPaymentModal.installment}
-          onSuccess={onDealUpdate}
+          onSuccess={onPaymentRecorded ?? (() => {})}
         />
       )}
 

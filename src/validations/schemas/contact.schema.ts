@@ -27,7 +27,7 @@ export const contactFormSchema = z.object({
     ],
     {
       error: { message: "Please select a contact type" },
-    } as any,
+    } as { message?: string },
   ),
   company: z.string().optional(),
   address: z.string().optional(),

@@ -11,7 +11,7 @@
  * - Clickable to navigate
  * 
  * DESIGN:
- * - Follows Design System V4.1
+ * - Follows Design System
  * - NO Tailwind typography classes
  * - Accessible (keyboard nav, ARIA labels)
  * 

@@ -39,7 +39,7 @@ interface CommissionWorkspaceProps {
  * - Export to CSV/JSON
  * - Integration with Deal.financial.commission.agents
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses WorkspaceHeader with stats
  * - Uses WorkspaceSearchBar with filters
  * - Uses MetricCard components
@@ -50,7 +50,7 @@ interface CommissionWorkspaceProps {
  * - Miller's Law: 5 stats, 7 filters (within 7±2)
  * - Fitts's Law: Large action buttons
  * - Hick's Law: Progressive disclosure (filters, bulk actions)
- * - Jakob's Law: Follows ContactsWorkspaceV4 pattern
+ * - Jakob's Law: Follows ContactsWorkspace pattern
  * - Aesthetic-Usability: Consistent design
  * 
  * Features:

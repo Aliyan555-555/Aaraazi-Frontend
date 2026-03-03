@@ -18,7 +18,7 @@ interface BankReconciliationMetricsProps {
  * Displays key bank reconciliation metrics in a grid of MetricCard components.
  * Shows max 6 metrics (Miller's Law: 7±2).
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses MetricCard from /components/layout/
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

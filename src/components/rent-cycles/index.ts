@@ -1,5 +1,5 @@
 /**
- * Rent Cycles Workspace V4 - Barrel Export
+ * Rent Cycles Workspace - Barrel Export
  * 
  * Centralized exports for all rent cycles workspace components
  */

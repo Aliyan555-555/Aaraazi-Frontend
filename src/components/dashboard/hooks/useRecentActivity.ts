@@ -1,32 +1,11 @@
-/**
- * useRecentActivity Hook
- *
- * Loads recent activity data for workflow cards.
- *
- * FEATURES:
- * - Loads data from localStorage
- * - Filters to last 7 days
- * - Role-based filtering
- * - Used by QuickLaunchSection
- */
-
 import { useState, useEffect } from "react";
 import { User, Property, Contact } from "../../../types";
-import { LeadV4 } from "../../../types/leads";
+import { DashboardLead } from "../../../types/leads";
 import { CRMTask } from "../../../types";
-// [STUBBED] import { getProperties, getContacts } from "../../../lib/data";
-// [STUBBED] import { getLeadsV4 } from "../../../lib/leadsV4";
-// [STUBBED] import { getAllTasks } from "../../../lib/data";
-
-// ===== STUBS for removed prototype functions =====
-const getProperties = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getContacts = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getLeadsV4 = (..._args: any[]): any => { /* stub - prototype function removed */ };
-const getAllTasks = (..._args: any[]): any => { /* stub - prototype function removed */ };
-// ===== END STUBS =====
-
-
-// Document type (not in main types)
+const getProperties = (..._args: any[]): any[] => [];
+const getContacts = (..._args: any[]): any[] => [];
+const getDashboardLeads = (..._args: any[]): any[] => [];
+const getAllTasks = (..._args: any[]): any[] => [];
 interface Document {
   id: string;
   name?: string;
@@ -37,7 +16,7 @@ interface Document {
 
 export interface RecentActivityData {
   properties: Property[];
-  leads: LeadV4[];
+  leads: DashboardLead[];
   contacts: Contact[];
   tasks: CRMTask[];
   documents: Document[];
@@ -51,7 +30,7 @@ export interface RecentActivityData {
 export function useRecentActivity(user: User): RecentActivityData {
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [leads, setLeads] = useState<LeadV4[]>([]);
+  const [leads, setLeads] = useState<DashboardLead[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [tasks, setTasks] = useState<CRMTask[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -75,7 +54,7 @@ export function useRecentActivity(user: User): RecentActivityData {
       setProperties(recentProperties);
 
       // Load leads (last 7 days)
-      const allLeads = getLeadsV4(userId, userRole);
+      const allLeads = getDashboardLeads(userId, userRole);
       const recentLeads = allLeads.filter(
         (l) => new Date(l.createdAt) >= oneWeekAgo,
       );

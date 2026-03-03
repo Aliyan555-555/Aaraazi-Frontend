@@ -1,7 +1,7 @@
 /**
- * Purchase Cycle Form V2 - Full Page with Type Selection
+ * Purchase Cycle Form - Full Page with Type Selection
  * 
- * DESIGN SYSTEM V4.1 COMPLIANT:
+ * Design System COMPLIANT:
  * - Type selection step (Agency/Investor/Client)
  * - Delegates to specific sub-forms based on type
  * - Full-page layout with back button (not a modal)
@@ -16,20 +16,22 @@ import { Property, User, PurchaserType } from '../types';
 import { FormContainer } from './ui/form-container';
 import { Button } from './ui/button';
 import { formatPropertyAddress } from '../lib/utils';
-import { 
-  Building2, 
-  Users as UsersIcon, 
-  UserCheck 
+import {
+  Building2,
+  Users as UsersIcon,
+  UserCheck
 } from 'lucide-react';
-import { AgencyPurchaseFormLayout } from './purchase/AgencyPurchaseFormLayout';
-import { InvestorPurchaseFormLayout } from './purchase/InvestorPurchaseFormLayout';
-import { ClientPurchaseFormLayout } from './purchase/ClientPurchaseFormLayout';
+import { AgencyPurchaseForm } from './purchase/AgencyPurchaseForm';
+import { InvestorPurchaseForm } from './purchase/InvestorPurchaseForm';
+import { ClientPurchaseForm } from './purchase/ClientPurchaseForm';
+import type { CreatePurchaseCycleFromPropertyPayload } from '@/lib/api/purchase-cycles';
 
 interface PurchaseCycleFormProps {
   property: Property;
   user: User;
   onBack: () => void;
   onSuccess: () => void;
+  onSubmitFromProperty?: (data: CreatePurchaseCycleFromPropertyPayload) => Promise<{ id: string } | null>;
 }
 
 export function PurchaseCycleForm({
@@ -37,6 +39,7 @@ export function PurchaseCycleForm({
   user,
   onBack,
   onSuccess,
+  onSubmitFromProperty,
 }: PurchaseCycleFormProps) {
   const [selectedType, setSelectedType] = useState<PurchaserType | null>(null);
 
@@ -146,29 +149,33 @@ export function PurchaseCycleForm({
   return (
     <>
       {selectedType === 'agency' && (
-        <AgencyPurchaseFormLayout
+        <AgencyPurchaseForm
           property={property}
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
       {selectedType === 'investor' && (
-        <InvestorPurchaseFormLayout
+        <InvestorPurchaseForm
           property={property}
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
       {selectedType === 'client' && (
-        <ClientPurchaseFormLayout
+        <ClientPurchaseForm
           property={property}
           user={user}
           onSuccess={onSuccess}
           onCancel={handleBackToSelection}
+          onSubmitFromProperty={onSubmitFromProperty}
         />
       )}
     </>
   );
 }
+

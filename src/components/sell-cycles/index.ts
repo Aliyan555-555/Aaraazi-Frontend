@@ -1,5 +1,5 @@
 /**
- * Sell Cycles Workspace V4 - Barrel Export
+ * Sell Cycles Workspace - Barrel Export
  * 
  * Centralized exports for all sell cycles workspace components
  */

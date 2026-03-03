@@ -139,7 +139,7 @@ export function DocumentCenter() {
     if (!file || !tenantId || !agencyId) return;
 
     try {
-      await uploadDocument(file, {
+      await upload(file, {
         documentName: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
         documentType: 'CUSTOM',
         agencyId,

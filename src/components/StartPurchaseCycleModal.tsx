@@ -1,7 +1,7 @@
 /**
- * Start Purchase Cycle Modal V2 - Multi-Step Form with Type Selection
+ * Start Purchase Cycle Modal - Multi-Step Form with Type Selection
  * 
- * DESIGN SYSTEM V4.1 COMPLIANT:
+ * Design System COMPLIANT:
  * - Type selection first (Agency/Investor/Client)
  * - Multi-step forms for each type
  * - FormContainer + FormSection + FormField
@@ -27,9 +27,9 @@ import {
   DollarSign, 
   Handshake 
 } from 'lucide-react';
-import { AgencyPurchaseFormLayout } from './purchase/AgencyPurchaseFormLayout';
-import { InvestorPurchaseFormLayout } from './purchase/InvestorPurchaseFormLayout';
-import { ClientPurchaseFormLayout } from './purchase/ClientPurchaseFormLayout';
+import { AgencyPurchaseForm } from './purchase/AgencyPurchaseForm';
+import { InvestorPurchaseForm } from './purchase/InvestorPurchaseForm';
+import { ClientPurchaseForm } from './purchase/ClientPurchaseForm';
 
 interface StartPurchaseCycleModalProps {
   isOpen: boolean;
@@ -283,7 +283,7 @@ export default function StartPurchaseCycleModal({
         {/* Type-Specific Forms (use their own layout) */}
         <div className="pt-2">
           {selectedType === 'agency' && (
-            <AgencyPurchaseFormLayout
+            <AgencyPurchaseForm
               property={property}
               user={user}
               onSuccess={handleSuccess}
@@ -291,7 +291,7 @@ export default function StartPurchaseCycleModal({
             />
           )}
           {selectedType === 'investor' && (
-            <InvestorPurchaseFormLayout
+            <InvestorPurchaseForm
               property={property}
               user={user}
               onSuccess={handleSuccess}
@@ -299,7 +299,7 @@ export default function StartPurchaseCycleModal({
             />
           )}
           {selectedType === 'client' && (
-            <ClientPurchaseFormLayout
+            <ClientPurchaseForm
               property={property}
               user={user}
               onSuccess={handleSuccess}

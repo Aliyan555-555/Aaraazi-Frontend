@@ -10,7 +10,7 @@
  * - Quick template preview
  * - Duplicate templates
  * 
- * DESIGN: Design System V4.1 compliant
+ * DESIGN: Design System compliant
  * UX LAWS: Miller's Law (7±2 items per view), Fitts's Law (large touch targets)
  * 
  * @example
@@ -518,7 +518,7 @@ const TemplateForm: React.FC<TemplateFormProps> = ({ template, onSubmit, onCance
 // ==================== MAIN COMPONENT ====================
 
 export const TaskTemplateManager: React.FC<TaskTemplateManagerProps> = ({
-  user,
+  user: _user,
   onClose,
   onSelectTemplate,
 }) => {
@@ -635,7 +635,7 @@ export const TaskTemplateManager: React.FC<TaskTemplateManagerProps> = ({
             </div>
 
             {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'system' | 'custom')}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="all">
                   All Templates ({allTemplates.length})

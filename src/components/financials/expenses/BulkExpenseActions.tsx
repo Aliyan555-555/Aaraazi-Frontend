@@ -21,7 +21,7 @@ interface BulkExpenseActionsProps {
  * Modal for bulk actions on selected expenses.
  * Supports: Bulk Approve, Bulk Reject, Bulk Delete.
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses Shadcn Dialog components
  * - No Tailwind typography classes
  * - Follows 8px spacing grid

@@ -1,6 +1,6 @@
 /**
  * PurchaseCycleWorkspaceCard Component
- * Custom card for Purchase Cycles Workspace V4
+ * Custom card for Purchase Cycles Workspace
  * 
  * Uses WorkspaceCard with purchase cycle-specific customization
  */

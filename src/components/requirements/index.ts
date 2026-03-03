@@ -1,5 +1,5 @@
 /**
- * Requirements Workspace V4 - Barrel Export
+ * Requirements Workspace - Barrel Export
  * 
  * Centralized exports for all requirements workspace components
  */

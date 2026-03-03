@@ -1,16 +1,11 @@
 /**
  * useDocumentsApi – fetch documents from backend (when authenticated)
+ * Uses documents.service — not lib/api directly
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import {
-  listDocuments,
-  generateDocumentPdf,
-  deleteDocument,
-  type QueryDocumentsParams,
-  type DocumentsListResponse,
-} from '@/lib/api/documents';
-import type { GeneratedDocument } from '@/types/documents';
+import { documentsService } from '@/services/documents.service';
+import type { QueryDocumentsParams, DocumentsListResponse } from '@/services/documents.service';
 
 export function useDocumentsApi(params?: QueryDocumentsParams) {
   const [data, setData] = useState<DocumentsListResponse | null>(null);
@@ -32,7 +27,7 @@ export function useDocumentsApi(params?: QueryDocumentsParams) {
     setLoading(true);
     setError(null);
     try {
-      const result = await listDocuments(params);
+      const result = await documentsService.list(params);
       setData(result);
       return result;
     } catch (e) {
@@ -52,7 +47,7 @@ export function useDocumentsApi(params?: QueryDocumentsParams) {
   const downloadPdf = useCallback(
     async (documentId: string, fileName?: string): Promise<boolean> => {
       try {
-        const blob = await generateDocumentPdf(documentId);
+        const blob = await documentsService.generatePdf(documentId);
         if (!blob || blob.size === 0) {
           throw new Error('PDF generation returned empty file');
         }
@@ -73,13 +68,33 @@ export function useDocumentsApi(params?: QueryDocumentsParams) {
 
   const remove = useCallback(async (id: string) => {
     try {
-      await deleteDocument(id);
+      await documentsService.remove(id);
       await fetchDocuments();
       return true;
     } catch {
       return false;
     }
   }, [fetchDocuments]);
+
+  const upload = useCallback(
+    async (
+      file: File,
+      metadata: {
+        documentName: string;
+        documentType: string;
+        propertyId?: string;
+        transactionId?: string;
+        contactId?: string;
+        agencyId: string;
+        tenantId: string;
+      }
+    ) => {
+      const doc = await documentsService.upload(file, metadata);
+      await fetchDocuments();
+      return doc;
+    },
+    [fetchDocuments]
+  );
 
   return {
     documents: data?.data ?? [],
@@ -89,5 +104,6 @@ export function useDocumentsApi(params?: QueryDocumentsParams) {
     refetch: fetchDocuments,
     downloadPdf,
     remove,
+    upload,
   };
 }

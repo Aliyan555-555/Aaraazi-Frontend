@@ -1,7 +1,6 @@
 /**
- * Acquisition Cost Modal - V2.0
- * Records all costs associated with property purchase
- * Design System V4.1 Compliant
+ * Acquisition Cost Modal - * Records all costs associated with property purchase
+ * Design System Compliant
  * PHASE 4: Auto-population from purchase cycle + Skip option
  */
 

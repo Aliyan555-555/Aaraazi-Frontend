@@ -27,7 +27,7 @@ const BANK_TRANSACTIONS_KEY = 'bank_transactions';
  * - Statement import (placeholder)
  * - Export capabilities
  * 
- * Design System V4.1 Compliant:
+ * Design System Compliant:
  * - Uses WorkspaceHeader with stats
  * - Uses WorkspaceSearchBar with filters
  * - Uses MetricCard components
