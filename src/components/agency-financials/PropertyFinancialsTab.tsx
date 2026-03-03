@@ -83,14 +83,14 @@ export function PropertyFinancialsTab({
   // Filter transactions by category
   const filteredTransactions = useMemo(() => {
     if (selectedCategory === 'all') return allTransactions;
-    return allTransactions.filter(t => t.category === selectedCategory);
+    return allTransactions.filter((transaction: AgencyTransaction) => transaction.category === selectedCategory);
   }, [allTransactions, selectedCategory]);
 
   // Group transactions by month
   const transactionsByMonth = useMemo(() => {
     const grouped = new Map<string, AgencyTransaction[]>();
     
-    filteredTransactions.forEach(transaction => {
+    filteredTransactions.forEach((transaction: AgencyTransaction) => {
       const date = new Date(transaction.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       
@@ -312,22 +312,22 @@ export function PropertyFinancialsTab({
             { 
               value: 'acquisition', 
               label: 'Acquisition', 
-              count: allTransactions.filter(t => t.category === 'acquisition').length 
+              count: allTransactions.filter((transaction: AgencyTransaction) => transaction.category === 'acquisition').length 
             },
             { 
               value: 'income', 
               label: 'Income', 
-              count: allTransactions.filter(t => t.category === 'income').length 
+              count: allTransactions.filter((transaction: AgencyTransaction) => transaction.category === 'income').length 
             },
             { 
               value: 'expense', 
               label: 'Expense', 
-              count: allTransactions.filter(t => t.category === 'expense').length 
+              count: allTransactions.filter((transaction: AgencyTransaction) => transaction.category === 'expense').length 
             },
             { 
               value: 'sale', 
               label: 'Sale', 
-              count: allTransactions.filter(t => t.category === 'sale').length 
+              count: allTransactions.filter((transaction: AgencyTransaction) => transaction.category === 'sale').length 
             },
           ].map((category) => (
             <Button

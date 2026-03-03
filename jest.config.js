@@ -20,8 +20,7 @@ const config = {
   ],
   coverageDirectory: 'coverage',
   testMatch: [
-    '**/__tests__/**/*.[jt]s?(x)',
-    '**/?(*.)+(spec|test).[jt]s?(x)',
+    '<rootDir>/src/__tests__/**/*.[jt]s?(x)',
   ],
 };
 

@@ -157,10 +157,7 @@ export interface TaskAttachment {
 /**
  * Enhanced Task (extends CRMTask with advanced features)
  */
-export interface Task extends Omit<
-  CRMTask,
-  "dueDate" | "priority" | "status"
-> {
+export interface Task extends Omit<CRMTask, "dueDate" | "priority" | "status"> {
   // Enhanced fields
   priority: TaskPriority;
   status: TaskStatus;
@@ -297,7 +294,7 @@ export interface TaskAutomationRule {
       | "contains"
       | "greater-than"
       | "less-than";
-    value: any;
+    value: unknown;
   }[];
 
   // Action: Create task
@@ -445,11 +442,11 @@ export interface TaskActivity {
 
   changes?: {
     field: string;
-    oldValue: any;
-    newValue: any;
+    oldValue: unknown;
+    newValue: unknown;
   }[];
 
-  metadata?: any;
+  metadata?: unknown;
   timestamp: string;
 }
 

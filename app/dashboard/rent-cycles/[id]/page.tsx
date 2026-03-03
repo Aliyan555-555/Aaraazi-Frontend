@@ -45,19 +45,19 @@ const STATUS_LABELS: Record<string, string> = {
   ON_HOLD: 'On Hold',
 };
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  LISTED: 'secondary',
-  AVAILABLE: 'default',
-  SHOWING: 'default',
-  APPLICATION_RECEIVED: 'default',
-  LEASED: 'default',
-  ACTIVE: 'default',
-  RENEWAL_PENDING: 'secondary',
-  ENDING: 'destructive',
-  ENDED: 'outline',
-  CANCELLED: 'destructive',
-  ON_HOLD: 'secondary',
-};
+// const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+//   LISTED: 'secondary',
+//   AVAILABLE: 'default',
+//   SHOWING: 'default',
+//   APPLICATION_RECEIVED: 'default',
+//   LEASED: 'default',
+//   ACTIVE: 'default',
+//   RENEWAL_PENDING: 'secondary',
+//   ENDING: 'destructive',
+//   ENDED: 'outline',
+//   CANCELLED: 'destructive',
+//   ON_HOLD: 'secondary',
+// };
 
 /** CSS colour classes per status for the coloured pill */
 const STATUS_COLOUR: Record<string, string> = {

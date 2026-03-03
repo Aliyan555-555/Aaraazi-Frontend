@@ -5,6 +5,8 @@
 
 import { apiClient } from "@/lib/api/client";
 import type { Contact as SchemaContact } from "@/types/schema";
+import type { Task } from "./tasks.service";
+import type { Interaction } from "./interactions.service";
 import { ContactType, ContactCategory, ContactStatus } from "@/types/schema";
 
 export interface CreateContactDto {
@@ -64,6 +66,13 @@ export interface ContactStatistics {
   recentContacts: number;
 }
 
+/** Contact with tasks and interactions — single API response */
+export interface ContactDetailsResponse {
+  contact: SchemaContact;
+  tasks: Task[];
+  interactions: Interaction[];
+}
+
 // ============================================================================
 // Contacts Service
 // ============================================================================
@@ -95,6 +104,21 @@ class ContactsService {
       return response.data;
     } catch (error) {
       console.error("Failed to fetch contacts:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get contact with tasks and interactions in one call
+   */
+  async findDetails(id: string): Promise<ContactDetailsResponse> {
+    try {
+      const response = await apiClient.get<ContactDetailsResponse>(
+        `${this.baseUrl}/${id}/details`,
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`Failed to fetch contact details ${id}:`, error);
       throw error;
     }
   }

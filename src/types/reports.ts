@@ -1,9 +1,9 @@
 /**
  * Reports Module - Type Definitions
- * 
+ *
  * Comprehensive ERP-standard reporting system for aaraazi
  * Integrates data from Properties, Leads, Contacts, Financials, Portfolios, and Performance modules
- * 
+ *
  * @module types/reports
  * @version 1.0.0
  */
@@ -51,32 +51,32 @@ export interface ReportTemplate {
  * Report categories for organization
  */
 export type ReportCategory =
-  | 'executive-summary'      // High-level KPI dashboards
-  | 'financial-analysis'     // P&L, Cash Flow, ROI
-  | 'sales-performance'      // Deal analytics, conversion
-  | 'inventory-analysis'     // Property portfolio insights
-  | 'lead-analytics'         // Lead funnel, sources
-  | 'agent-performance'      // Individual/team metrics
-  | 'client-insights'        // Client behavior, lifetime value
-  | 'market-trends'          // Market analysis, pricing
-  | 'operational'            // Process efficiency
-  | 'compliance'             // Regulatory, audit trails
-  | 'custom';                // User-created reports
+  | "executive-summary" // High-level KPI dashboards
+  | "financial-analysis" // P&L, Cash Flow, ROI
+  | "sales-performance" // Deal analytics, conversion
+  | "inventory-analysis" // Property portfolio insights
+  | "lead-analytics" // Lead funnel, sources
+  | "agent-performance" // Individual/team metrics
+  | "client-insights" // Client behavior, lifetime value
+  | "market-trends" // Market analysis, pricing
+  | "operational" // Process efficiency
+  | "compliance" // Regulatory, audit trails
+  | "custom"; // User-created reports
 
 /**
  * Data modules that can be reported on
  */
 export type ReportModule =
-  | 'properties'
-  | 'leads'
-  | 'contacts'
-  | 'deals'
-  | 'financials'
-  | 'portfolio'
-  | 'performance'
-  | 'requirements'
-  | 'cycles'
-  | 'cross-module'; // Reports that combine multiple modules
+  | "properties"
+  | "leads"
+  | "contacts"
+  | "deals"
+  | "financials"
+  | "portfolio"
+  | "performance"
+  | "requirements"
+  | "cycles"
+  | "cross-module"; // Reports that combine multiple modules
 
 /**
  * Report configuration
@@ -125,7 +125,7 @@ export interface ReportDataSource {
 export interface ReportJoin {
   targetModule: ReportModule;
   targetEntity: string;
-  joinType: 'inner' | 'left' | 'right';
+  joinType: "inner" | "left" | "right";
   onField: string;
   targetField: string;
 }
@@ -134,7 +134,7 @@ export interface ReportJoin {
  * Date range configuration
  */
 export interface DateRangeConfig {
-  type: 'preset' | 'custom' | 'rolling';
+  type: "preset" | "custom" | "rolling";
 
   // Preset ranges
   preset?: DateRangePreset;
@@ -145,10 +145,10 @@ export interface DateRangeConfig {
 
   // Rolling range
   rollingPeriod?: number;
-  rollingUnit?: 'days' | 'weeks' | 'months' | 'quarters' | 'years';
+  rollingUnit?: "days" | "weeks" | "months" | "quarters" | "years";
 
   // Comparison
-  compareWith?: 'previous-period' | 'previous-year' | 'custom';
+  compareWith?: "previous-period" | "previous-year" | "custom";
   comparisonStartDate?: string;
   comparisonEndDate?: string;
 }
@@ -157,24 +157,24 @@ export interface DateRangeConfig {
  * Preset date ranges
  */
 export type DateRangePreset =
-  | 'today'
-  | 'yesterday'
-  | 'this-week'
-  | 'last-week'
-  | 'this-month'
-  | 'last-month'
-  | 'this-quarter'
-  | 'last-quarter'
-  | 'this-year'
-  | 'last-year'
-  | 'mtd'              // Month to date
-  | 'qtd'              // Quarter to date
-  | 'ytd'              // Year to date
-  | 'last-7-days'
-  | 'last-30-days'
-  | 'last-90-days'
-  | 'last-12-months'
-  | 'all-time';
+  | "today"
+  | "yesterday"
+  | "this-week"
+  | "last-week"
+  | "this-month"
+  | "last-month"
+  | "this-quarter"
+  | "last-quarter"
+  | "this-year"
+  | "last-year"
+  | "mtd" // Month to date
+  | "qtd" // Quarter to date
+  | "ytd" // Year to date
+  | "last-7-days"
+  | "last-30-days"
+  | "last-90-days"
+  | "last-12-months"
+  | "all-time";
 
 /**
  * Report filter
@@ -184,42 +184,42 @@ export interface ReportFilter {
   field: string;
   fieldLabel: string;
   operator: FilterOperator;
-  value: any;
+  value: unknown;
   dataType: FilterDataType;
-  logicalOperator?: 'AND' | 'OR';
+  logicalOperator?: "AND" | "OR";
 }
 
 /**
  * Filter operators
  */
 export type FilterOperator =
-  | 'equals'
-  | 'not-equals'
-  | 'contains'
-  | 'not-contains'
-  | 'starts-with'
-  | 'ends-with'
-  | 'greater-than'
-  | 'less-than'
-  | 'greater-or-equal'
-  | 'less-or-equal'
-  | 'between'
-  | 'in'
-  | 'not-in'
-  | 'is-null'
-  | 'is-not-null';
+  | "equals"
+  | "not-equals"
+  | "contains"
+  | "not-contains"
+  | "starts-with"
+  | "ends-with"
+  | "greater-than"
+  | "less-than"
+  | "greater-or-equal"
+  | "less-or-equal"
+  | "between"
+  | "in"
+  | "not-in"
+  | "is-null"
+  | "is-not-null";
 
 /**
  * Filter data types
  */
 export type FilterDataType =
-  | 'text'
-  | 'number'
-  | 'currency'
-  | 'date'
-  | 'boolean'
-  | 'select'
-  | 'multi-select';
+  | "text"
+  | "number"
+  | "currency"
+  | "date"
+  | "boolean"
+  | "select"
+  | "multi-select";
 
 /**
  * Report dimension (grouping/breakdown)
@@ -229,21 +229,21 @@ export interface ReportDimension {
   field: string;
   label: string;
   groupBy: GroupByType;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 /**
  * Group by types for dimensions
  */
 export type GroupByType =
-  | 'exact'              // Exact value
-  | 'date-day'           // Group by day
-  | 'date-week'          // Group by week
-  | 'date-month'         // Group by month
-  | 'date-quarter'       // Group by quarter
-  | 'date-year'          // Group by year
-  | 'range'              // Numeric ranges
-  | 'custom';            // Custom grouping logic
+  | "exact" // Exact value
+  | "date-day" // Group by day
+  | "date-week" // Group by week
+  | "date-month" // Group by month
+  | "date-quarter" // Group by quarter
+  | "date-year" // Group by year
+  | "range" // Numeric ranges
+  | "custom"; // Custom grouping logic
 
 /**
  * Report metric (what to measure)
@@ -263,23 +263,23 @@ export interface ReportMetric {
  * Aggregation types
  */
 export type AggregationType =
-  | 'count'
-  | 'count-distinct'
-  | 'sum'
-  | 'average'
-  | 'min'
-  | 'max'
-  | 'median'
-  | 'percentile'
-  | 'first'
-  | 'last'
-  | 'none';
+  | "count"
+  | "count-distinct"
+  | "sum"
+  | "average"
+  | "min"
+  | "max"
+  | "median"
+  | "percentile"
+  | "first"
+  | "last"
+  | "none";
 
 /**
  * Metric format
  */
 export interface MetricFormat {
-  type: 'number' | 'currency' | 'percentage' | 'duration' | 'text';
+  type: "number" | "currency" | "percentage" | "duration" | "text";
   decimals?: number;
   prefix?: string;
   suffix?: string;
@@ -290,7 +290,7 @@ export interface MetricFormat {
  * Metric threshold for conditional formatting
  */
 export interface MetricThreshold {
-  condition: 'greater-than' | 'less-than' | 'between';
+  condition: "greater-than" | "less-than" | "between";
   value: number;
   value2?: number; // For 'between'
   color: string;
@@ -302,7 +302,7 @@ export interface MetricThreshold {
  */
 export interface ReportSort {
   field: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
   priority: number;
 }
 
@@ -311,7 +311,7 @@ export interface ReportSort {
  */
 export interface ComparisonConfig {
   enabled: boolean;
-  type: 'period-over-period' | 'year-over-year' | 'custom';
+  type: "period-over-period" | "year-over-year" | "custom";
   showVariance: boolean;
   showPercentChange: boolean;
 }
@@ -320,20 +320,20 @@ export interface ComparisonConfig {
  * Visualization types
  */
 export type VisualizationType =
-  | 'table'              // Data table
-  | 'summary-cards'      // KPI cards
-  | 'bar-chart'          // Bar chart
-  | 'line-chart'         // Line chart
-  | 'area-chart'         // Area chart
-  | 'pie-chart'          // Pie chart
-  | 'donut-chart'        // Donut chart
-  | 'funnel-chart'       // Funnel chart
-  | 'scatter-plot'       // Scatter plot
-  | 'heatmap'            // Heat map
-  | 'tree-map'           // Tree map
-  | 'pivot-table'        // Pivot table
-  | 'gauge'              // Gauge/speedometer
-  | 'progress-bar';      // Progress bar
+  | "table" // Data table
+  | "summary-cards" // KPI cards
+  | "bar-chart" // Bar chart
+  | "line-chart" // Line chart
+  | "area-chart" // Area chart
+  | "pie-chart" // Pie chart
+  | "donut-chart" // Donut chart
+  | "funnel-chart" // Funnel chart
+  | "scatter-plot" // Scatter plot
+  | "heatmap" // Heat map
+  | "tree-map" // Tree map
+  | "pivot-table" // Pivot table
+  | "gauge" // Gauge/speedometer
+  | "progress-bar"; // Progress bar
 
 // ============================================
 // GENERATED REPORT INSTANCE
@@ -389,7 +389,7 @@ export interface ReportData {
  */
 export interface ReportRow {
   id: string;
-  [key: string]: any; // Dynamic fields based on report config
+  [key: string]: unknown; // Dynamic fields based on report config
 
   // Metadata
   _metadata?: {
@@ -408,7 +408,7 @@ export interface ReportSummary {
     formatted: string;
     change?: number;
     percentChange?: number;
-    trend?: 'up' | 'down' | 'stable';
+    trend?: "up" | "down" | "stable";
   };
 }
 
@@ -425,7 +425,7 @@ export interface ReportParameters {
   filters: {
     [filterId: string]: {
       label: string;
-      value: any;
+      value: unknown;
       formatted: string;
     };
   };
@@ -450,7 +450,7 @@ export interface ReportExport {
 /**
  * Export formats
  */
-export type ExportFormat = 'pdf' | 'excel' | 'csv' | 'json' | 'png';
+export type ExportFormat = "pdf" | "excel" | "csv" | "json" | "png";
 
 // ============================================
 // REPORT SCHEDULING
@@ -505,7 +505,7 @@ export interface ScheduleConfig {
   monthOfQuarter?: number; // 1-3 for quarterly
 
   // Date range (how to handle report date ranges)
-  dateRangeMode: 'rolling' | 'fixed';
+  dateRangeMode: "rolling" | "fixed";
 
   // End date for schedule
   endDate?: string;
@@ -516,11 +516,11 @@ export interface ScheduleConfig {
  * Schedule frequency
  */
 export type ScheduleFrequency =
-  | 'daily'
-  | 'weekly'
-  | 'monthly'
-  | 'quarterly'
-  | 'yearly';
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "quarterly"
+  | "yearly";
 
 /**
  * Distribution configuration
@@ -537,7 +537,7 @@ export interface DistributionConfig {
   attachmentFormats: ExportFormat[];
 
   // Delivery options
-  deliveryMethod: 'email' | 'save-to-storage' | 'both';
+  deliveryMethod: "email" | "save-to-storage" | "both";
   storagePath?: string;
 }
 
@@ -560,7 +560,7 @@ export interface ReportHistory {
   executedByName: string;
 
   // Result
-  status: 'success' | 'failed' | 'partial';
+  status: "success" | "failed" | "partial";
   rowCount?: number;
   executionTime: number; // milliseconds
 
@@ -582,20 +582,20 @@ export interface ReportAction {
   type: ReportActionType;
   performedAt: string;
   performedBy: string;
-  details?: any;
+  details?: unknown;
 }
 
 /**
  * Report action types
  */
 export type ReportActionType =
-  | 'generated'
-  | 'viewed'
-  | 'exported'
-  | 'shared'
-  | 'scheduled'
-  | 'modified'
-  | 'deleted';
+  | "generated"
+  | "viewed"
+  | "exported"
+  | "shared"
+  | "scheduled"
+  | "modified"
+  | "deleted";
 
 // ============================================
 // REPORT WIDGETS & DASHBOARDS
@@ -646,62 +646,62 @@ export interface ReportWidget {
  */
 export const SYSTEM_REPORTS = {
   // Executive Summary
-  EXECUTIVE_DASHBOARD: 'exec-dashboard',
-  BUSINESS_OVERVIEW: 'business-overview',
+  EXECUTIVE_DASHBOARD: "exec-dashboard",
+  BUSINESS_OVERVIEW: "business-overview",
 
   // Financial Analysis
-  REVENUE_ANALYSIS: 'revenue-analysis',
-  COMMISSION_SUMMARY: 'commission-summary',
-  EXPENSE_ANALYSIS: 'expense-analysis',
-  PROFIT_LOSS: 'profit-loss',
-  CASH_FLOW: 'cash-flow',
-  PORTFOLIO_ROI: 'portfolio-roi',
-  ACCOUNTS_RECEIVABLE: 'accounts-receivable',
-  ACCOUNTS_PAYABLE: 'accounts-payable',
-  MONTHLY_REVENUE_PROJECTION: 'monthly-revenue-projection',
-  DAILY_OPERATIONS: 'daily-operations',
+  REVENUE_ANALYSIS: "revenue-analysis",
+  COMMISSION_SUMMARY: "commission-summary",
+  EXPENSE_ANALYSIS: "expense-analysis",
+  PROFIT_LOSS: "profit-loss",
+  CASH_FLOW: "cash-flow",
+  PORTFOLIO_ROI: "portfolio-roi",
+  ACCOUNTS_RECEIVABLE: "accounts-receivable",
+  ACCOUNTS_PAYABLE: "accounts-payable",
+  MONTHLY_REVENUE_PROJECTION: "monthly-revenue-projection",
+  DAILY_OPERATIONS: "daily-operations",
 
   // Sales Performance
-  DEALS_PIPELINE: 'deals-pipeline',
-  CONVERSION_FUNNEL: 'conversion-funnel',
-  SALES_BY_AGENT: 'sales-by-agent',
-  DEAL_VELOCITY: 'deal-velocity',
+  DEALS_PIPELINE: "deals-pipeline",
+  CONVERSION_FUNNEL: "conversion-funnel",
+  SALES_BY_AGENT: "sales-by-agent",
+  DEAL_VELOCITY: "deal-velocity",
 
   // Inventory Analysis
-  PROPERTY_PORTFOLIO: 'property-portfolio',
-  INVENTORY_AGING: 'inventory-aging',
-  PROPERTY_PERFORMANCE: 'property-performance',
-  MARKET_VALUE_TRENDS: 'market-value-trends',
+  PROPERTY_PORTFOLIO: "property-portfolio",
+  INVENTORY_AGING: "inventory-aging",
+  PROPERTY_PERFORMANCE: "property-performance",
+  MARKET_VALUE_TRENDS: "market-value-trends",
 
   // Lead Analytics
-  LEAD_FUNNEL: 'lead-funnel',
-  LEAD_SOURCE_ANALYSIS: 'lead-source-analysis',
-  LEAD_RESPONSE_TIME: 'lead-response-time',
-  LEAD_CONVERSION: 'lead-conversion',
+  LEAD_FUNNEL: "lead-funnel",
+  LEAD_SOURCE_ANALYSIS: "lead-source-analysis",
+  LEAD_RESPONSE_TIME: "lead-response-time",
+  LEAD_CONVERSION: "lead-conversion",
 
   // Agent Performance
-  AGENT_PERFORMANCE: 'agent-performance',
-  AGENT_LEADERBOARD: 'agent-leaderboard',
-  TEAM_PRODUCTIVITY: 'team-productivity',
+  AGENT_PERFORMANCE: "agent-performance",
+  AGENT_LEADERBOARD: "agent-leaderboard",
+  TEAM_PRODUCTIVITY: "team-productivity",
 
   // Client Insights
-  CLIENT_LIFETIME_VALUE: 'client-lifetime-value',
-  CLIENT_SEGMENTATION: 'client-segmentation',
-  REPEAT_BUSINESS: 'repeat-business',
+  CLIENT_LIFETIME_VALUE: "client-lifetime-value",
+  CLIENT_SEGMENTATION: "client-segmentation",
+  REPEAT_BUSINESS: "repeat-business",
 
   // Market Trends
-  MARKET_ANALYSIS: 'market-analysis',
-  PRICING_TRENDS: 'pricing-trends',
-  DEMAND_ANALYSIS: 'demand-analysis',
+  MARKET_ANALYSIS: "market-analysis",
+  PRICING_TRENDS: "pricing-trends",
+  DEMAND_ANALYSIS: "demand-analysis",
 
   // Operational
-  CYCLE_TIME_ANALYSIS: 'cycle-time-analysis',
-  PROCESS_EFFICIENCY: 'process-efficiency',
+  CYCLE_TIME_ANALYSIS: "cycle-time-analysis",
+  PROCESS_EFFICIENCY: "process-efficiency",
 
   // Requirements
-  BUYER_REQUIREMENTS: 'buyer-requirements',
-  RENT_REQUIREMENTS: 'rent-requirements',
-  MATCHING_SUCCESS: 'matching-success',
+  BUYER_REQUIREMENTS: "buyer-requirements",
+  RENT_REQUIREMENTS: "rent-requirements",
+  MATCHING_SUCCESS: "matching-success",
 } as const;
 
 // ============================================

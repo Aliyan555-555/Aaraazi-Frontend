@@ -37,7 +37,7 @@ export interface Property {
   id: string;
   title: string;
   description?: string;
-  address: string | any; // often uses string, but can be PropertyAddress
+  address: string | PropertyAddress; // often uses string, but can be PropertyAddress
   addressDetails?: PropertyAddress;
   city?: string;
   area: number | string;
@@ -45,6 +45,8 @@ export interface Property {
   propertyType: PropertyType;
   price: number;
   status: PropertyStatus;
+  /** Raw backend listing status (e.g. DRAFT, ACTIVE) for API updates */
+  listingStatusBackend?: string;
   agentId: string;
   agentName?: string;
   assignedAgent?: string;
@@ -97,10 +99,10 @@ export interface Property {
   currentOwnerId?: string;
   currentOwnerName?: string;
   currentOwnerType?: "client" | "agency" | "investor" | "external";
-  ownershipHistory?: any[]; // Full OwnershipRecord[] type might cause circular dependency if imported
-  investorShares?: any[]; // InvestorShare[]
+  ownershipHistory?: Record<string, unknown>[]; // Full OwnershipRecord[] type might cause circular dependency if imported
+  investorShares?: Record<string, unknown>[]; // InvestorShare[]
   transactionIds?: string[];
-  cycleHistory?: any;
+  cycleHistory?: Record<string, unknown>;
 
   // Legacy/Module Specific
   type?: string;

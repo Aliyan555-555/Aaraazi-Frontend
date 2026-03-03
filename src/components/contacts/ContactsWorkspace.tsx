@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Plus,
   Download,
@@ -8,8 +8,6 @@ import {
   Phone,
   Users,
   Tag,
-  Building2,
-  User as UserIcon,
   MoreHorizontal,
   Eye,
   Edit,
@@ -21,18 +19,17 @@ import {
 import { User } from '../../types';
 import { ContactStatus, ContactType, ContactCategory } from '@/types/schema';
 import { WorkspacePageTemplate } from '../workspace/WorkspacePageTemplate';
-import { ContactWorkspaceCard } from './ContactWorkspaceCard';
 import { ContactCard } from '../layout/ContactCard';
 import { StatusBadge } from '../layout/StatusBadge'; // PHASE 5: Add StatusBadge import
-import { Column, EmptyStatePresets } from '../workspace';
+import { Column } from '../workspace';
 import { formatPKR } from '../../lib/currency';
 import { exportContactsToCSV } from '../../lib/exportUtils';
+import { getTagArray, tagsToApi } from '@/lib/contacts.utils';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useContacts, useUpdateContact, useDeleteContact, useBulkUpdateContacts, useBulkDeleteContacts } from '../../hooks/useContacts';
 import { mapApiContactToUIContact, type UIContact } from './mappers/contact.mappers';
 import { toast } from 'sonner';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { ContactFormModal } from '../ContactFormModal';
+import { useRouter } from 'next/navigation';
 
 /** Contact with legacy UI/tracking fields for display */
 type ContactWithLegacy = UIContact & {
@@ -53,9 +51,8 @@ type ContactWithLegacy = UIContact & {
 /** Alias for handlers - accepts UIContact (has id, etc.) */
 type ContactForHandlers = UIContact;
 
-export interface ContactsWorkspaceV4EnhancedProps {
+export interface ContactsWorkspaceProps {
   user: User;
-  onNavigate: (section: string, id?: string) => void;
   onAddContact?: () => void;
   onEditContact?: (contact: ContactForHandlers) => void;
 }
@@ -63,9 +60,8 @@ export interface ContactsWorkspaceV4EnhancedProps {
 /**
  * ContactsWorkspaceV4Enhanced - Complete workspace with all functionality
  */
-export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
+export const ContactsWorkspace: React.FC<ContactsWorkspaceProps> = ({
   user,
-  onNavigate,
   onAddContact,
   onEditContact,
 }) => {
@@ -77,6 +73,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
   const { data: apiContacts, isLoading, refetch } = useContacts(query);
   const updateContactMutation = useUpdateContact();
   const deleteContactMutation = useDeleteContact();
+  const router = useRouter();
   const bulkUpdateMutation = useBulkUpdateContacts();
   const bulkDeleteMutation = useBulkDeleteContacts();
 
@@ -90,29 +87,13 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [followUpFilter, setFollowUpFilter] = useState<string[]>([]);
 
-  // Helper functions to handle tags (can be string or array)
-  const getTagArray = (tags: string | string[] | undefined | null): string[] => {
-    if (Array.isArray(tags)) return tags;
-    if (typeof tags === 'string' && tags.trim() !== '') {
-      try {
-        const parsed = JSON.parse(tags) as unknown;
-        if (Array.isArray(parsed)) return parsed as string[];
-        return tags.split(',').map(t => t.trim()).filter(t => t);
-      } catch {
-        return tags.split(',').map(t => t.trim()).filter(t => t);
-      }
-    }
-    return [];
-  };
-
-  // UI Contact type (types/contacts) uses tags as string[]; pass-through for data layer.
-  const serializeTags = (tags: string[]): string[] => tags;
+  // getTagArray and tagsToApi are imported from @/lib/contacts.utils
 
   // Calculate stats
   const stats = useMemo(() => {
     const active = allContacts.filter((c) => c.status === ContactStatus.ACTIVE).length;
     const clients = allContacts.filter((c) => c.type === ContactType.CLIENT).length;
-    const prospects = allContacts.filter((c) => c.type === ContactType.PROSPECT).length;
+
 
     const totalCommission = allContacts
       .filter(c => (c as ContactWithLegacy).totalCommissionEarned)
@@ -165,7 +146,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
   };
 
   const handleView = (contact: ContactForHandlers) => {
-    onNavigate('contact-details', contact.id);
+    router.push(`/dashboard/contacts/${contact.id}`);
   };
 
   const handleEdit = (contact: ContactForHandlers) => {
@@ -178,7 +159,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
     if (window.confirm(`Are you sure you want to delete ${contact.name}? This action cannot be undone.`)) {
       try {
         await deleteContactMutation.mutateAsync(contact.id);
-        refetch();
       } catch { /* toast handled by store */ }
     }
   };
@@ -187,7 +167,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
     try {
       await updateContactMutation.mutateAsync({ id: contact.id, data: { status: newStatus } });
       toast.success(`Contact status changed to ${newStatus}`);
-      refetch();
     } catch { /* toast handled by store */ }
   };
 
@@ -205,7 +184,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
     try {
       await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.ARCHIVED } });
       toast.success(`Archived ${ids.length} contacts`);
-      refetch();
     } catch { /* toast handled by store */ }
   };
 
@@ -214,7 +192,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
       try {
         await bulkDeleteMutation.mutateAsync(ids);
         toast.success(`Deleted ${ids.length} contacts`);
-        refetch();
       } catch { /* toast handled by store */ }
     }
   };
@@ -223,7 +200,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
     try {
       await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.ACTIVE } });
       toast.success(`Activated ${ids.length} contacts`);
-      refetch();
     } catch { /* toast handled by store */ }
   };
 
@@ -231,7 +207,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
     try {
       await bulkUpdateMutation.mutateAsync({ ids, updates: { status: ContactStatus.INACTIVE } });
       toast.success(`Deactivated ${ids.length} contacts`);
-      refetch();
     } catch { /* toast handled by store */ }
   };
 
@@ -244,7 +219,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
         if (contact) {
           const currentTags = getTagArray(contact.tags);
           if (!currentTags.includes(tag.trim())) {
-            updates.push({ id, tags: [...currentTags, tag.trim()].join(',') });
+            updates.push({ id, tags: tagsToApi([...currentTags, tag.trim()]) });
           }
         }
       }
@@ -252,7 +227,6 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
         try {
           await Promise.all(updates.map(({ id, tags }) => updateContactMutation.mutateAsync({ id, data: { tags } })));
           toast.success(`Added tag "${tag}" to ${updates.length} contacts`);
-          refetch();
         } catch { /* toast handled by store */ }
       }
     }
@@ -462,12 +436,18 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={() => handleView(c)}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleEdit(c)}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleEdit(c);
+                }}
+              >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Contact
               </DropdownMenuItem>
@@ -824,7 +804,7 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
         }}
 
         // Callbacks
-        onItemClick={(contact) => onNavigate('contact-details', contact.id)}
+        onItemClick={(contact) => router.push(`/dashboard/contacts/${contact.id}`)}
       />
 
       {/* Add/Edit Contact Modal */}
@@ -836,8 +816,9 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
         }}
         onSuccess={() => {
           setShowAddContactModal(false);
+          const wasEdit = editingContact !== null;
           setEditingContact(null);
-          refetch();
+          if (!wasEdit) refetch();
         }}
         agentId={user.id}
         tenantId={tenantId ?? undefined}
@@ -853,8 +834,8 @@ export const ContactsWorkspace: React.FC<ContactsWorkspaceV4EnhancedProps> = ({
                 : editingContact.category === ContactCategory.BOTH
                   ? undefined
                   : (editingContact.category === ContactCategory.EXTERNAL_BROKER
-                      ? 'external-broker'
-                      : editingContact.category?.toLowerCase()) as 'buyer' | 'seller' | 'tenant' | 'landlord' | 'investor' | 'vendor' | 'external-broker'
+                    ? 'external-broker'
+                    : editingContact.category?.toLowerCase()) as 'buyer' | 'seller' | 'tenant' | 'landlord' | 'investor' | 'vendor' | 'external-broker'
         }
       />
     </>

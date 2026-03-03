@@ -346,6 +346,7 @@ export function transformPropertyListingToUI(
     propertyType: mp.type.toLowerCase() as Property["propertyType"],
     price: Number(listing.price) || 0,
     status: mapStatus(listing.status),
+    listingStatusBackend: listing.status,
     agentId: listing.agentId,
     agentName: listing.agent?.name ?? undefined,
     assignedAgent: listing.agentId,

@@ -1,20 +1,22 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ContactDetailsV4 } from '@/components/contacts/ContactDetailsV4';
+import { ContactDetails } from '@/components/contacts/ContactDetails';
 import { mapAuthUserToUIUser } from '@/types';
 import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function ContactDetailPage() {
   const { id } = useParams();
-  const { user: saasUser } = useAuthStore();
+  const { user: saasUser, isInitialized } = useAuthStore();
   const router = useRouter();
 
   const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
 
-  if (!id || typeof id !== 'string' || !user) {
+  // Invalid route - no contact id
+  if (!id || typeof id !== 'string') {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)]">
         <p className="text-gray-500 mb-4">Contact not found</p>
@@ -28,32 +30,27 @@ export default function ContactDetailPage() {
     );
   }
 
-  const handleNavigate = (page: string, data?: unknown) => {
-    if (page === 'contact-details' && typeof data === 'string') {
-      router.push(`/dashboard/contacts/${data}`);
-      return;
-    }
-    if (page === 'property-detail' && data && typeof data === 'object' && 'id' in data) {
-      router.push(`/dashboard/properties/${(data as { id: string }).id}`);
-      return;
-    }
-    if (page === 'contacts') {
-      router.push('/dashboard/contacts');
-      return;
-    }
-    router.push(`/dashboard/${page}`);
-  };
+  // Auth still rehydrating – show loading instead of "not found"
+  if (!isInitialized || !user) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-pulse h-8 w-8 rounded-full bg-primary/20" />
+              <p className="text-muted-foreground text-sm">Loading...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <ContactDetailsV4
+    <ContactDetails
       contactId={id}
       user={user}
       onBack={() => router.push('/dashboard/contacts')}
-      onNavigate={handleNavigate}
-      onEdit={(contact) => {
-        // TODO: open edit modal or navigate to edit route when implemented
-        toast.info(`Edit contact: ${contact.name}`);
-      }}
       onDelete={(contactId) => toast.info(`Delete contact: ${contactId}`)}
     />
   );

@@ -29,13 +29,8 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Label } from './ui/label';
 import { MultiStepForm, useMultiStepForm, type Step } from './ui/multi-step-form';
-import {
-  required,
-  positiveNumber,
-  validateForm,
-  hasErrors,
-  type FormErrors,
-} from '../lib/formValidation';
+import { validatePropertyStep } from '@/validations/properties';
+import { type FormErrors } from '@/lib/formValidation';
 import { ContactFormModal } from './ContactFormModal';
 import { PropertyAddressFields } from './PropertyAddressFields';
 import { ImageUpload } from './properties/ImageUpload';
@@ -48,6 +43,17 @@ import { useLocations } from '@/hooks/useLocations';
 import { usePropertyMutations } from '@/hooks/useProperties';
 import type { CreatePropertyData } from '@/services/properties.service';
 
+/** Map UI status (e.g. available, under-offer) to backend enum for PATCH */
+function mapUIStatusToBackend(uiStatus: string): string {
+  const map: Record<string, string> = {
+    available: 'ACTIVE',
+    'under-offer': 'UNDER_OFFER',
+    'under-contract': 'UNDER_CONTRACT',
+    sold: 'SOLD',
+    rented: 'RENTED',
+  };
+  return map[uiStatus] ?? 'ACTIVE';
+}
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -208,10 +214,10 @@ const Step2OwnerLocation = React.memo(({
         error={errors.currentOwnerId}
         hint="Select from existing contacts or add new"
       >
-        {formData.currentOwnerId ? (
+        {(formData.currentOwnerId || formData.currentOwnerName) ? (
           <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <Users className="w-4 h-4 text-blue-600" />
-            <span className="flex-1">{formData.currentOwnerName}</span>
+            <span className="flex-1">{formData.currentOwnerName || 'Property owner'}</span>
             <Button
               type="button"
               variant="ghost"
@@ -350,7 +356,7 @@ const Step3PropertyDetails = React.memo(({
           />
         </FormField>
 
-        <FormField label="Unit" required>
+        <FormField label="Unit" required error={errors.areaUnit}>
           <Select
             value={formData.areaUnit}
             onValueChange={(value) => onFieldChange('areaUnit', value)}
@@ -543,34 +549,17 @@ const Step4AdditionalInfo = React.memo(({
 
 Step4AdditionalInfo.displayName = 'Step4AdditionalInfo';
 
-// ==================== VALIDATION RULES ====================
-
-// Step 1: Property Type
-const step1ValidationRules = {
-  propertyType: (value: string) => required(value, 'Property type'),
-};
-
-// Step 2: Owner & Location
-const step2ValidationRules = {
-  currentOwnerId: (value: string) => required(value, 'Owner'),
-  cityId: (value: string) => required(value, 'City'),
-  areaId: (value: string) => required(value, 'Area'),
-};
-
-// Step 3: Property Details
-const step3ValidationRules = {
-  area: (value: string) =>
-    required(value, 'Area') || positiveNumber(value, 'Area'),
-};
-
-// Step 4: No required fields (all optional)
-
 // ==================== MAIN COMPONENT ====================
 
 export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisitionType }: PropertyFormProps) {
   const { user: authUser } = useAuthStore();
   const { create, update, uploadImage } = usePropertyMutations();
   const { getCountries } = useLocations();
+
+  // Resolve structured address: API uses addressDetails; legacy may use address object
+  const addressSource =
+    editingProperty?.addressDetails ??
+    (typeof editingProperty?.address === 'object' ? editingProperty.address : null);
 
   // Form state using multi-step hook
   const initialData: PropertyFormData = {
@@ -579,14 +568,14 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
     currentOwnerId: editingProperty?.currentOwnerId || '',
     currentOwnerName: editingProperty?.currentOwnerName || '',
 
-    // Structured address
-    cityId: (typeof editingProperty?.address === 'object' ? editingProperty.address.cityId : '') || '',
-    areaId: (typeof editingProperty?.address === 'object' ? editingProperty.address.areaId : '') || '',
-    blockId: (typeof editingProperty?.address === 'object' ? editingProperty.address.blockId : '') || '',
-    buildingId: (typeof editingProperty?.address === 'object' ? editingProperty.address.buildingId : '') || '',
-    plotNumber: (typeof editingProperty?.address === 'object' ? editingProperty.address.plotNumber : '') || '',
-    floorNumber: (typeof editingProperty?.address === 'object' ? editingProperty.address.floorNumber : '') || '',
-    unitNumber: (typeof editingProperty?.address === 'object' ? editingProperty.address.unitNumber : '') || '',
+    // Structured address (from addressDetails or legacy address object)
+    cityId: addressSource?.cityId ?? '',
+    areaId: addressSource?.areaId ?? '',
+    blockId: addressSource?.blockId ?? '',
+    buildingId: (addressSource as { buildingName?: string; buildingId?: string } | null)?.buildingName ?? (addressSource as { buildingId?: string } | null)?.buildingId ?? '',
+    plotNumber: addressSource?.plotNumber ?? '',
+    floorNumber: addressSource?.floorNumber ?? '',
+    unitNumber: addressSource?.unitNumber ?? '',
 
     area: editingProperty?.area?.toString() || '',
     areaUnit: (editingProperty?.areaUnit?.toLowerCase() as any) || 'sqft',
@@ -672,60 +661,33 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
     updateFormData({ features: newFeatures });
   }, [formData.features, updateFormData]);
 
-  // ==================== STEP VALIDATION ====================
+  // ==================== STEP VALIDATION (Zod schemas) ====================
 
   const validateStep1 = useCallback(async () => {
-    const stepErrors = validateForm(formData, step1ValidationRules);
-    setErrors(stepErrors);
-
-    if (hasErrors(stepErrors)) {
-      toast.error('Please select a property type');
-      return false;
-    }
-    return true;
-  }, [formData]);
+    const result = validatePropertyStep(1, { propertyType: formData.propertyType });
+    if (result.success) return true;
+    setErrors(result.errors as FormErrors<PropertyFormData>);
+    toast.error('Please select a property type');
+    return false;
+  }, [formData.propertyType]);
 
   const validateStep2 = useCallback(async () => {
-    const stepErrors = validateForm(formData, step2ValidationRules);
-
-    // Additional address validation based on property type
-    const needsPlot = ['plot', 'land', 'house'].includes(formData.propertyType);
-    const needsBuilding = ['apartment', 'commercial'].includes(formData.propertyType);
-
-    if (needsPlot && !formData.plotNumber) {
-      stepErrors.plotNumber = 'Plot number is required for this property type';
-    }
-
-    if (needsBuilding) {
-      if (!formData.buildingId) stepErrors.buildingId = 'Building name is required';
-      if (!formData.floorNumber) stepErrors.floorNumber = 'Floor number is required';
-      if (!formData.unitNumber) stepErrors.unitNumber = 'Unit number is required';
-    }
-
-    setErrors(stepErrors);
-
-    if (hasErrors(stepErrors)) {
-      toast.error('Please fix the errors in Owner & Location');
-      return false;
-    }
-    return true;
+    const result = validatePropertyStep(2, formData);
+    if (result.success) return true;
+    setErrors(result.errors as FormErrors<PropertyFormData>);
+    toast.error('Please fix the errors in Owner & Location');
+    return false;
   }, [formData]);
 
   const validateStep3 = useCallback(async () => {
-    const stepErrors = validateForm(formData, step3ValidationRules);
-    setErrors(stepErrors);
-
-    if (hasErrors(stepErrors)) {
-      toast.error('Please fix the errors in Property Details');
-      return false;
-    }
-    return true;
+    const result = validatePropertyStep(3, formData);
+    if (result.success) return true;
+    setErrors(result.errors as FormErrors<PropertyFormData>);
+    toast.error('Please fix the errors in Property Details');
+    return false;
   }, [formData]);
 
-  const validateStep4 = useCallback(async () => {
-    // Step 4 has no required fields
-    return true;
-  }, []);
+  const validateStep4 = useCallback(async () => true, []);
 
   // ==================== FORM SUBMISSION ====================
 
@@ -801,7 +763,7 @@ export function PropertyForm({ user, onBack, onSuccess, editingProperty, acquisi
         const updateData = {
           title: formData.propertyType.charAt(0).toUpperCase() + formData.propertyType.slice(1) + " in " + formData.cityId,
           description: propertyData.description,
-          status: editingProperty.status.toUpperCase() as any,
+          status: (editingProperty.listingStatusBackend ?? mapUIStatusToBackend(editingProperty.status)) as any,
           listingType: (editingProperty.listingType === 'for-sale' ? 'SALE' : 'RENT') as any,
           images: propertyData.images,
         };

@@ -40,6 +40,8 @@ export function useContacts(query: QueryContactsDto = {}) {
     isLoading,
     error,
     refetch: () => fetchContacts(query),
+    /** Refetch without showing loading state — use after bulk mutations */
+    refetchSilent: () => fetchContacts(query, { silent: true }),
   };
 }
 
@@ -58,6 +60,27 @@ export function useContact(id: string, enabled = true) {
     isLoading,
     error,
     refetch: () => fetchContact(id),
+  };
+}
+
+/** Single API call for contact + tasks + interactions */
+export function useContactDetails(id: string, enabled = true) {
+  const data = useContactsStore((s) => s.detailFullCache[id]);
+  const isLoading = useContactsStore((s) => s.detailFullLoading[id] ?? false);
+  const error = useContactsStore((s) => s.detailFullError[id]);
+  const fetchContactDetails = useContactsStore((s) => s.fetchContactDetails);
+
+  useEffect(() => {
+    if (enabled && id) void fetchContactDetails(id);
+  }, [id, enabled, fetchContactDetails]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch: () => fetchContactDetails(id),
+    /** Refetch without showing loading state — use after mutations for seamless UX */
+    refetchSilent: () => fetchContactDetails(id, { silent: true }),
   };
 }
 
