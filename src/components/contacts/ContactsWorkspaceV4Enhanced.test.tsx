@@ -5,7 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ContactsWorkspaceV4Enhanced } from './ContactsWorkspaceV4Enhanced';
+import { ContactsWorkspace } from './ContactsWorkspace';
 import type { User } from '@/types';
 
 const mockUseContacts = vi.fn();
@@ -50,7 +50,7 @@ describe('ContactsWorkspaceV4Enhanced', () => {
       isLoading: true,
       refetch: vi.fn(),
     });
-    render(<ContactsWorkspaceV4Enhanced {...defaultProps} />);
+    render(<ContactsWorkspace {...defaultProps} />);
     // Component renders; loading is handled by WorkspacePageTemplate
     expect(document.body).toBeTruthy();
   });
@@ -62,7 +62,7 @@ describe('ContactsWorkspaceV4Enhanced', () => {
       isLoading: false,
       refetch: vi.fn(),
     });
-    render(<ContactsWorkspaceV4Enhanced {...defaultProps} />);
+    render(<ContactsWorkspace {...defaultProps} />);
     expect(screen.getByText(/No contacts yet/i)).toBeInTheDocument();
   });
 
@@ -89,7 +89,7 @@ describe('ContactsWorkspaceV4Enhanced', () => {
       isLoading: false,
       refetch: vi.fn(),
     });
-    render(<ContactsWorkspaceV4Enhanced {...defaultProps} />);
+    render(<ContactsWorkspace {...defaultProps} />);
     expect(screen.getByText('Ahmed Ali')).toBeInTheDocument();
   });
 });

@@ -8,8 +8,8 @@ import type { User as UIUser } from '../types';
 import { Notification } from '../types/notifications';
 import { NotificationItem } from './NotificationItem';
 
-const notifyMissingIntegration = (): never => {
-
+const notifyMissingIntegration = () => {
+return [];
 };
 const getNotifications = (..._args: any[]): any => notifyMissingIntegration();
 const getUnreadCount = (..._args: any[]): any => notifyMissingIntegration();
@@ -59,7 +59,7 @@ export function NotificationBell({ user, onNavigate, onOpenCenter }: Notificatio
 
   const loadNotifications = () => {
     const notifs = getNotifications(user.id);
-    setNotifications([]); // Show only 5 most recent in dropdown
+    setNotifications(notifs.slice(0, 5)); // Show only 5 most recent in dropdown
     setUnreadCount(getUnreadCount(user.id));
   };
 
