@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ContactDetails } from '@/components/contacts/ContactDetails';
@@ -12,8 +12,23 @@ export default function ContactDetailPage() {
   const { id } = useParams();
   const { user: saasUser, isInitialized } = useAuthStore();
   const router = useRouter();
+  const [authReady, setAuthReady] = useState(false);
 
   const user = useMemo(() => mapAuthUserToUIUser(saasUser), [saasUser]);
+
+  // Once store is ready (or after timeout): redirect if no user; otherwise allow render so contact API runs
+  useEffect(() => {
+    if (isInitialized || user) {
+      setAuthReady(true);
+      if (isInitialized && !saasUser) router.replace('/auth/agency-code');
+      return;
+    }
+    const t = setTimeout(() => {
+      setAuthReady(true);
+      if (!saasUser) router.replace('/auth/agency-code');
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [isInitialized, saasUser, user, router]);
 
   // Invalid route - no contact id
   if (!id || typeof id !== 'string') {
@@ -30,8 +45,8 @@ export default function ContactDetailPage() {
     );
   }
 
-  // Auth still rehydrating – show loading instead of "not found"
-  if (!isInitialized || !user) {
+  // Show loading only while waiting for store (rehydration or timeout). Then we render or redirect.
+  if (!authReady) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <Card className="max-w-md w-full">
@@ -44,6 +59,11 @@ export default function ContactDetailPage() {
         </Card>
       </div>
     );
+  }
+
+  // Redirect already triggered above; avoid rendering without user
+  if (!user) {
+    return null;
   }
 
   return (
