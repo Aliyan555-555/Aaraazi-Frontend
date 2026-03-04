@@ -97,6 +97,7 @@ export const useAuthStore = create<AuthStore>()(
           branding,
           agencies,
           error: null,
+          isInitialized: true,
         });
       },
 

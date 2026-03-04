@@ -44,14 +44,13 @@ export default function LoginPage() {
         return () => clearTimeout(timer);
     }, []);
 
-    // Redirect if no tenant selected (only after store has rehydrated from localStorage)
+    // Redirect only when store is ready and there is no tenant. When we have tenantId, auto-select single agency.
     useEffect(() => {
-        if (!isInitialized) return;
         if (!tenantId) {
-            router.replace('/auth/agency-code');
-        } else if (agencies.length === 1) {
-            setSelectedAgencyId(agencies[0].id);
+            if (isInitialized) router.replace('/auth/agency-code');
+            return;
         }
+        if (agencies.length === 1) setSelectedAgencyId(agencies[0].id);
     }, [isInitialized, tenantId, router, agencies]);
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -100,8 +99,8 @@ export default function LoginPage() {
         router.push('/auth/agency-code');
     };
 
-    // Show loader while rehydrating or when no tenant (don't redirect until isInitialized)
-    if (!isInitialized || !branding || !tenantId) {
+    // Show loader only when we don't have tenant context yet. If we have tenantId + branding (e.g. from setTenant), show form.
+    if (!tenantId || !branding) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
                 <div className="text-center space-y-4">
