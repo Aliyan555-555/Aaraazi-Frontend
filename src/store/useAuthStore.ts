@@ -357,10 +357,8 @@ export const useAuthStore = create<AuthStore>()(
             state.agencyId,
           );
         }
-        // Mark as initialized
-        if (state) {
-          state.isInitialized = true;
-        }
+        // Mark as initialized so login/agency pages know persist has loaded
+        useAuthStore.setState({ isInitialized: true });
       },
     }
   )

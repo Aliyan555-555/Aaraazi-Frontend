@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +22,7 @@ import { AARAAZI_BRAND } from '@/lib/brand';
  */
 export default function LoginPage() {
     const router = useRouter();
-    const { branding, tenantId, agencies } = useAuthStore();
+    const { branding, tenantId, agencies, isInitialized } = useAuthStore();
     const { login, isLoading, error, clearError } = useLogin();
 
     const [email, setEmail] = useState('');
@@ -30,15 +30,29 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [selectedAgencyId, setSelectedAgencyId] = useState<string>('');
     const [validationError, setValidationError] = useState('');
+    const emailRef = useRef<HTMLInputElement>(null);
+    const passwordRef = useRef<HTMLInputElement>(null);
 
-    // Redirect if no tenant selected
+    // Sync from DOM on mount/delay to handle browser autofill (autofill doesn't fire onChange)
     useEffect(() => {
+        const timer = setTimeout(() => {
+            const eVal = emailRef.current?.value?.trim() ?? '';
+            const pVal = passwordRef.current?.value ?? '';
+            setEmail((prev) => (eVal && !prev ? eVal : prev));
+            setPassword((prev) => (pVal && !prev ? pVal : prev));
+        }, 300);
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Redirect if no tenant selected (only after store has rehydrated from localStorage)
+    useEffect(() => {
+        if (!isInitialized) return;
         if (!tenantId) {
             router.replace('/auth/agency-code');
         } else if (agencies.length === 1) {
             setSelectedAgencyId(agencies[0].id);
         }
-    }, [tenantId, router, agencies]);
+    }, [isInitialized, tenantId, router, agencies]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -86,8 +100,8 @@ export default function LoginPage() {
         router.push('/auth/agency-code');
     };
 
-    // Show loader while checking tenant
-    if (!branding || !tenantId) {
+    // Show loader while rehydrating or when no tenant (don't redirect until isInitialized)
+    if (!isInitialized || !branding || !tenantId) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
                 <div className="text-center space-y-4">
@@ -187,8 +201,10 @@ export default function LoginPage() {
                                     <div className="relative">
                                         <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                         <Input
+                                            ref={emailRef}
                                             id="email"
                                             type="email"
+                                            autoComplete="email"
                                             value={email}
                                             onChange={e => setEmail(e.target.value)}
                                             required
@@ -212,8 +228,10 @@ export default function LoginPage() {
                                     <div className="relative">
                                         <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                         <Input
+                                            ref={passwordRef}
                                             id="password"
                                             type={showPassword ? 'text' : 'password'}
+                                            autoComplete="current-password"
                                             value={password}
                                             onChange={e => setPassword(e.target.value)}
                                             required

@@ -128,6 +128,14 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
       }
 
+      // Don't try refresh for login/register - user has no token yet
+      if (
+        originalRequest.url?.includes('/auth/login') ||
+        originalRequest.url?.includes('/auth/register')
+      ) {
+        return Promise.reject(error);
+      }
+
       try {
         const authStorage = localStorage.getItem(AUTH_STORAGE_KEY);
         const parsed = authStorage ? JSON.parse(authStorage) : null;
